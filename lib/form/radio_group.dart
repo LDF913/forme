@@ -5,12 +5,24 @@ import 'package:provider/provider.dart';
 class RadioButton {
   final dynamic value;
   final String label;
+  final String controlKey;
 
-  RadioButton(this.value, this.label);
+  RadioButton(this.value, this.label, {this.controlKey});
 }
 
 class RadioGroupController extends ValueNotifier {
+  List<String> _readOnlyKeys = [];
   RadioGroupController({value}) : super(value);
+
+  set readOnlyKeys(List<String> keys) {
+    _readOnlyKeys.clear();
+    if (keys != null) _readOnlyKeys.addAll(keys);
+    notifyListeners();
+  }
+
+  bool isReadOnly(String key) {
+    return _readOnlyKeys.contains(key);
+  }
 }
 
 class RadioGroup extends FormField {
@@ -21,6 +33,7 @@ class RadioGroup extends FormField {
   final FormFieldValidator validator;
   final AutovalidateMode autovalidateMode;
   final String controlKey;
+  final ValueChanged onChanged;
 
   RadioGroup(this.buttons,
       {Key key,
@@ -28,6 +41,7 @@ class RadioGroup extends FormField {
       this.controller,
       this.initialValue,
       this.label,
+      this.onChanged,
       this.validator,
       this.autovalidateMode = AutovalidateMode.disabled})
       : super(
@@ -53,16 +67,20 @@ class RadioGroup extends FormField {
               }
 
               for (RadioButton button in buttons) {
+                bool isReadOnly = state.readOnly ||
+                    state._controller.isReadOnly(button.controlKey);
                 widgets.add(Wrap(
                   children: [
                     Radio(
                         key: UniqueKey(),
                         value: button.value,
                         groupValue: state.value,
-                        onChanged: (v) {
-                          if (state.readOnly) return;
-                          field.didChange(v);
-                        }),
+                        onChanged: isReadOnly
+                            ? null
+                            : (v) {
+                                field.didChange(v);
+                                if (onChanged != null) onChanged(v);
+                              }),
                     Padding(
                       padding: EdgeInsets.only(top: 15),
                       child: Text(
@@ -168,6 +186,9 @@ class _RadioGroupState extends FormFieldState {
   }
 
   void _handleControllerChanged() {
-    if (_controller.value != value) didChange(_controller.value);
+    if (_controller.value != value)
+      didChange(_controller.value);
+    else
+      setState(() {});
   }
 }

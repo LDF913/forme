@@ -170,24 +170,71 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Text('reset'));
           },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  if (cgc.isReadOnly('man'))
+                    cgc.readOnlyKeys = [];
+                  else
+                    cgc.readOnlyKeys = ['man'];
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(cgc.isReadOnly('man')
+                    ? 'set man selectable'
+                    : 'set man readonly'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  if (rgc.isReadOnly('radio 1'))
+                    rgc.readOnlyKeys = [];
+                  else
+                    rgc.readOnlyKeys = ['radio 1'];
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(rgc.isReadOnly('radio 1')
+                    ? 'set radio 1 selectable'
+                    : 'set radio 1 readonly'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  if (formController.isReadOnly('button'))
+                    formController.readOnlyKeys = [];
+                  else
+                    formController.readOnlyKeys = ['button'];
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(formController.isReadOnly('button')
+                    ? 'set button pressable'
+                    : 'set button readonly'));
+          },
         )
       ]),
     );
   }
 
   CheckboxGroupController cgc = CheckboxGroupController();
+  RadioGroupController rgc = RadioGroupController();
+  TextEditingController tec = TextEditingController();
 
   Widget createForm() {
-    cgc.addListener(() {
-      print(cgc.value);
-    });
     FormBuilder builder = FormBuilder(formController: formController)
       ..textField(
         '用户名',
         controlKey: 'username',
         clearable: true,
+        controller: tec,
+        flex: 3,
         validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
       )
+      ..checkboxs([CheckboxButton('记住')], flex: 0)
       ..nextLine()
       ..textField('密码',
           controlKey: '456',
@@ -195,14 +242,31 @@ class _MyHomePageState extends State<MyHomePage> {
           passwordVisible: true,
           clearable: true,
           flex: 1)
-      ..checkboxGroup([CheckboxButton('男'), CheckboxButton('女')],
+      ..button('登录', () {
+        print('x');
+      }, flex: 0, controlKey: 'button')
+      ..checkboxGroup(
+          [CheckboxButton('男', controlKey: 'man'), CheckboxButton('女')],
           label: '性别',
           controller: cgc,
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
           controlKey: 'checkbox')
       ..radioGroup(
-          [RadioButton('1', '1'), RadioButton('2', '2'), RadioButton('3', '3')],
-          label: '单选框', controlKey: 'radio', initialValue: 2);
+        [
+          RadioButton('1', '1', controlKey: 'radio 1'),
+          RadioButton('2', '2'),
+          RadioButton('3', '3')
+        ],
+        label: '单选框',
+        controlKey: 'radio',
+        controller: rgc,
+      )
+      ..textField('123')
+      ..checkboxs([CheckboxButton('1')], flex: 0)
+      ..radios([RadioButton('1', '1')], flex: 0)
+      ..button('登录', () {
+        print('x');
+      }, controlKey: 'button', flex: 0);
     return builder.build();
   }
 }

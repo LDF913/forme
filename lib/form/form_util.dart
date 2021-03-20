@@ -31,6 +31,7 @@ class FormBuilder {
       Icon prefixIcon,
       TextInputType keyboardType,
       int maxLength,
+      ValueChanged<String> onChanged,
       FormFieldValidator<String> validator,
       InputDecoration decoration,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
@@ -39,6 +40,7 @@ class FormBuilder {
       String initialValue}) {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
+      flex: flex,
       child: ClearableTextField(
         label,
         key: key,
@@ -58,6 +60,7 @@ class FormBuilder {
         prefixIcon: prefixIcon,
         passwordVisible: passwordVisible,
         initialValue: initialValue,
+        onChanged: onChanged,
       ),
     ));
   }
@@ -68,17 +71,24 @@ class FormBuilder {
       dynamic initialValue,
       String controlKey,
       FormFieldValidator validator,
+      ValueChanged onChanged,
+      int flex,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      child: RadioGroup(
-        List.from(radios),
-        key: key,
-        controller: controller,
-        initialValue: initialValue,
-        validator: validator,
-        controlKey: controlKey,
-        autovalidateMode: autovalidateMode,
+      flex: flex,
+      child: Padding(
+        padding: EdgeInsets.only(top: 15),
+        child: RadioGroup(
+          List.from(radios),
+          key: key,
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator,
+          controlKey: controlKey,
+          onChanged: onChanged,
+          autovalidateMode: autovalidateMode,
+        ),
       ),
     ));
   }
@@ -90,6 +100,7 @@ class FormBuilder {
       RadioGroupController controller,
       dynamic initialValue,
       FormFieldValidator validator,
+      ValueChanged onChanged,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     nextLine();
     _builders.add(_FormItemWidget(
@@ -103,6 +114,7 @@ class FormBuilder {
         validator: validator,
         controlKey: controlKey,
         autovalidateMode: autovalidateMode,
+        onChanged: onChanged,
       ),
     ));
     nextLine();
@@ -114,18 +126,23 @@ class FormBuilder {
       List<int> initialValue,
       String controlKey,
       FormFieldValidator validator,
+      ValueChanged<List<int>> onChanged,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex}) {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      child: CheckboxGroup(
-        List.from(checkboxs),
-        key: key,
-        controller: controller,
-        initialValue: initialValue,
-        validator: validator,
-        controlKey: controlKey,
-        autovalidateMode: autovalidateMode,
+      child: Padding(
+        padding: EdgeInsets.only(top: 15),
+        child: CheckboxGroup(
+          List.from(checkboxs),
+          key: key,
+          controller: controller,
+          initialValue: initialValue,
+          validator: validator,
+          controlKey: controlKey,
+          onChanged: onChanged,
+          autovalidateMode: autovalidateMode,
+        ),
       ),
       flex: flex,
     ));
@@ -137,6 +154,7 @@ class FormBuilder {
       String label,
       CheckboxGroupController controller,
       List<int> initialValue,
+      ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     nextLine();
@@ -150,10 +168,37 @@ class FormBuilder {
         label: label,
         validator: validator,
         controlKey: controlKey,
+        onChanged: onChanged,
         autovalidateMode: autovalidateMode,
       ),
     ));
     nextLine();
+  }
+
+  void button(String label, VoidCallback onPressed,
+      {Key key,
+      int flex,
+      String controlKey,
+      VoidCallback onLongPress,
+      Alignment alignment}) {
+    _builders.add(_FormItemWidget(
+      controlKey: controlKey,
+      flex: flex,
+      child: Consumer<FormController>(builder: (context, v, child) {
+        bool isReadOnly = v.isReadOnly(controlKey);
+        return Padding(
+          padding: EdgeInsets.only(top: 15),
+          child: Align(
+            alignment: alignment ?? Alignment.centerLeft,
+            child: TextButton(
+              onPressed: isReadOnly ? null : onPressed,
+              onLongPress: isReadOnly ? null : onLongPress,
+              child: Text(label),
+            ),
+          ),
+        );
+      }),
+    ));
   }
 
   Widget build() {

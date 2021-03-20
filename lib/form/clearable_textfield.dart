@@ -23,6 +23,7 @@ class ClearableTextField extends StatefulWidget {
   final String controlKey;
   final bool passwordVisible;
   final String initialValue;
+  final ValueChanged<String> onChanged;
 
   const ClearableTextField(this.label,
       {Key key,
@@ -43,6 +44,7 @@ class ClearableTextField extends StatefulWidget {
       this.onFieldSubmitted,
       this.initialValue,
       this.clearable = false,
+      this.onChanged,
       this.passwordVisible = false})
       : super(key: key);
 
@@ -142,6 +144,7 @@ class _ClearableTextFieldState extends State<ClearableTextField> {
         validator: widget.validator,
         autovalidateMode: widget.autovalidateMode,
         readOnly: readOnly,
+        onChanged: widget.onChanged,
         decoration: decoration);
     return Padding(
       padding: EdgeInsets.all(5),
@@ -170,6 +173,7 @@ class _ClearIconState extends State<_ClearIcon> {
   @override
   void initState() {
     widget.controller.addListener(changeListener);
+    visible = widget.controller.text != '';
     super.initState();
   }
 

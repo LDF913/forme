@@ -5,11 +5,23 @@ import 'form_util.dart';
 
 class CheckboxButton {
   final String label;
-  CheckboxButton(this.label);
+  final String controlKey;
+  CheckboxButton(this.label, {this.controlKey});
 }
 
 class CheckboxGroupController extends ValueNotifier<List<int>> {
+  List<String> _readOnlyKeys = [];
   CheckboxGroupController({List<int> value}) : super(value);
+
+  set readOnlyKeys(List<String> keys) {
+    _readOnlyKeys.clear();
+    if (keys != null) _readOnlyKeys.addAll(keys);
+    notifyListeners();
+  }
+
+  bool isReadOnly(String key) {
+    return _readOnlyKeys.contains(key);
+  }
 }
 
 class CheckboxGroup extends FormField<List<int>> {
@@ -20,6 +32,7 @@ class CheckboxGroup extends FormField<List<int>> {
   final FormFieldValidator<List<int>> validator;
   final AutovalidateMode autovalidateMode;
   final String controlKey;
+  final ValueChanged<List<int>> onChanged;
 
   CheckboxGroup(this.buttons,
       {Key key,
@@ -28,6 +41,7 @@ class CheckboxGroup extends FormField<List<int>> {
       this.label,
       this.validator,
       this.controlKey,
+      this.onChanged,
       this.autovalidateMode = AutovalidateMode.disabled})
       : super(
             autovalidateMode: autovalidateMode,
@@ -61,18 +75,23 @@ class CheckboxGroup extends FormField<List<int>> {
 
                 for (int i = 0; i < buttons.length; i++) {
                   CheckboxButton button = buttons[i];
+                  bool isReadOnly = state.readOnly ||
+                      state._controller.isReadOnly(button.controlKey);
                   widgets.add(Wrap(
                     children: [
                       Checkbox(
                           value: value.contains(i),
-                          onChanged: (v) {
-                            if (state.readOnly) return;
-                            if (value.contains(i))
-                              value.remove(i);
-                            else
-                              value.add(i);
-                            field.didChange(value);
-                          }),
+                          onChanged: isReadOnly
+                              ? null
+                              : (v) {
+                                  if (value.contains(i))
+                                    value.remove(i);
+                                  else
+                                    value.add(i);
+                                  field.didChange(value);
+                                  if (onChanged != null)
+                                    onChanged(List.from(value));
+                                }),
                       Padding(
                         padding: EdgeInsets.only(top: 15),
                         child: Text(
@@ -178,6 +197,9 @@ class _CheckboxGroupState extends FormFieldState<List<int>> {
   }
 
   void _handleControllerChanged() {
-    if (_controller.value != value) didChange(_controller.value);
+    if (_controller.value != value)
+      didChange(_controller.value);
+    else
+      setState(() {});
   }
 }
