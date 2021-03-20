@@ -178,6 +178,9 @@ class _MyHomePageState extends State<MyHomePage> {
   CheckboxGroupController cgc = CheckboxGroupController();
 
   Widget createForm() {
+    cgc.addListener(() {
+      print(cgc.value);
+    });
     FormBuilder builder = FormBuilder(formController: formController)
       ..textField(
         '用户名',
@@ -194,6 +197,7 @@ class _MyHomePageState extends State<MyHomePage> {
           flex: 1)
       ..checkboxGroup([CheckboxButton('男'), CheckboxButton('女')],
           label: '性别',
+          controller: cgc,
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
           controlKey: 'checkbox')
       ..radioGroup(
