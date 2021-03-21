@@ -72,7 +72,6 @@ class RadioGroup extends FormField {
                 widgets.add(Wrap(
                   children: [
                     Radio(
-                        key: UniqueKey(),
                         value: button.value,
                         groupValue: state.value,
                         onChanged: isReadOnly

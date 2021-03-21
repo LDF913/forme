@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_flutter/form/button.dart';
 
 import 'form/checkbox_group.dart';
 import 'form/form_util.dart';
@@ -47,9 +48,21 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  FormController formController = FormController();
-
+  FormController formController;
   TextEditingController controller = TextEditingController();
+  ButtonController buttonController = ButtonController();
+
+  @override
+  void initState() {
+    super.initState();
+    formController = FormController();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    formController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +80,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Wrap(children: [
         Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.only(left: 20, right: 20),
           child: createForm(),
         ),
         Builder(
@@ -205,6 +218,7 @@ class _MyHomePageState extends State<MyHomePage> {
           builder: (context) {
             return TextButton(
                 onPressed: () {
+                  buttonController.child = Icon(Icons.add);
                   if (formController.isReadOnly('button'))
                     formController.readOnlyKeys = [];
                   else
@@ -225,12 +239,11 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController tec = TextEditingController();
 
   Widget createForm() {
-    FormBuilder builder = FormBuilder(formController: formController)
+    FormBuilder builder = FormBuilder(formController)
       ..textField(
         '用户名',
         controlKey: 'username',
         clearable: true,
-        controller: tec,
         flex: 3,
         validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
       )
@@ -242,13 +255,16 @@ class _MyHomePageState extends State<MyHomePage> {
           passwordVisible: true,
           clearable: true,
           flex: 1)
-      ..button('登录', () {
+      ..button(() {
         print('x');
-      }, flex: 0, controlKey: 'button')
+      },
+          flex: 0,
+          controlKey: 'button',
+          label: '登录',
+          controller: buttonController)
       ..checkboxGroup(
           [CheckboxButton('男', controlKey: 'man'), CheckboxButton('女')],
           label: '性别',
-          controller: cgc,
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
           controlKey: 'checkbox')
       ..radioGroup(
@@ -259,14 +275,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
         label: '单选框',
         controlKey: 'radio',
-        controller: rgc,
       )
       ..textField('123')
-      ..checkboxs([CheckboxButton('1')], flex: 0)
-      ..radios([RadioButton('1', '1')], flex: 0)
-      ..button('登录', () {
-        print('x');
-      }, controlKey: 'button', flex: 0);
+      ..checkboxs([CheckboxButton('1')])
+      ..radios([RadioButton('1', '1')]);
     return builder.build();
   }
 }

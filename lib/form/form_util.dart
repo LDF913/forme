@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'button.dart';
 import 'clearable_textfield.dart';
 import 'radio_group.dart';
 import 'checkbox_group.dart';
@@ -9,7 +10,11 @@ class FormBuilder {
   List<List<_FormItemWidget>> _builderss = [];
   FormController formController;
 
-  FormBuilder({this.formController});
+  FormBuilder(this.formController)
+      : assert(
+          formController != null,
+          'FormController can not be null',
+        );
 
   void nextLine() {
     if (_builders.length > 0) {
@@ -37,7 +42,11 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool clearable = false,
       bool passwordVisible = false,
+      bool readOnly = false,
+      bool visible = true,
       String initialValue}) {
+    _setInitialValueKey(readOnly, visible, controlKey);
+    //this is a bug? rest form will not clear text field's text after rebuild page
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
@@ -72,8 +81,11 @@ class FormBuilder {
       String controlKey,
       FormFieldValidator validator,
       ValueChanged onChanged,
-      int flex,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+      int flex = 0,
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      bool readOnly = false,
+      bool visible = true}) {
+    _setInitialValueKey(readOnly, visible, controlKey);
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
@@ -101,7 +113,10 @@ class FormBuilder {
       dynamic initialValue,
       FormFieldValidator validator,
       ValueChanged onChanged,
+      bool readOnly = false,
+      bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+    _setInitialValueKey(readOnly, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
@@ -127,8 +142,11 @@ class FormBuilder {
       String controlKey,
       FormFieldValidator validator,
       ValueChanged<List<int>> onChanged,
+      bool readOnly = false,
+      bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      int flex}) {
+      int flex = 0}) {
+    _setInitialValueKey(readOnly, visible, controlKey);
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       child: Padding(
@@ -156,7 +174,10 @@ class FormBuilder {
       List<int> initialValue,
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
+      bool readOnly = false,
+      bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+    _setInitialValueKey(readOnly, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
@@ -175,30 +196,37 @@ class FormBuilder {
     nextLine();
   }
 
-  void button(String label, VoidCallback onPressed,
+  void button(VoidCallback onPressed,
       {Key key,
-      int flex,
+      String label,
+      Widget child,
+      ButtonController controller,
+      int flex = 0,
       String controlKey,
       VoidCallback onLongPress,
+      bool readOnly = false,
+      bool visible = true,
       Alignment alignment}) {
-    _builders.add(_FormItemWidget(
-      controlKey: controlKey,
-      flex: flex,
-      child: Consumer<FormController>(builder: (context, v, child) {
-        bool isReadOnly = v.isReadOnly(controlKey);
-        return Padding(
-          padding: EdgeInsets.only(top: 15),
-          child: Align(
-            alignment: alignment ?? Alignment.centerLeft,
-            child: TextButton(
-              onPressed: isReadOnly ? null : onPressed,
-              onLongPress: isReadOnly ? null : onLongPress,
-              child: Text(label),
-            ),
-          ),
-        );
-      }),
-    ));
+    _setInitialValueKey(readOnly, visible, controlKey);
+    _builders.add(
+      _FormItemWidget(
+          controlKey: controlKey,
+          flex: flex,
+          child: Padding(
+              padding: EdgeInsets.only(top: 15),
+              child: Align(
+                alignment: alignment ?? Alignment.centerLeft,
+                child: Button(
+                  onPressed,
+                  key: key,
+                  label: label,
+                  child: child,
+                  controlKey: controlKey,
+                  controller: controller,
+                  onLongPress: onLongPress,
+                ),
+              ))),
+    );
   }
 
   Widget build() {
@@ -225,14 +253,29 @@ class FormBuilder {
           ),
         ));
   }
+
+  void _setInitialValueKey(bool readOnly, bool visible, String controlKey) {
+    if (readOnly && controlKey != null)
+      formController._addReadOnlyKey(controlKey);
+    if (!visible && controlKey != null) formController._addHideKey(controlKey);
+  }
 }
 
 class FormController extends ChangeNotifier {
   bool _hide = false;
   bool _readOnly = false;
   final GlobalKey _formKey = GlobalKey<FormState>();
-  final List<String> _hideKeys = [];
-  final List<String> _readOnlyKeys = [];
+  final Set<String> _hideKeys = {};
+  final Set<String> _readOnlyKeys = {};
+  final List<VoidCallback> _afterResetCallbacks = [];
+
+  void _addHideKey(String controlKey) {
+    _hideKeys.add(controlKey);
+  }
+
+  void _addReadOnlyKey(String controlKey) {
+    _readOnlyKeys.add(controlKey);
+  }
 
   get hide => _hide;
 
@@ -254,6 +297,7 @@ class FormController extends ChangeNotifier {
 
   void reset() {
     _state.reset();
+    for (VoidCallback callback in _afterResetCallbacks) callback();
   }
 
   bool validate() {
@@ -280,6 +324,14 @@ class FormController extends ChangeNotifier {
 
   bool isReadOnly(String key) {
     return _readOnly || _readOnlyKeys.contains(key);
+  }
+
+  void addAfterResetCallback(VoidCallback callback) {
+    _afterResetCallbacks.add(callback);
+  }
+
+  void removeAfterResetCallback(VoidCallback callback) {
+    _afterResetCallbacks.remove(callback);
   }
 }
 

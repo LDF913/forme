@@ -60,11 +60,22 @@ class _ClearableTextFieldState extends State<ClearableTextField> {
 
   @override
   void initState() {
+    FormController formController = context.read<FormController>();
+    //this is a bug ?
+    //reset form will not clear text field's text after rebuild page
+    //so add a callback to formController and clear again;
+    formController.addAfterResetCallback(_clear);
     obscureText = widget.obscureText;
     if (widget.controller == null) {
       controller = TextEditingController(text: widget.initialValue);
     }
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    context.read<FormController>().removeAfterResetCallback(_clear);
   }
 
   @override
@@ -93,6 +104,10 @@ class _ClearableTextFieldState extends State<ClearableTextField> {
       },
       child: _textField(),
     );
+  }
+
+  void _clear() {
+    _controller.text = widget.initialValue ?? '';
   }
 
   Widget _textField() {
