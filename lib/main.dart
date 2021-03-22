@@ -270,6 +270,24 @@ class _MyHomePageState extends State<MyHomePage> {
         flex: 3,
         min: 14,
         max: 99,
+        onTap: () {
+          showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1999),
+                  lastDate: DateTime(2022))
+              .then((date) => {
+                    if (date != null)
+                      {
+                        showTimePicker(
+                                context: context, initialTime: TimeOfDay.now())
+                            .then((time) {
+                          DateTime finalTime = DateTime(date.year, date.month,
+                              date.day, time.hour, time.minute);
+                        })
+                      }
+                  });
+        },
         validator: (value) => value == null ? '不为空' : null,
       )
       ..checkboxGroup(

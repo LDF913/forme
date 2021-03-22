@@ -91,6 +91,7 @@ class FormBuilder {
     };
     textField(label,
         controller: controller,
+        onTap: onTap,
         onSubmitted: onSubmitted,
         key: key,
         controlKey: controlKey,

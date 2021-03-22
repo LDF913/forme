@@ -253,3 +253,57 @@ class _ClearIconState extends State<_ClearIcon> {
         ));
   }
 }
+
+class DateTimeField extends StatefulWidget {
+  final DateTime current;
+  final DateTime min;
+  final DateTime max;
+  final DateTimeController controller;
+  final String controlKey;
+  final String label;
+  final FocusNode focusNode;
+
+  DateTimeField(
+      {Key key,
+      this.current,
+      this.min,
+      this.max,
+      this.controller,
+      this.controlKey,
+      this.label,
+      this.focusNode})
+      : super(key: key);
+
+  @override
+  State<StatefulWidget> createState() => _DateTimeField();
+}
+
+class _DateTimeField extends State<DateTimeField> {
+  DateTimeController _controller;
+  DateTimeController get _effectiveController =>
+      widget.controller ?? _controller;
+
+  @override
+  void initState() {
+    if (widget.controller == null) {
+      _controller =
+          DateTimeController(dateTime: widget.current ?? DateTime.now());
+    } else {
+      widget.controller.addListener(_handleChange);
+    }
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return null;
+  }
+
+  void _handleChange() {
+    setState(() {});
+  }
+}
+
+class DateTimeController extends ValueNotifier<DateTime> {
+  DateTimeController({DateTime dateTime}) : super(dateTime);
+}
