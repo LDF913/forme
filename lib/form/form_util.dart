@@ -38,7 +38,6 @@ class FormBuilder {
       int maxLength,
       ValueChanged<String> onChanged,
       FormFieldValidator<String> validator,
-      InputDecoration decoration,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool clearable = false,
       bool passwordVisible = false,
@@ -50,7 +49,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
-      child: ClearableTextField(
+      child: ClearableTextFormField(
         label,
         key: key,
         controlKey: controlKey,
@@ -64,7 +63,6 @@ class FormBuilder {
         keyboardType: keyboardType,
         validator: validator,
         autovalidateMode: autovalidateMode,
-        decoration: decoration,
         clearable: clearable,
         prefixIcon: prefixIcon,
         passwordVisible: passwordVisible,
@@ -267,7 +265,6 @@ class FormController extends ChangeNotifier {
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
-  final List<VoidCallback> _afterResetCallbacks = [];
 
   void _addHideKey(String controlKey) {
     _hideKeys.add(controlKey);
@@ -297,7 +294,6 @@ class FormController extends ChangeNotifier {
 
   void reset() {
     _state.reset();
-    for (VoidCallback callback in _afterResetCallbacks) callback();
   }
 
   bool validate() {
@@ -324,14 +320,6 @@ class FormController extends ChangeNotifier {
 
   bool isReadOnly(String key) {
     return _readOnly || _readOnlyKeys.contains(key);
-  }
-
-  void addAfterResetCallback(VoidCallback callback) {
-    _afterResetCallbacks.add(callback);
-  }
-
-  void removeAfterResetCallback(VoidCallback callback) {
-    _afterResetCallbacks.remove(callback);
   }
 }
 

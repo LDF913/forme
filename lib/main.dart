@@ -266,7 +266,8 @@ class _MyHomePageState extends State<MyHomePage> {
           [CheckboxButton('男', controlKey: 'man'), CheckboxButton('女')],
           label: '性别',
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
-          controlKey: 'checkbox')
+          controlKey: 'checkbox',
+          controller: cgc)
       ..radioGroup(
         [
           RadioButton('1', '1', controlKey: 'radio 1'),

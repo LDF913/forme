@@ -3,168 +3,189 @@ import 'package:provider/provider.dart';
 
 import 'form_util.dart';
 
-class ClearableTextField extends StatefulWidget {
-  final GestureTapCallback onTap;
-  final ValueChanged<String> onSubmitted;
+class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
-  final int flex;
-  final int maxLines;
-  final FocusNode focusNode;
-  final Icon prefixIcon;
-  final TextInputType keyboardType;
-  final int maxLength;
-  final FormFieldValidator<String> validator;
-  final InputDecoration decoration;
-  final AutovalidateMode autovalidateMode;
-  final TextEditingController controller;
-  final String label;
-  final ValueChanged<String> onFieldSubmitted;
-  final bool clearable;
-  final String controlKey;
-  final bool passwordVisible;
-  final String initialValue;
-  final ValueChanged<String> onChanged;
+  ClearableTextFormField(
+    String label, {
+    Key key,
+    this.controller,
+    String initialValue,
+    FocusNode focusNode,
+    TextInputType keyboardType,
+    bool autofocus = false,
+    this.obscureText = false,
+    int maxLines = 1,
+    int minLines,
+    int maxLength,
+    ValueChanged<String> onChanged,
+    GestureTapCallback onTap,
+    ValueChanged<String> onSubmitted,
+    FormFieldValidator<String> validator,
+    AutovalidateMode autovalidateMode,
+    ValueChanged<String> onFieldSubmitted,
+    bool clearable,
+    String controlKey,
+    bool passwordVisible,
+    Icon prefixIcon,
+  }) : super(
+          key: key,
+          initialValue:
+              controller != null ? controller.text : (initialValue ?? ''),
+          validator: validator,
+          enabled: true,
+          autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
+          builder: (FormFieldState<String> field) {
+            final _TextFormFieldState state = field as _TextFormFieldState;
+            Widget buildWidget() {
+              List<Widget> suffixes = [];
 
-  const ClearableTextField(this.label,
-      {Key key,
-      this.onTap,
-      this.controlKey,
-      this.onSubmitted,
-      this.obscureText = false,
-      this.flex,
-      this.focusNode,
-      this.prefixIcon,
-      this.keyboardType,
-      this.maxLength,
-      this.validator,
-      this.decoration,
-      this.maxLines = 1,
-      this.controller,
-      this.autovalidateMode,
-      this.onFieldSubmitted,
-      this.initialValue,
-      this.clearable = false,
-      this.onChanged,
-      this.passwordVisible = false})
-      : super(key: key);
+              if (clearable && !state.readOnly) {
+                suffixes.add(_ClearIcon(
+                  state._effectiveController,
+                ));
+              }
+              if (passwordVisible) {
+                suffixes.add(IconButton(
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  padding: EdgeInsets.only(top: 15),
+                  icon: Icon(state.obscureText
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: () {
+                    state.toggleObsureText();
+                  },
+                ));
+              }
+
+              Widget suffixIcon = suffixes.isEmpty
+                  ? null
+                  : Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween, // added line
+                      mainAxisSize: MainAxisSize.min, // added line
+                      children: suffixes,
+                    );
+
+              final InputDecoration effectiveDecoration = InputDecoration(
+                      labelText: label,
+                      prefixIcon: prefixIcon,
+                      suffixIcon: suffixIcon)
+                  .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+              void onChangedHandler(String value) {
+                field.didChange(value);
+                if (onChanged != null) {
+                  onChanged(value);
+                }
+              }
+
+              return TextField(
+                controller: state._effectiveController,
+                focusNode: focusNode,
+                decoration:
+                    effectiveDecoration.copyWith(errorText: field.errorText),
+                keyboardType: keyboardType,
+                autofocus: autofocus,
+                obscureText: state.obscureText,
+                maxLines: maxLines,
+                minLines: minLines,
+                maxLength: maxLength,
+                onChanged: onChangedHandler,
+                onTap: onTap,
+                onSubmitted: onSubmitted,
+                enabled: true,
+                readOnly: state.readOnly,
+              );
+            }
+
+            return Consumer<FormController>(
+                builder: (context, c, child) {
+                  bool currentReadOnly = c.isReadOnly(controlKey);
+                  if (state.readOnly != currentReadOnly) {
+                    state.readOnly = currentReadOnly;
+                    return buildWidget();
+                  }
+                  return child;
+                },
+                child: buildWidget());
+          },
+        );
+
+  final TextEditingController controller;
 
   @override
-  State<StatefulWidget> createState() => _ClearableTextFieldState();
+  _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _ClearableTextFieldState extends State<ClearableTextField> {
+class _TextFormFieldState extends FormFieldState<String> {
   bool obscureText = false;
   bool readOnly = false;
-  TextEditingController controller;
-  TextEditingController get _controller => widget.controller ?? controller;
+
+  TextEditingController _controller;
+
+  TextEditingController get _effectiveController =>
+      widget.controller ?? _controller;
+
+  @override
+  ClearableTextFormField get widget => super.widget as ClearableTextFormField;
 
   @override
   void initState() {
-    FormController formController = context.read<FormController>();
-    //this is a bug ?
-    //reset form will not clear text field's text after rebuild page
-    //so add a callback to formController and clear again;
-    formController.addAfterResetCallback(_clear);
     obscureText = widget.obscureText;
     if (widget.controller == null) {
-      controller = TextEditingController(text: widget.initialValue);
+      _controller = TextEditingController(text: widget.initialValue);
+    } else {
+      widget.controller.addListener(_handleControllerChanged);
     }
     super.initState();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-    context.read<FormController>().removeAfterResetCallback(_clear);
+  void toggleObsureText() {
+    setState(() {
+      obscureText = !obscureText;
+    });
   }
 
   @override
-  void didUpdateWidget(ClearableTextField oldWidget) {
+  void didUpdateWidget(ClearableTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.controller != oldWidget.controller) {
+      oldWidget.controller?.removeListener(_handleControllerChanged);
+      widget.controller?.addListener(_handleControllerChanged);
+
       if (oldWidget.controller != null && widget.controller == null)
-        controller =
+        _controller =
             TextEditingController.fromValue(oldWidget.controller.value);
       if (widget.controller != null) {
-        if (oldWidget.controller == null) controller = null;
+        setValue(widget.controller.text);
+        if (oldWidget.controller == null) _controller = null;
       }
     }
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Consumer<FormController>(
-      builder: (context, v, child) {
-        bool currentReadOnly = v.isReadOnly(widget.controlKey);
-        if (currentReadOnly != readOnly) {
-          readOnly = currentReadOnly;
-          return _textField();
-        }
-        return child;
-      },
-      child: _textField(),
-    );
+  void dispose() {
+    widget.controller?.removeListener(_handleControllerChanged);
+    super.dispose();
   }
 
-  void _clear() {
-    _controller.text = widget.initialValue ?? '';
+  @override
+  void didChange(String value) {
+    super.didChange(value);
+
+    if (_effectiveController.text != value)
+      _effectiveController.text = value ?? '';
   }
 
-  Widget _textField() {
-    InputDecoration decoration;
-    List<Widget> suffixes = [];
-    if (widget.clearable && !readOnly) {
-      suffixes.add(_ClearIcon(
-        _controller,
-      ));
-    }
-    if (widget.passwordVisible) {
-      suffixes.add(IconButton(
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        padding: EdgeInsets.only(top: 15),
-        icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
-        onPressed: () {
-          setState(() {
-            obscureText = !obscureText;
-          });
-        },
-      ));
-    }
-    Widget suffixIcon = suffixes.isEmpty
-        ? null
-        : Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween, // added line
-            mainAxisSize: MainAxisSize.min, // added line
-            children: suffixes,
-          );
-    if (decoration != null) {
-      decoration = decoration.copyWith(suffixIcon: suffixIcon);
-    } else {
-      decoration = InputDecoration(
-          labelText: widget.label,
-          prefixIcon: widget.prefixIcon,
-          suffixIcon: suffixIcon);
-    }
-    TextFormField field = TextFormField(
-        key: widget.key,
-        focusNode: widget.focusNode,
-        maxLength: widget.maxLength,
-        maxLines: widget.maxLines,
-        obscureText: obscureText,
-        controller: _controller,
-        onTap: widget.onTap,
-        onFieldSubmitted: widget.onSubmitted,
-        keyboardType: widget.keyboardType,
-        validator: widget.validator,
-        autovalidateMode: widget.autovalidateMode,
-        readOnly: readOnly,
-        onChanged: widget.onChanged,
-        decoration: decoration);
-    return Padding(
-      padding: EdgeInsets.all(5),
-      child: field,
-    );
+  @override
+  void reset() {
+    _effectiveController.text = widget.initialValue ?? '';
+    super.reset();
+  }
+
+  void _handleControllerChanged() {
+    if (_effectiveController.text != value)
+      didChange(_effectiveController.text);
   }
 }
 
