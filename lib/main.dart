@@ -262,6 +262,16 @@ class _MyHomePageState extends State<MyHomePage> {
           controlKey: 'button',
           label: '登录',
           controller: buttonController)
+      ..nextLine()
+      ..numberField(
+        '年龄',
+        controlKey: 'username',
+        clearable: true,
+        flex: 3,
+        min: 14,
+        max: 99,
+        validator: (value) => value == null ? '不为空' : null,
+      )
       ..checkboxGroup(
           [CheckboxButton('男', controlKey: 'man'), CheckboxButton('女')],
           label: '性别',

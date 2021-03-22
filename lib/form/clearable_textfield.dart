@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'form_util.dart';
@@ -27,6 +28,7 @@ class ClearableTextFormField extends FormField<String> {
     String controlKey,
     bool passwordVisible,
     Icon prefixIcon,
+    List<TextInputFormatter> inputFormatters,
   }) : super(
           key: key,
           initialValue:
@@ -40,9 +42,9 @@ class ClearableTextFormField extends FormField<String> {
               List<Widget> suffixes = [];
 
               if (clearable && !state.readOnly) {
-                suffixes.add(_ClearIcon(
-                  state._effectiveController,
-                ));
+                suffixes.add(_ClearIcon(state._effectiveController, () {
+                  state.didChange('');
+                }));
               }
               if (passwordVisible) {
                 suffixes.add(IconButton(
@@ -79,7 +81,7 @@ class ClearableTextFormField extends FormField<String> {
                 }
               }
 
-              return TextField(
+              TextField textField = TextField(
                 controller: state._effectiveController,
                 focusNode: focusNode,
                 decoration:
@@ -95,6 +97,12 @@ class ClearableTextFormField extends FormField<String> {
                 onSubmitted: onSubmitted,
                 enabled: true,
                 readOnly: state.readOnly,
+                inputFormatters: inputFormatters,
+              );
+
+              return Padding(
+                child: textField,
+                padding: EdgeInsets.all(5),
               );
             }
 
@@ -191,8 +199,9 @@ class _TextFormFieldState extends FormFieldState<String> {
 
 class _ClearIcon extends StatefulWidget {
   final TextEditingController controller;
+  final VoidCallback clear;
 
-  const _ClearIcon(this.controller);
+  const _ClearIcon(this.controller, this.clear);
   @override
   State<StatefulWidget> createState() => _ClearIconState();
 }
@@ -231,19 +240,16 @@ class _ClearIconState extends State<_ClearIcon> {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(builder: (context) {
-      return Visibility(
-          visible: visible,
-          child: IconButton(
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            padding: EdgeInsets.only(top: 15),
-            onPressed: () {
-              widget.controller.text = '';
-              (context as Element).markNeedsBuild();
-            },
-            icon: Icon(Icons.clear),
-          ));
-    });
+    return Visibility(
+        visible: visible,
+        child: IconButton(
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          padding: EdgeInsets.only(top: 15),
+          onPressed: () {
+            widget.clear();
+          },
+          icon: Icon(Icons.clear),
+        ));
   }
 }

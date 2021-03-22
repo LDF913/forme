@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
 import 'clearable_textfield.dart';
@@ -23,6 +24,91 @@ class FormBuilder {
     }
   }
 
+  void numberField(String label,
+      {TextEditingController controller,
+      VoidCallback onTap,
+      ValueChanged<String> onSubmitted,
+      Key key,
+      String controlKey,
+      int flex,
+      FocusNode focusNode,
+      Icon prefixIcon,
+      int maxLength,
+      ValueChanged<String> onChanged,
+      FormFieldValidator<double> validator,
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      double min,
+      double max,
+      double initialValue,
+      bool clearable = false,
+      bool readOnly = false,
+      bool visible = true,
+      int decimal = 0}) {
+    List<TextInputFormatter> formatters = [
+      TextInputFormatter.withFunction((oldValue, newValue) {
+        if (newValue.text == '') return newValue;
+        double parsed = double.tryParse(newValue.text);
+        if (parsed == null) {
+          return oldValue;
+        }
+        if (decimal != null) {
+          int indexOfPoint = newValue.text.indexOf(".");
+          if (indexOfPoint != -1) {
+            int decimalNum = newValue.text.length - (indexOfPoint + 1);
+            if (decimalNum > decimal) {
+              return oldValue;
+            }
+          }
+        }
+
+        if (max != null && parsed > max) {
+          return oldValue;
+        }
+        return newValue;
+      }),
+      FilteringTextInputFormatter.allow(
+          decimal > 0 ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))
+    ];
+    FormFieldValidator<String> fieldValidator = (value) {
+      if (value == null || value == '') {
+        return validator(null);
+      }
+      String msg;
+      double parsedValue = double.parse(value);
+      if (validator != null) {
+        msg = validator(parsedValue);
+      }
+      if (msg != null) {
+        return msg;
+      }
+      if (min != null && min > parsedValue) {
+        return '必须大于:$min';
+      }
+      if (max != null && max < parsedValue) {
+        return '必须小于:$max';
+      }
+      return null;
+    };
+    textField(label,
+        controller: controller,
+        onSubmitted: onSubmitted,
+        key: key,
+        controlKey: controlKey,
+        obscureText: false,
+        flex: flex,
+        maxLines: 1,
+        focusNode: focusNode,
+        prefixIcon: prefixIcon,
+        keyboardType: TextInputType.number,
+        onChanged: onChanged,
+        autovalidateMode: autovalidateMode,
+        clearable: clearable,
+        readOnly: readOnly,
+        visible: visible,
+        validator: fieldValidator,
+        inputFormatters: formatters);
+  }
+
   void textField(String label,
       {TextEditingController controller,
       VoidCallback onTap,
@@ -43,9 +129,16 @@ class FormBuilder {
       bool passwordVisible = false,
       bool readOnly = false,
       bool visible = true,
-      String initialValue}) {
+      String initialValue,
+      String regExp,
+      List<TextInputFormatter> inputFormatters}) {
     _setInitialValueKey(readOnly, visible, controlKey);
-    //this is a bug? rest form will not clear text field's text after rebuild page
+    List<TextInputFormatter> formatters = inputFormatters ?? [];
+    if (regExp != null) {
+      formatters.add(
+        FilteringTextInputFormatter.allow(RegExp(regExp)),
+      );
+    }
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
@@ -68,6 +161,7 @@ class FormBuilder {
         passwordVisible: passwordVisible,
         initialValue: initialValue,
         onChanged: onChanged,
+        inputFormatters: formatters,
       ),
     ));
   }
