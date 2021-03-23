@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
-import 'clearable_textfield.dart';
+import 'textfield.dart';
 import 'radio_group.dart';
 import 'checkbox_group.dart';
 
@@ -133,7 +133,7 @@ class FormBuilder {
       String initialValue,
       String regExp,
       List<TextInputFormatter> inputFormatters}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     List<TextInputFormatter> formatters = inputFormatters ?? [];
     if (regExp != null) {
       formatters.add(
@@ -178,7 +178,7 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool readOnly = false,
       bool visible = true}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
@@ -209,7 +209,7 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
@@ -239,7 +239,7 @@ class FormBuilder {
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       child: Padding(
@@ -270,7 +270,7 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
@@ -300,7 +300,7 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       Alignment alignment}) {
-    _setInitialValueKey(readOnly, visible, controlKey);
+    _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(
       _FormItemWidget(
           controlKey: controlKey,
@@ -319,6 +319,28 @@ class FormBuilder {
                   onLongPress: onLongPress,
                 ),
               ))),
+    );
+  }
+
+  void datetimeField(String label,
+      {bool readOnly = false,
+      bool visible = true,
+      String controlKey,
+      int flex = 1,
+      DateTimeController controller,
+      DateTimeFormatter formatter,
+      FormFieldValidator<DateTime> validator}) {
+    _setInitialStateKey(readOnly, visible, controlKey);
+    _builders.add(
+      _FormItemWidget(
+          controlKey: controlKey,
+          flex: flex,
+          child: DateTimeFormField(
+            label,
+            controller: controller,
+            formatter: formatter,
+            validator: validator,
+          )),
     );
   }
 
@@ -347,7 +369,7 @@ class FormBuilder {
         ));
   }
 
-  void _setInitialValueKey(bool readOnly, bool visible, String controlKey) {
+  void _setInitialStateKey(bool readOnly, bool visible, String controlKey) {
     if (readOnly && controlKey != null)
       formController._addReadOnlyKey(controlKey);
     if (!visible && controlKey != null) formController._addHideKey(controlKey);

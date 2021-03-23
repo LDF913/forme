@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:my_flutter/form/button.dart';
 
 import 'form/checkbox_group.dart';
@@ -13,6 +14,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
+      localizationsDelegates: [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -270,24 +276,6 @@ class _MyHomePageState extends State<MyHomePage> {
         flex: 3,
         min: 14,
         max: 99,
-        onTap: () {
-          showDatePicker(
-                  context: context,
-                  initialDate: DateTime.now(),
-                  firstDate: DateTime(1999),
-                  lastDate: DateTime(2022))
-              .then((date) => {
-                    if (date != null)
-                      {
-                        showTimePicker(
-                                context: context, initialTime: TimeOfDay.now())
-                            .then((time) {
-                          DateTime finalTime = DateTime(date.year, date.month,
-                              date.day, time.hour, time.minute);
-                        })
-                      }
-                  });
-        },
         validator: (value) => value == null ? '不为空' : null,
       )
       ..checkboxGroup(
@@ -307,7 +295,11 @@ class _MyHomePageState extends State<MyHomePage> {
       )
       ..textField('123')
       ..checkboxs([CheckboxButton('1')])
-      ..radios([RadioButton('1', '1')]);
+      ..radios([RadioButton('1', '1')])
+      ..nextLine()
+      ..datetimeField(
+        '开始日期',
+      );
     return builder.build();
   }
 }

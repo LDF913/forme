@@ -254,56 +254,209 @@ class _ClearIconState extends State<_ClearIcon> {
   }
 }
 
-class DateTimeField extends StatefulWidget {
-  final DateTime current;
-  final DateTime min;
-  final DateTime max;
+class DateTimeFormField extends FormField<DateTime> {
   final DateTimeController controller;
-  final String controlKey;
+  final DateTime initialValue;
   final String label;
-  final FocusNode focusNode;
+  final DateTimeFormatter formatter;
+  final String controlKey;
+  final FormFieldValidator<DateTime> validator;
+  final bool useTime;
 
-  DateTimeField(
+  DateTimeFormField(this.label,
       {Key key,
-      this.current,
-      this.min,
-      this.max,
       this.controller,
+      this.initialValue,
+      this.formatter,
       this.controlKey,
-      this.label,
-      this.focusNode})
-      : super(key: key);
+      this.validator,
+      this.useTime = false,
+      AutovalidateMode autovalidateMode})
+      : super(
+          validator: validator,
+          autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
+          key: key,
+          builder: (field) {
+            _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
+            Widget buildChild() {
+              List<Widget> suffixes = [];
+
+              if (!state.readOnly) {
+                suffixes.add(_ClearIcon(state.controller, () {
+                  state.suffixPressed = true;
+                  state.didChange(null);
+                }));
+              }
+
+              Widget suffixIcon = suffixes.isEmpty
+                  ? null
+                  : Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween, // added line
+                      mainAxisSize: MainAxisSize.min, // added line
+                      children: suffixes,
+                    );
+
+              final InputDecoration effectiveDecoration = InputDecoration(
+                      labelText: label,
+                      prefixIcon: Icon(Icons.timer),
+                      suffixIcon: suffixIcon)
+                  .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+
+              TextField textField = TextField(
+                controller: state.controller,
+                decoration:
+                    effectiveDecoration.copyWith(errorText: field.errorText),
+                autofocus: false,
+                obscureText: false,
+                maxLines: 1,
+                onTap: () {
+                  if (state.suffixPressed) {
+                    state.suffixPressed = false;
+                    return;
+                  }
+                  showDatePicker(
+                          locale: Locale('zh', 'CN'),
+                          context: state.context,
+                          initialDate: state._effectiveController.value ??
+                              DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2099))
+                      .then((date) {
+                    if (date != null) {
+                      if (useTime)
+                        showTimePicker(
+                                context: state.context,
+                                initialTime: state._controller._timeOfDay)
+                            .then((value) {
+                          TimeOfDay timeOfDay =
+                              value ?? TimeOfDay(hour: 0, minute: 0);
+                          DateTime dateTime = DateTime(date.year, date.month,
+                              date.day, timeOfDay.hour, timeOfDay.minute);
+                          state.didChange(dateTime);
+                        });
+                      else
+                        state.didChange(date);
+                    }
+                  });
+                },
+                enabled: true,
+                readOnly: true,
+              );
+              return Padding(
+                child: textField,
+                padding: EdgeInsets.all(5),
+              );
+            }
+
+            return Consumer<FormController>(
+                builder: (context, c, child) {
+                  bool currentReadOnly = c.isReadOnly(controlKey);
+                  if (state.readOnly != currentReadOnly) {
+                    state.readOnly = currentReadOnly;
+                    return buildChild();
+                  }
+                  return child;
+                },
+                child: buildChild());
+          },
+        );
 
   @override
-  State<StatefulWidget> createState() => _DateTimeField();
+  _DateTimeFormFieldState createState() => _DateTimeFormFieldState();
 }
 
-class _DateTimeField extends State<DateTimeField> {
+class _DateTimeFormFieldState extends FormFieldState<DateTime> {
+  TextEditingController controller = TextEditingController();
   DateTimeController _controller;
+  bool readOnly = false;
+  bool suffixPressed = false;
+
   DateTimeController get _effectiveController =>
       widget.controller ?? _controller;
+
+  DateTimeFormatter formatter;
+
+  DateTimeFormatter get _formatter => widget.formatter ?? formatter;
+
+  @override
+  DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
   void initState() {
     if (widget.controller == null) {
-      _controller =
-          DateTimeController(dateTime: widget.current ?? DateTime.now());
+      _controller = DateTimeController(value: widget.initialValue);
     } else {
-      widget.controller.addListener(_handleChange);
+      widget.controller.addListener(_handleControllerChanged);
     }
+
+    if (widget.formatter == null) {
+      formatter = (dateTime) {
+        if (widget.useTime)
+          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}-${dateTime.minute.toString().padLeft(2, '0')}';
+        else
+          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
+      };
+    }
+
     super.initState();
   }
 
   @override
-  Widget build(BuildContext context) {
-    return null;
+  void didUpdateWidget(DateTimeFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      oldWidget.controller?.removeListener(_handleControllerChanged);
+      widget.controller?.addListener(_handleControllerChanged);
+
+      if (oldWidget.controller != null && widget.controller == null)
+        _controller = DateTimeController(value: oldWidget.controller.value);
+      if (widget.controller != null) {
+        setValue(widget.controller.value);
+        controller.text = _formatter(widget.controller.value);
+        if (oldWidget.controller == null) _controller = null;
+      }
+    }
   }
 
-  void _handleChange() {
-    setState(() {});
+  @override
+  void dispose() {
+    widget.controller?.removeListener(_handleControllerChanged);
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChange(DateTime value) {
+    super.didChange(value);
+
+    if (_effectiveController.value != value) {
+      _effectiveController.value = value;
+      controller.text = value == null ? '' : _formatter(value);
+    }
+  }
+
+  @override
+  void reset() {
+    _effectiveController.value = widget.initialValue;
+    controller.text = _effectiveController.value == null
+        ? ''
+        : _formatter(_effectiveController.value);
+    super.reset();
+  }
+
+  void _handleControllerChanged() {
+    if (_effectiveController.value != value)
+      didChange(_effectiveController.value);
   }
 }
 
-class DateTimeController extends ValueNotifier<DateTime> {
-  DateTimeController({DateTime dateTime}) : super(dateTime);
+class DateTimeController<DateTime> extends ValueNotifier {
+  DateTimeController({DateTime value}) : super(value);
+
+  TimeOfDay get _timeOfDay => value == null
+      ? TimeOfDay(hour: 0, minute: 0)
+      : TimeOfDay(hour: value.hour, minute: value.minute);
 }
+
+typedef DateTimeFormatter = String Function(DateTime dateTime);
