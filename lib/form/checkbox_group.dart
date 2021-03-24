@@ -34,16 +34,16 @@ class CheckboxGroup extends FormField<List<int>> {
   final String controlKey;
   final ValueChanged<List<int>> onChanged;
 
-  CheckboxGroup(this.buttons,
+  CheckboxGroup(this.controlKey, this.buttons,
       {Key key,
       this.controller,
       this.initialValue,
       this.label,
       this.validator,
-      this.controlKey,
       this.onChanged,
       this.autovalidateMode = AutovalidateMode.disabled})
-      : super(
+      : assert(controlKey != null),
+        super(
             autovalidateMode: autovalidateMode,
             validator: validator,
             initialValue: initialValue,

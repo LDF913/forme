@@ -35,16 +35,16 @@ class RadioGroup extends FormField {
   final String controlKey;
   final ValueChanged onChanged;
 
-  RadioGroup(this.buttons,
+  RadioGroup(this.controlKey, this.buttons,
       {Key key,
-      this.controlKey,
       this.controller,
       this.initialValue,
       this.label,
       this.onChanged,
       this.validator,
       this.autovalidateMode = AutovalidateMode.disabled})
-      : super(
+      : assert(controlKey != null),
+        super(
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           validator: validator,

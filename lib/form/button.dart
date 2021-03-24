@@ -11,15 +11,11 @@ class Button extends StatefulWidget {
   final Widget child;
   final String controlKey;
 
-  const Button(this.onPressed,
-      {Key key,
-      this.onLongPress,
-      this.controller,
-      this.label,
-      this.child,
-      this.controlKey})
+  const Button(this.controlKey, this.onPressed,
+      {Key key, this.onLongPress, this.controller, this.label, this.child})
       : assert(label != null || child != null),
         assert(onPressed != null),
+        assert(controlKey != null),
         super(key: key);
 
   @override

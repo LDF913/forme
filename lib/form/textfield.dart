@@ -7,7 +7,8 @@ import 'form_util.dart';
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
   ClearableTextFormField(
-    String label, {
+    String label,
+    String controlKey, {
     Key key,
     this.controller,
     String initialValue,
@@ -25,11 +26,11 @@ class ClearableTextFormField extends FormField<String> {
     AutovalidateMode autovalidateMode,
     ValueChanged<String> onFieldSubmitted,
     bool clearable,
-    String controlKey,
     bool passwordVisible,
     Icon prefixIcon,
     List<TextInputFormatter> inputFormatters,
-  }) : super(
+  })  : assert(controlKey != null),
+        super(
           key: key,
           initialValue:
               controller != null ? controller.text : (initialValue ?? ''),
@@ -42,7 +43,8 @@ class ClearableTextFormField extends FormField<String> {
               List<Widget> suffixes = [];
 
               if (clearable && !state.readOnly) {
-                suffixes.add(_ClearIcon(state._effectiveController, () {
+                suffixes
+                    .add(_ClearIcon(state._effectiveController, focusNode, () {
                   state.didChange('');
                 }));
               }
@@ -200,8 +202,9 @@ class _TextFormFieldState extends FormFieldState<String> {
 class _ClearIcon extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback clear;
+  final FocusNode focusNode;
 
-  const _ClearIcon(this.controller, this.clear);
+  const _ClearIcon(this.controller, this.focusNode, this.clear);
   @override
   State<StatefulWidget> createState() => _ClearIconState();
 }
@@ -211,7 +214,7 @@ class _ClearIconState extends State<_ClearIcon> {
 
   void changeListener() {
     setState(() {
-      visible = widget.controller.text != '';
+      visible = widget.focusNode.hasFocus && widget.controller.text != '';
     });
   }
 
@@ -219,11 +222,17 @@ class _ClearIconState extends State<_ClearIcon> {
   void initState() {
     widget.controller.addListener(changeListener);
     visible = widget.controller.text != '';
+    if (widget.focusNode != null) {
+      widget.focusNode.addListener(changeListener);
+    }
     super.initState();
   }
 
   @override
   void dispose() {
+    if (widget.focusNode != null) {
+      widget.focusNode.removeListener(changeListener);
+    }
     widget.controller.removeListener(changeListener);
     super.dispose();
   }
@@ -262,17 +271,21 @@ class DateTimeFormField extends FormField<DateTime> {
   final String controlKey;
   final FormFieldValidator<DateTime> validator;
   final bool useTime;
+  final Locale locale;
+  final FocusNode focusNode;
 
-  DateTimeFormField(this.label,
+  DateTimeFormField(this.label, this.controlKey,
       {Key key,
       this.controller,
       this.initialValue,
       this.formatter,
-      this.controlKey,
       this.validator,
+      this.locale,
+      this.focusNode,
       this.useTime = false,
       AutovalidateMode autovalidateMode})
-      : super(
+      : assert(controlKey != null),
+        super(
           validator: validator,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
@@ -282,7 +295,7 @@ class DateTimeFormField extends FormField<DateTime> {
               List<Widget> suffixes = [];
 
               if (!state.readOnly) {
-                suffixes.add(_ClearIcon(state.controller, () {
+                suffixes.add(_ClearIcon(state.controller, focusNode, () {
                   state.suffixPressed = true;
                   state.didChange(null);
                 }));
@@ -298,9 +311,7 @@ class DateTimeFormField extends FormField<DateTime> {
                     );
 
               final InputDecoration effectiveDecoration = InputDecoration(
-                      labelText: label,
-                      prefixIcon: Icon(Icons.timer),
-                      suffixIcon: suffixIcon)
+                      labelText: label, suffixIcon: suffixIcon)
                   .applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
               TextField textField = TextField(
@@ -316,7 +327,7 @@ class DateTimeFormField extends FormField<DateTime> {
                     return;
                   }
                   showDatePicker(
-                          locale: Locale('zh', 'CN'),
+                          locale: locale ?? Locale('zh', 'CN'),
                           context: state.context,
                           initialDate: state._effectiveController.value ??
                               DateTime.now(),
@@ -326,14 +337,21 @@ class DateTimeFormField extends FormField<DateTime> {
                     if (date != null) {
                       if (useTime)
                         showTimePicker(
-                                context: state.context,
-                                initialTime: state._controller._timeOfDay)
-                            .then((value) {
-                          TimeOfDay timeOfDay =
-                              value ?? TimeOfDay(hour: 0, minute: 0);
-                          DateTime dateTime = DateTime(date.year, date.month,
-                              date.day, timeOfDay.hour, timeOfDay.minute);
-                          state.didChange(dateTime);
+                          context: state.context,
+                          initialTime: state._controller._timeOfDay,
+                          builder: (BuildContext context, Widget child) {
+                            return Localizations.override(
+                              context: context,
+                              locale: locale ?? Locale('zh', 'CN'),
+                              child: child,
+                            );
+                          },
+                        ).then((value) {
+                          if (value != null) {
+                            DateTime dateTime = DateTime(date.year, date.month,
+                                date.day, value.hour, value.minute);
+                            state.didChange(dateTime);
+                          }
                         });
                       else
                         state.didChange(date);
@@ -393,7 +411,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
     if (widget.formatter == null) {
       formatter = (dateTime) {
         if (widget.useTime)
-          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}-${dateTime.minute.toString().padLeft(2, '0')}';
+          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
         else
           return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
       };

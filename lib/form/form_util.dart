@@ -24,14 +24,11 @@ class FormBuilder {
     }
   }
 
-  void numberField(String label,
-      {TextEditingController controller,
-      VoidCallback onTap,
+  void numberField(String label, String controlKey,
+      {VoidCallback onTap,
       ValueChanged<String> onSubmitted,
       Key key,
-      String controlKey,
       int flex,
-      FocusNode focusNode,
       Icon prefixIcon,
       int maxLength,
       ValueChanged<String> onChanged,
@@ -89,16 +86,13 @@ class FormBuilder {
       }
       return null;
     };
-    textField(label,
-        controller: controller,
+    textField(label, controlKey,
         onTap: onTap,
         onSubmitted: onSubmitted,
         key: key,
-        controlKey: controlKey,
         obscureText: false,
         flex: flex,
         maxLines: 1,
-        focusNode: focusNode,
         prefixIcon: prefixIcon,
         keyboardType: TextInputType.number,
         onChanged: onChanged,
@@ -110,16 +104,13 @@ class FormBuilder {
         inputFormatters: formatters);
   }
 
-  void textField(String label,
-      {TextEditingController controller,
-      VoidCallback onTap,
+  void textField(String label, String controlKey,
+      {VoidCallback onTap,
       ValueChanged<String> onSubmitted,
       Key key,
-      String controlKey,
       bool obscureText: false,
       int flex,
       int maxLines = 1,
-      FocusNode focusNode,
       Icon prefixIcon,
       TextInputType keyboardType,
       int maxLength,
@@ -134,6 +125,12 @@ class FormBuilder {
       String regExp,
       List<TextInputFormatter> inputFormatters}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+
+    TextEditingController controller = formController._controllers
+        .putIfAbsent(controlKey, () => TextEditingController());
+    FocusNode focusNode =
+        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+
     List<TextInputFormatter> formatters = inputFormatters ?? [];
     if (regExp != null) {
       formatters.add(
@@ -145,8 +142,8 @@ class FormBuilder {
       flex: flex,
       child: ClearableTextFormField(
         label,
+        controlKey,
         key: key,
-        controlKey: controlKey,
         focusNode: focusNode,
         maxLength: maxLength,
         maxLines: maxLines,
@@ -167,11 +164,10 @@ class FormBuilder {
     ));
   }
 
-  void radios(List<RadioButton> radios,
+  void radios(String controlKey, List<RadioButton> radios,
       {RadioGroupController controller,
       Key key,
       dynamic initialValue,
-      String controlKey,
       FormFieldValidator validator,
       ValueChanged onChanged,
       int flex = 0,
@@ -179,18 +175,20 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    RadioGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => RadioGroupController());
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
       child: Padding(
         padding: EdgeInsets.only(top: 15),
         child: RadioGroup(
+          controlKey,
           List.from(radios),
           key: key,
           controller: controller,
           initialValue: initialValue,
           validator: validator,
-          controlKey: controlKey,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
         ),
@@ -198,9 +196,8 @@ class FormBuilder {
     ));
   }
 
-  void radioGroup(List<RadioButton> radios,
-      {String controlKey,
-      Key key,
+  void radioGroup(String controlKey, List<RadioButton> radios,
+      {Key key,
       String label,
       RadioGroupController controller,
       dynamic initialValue,
@@ -210,17 +207,19 @@ class FormBuilder {
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    RadioGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => RadioGroupController());
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       child: RadioGroup(
+        controlKey,
         List.from(radios),
         key: key,
         controller: controller,
         initialValue: initialValue,
         label: label,
         validator: validator,
-        controlKey: controlKey,
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
       ),
@@ -228,11 +227,10 @@ class FormBuilder {
     nextLine();
   }
 
-  void checkboxs(List<CheckboxButton> checkboxs,
+  void checkboxs(String controlKey, List<CheckboxButton> checkboxs,
       {CheckboxGroupController controller,
       Key key,
       List<int> initialValue,
-      String controlKey,
       FormFieldValidator validator,
       ValueChanged<List<int>> onChanged,
       bool readOnly = false,
@@ -240,17 +238,19 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    CheckboxGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => CheckboxGroupController());
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       child: Padding(
         padding: EdgeInsets.only(top: 15),
         child: CheckboxGroup(
+          controlKey,
           List.from(checkboxs),
           key: key,
           controller: controller,
           initialValue: initialValue,
           validator: validator,
-          controlKey: controlKey,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
         ),
@@ -259,11 +259,9 @@ class FormBuilder {
     ));
   }
 
-  void checkboxGroup(List<CheckboxButton> checkboxs,
+  void checkboxGroup(String controlKey, List<CheckboxButton> checkboxs,
       {Key key,
-      String controlKey,
       String label,
-      CheckboxGroupController controller,
       List<int> initialValue,
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
@@ -271,17 +269,19 @@ class FormBuilder {
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    CheckboxGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => CheckboxGroupController());
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       child: CheckboxGroup(
+        controlKey,
         List.from(checkboxs),
         key: key,
         controller: controller,
         initialValue: initialValue,
         label: label,
         validator: validator,
-        controlKey: controlKey,
         onChanged: onChanged,
         autovalidateMode: autovalidateMode,
       ),
@@ -289,13 +289,12 @@ class FormBuilder {
     nextLine();
   }
 
-  void button(VoidCallback onPressed,
+  void button(String controlKey, VoidCallback onPressed,
       {Key key,
       String label,
       Widget child,
       ButtonController controller,
       int flex = 0,
-      String controlKey,
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
@@ -310,11 +309,11 @@ class FormBuilder {
               child: Align(
                 alignment: alignment ?? Alignment.centerLeft,
                 child: Button(
+                  controlKey,
                   onPressed,
                   key: key,
                   label: label,
                   child: child,
-                  controlKey: controlKey,
                   controller: controller,
                   onLongPress: onLongPress,
                 ),
@@ -322,24 +321,30 @@ class FormBuilder {
     );
   }
 
-  void datetimeField(String label,
+  void datetimeField(String label, String controlKey,
       {bool readOnly = false,
       bool visible = true,
-      String controlKey,
       int flex = 1,
-      DateTimeController controller,
       DateTimeFormatter formatter,
-      FormFieldValidator<DateTime> validator}) {
+      FormFieldValidator<DateTime> validator,
+      bool useTime}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    DateTimeController controller = formController._controllers
+        .putIfAbsent(controlKey, () => DateTimeController());
+    FocusNode focusNode =
+        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
           child: DateTimeFormField(
             label,
+            controlKey,
+            focusNode: focusNode,
             controller: controller,
             formatter: formatter,
             validator: validator,
+            useTime: useTime,
           )),
     );
   }
@@ -370,9 +375,8 @@ class FormBuilder {
   }
 
   void _setInitialStateKey(bool readOnly, bool visible, String controlKey) {
-    if (readOnly && controlKey != null)
-      formController._addReadOnlyKey(controlKey);
-    if (!visible && controlKey != null) formController._addHideKey(controlKey);
+    if (readOnly) formController._addReadOnlyKey(controlKey);
+    if (!visible) formController._addHideKey(controlKey);
   }
 }
 
@@ -382,6 +386,54 @@ class FormController extends ChangeNotifier {
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
+
+  final Map<String, ValueNotifier> _controllers = {};
+  final Map<String, FocusNode> _focusNodes = {};
+
+  void requestFocus(String controlKey) {
+    FocusNode focusNode = _focusNodes[controlKey];
+    if (focusNode == null) return;
+    focusNode.requestFocus();
+  }
+
+  void unfocus(String controlKey) {
+    FocusNode focusNode = _focusNodes[controlKey];
+    if (focusNode == null) return;
+    focusNode.unfocus();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _hideKeys.clear();
+    _readOnlyKeys.clear();
+    _focusNodes.values.forEach((element) {
+      element.dispose();
+    });
+    _controllers.values.forEach((element) {
+      element.dispose();
+    });
+  }
+
+  Map<String, dynamic> getData() {
+    Map<String, dynamic> map = {};
+    _controllers.forEach((key, notifier) {
+      dynamic value;
+      if (notifier is TextEditingController) {
+        value = notifier.text;
+      } else {
+        value = notifier.value;
+      }
+      if (value != null) {
+        map[key] = value;
+      }
+    });
+    return map;
+  }
+
+  ValueNotifier getController(String controlKey) {
+    return _controllers[controlKey];
+  }
 
   void _addHideKey(String controlKey) {
     _hideKeys.add(controlKey);
