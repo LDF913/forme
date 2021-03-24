@@ -6,6 +6,7 @@ import 'form_util.dart';
 
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
+  final TextEditingController controller;
   ClearableTextFormField(
     String label,
     String controlKey, {
@@ -32,8 +33,7 @@ class ClearableTextFormField extends FormField<String> {
   })  : assert(controlKey != null),
         super(
           key: key,
-          initialValue:
-              controller != null ? controller.text : (initialValue ?? ''),
+          initialValue: initialValue ?? '',
           validator: validator,
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
@@ -43,8 +43,7 @@ class ClearableTextFormField extends FormField<String> {
               List<Widget> suffixes = [];
 
               if (clearable && !state.readOnly) {
-                suffixes
-                    .add(_ClearIcon(state._effectiveController, focusNode, () {
+                suffixes.add(_ClearIcon(controller, focusNode, () {
                   state.didChange('');
                 }));
               }
@@ -84,7 +83,7 @@ class ClearableTextFormField extends FormField<String> {
               }
 
               TextField textField = TextField(
-                controller: state._effectiveController,
+                controller: controller,
                 focusNode: focusNode,
                 decoration:
                     effectiveDecoration.copyWith(errorText: field.errorText),
@@ -121,8 +120,6 @@ class ClearableTextFormField extends FormField<String> {
           },
         );
 
-  final TextEditingController controller;
-
   @override
   _TextFormFieldState createState() => _TextFormFieldState();
 }
@@ -131,22 +128,13 @@ class _TextFormFieldState extends FormFieldState<String> {
   bool obscureText = false;
   bool readOnly = false;
 
-  TextEditingController _controller;
-
-  TextEditingController get _effectiveController =>
-      widget.controller ?? _controller;
-
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
 
   @override
   void initState() {
     obscureText = widget.obscureText;
-    if (widget.controller == null) {
-      _controller = TextEditingController(text: widget.initialValue);
-    } else {
-      widget.controller.addListener(_handleControllerChanged);
-    }
+    widget.controller.addListener(_handleControllerChanged);
     super.initState();
   }
 
@@ -157,45 +145,25 @@ class _TextFormFieldState extends FormFieldState<String> {
   }
 
   @override
-  void didUpdateWidget(ClearableTextFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller?.removeListener(_handleControllerChanged);
-      widget.controller?.addListener(_handleControllerChanged);
-
-      if (oldWidget.controller != null && widget.controller == null)
-        _controller =
-            TextEditingController.fromValue(oldWidget.controller.value);
-      if (widget.controller != null) {
-        setValue(widget.controller.text);
-        if (oldWidget.controller == null) _controller = null;
-      }
-    }
-  }
-
-  @override
   void dispose() {
-    widget.controller?.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleControllerChanged);
     super.dispose();
   }
 
   @override
   void didChange(String value) {
     super.didChange(value);
-
-    if (_effectiveController.text != value)
-      _effectiveController.text = value ?? '';
+    if (widget.controller.text != value) widget.controller.text = value ?? '';
   }
 
   @override
   void reset() {
-    _effectiveController.text = widget.initialValue ?? '';
+    widget.controller.text = widget.initialValue ?? '';
     super.reset();
   }
 
   void _handleControllerChanged() {
-    if (_effectiveController.text != value)
-      didChange(_effectiveController.text);
+    if (widget.controller.text != value) didChange(widget.controller.text);
   }
 }
 
@@ -329,8 +297,7 @@ class DateTimeFormField extends FormField<DateTime> {
                   showDatePicker(
                           locale: locale ?? Locale('zh', 'CN'),
                           context: state.context,
-                          initialDate: state._effectiveController.value ??
-                              DateTime.now(),
+                          initialDate: controller.value ?? DateTime.now(),
                           firstDate: DateTime(2000),
                           lastDate: DateTime(2099))
                       .then((date) {
@@ -338,7 +305,7 @@ class DateTimeFormField extends FormField<DateTime> {
                       if (useTime)
                         showTimePicker(
                           context: state.context,
-                          initialTime: state._controller._timeOfDay,
+                          initialTime: controller._timeOfDay,
                           builder: (BuildContext context, Widget child) {
                             return Localizations.override(
                               context: context,
@@ -386,12 +353,8 @@ class DateTimeFormField extends FormField<DateTime> {
 
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   TextEditingController controller = TextEditingController();
-  DateTimeController _controller;
   bool readOnly = false;
   bool suffixPressed = false;
-
-  DateTimeController get _effectiveController =>
-      widget.controller ?? _controller;
 
   DateTimeFormatter formatter;
 
@@ -402,11 +365,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
   @override
   void initState() {
-    if (widget.controller == null) {
-      _controller = DateTimeController(value: widget.initialValue);
-    } else {
-      widget.controller.addListener(_handleControllerChanged);
-    }
+    widget.controller.addListener(_handleControllerChanged);
 
     if (widget.formatter == null) {
       formatter = (dateTime) {
@@ -421,25 +380,8 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   }
 
   @override
-  void didUpdateWidget(DateTimeFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      oldWidget.controller?.removeListener(_handleControllerChanged);
-      widget.controller?.addListener(_handleControllerChanged);
-
-      if (oldWidget.controller != null && widget.controller == null)
-        _controller = DateTimeController(value: oldWidget.controller.value);
-      if (widget.controller != null) {
-        setValue(widget.controller.value);
-        controller.text = _formatter(widget.controller.value);
-        if (oldWidget.controller == null) _controller = null;
-      }
-    }
-  }
-
-  @override
   void dispose() {
-    widget.controller?.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleControllerChanged);
     controller.dispose();
     super.dispose();
   }
@@ -448,24 +390,23 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   void didChange(DateTime value) {
     super.didChange(value);
 
-    if (_effectiveController.value != value) {
-      _effectiveController.value = value;
+    if (widget.controller.value != value) {
+      widget.controller.value = value;
       controller.text = value == null ? '' : _formatter(value);
     }
   }
 
   @override
   void reset() {
-    _effectiveController.value = widget.initialValue;
-    controller.text = _effectiveController.value == null
+    widget.controller.value = widget.initialValue;
+    controller.text = widget.controller.value == null
         ? ''
-        : _formatter(_effectiveController.value);
+        : _formatter(widget.controller.value);
     super.reset();
   }
 
   void _handleControllerChanged() {
-    if (_effectiveController.value != value)
-      didChange(_effectiveController.value);
+    if (widget.controller.value != value) didChange(widget.controller.value);
   }
 }
 

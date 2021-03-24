@@ -67,8 +67,8 @@ class RadioGroup extends FormField {
               }
 
               for (RadioButton button in buttons) {
-                bool isReadOnly = state.readOnly ||
-                    state._controller.isReadOnly(button.controlKey);
+                bool isReadOnly =
+                    state.readOnly || controller.isReadOnly(button.controlKey);
                 widgets.add(Wrap(
                   children: [
                     Radio(
@@ -129,9 +129,6 @@ class RadioGroup extends FormField {
 }
 
 class _RadioGroupState extends FormFieldState {
-  RadioGroupController controller;
-  RadioGroupController get _controller => widget.controller ?? controller;
-
   bool readOnly = false;
 
   @override
@@ -140,53 +137,30 @@ class _RadioGroupState extends FormFieldState {
   @override
   void initState() {
     super.initState();
-    if (widget.controller == null) {
-      controller = RadioGroupController(value: widget.initialValue);
-    } else {
-      widget.controller.addListener(_handleControllerChanged);
-    }
-  }
-
-  @override
-  void didUpdateWidget(RadioGroup oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      if (oldWidget.controller != null)
-        oldWidget.controller.removeListener(_handleControllerChanged);
-      if (widget.controller != null) {
-        widget.controller.addListener(_handleControllerChanged);
-      }
-      if (oldWidget.controller != null && widget.controller == null)
-        controller = RadioGroupController(value: oldWidget.controller.value);
-      if (widget.controller != null) {
-        setValue(widget.controller.value);
-        if (oldWidget.controller == null) controller = null;
-      }
-    }
+    widget.controller.addListener(_handleControllerChanged);
   }
 
   @override
   void dispose() {
-    if (widget.controller != null)
-      widget.controller.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleControllerChanged);
     super.dispose();
   }
 
   @override
   void didChange(dynamic value) {
     super.didChange(value);
-    if (_controller.value != value) _controller.value = value ?? [];
+    if (widget.controller.value != value) widget.controller.value = value ?? [];
   }
 
   @override
   void reset() {
-    _controller.value = widget.initialValue ?? [];
+    widget.controller.value = widget.initialValue ?? [];
     super.reset();
   }
 
   void _handleControllerChanged() {
-    if (_controller.value != value)
-      didChange(_controller.value);
+    if (widget.controller.value != value)
+      didChange(widget.controller.value);
     else
       setState(() {});
   }

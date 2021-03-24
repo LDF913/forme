@@ -67,8 +67,8 @@ class CheckboxGroup extends FormField<List<int>> {
                 }
 
                 List<int> value;
-                if (state._controller.value != null) {
-                  value = List.from(state._controller.value);
+                if (controller.value != null) {
+                  value = List.from(controller.value);
                 } else {
                   value = [];
                 }
@@ -76,7 +76,7 @@ class CheckboxGroup extends FormField<List<int>> {
                 for (int i = 0; i < buttons.length; i++) {
                   CheckboxButton button = buttons[i];
                   bool isReadOnly = state.readOnly ||
-                      state._controller.isReadOnly(button.controlKey);
+                      controller.isReadOnly(button.controlKey);
                   widgets.add(Wrap(
                     children: [
                       Checkbox(
@@ -141,9 +141,6 @@ class CheckboxGroup extends FormField<List<int>> {
 }
 
 class _CheckboxGroupState extends FormFieldState<List<int>> {
-  CheckboxGroupController controller;
-  CheckboxGroupController get _controller => widget.controller ?? controller;
-
   @override
   CheckboxGroup get widget => super.widget as CheckboxGroup;
 
@@ -152,53 +149,30 @@ class _CheckboxGroupState extends FormFieldState<List<int>> {
   @override
   void initState() {
     super.initState();
-    if (widget.controller == null) {
-      controller = CheckboxGroupController(value: widget.initialValue);
-    } else {
-      widget.controller.addListener(_handleControllerChanged);
-    }
-  }
-
-  @override
-  void didUpdateWidget(CheckboxGroup oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      if (oldWidget.controller != null)
-        oldWidget.controller.removeListener(_handleControllerChanged);
-      if (widget.controller != null) {
-        widget.controller.addListener(_handleControllerChanged);
-      }
-      if (oldWidget.controller != null && widget.controller == null)
-        controller = CheckboxGroupController(value: oldWidget.controller.value);
-      if (widget.controller != null) {
-        setValue(widget.controller.value);
-        if (oldWidget.controller == null) controller = null;
-      }
-    }
+    widget.controller.addListener(_handleControllerChanged);
   }
 
   @override
   void dispose() {
-    if (widget.controller != null)
-      widget.controller.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleControllerChanged);
     super.dispose();
   }
 
   @override
   void didChange(List<int> value) {
     super.didChange(value);
-    if (_controller.value != value) _controller.value = value ?? [];
+    if (widget.controller.value != value) widget.controller.value = value ?? [];
   }
 
   @override
   void reset() {
-    _controller.value = widget.initialValue ?? [];
+    widget.controller.value = widget.initialValue ?? [];
     super.reset();
   }
 
   void _handleControllerChanged() {
-    if (_controller.value != value)
-      didChange(_controller.value);
+    if (widget.controller.value != value)
+      didChange(widget.controller.value);
     else
       setState(() {});
   }
