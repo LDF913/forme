@@ -293,13 +293,14 @@ class FormBuilder {
       {Key key,
       String label,
       Widget child,
-      ButtonController controller,
       int flex = 0,
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
       Alignment alignment}) {
     _setInitialStateKey(readOnly, visible, controlKey);
+    ButtonController controller = formController._controllers
+        .putIfAbsent(controlKey, () => ButtonController());
     _builders.add(
       _FormItemWidget(
           controlKey: controlKey,
@@ -387,7 +388,7 @@ class FormController extends ChangeNotifier {
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
 
-  final Map<String, ValueNotifier> _controllers = {};
+  final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
 
   void requestFocus(String controlKey) {
@@ -403,7 +404,7 @@ class FormController extends ChangeNotifier {
   }
 
   dynamic getValue(String controlKey) {
-    ValueNotifier valueNotifier = getController(controlKey);
+    dynamic valueNotifier = getController(controlKey);
     return valueNotifier == null ? null : _getValue(valueNotifier);
   }
 
@@ -431,7 +432,7 @@ class FormController extends ChangeNotifier {
     return map;
   }
 
-  ValueNotifier getController(String controlKey) {
+  dynamic getController(String controlKey) {
     return _controllers[controlKey];
   }
 
@@ -443,7 +444,10 @@ class FormController extends ChangeNotifier {
     _readOnlyKeys.add(controlKey);
   }
 
-  dynamic _getValue(ValueNotifier valueNotifier) {
+  dynamic _getValue(dynamic valueNotifier) {
+    if (!valueNotifier is ValueNotifier) {
+      return null;
+    }
     if (valueNotifier is TextEditingController) {
       return valueNotifier.text;
     } else {

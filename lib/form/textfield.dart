@@ -263,7 +263,7 @@ class DateTimeFormField extends FormField<DateTime> {
               List<Widget> suffixes = [];
 
               if (!state.readOnly) {
-                suffixes.add(_ClearIcon(state.controller, focusNode, () {
+                suffixes.add(_ClearIcon(controller._controller, focusNode, () {
                   state.suffixPressed = true;
                   state.didChange(null);
                 }));
@@ -283,7 +283,7 @@ class DateTimeFormField extends FormField<DateTime> {
                   .applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
               TextField textField = TextField(
-                controller: state.controller,
+                controller: controller._controller,
                 decoration:
                     effectiveDecoration.copyWith(errorText: field.errorText),
                 autofocus: false,
@@ -352,7 +352,6 @@ class DateTimeFormField extends FormField<DateTime> {
 }
 
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
-  TextEditingController controller = TextEditingController();
   bool readOnly = false;
   bool suffixPressed = false;
 
@@ -382,7 +381,6 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   @override
   void dispose() {
     widget.controller.removeListener(_handleControllerChanged);
-    controller.dispose();
     super.dispose();
   }
 
@@ -392,14 +390,15 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
     if (widget.controller.value != value) {
       widget.controller.value = value;
-      controller.text = value == null ? '' : _formatter(value);
+      widget.controller._controller.text =
+          value == null ? '' : _formatter(value);
     }
   }
 
   @override
   void reset() {
     widget.controller.value = widget.initialValue;
-    controller.text = widget.controller.value == null
+    widget.controller._controller.text = widget.controller.value == null
         ? ''
         : _formatter(widget.controller.value);
     super.reset();
@@ -411,6 +410,8 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 }
 
 class DateTimeController<DateTime> extends ValueNotifier {
+  TextEditingController _controller = new TextEditingController();
+
   DateTimeController({DateTime value}) : super(value);
 
   TimeOfDay get _timeOfDay => value == null

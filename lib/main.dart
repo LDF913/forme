@@ -55,8 +55,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   FormController formController;
-  TextEditingController controller = TextEditingController();
-  ButtonController buttonController = ButtonController();
 
   @override
   void initState() {
@@ -227,6 +225,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Builder(
               builder: (context) {
+                ButtonController buttonController =
+                    formController.getController('button');
                 return TextButton(
                     onPressed: () {
                       buttonController.child = Icon(Icons.add);
@@ -269,7 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
           obscureText: true, passwordVisible: true, clearable: true, flex: 1)
       ..button('button', () {
         print('x');
-      }, flex: 0, label: '登录', controller: buttonController)
+      }, flex: 0, label: '登录')
       ..nextLine()
       ..numberField(
         '年龄',
