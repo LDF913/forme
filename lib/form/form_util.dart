@@ -402,6 +402,11 @@ class FormController extends ChangeNotifier {
     focusNode.unfocus();
   }
 
+  dynamic getValue(String controlKey) {
+    ValueNotifier valueNotifier = getController(controlKey);
+    return valueNotifier == null ? null : _getValue(valueNotifier);
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -418,12 +423,7 @@ class FormController extends ChangeNotifier {
   Map<String, dynamic> getData() {
     Map<String, dynamic> map = {};
     _controllers.forEach((key, notifier) {
-      dynamic value;
-      if (notifier is TextEditingController) {
-        value = notifier.text;
-      } else {
-        value = notifier.value;
-      }
+      dynamic value = _getValue(notifier);
       if (value != null) {
         map[key] = value;
       }
@@ -441,6 +441,14 @@ class FormController extends ChangeNotifier {
 
   void _addReadOnlyKey(String controlKey) {
     _readOnlyKeys.add(controlKey);
+  }
+
+  dynamic _getValue(ValueNotifier valueNotifier) {
+    if (valueNotifier is TextEditingController) {
+      return valueNotifier.text;
+    } else {
+      return valueNotifier.value;
+    }
   }
 
   get hide => _hide;
