@@ -287,6 +287,7 @@ class _MyHomePageState extends State<MyHomePage> {
           CheckboxButton('女'),
         ],
         label: '性别',
+        padding: EdgeInsets.only(top: 10),
         validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
       )
       ..radioGroup(
@@ -311,7 +312,7 @@ class _MyHomePageState extends State<MyHomePage> {
       )
       ..nextLine()
       ..datetimeField('开始日期', 'startTime', useTime: true)
-      ..padding(EdgeInsets.only(right: 50))
+      ..datetimeField('开始日期', 'startTime', useTime: true)
       ..datetimeField('开始日期', 'startTime', useTime: true);
     return builder.build();
   }

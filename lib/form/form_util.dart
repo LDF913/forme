@@ -40,6 +40,7 @@ class FormBuilder {
       bool clearable = false,
       bool readOnly = false,
       bool visible = true,
+      EdgeInsetsGeometry padding,
       int decimal = 0}) {
     List<TextInputFormatter> formatters = [
       TextInputFormatter.withFunction((oldValue, newValue) {
@@ -88,6 +89,7 @@ class FormBuilder {
     };
     textField(label, controlKey,
         onTap: onTap,
+        padding: padding,
         onSubmitted: onSubmitted,
         key: key,
         obscureText: false,
@@ -123,6 +125,7 @@ class FormBuilder {
       bool visible = true,
       String initialValue,
       String regExp,
+      EdgeInsetsGeometry padding,
       List<TextInputFormatter> inputFormatters}) {
     _setInitialStateKey(readOnly, visible, controlKey);
 
@@ -140,6 +143,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
+      padding: padding,
       child: ClearableTextFormField(
         label,
         controlKey,
@@ -173,6 +177,7 @@ class FormBuilder {
       int flex = 0,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool readOnly = false,
+      EdgeInsetsGeometry padding,
       bool visible = true}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
@@ -180,6 +185,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
+      padding: padding,
       child: RadioGroup(
         controlKey,
         List.from(radios),
@@ -202,6 +208,7 @@ class FormBuilder {
       ValueChanged onChanged,
       bool readOnly = false,
       bool visible = true,
+      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
@@ -209,6 +216,7 @@ class FormBuilder {
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
+      padding: padding,
       child: RadioGroup(
         controlKey,
         List.from(radios),
@@ -232,6 +240,7 @@ class FormBuilder {
       ValueChanged<List<int>> onChanged,
       bool readOnly = false,
       bool visible = true,
+      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0}) {
     _setInitialStateKey(readOnly, visible, controlKey);
@@ -239,6 +248,7 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => CheckboxGroupController());
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
+      padding: padding,
       child: CheckboxGroup(
         controlKey,
         List.from(checkboxs),
@@ -261,6 +271,7 @@ class FormBuilder {
       FormFieldValidator<List<int>> validator,
       bool readOnly = false,
       bool visible = true,
+      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
@@ -268,6 +279,7 @@ class FormBuilder {
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
+      padding: padding,
       child: CheckboxGroup(
         controlKey,
         List.from(checkboxs),
@@ -291,7 +303,8 @@ class FormBuilder {
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
-      Alignment alignment}) {
+      Alignment alignment,
+      EdgeInsetsGeometry padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     ButtonController controller = formController._controllers
         .putIfAbsent(controlKey, () => ButtonController());
@@ -299,6 +312,7 @@ class FormBuilder {
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
+          padding: padding,
           child: Align(
             alignment: alignment ?? Alignment.centerLeft,
             child: Button(
@@ -314,24 +328,14 @@ class FormBuilder {
     );
   }
 
-  void padding(EdgeInsetsGeometry padding) {
-    _builders.add(
-      _FormItemWidget(
-          flex: 0,
-          child: Padding(
-            padding: padding,
-            child: SizedBox.shrink(),
-          )),
-    );
-  }
-
   void datetimeField(String label, String controlKey,
       {bool readOnly = false,
       bool visible = true,
       int flex = 1,
       DateTimeFormatter formatter,
       FormFieldValidator<DateTime> validator,
-      bool useTime}) {
+      bool useTime,
+      EdgeInsetsGeometry padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
@@ -341,6 +345,7 @@ class FormBuilder {
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
+          padding: padding,
           child: DateTimeFormField(
             label,
             controlKey,
@@ -511,7 +516,9 @@ class _FormItemWidget extends StatefulWidget {
   final String controlKey;
   final int flex;
   final Widget child;
-  const _FormItemWidget({Key key, this.controlKey, this.flex, this.child})
+  final EdgeInsetsGeometry padding;
+  const _FormItemWidget(
+      {Key key, this.controlKey, this.flex, this.child, this.padding})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -519,6 +526,8 @@ class _FormItemWidget extends StatefulWidget {
 
 class _FormItemWidgetState extends State<_FormItemWidget> {
   bool hide = false;
+
+  get padding => widget.padding ?? EdgeInsets.zero;
   @override
   Widget build(BuildContext context) {
     return Consumer<FormController>(
@@ -537,7 +546,10 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   Widget buildChild() {
     return Visibility(
       child: Expanded(
-        child: widget.child,
+        child: Padding(
+          padding: padding,
+          child: widget.child,
+        ),
         flex: widget.flex ?? 1,
       ),
       visible: !hide,
