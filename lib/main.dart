@@ -282,7 +282,10 @@ class _MyHomePageState extends State<MyHomePage> {
       )
       ..checkboxGroup(
         'checkbox',
-        [CheckboxButton('男', controlKey: 'man'), CheckboxButton('女')],
+        [
+          CheckboxButton('男', controlKey: 'man'),
+          CheckboxButton('女'),
+        ],
         label: '性别',
         validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
       )
@@ -291,6 +294,17 @@ class _MyHomePageState extends State<MyHomePage> {
         [
           RadioButton('1', '1', controlKey: 'radio 1'),
           RadioButton('2', '2'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
+          RadioButton('3', '3'),
           RadioButton('3', '3')
         ],
         label: '单选框',

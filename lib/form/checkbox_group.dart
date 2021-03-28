@@ -77,7 +77,8 @@ class CheckboxGroup extends FormField<List<int>> {
                   CheckboxButton button = buttons[i];
                   bool isReadOnly = state.readOnly ||
                       controller.isReadOnly(button.controlKey);
-                  widgets.add(Wrap(
+                  widgets.add(Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Checkbox(
                           value: value.contains(i),
@@ -92,34 +93,25 @@ class CheckboxGroup extends FormField<List<int>> {
                                   if (onChanged != null)
                                     onChanged(List.from(value));
                                 }),
-                      Padding(
-                        padding: EdgeInsets.only(top: 15),
-                        child: Text(
-                          button.label,
-                        ),
+                      Text(
+                        button.label,
                       ),
                     ],
                   ));
                 }
 
                 if (state.errorText != null) {
-                  widgets.add(Container(
-                      child: Row(
+                  widgets.add(Row(
                     children: [
                       Flexible(
-                          child: Padding(
                         child: Text(state.errorText,
                             style: TextStyle(color: errorColor)),
-                        padding: EdgeInsets.only(left: 15, right: 15),
-                      ))
+                      )
                     ],
-                  )));
+                  ));
                 }
-                return Padding(
-                  child: Wrap(
-                    children: widgets,
-                  ),
-                  padding: EdgeInsets.all(5),
+                return Wrap(
+                  children: widgets,
                 );
               }
 

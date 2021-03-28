@@ -49,9 +49,7 @@ class ClearableTextFormField extends FormField<String> {
               }
               if (passwordVisible) {
                 suffixes.add(IconButton(
-                  splashColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  padding: EdgeInsets.only(top: 15),
+                  padding: EdgeInsets.zero,
                   icon: Icon(state.obscureText
                       ? Icons.visibility
                       : Icons.visibility_off),
@@ -71,6 +69,7 @@ class ClearableTextFormField extends FormField<String> {
                     );
 
               final InputDecoration effectiveDecoration = InputDecoration(
+                      contentPadding: EdgeInsets.zero,
                       labelText: label,
                       prefixIcon: prefixIcon,
                       suffixIcon: suffixIcon)
@@ -101,10 +100,7 @@ class ClearableTextFormField extends FormField<String> {
                 inputFormatters: inputFormatters,
               );
 
-              return Padding(
-                child: textField,
-                padding: EdgeInsets.all(5),
-              );
+              return textField;
             }
 
             return Consumer<FormController>(
@@ -209,8 +205,6 @@ class _ClearIconState extends State<_ClearIcon> {
   void didUpdateWidget(_ClearIcon old) {
     super.didUpdateWidget(old);
     if (widget.controller != old.controller) {
-      old.controller.removeListener(changeListener);
-      widget.controller.addListener(changeListener);
       visible = widget.controller.text != '';
     }
   }
@@ -220,9 +214,9 @@ class _ClearIconState extends State<_ClearIcon> {
     return Visibility(
         visible: visible,
         child: IconButton(
+          padding: EdgeInsets.zero,
           splashColor: Colors.transparent,
           highlightColor: Colors.transparent,
-          padding: EdgeInsets.only(top: 15),
           onPressed: () {
             widget.clear();
           },
@@ -328,10 +322,7 @@ class DateTimeFormField extends FormField<DateTime> {
                 enabled: true,
                 readOnly: true,
               );
-              return Padding(
-                child: textField,
-                padding: EdgeInsets.all(5),
-              );
+              return textField;
             }
 
             return Consumer<FormController>(

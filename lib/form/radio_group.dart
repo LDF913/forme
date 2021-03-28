@@ -69,7 +69,8 @@ class RadioGroup extends FormField {
               for (RadioButton button in buttons) {
                 bool isReadOnly =
                     state.readOnly || controller.isReadOnly(button.controlKey);
-                widgets.add(Wrap(
+                widgets.add(Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Radio(
                         value: button.value,
@@ -80,33 +81,23 @@ class RadioGroup extends FormField {
                                 field.didChange(v);
                                 if (onChanged != null) onChanged(v);
                               }),
-                    Padding(
-                      padding: EdgeInsets.only(top: 15),
-                      child: Text(
-                        button.label,
-                      ),
+                    Text(
+                      button.label,
                     ),
                   ],
                 ));
               }
               if (state.errorText != null) {
-                widgets.add(Container(
-                    child: Row(
+                widgets.add(Row(
                   children: [
                     Flexible(
-                        child: Padding(
-                      child: Text(state.errorText,
-                          style: TextStyle(color: errorColor)),
-                      padding: EdgeInsets.only(left: 15, right: 15),
-                    ))
+                        child: Text(state.errorText,
+                            style: TextStyle(color: errorColor)))
                   ],
-                )));
+                ));
               }
-              return Padding(
-                child: Wrap(
-                  children: widgets,
-                ),
-                padding: EdgeInsets.all(5),
+              return Wrap(
+                children: widgets,
               );
             }
 

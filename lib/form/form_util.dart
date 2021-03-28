@@ -180,18 +180,15 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
-      child: Padding(
-        padding: EdgeInsets.only(top: 15),
-        child: RadioGroup(
-          controlKey,
-          List.from(radios),
-          key: key,
-          controller: controller,
-          initialValue: initialValue,
-          validator: validator,
-          onChanged: onChanged,
-          autovalidateMode: autovalidateMode,
-        ),
+      child: RadioGroup(
+        controlKey,
+        List.from(radios),
+        key: key,
+        controller: controller,
+        initialValue: initialValue,
+        validator: validator,
+        onChanged: onChanged,
+        autovalidateMode: autovalidateMode,
       ),
     ));
   }
@@ -242,18 +239,15 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => CheckboxGroupController());
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      child: Padding(
-        padding: EdgeInsets.only(top: 15),
-        child: CheckboxGroup(
-          controlKey,
-          List.from(checkboxs),
-          key: key,
-          controller: controller,
-          initialValue: initialValue,
-          validator: validator,
-          onChanged: onChanged,
-          autovalidateMode: autovalidateMode,
-        ),
+      child: CheckboxGroup(
+        controlKey,
+        List.from(checkboxs),
+        key: key,
+        controller: controller,
+        initialValue: initialValue,
+        validator: validator,
+        onChanged: onChanged,
+        autovalidateMode: autovalidateMode,
       ),
       flex: flex,
     ));
@@ -305,20 +299,18 @@ class FormBuilder {
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
-          child: Padding(
-              padding: EdgeInsets.only(top: 15),
-              child: Align(
-                alignment: alignment ?? Alignment.centerLeft,
-                child: Button(
-                  controlKey,
-                  onPressed,
-                  key: key,
-                  label: label,
-                  child: child,
-                  controller: controller,
-                  onLongPress: onLongPress,
-                ),
-              ))),
+          child: Align(
+            alignment: alignment ?? Alignment.centerLeft,
+            child: Button(
+              controlKey,
+              onPressed,
+              key: key,
+              label: label,
+              child: child,
+              controller: controller,
+              onLongPress: onLongPress,
+            ),
+          )),
     );
   }
 
