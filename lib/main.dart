@@ -311,7 +311,8 @@ class _MyHomePageState extends State<MyHomePage> {
       )
       ..nextLine()
       ..datetimeField('开始日期', 'startTime', useTime: true)
-      ..datetimeField('结束日期', 'endTime', useTime: true);
+      ..padding(EdgeInsets.only(right: 50))
+      ..datetimeField('开始日期', 'startTime', useTime: true);
     return builder.build();
   }
 }

@@ -273,14 +273,16 @@ class DateTimeFormField extends FormField<DateTime> {
                     );
 
               final InputDecoration effectiveDecoration = InputDecoration(
-                      labelText: label, suffixIcon: suffixIcon)
+                      contentPadding: EdgeInsets.zero,
+                      labelText: label,
+                      suffixIcon: suffixIcon)
                   .applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
               TextField textField = TextField(
+                focusNode: focusNode,
                 controller: controller._controller,
                 decoration:
                     effectiveDecoration.copyWith(errorText: field.errorText),
-                autofocus: false,
                 obscureText: false,
                 maxLines: 1,
                 onTap: () {

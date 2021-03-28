@@ -314,6 +314,17 @@ class FormBuilder {
     );
   }
 
+  void padding(EdgeInsetsGeometry padding) {
+    _builders.add(
+      _FormItemWidget(
+          flex: 0,
+          child: Padding(
+            padding: padding,
+            child: SizedBox.shrink(),
+          )),
+    );
+  }
+
   void datetimeField(String label, String controlKey,
       {bool readOnly = false,
       bool visible = true,
