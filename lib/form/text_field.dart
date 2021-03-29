@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-import 'form_util.dart';
+import 'form_builder.dart';
 
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;

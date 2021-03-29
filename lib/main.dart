@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:my_flutter/form/button.dart';
 
 import 'form/checkbox_group.dart';
-import 'form/form_util.dart';
+import 'form/form_builder.dart';
 import 'form/radio_group.dart';
 
 void main() => runApp(MyApp());
@@ -255,65 +255,56 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm() {
-    FormBuilder builder = FormBuilder(formController)
-      ..textField(
-        '用户名',
-        'username',
-        clearable: true,
-        flex: 3,
-        validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
-      )
-      ..checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
-      ..nextLine()
-      ..textField('密码', 'password',
-          obscureText: true, passwordVisible: true, clearable: true, flex: 1)
-      ..button('button', () {
-        print('x');
-      }, flex: 0, label: '登录')
-      ..nextLine()
-      ..numberField(
-        '年龄',
-        'age',
-        clearable: true,
-        flex: 3,
-        min: 14,
-        max: 99,
-        validator: (value) => value == null ? '不为空' : null,
-      )
-      ..checkboxGroup(
-        'checkbox',
-        [
-          CheckboxButton('男', controlKey: 'man'),
-          CheckboxButton('女'),
-        ],
-        label: '性别',
-        padding: EdgeInsets.only(top: 10),
-        validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
-      )
-      ..radioGroup(
-        'radio',
-        [
-          RadioButton('1', '1', controlKey: 'radio 1'),
-          RadioButton('2', '2'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3'),
-          RadioButton('3', '3')
-        ],
-        label: '单选框',
-      )
-      ..nextLine()
-      ..datetimeField('开始日期', 'startTime', useTime: true)
-      ..datetimeField('开始日期', 'startTime', useTime: true)
-      ..datetimeField('开始日期', 'startTime', useTime: true);
+    FormBuilder builder =
+        FormBuilder(formController, padding: EdgeInsets.all(5))
+          ..textField(
+            '用户名',
+            'username',
+            clearable: true,
+            flex: 3,
+            validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
+          )
+          ..checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
+          ..nextLine()
+          ..textField('密码', 'password',
+              obscureText: true,
+              passwordVisible: true,
+              clearable: true,
+              flex: 1)
+          ..button('button', () {
+            print('x');
+          }, flex: 0, label: '登录')
+          ..nextLine()
+          ..numberField(
+            '年龄',
+            'age',
+            clearable: true,
+            flex: 3,
+            min: 14,
+            max: 99,
+            validator: (value) => value == null ? '不为空' : null,
+          )
+          ..checkboxGroup(
+            'checkbox',
+            [
+              CheckboxButton('男', controlKey: 'man'),
+              CheckboxButton('女'),
+            ],
+            label: '性别',
+            validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
+          )
+          ..radioGroup(
+            'radio',
+            [
+              RadioButton('1', '1', controlKey: 'radio 1'),
+              RadioButton('2', '2'),
+            ],
+            label: '单选框',
+          )
+          ..nextLine()
+          ..datetimeField('开始日期', 'startTime', useTime: true)
+          ..datetimeField('开始日期', 'startTime', useTime: true)
+          ..datetimeField('开始日期', 'startTime', useTime: true);
     return builder.build();
   }
 }

@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
-import 'textfield.dart';
+import 'text_field.dart';
 import 'radio_group.dart';
 import 'checkbox_group.dart';
 
 class FormBuilder {
   List<_FormItemWidget> _builders = [];
   List<List<_FormItemWidget>> _builderss = [];
-  FormController formController;
+  final FormController formController;
+  final EdgeInsetsGeometry padding;
 
-  FormBuilder(this.formController)
+  FormBuilder(this.formController, {this.padding})
       : assert(
           formController != null,
           'FormController can not be null',
@@ -89,7 +90,7 @@ class FormBuilder {
     };
     textField(label, controlKey,
         onTap: onTap,
-        padding: padding,
+        padding: padding ?? this.padding,
         onSubmitted: onSubmitted,
         key: key,
         obscureText: false,
@@ -143,7 +144,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
-      padding: padding,
+      padding: padding ?? this.padding,
       child: ClearableTextFormField(
         label,
         controlKey,
@@ -185,7 +186,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
       flex: flex,
-      padding: padding,
+      padding: padding ?? this.padding,
       child: RadioGroup(
         controlKey,
         List.from(radios),
@@ -216,7 +217,7 @@ class FormBuilder {
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      padding: padding,
+      padding: padding ?? this.padding,
       child: RadioGroup(
         controlKey,
         List.from(radios),
@@ -248,7 +249,7 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => CheckboxGroupController());
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      padding: padding,
+      padding: padding ?? this.padding,
       child: CheckboxGroup(
         controlKey,
         List.from(checkboxs),
@@ -279,7 +280,7 @@ class FormBuilder {
     nextLine();
     _builders.add(_FormItemWidget(
       controlKey: controlKey,
-      padding: padding,
+      padding: padding ?? this.padding,
       child: CheckboxGroup(
         controlKey,
         List.from(checkboxs),
@@ -312,7 +313,7 @@ class FormBuilder {
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
-          padding: padding,
+          padding: padding ?? this.padding,
           child: Align(
             alignment: alignment ?? Alignment.centerLeft,
             child: Button(
@@ -345,7 +346,7 @@ class FormBuilder {
       _FormItemWidget(
           controlKey: controlKey,
           flex: flex,
-          padding: padding,
+          padding: padding ?? this.padding,
           child: DateTimeFormField(
             label,
             controlKey,
