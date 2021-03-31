@@ -504,24 +504,23 @@ class FormController extends ChangeNotifier {
   }
 
   dynamic _getValue(dynamic valueNotifier) {
-    if (!valueNotifier is ValueNotifier) {
-      return null;
+    if (valueNotifier is ValueNotifier) {
+      if (valueNotifier is TextEditingController) {
+        return valueNotifier.text;
+      } else {
+        return valueNotifier.value;
+      }
     }
-    if (valueNotifier is TextEditingController) {
-      return valueNotifier.text;
-    } else {
-      return valueNotifier.value;
-    }
+    return null;
   }
 
   void _setValue(dynamic valueNotifier, dynamic value) {
-    if (!valueNotifier is ValueNotifier) {
-      return;
-    }
-    if (valueNotifier is TextEditingController) {
-      valueNotifier.text = value.toString();
-    } else {
-      valueNotifier.value = value;
+    if (valueNotifier is ValueNotifier) {
+      if (valueNotifier is TextEditingController) {
+        valueNotifier.text = value.toString();
+      } else {
+        valueNotifier.value = value;
+      }
     }
   }
 
@@ -534,7 +533,7 @@ class FormController extends ChangeNotifier {
     }
   }
 
-  get readOnly => _hide;
+  get readOnly => _readOnly;
 
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {

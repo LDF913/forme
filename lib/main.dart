@@ -267,6 +267,18 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     child: Text('change username\'s label'));
               },
+            ),
+            TextButton(
+              onPressed: () {
+                formController.setValue('username', 'username');
+                formController.setValue('password', '123456');
+                formController.setValue('age', '21');
+                formController.setValue('checkbox', [0, 1]);
+                formController.setValue('radio', '1');
+                formController.setValue('startTime', DateTime(2019, 10, 1));
+                print(formController.getData());
+              },
+              child: Text('set&get form data'),
             )
           ]),
         ));

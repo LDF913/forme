@@ -255,10 +255,11 @@ class DateTimeFormField extends FormField<DateTime> {
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
 
             void pickTime() {
+              DateTime value = initialValue ?? DateTime.now();
               showDatePicker(
                       locale: locale ?? Locale('zh', 'CN'),
                       context: state.context,
-                      initialDate: controller.value ?? DateTime.now(),
+                      initialDate: controller.value ?? value,
                       firstDate: DateTime(2000),
                       lastDate: DateTime(2099))
                   .then((date) {
@@ -266,7 +267,8 @@ class DateTimeFormField extends FormField<DateTime> {
                   if (useTime)
                     showTimePicker(
                       context: state.context,
-                      initialTime: controller._timeOfDay,
+                      initialTime: controller._timeOfDay ??
+                          TimeOfDay(hour: value.hour, minute: value.minute),
                       builder: (BuildContext context, Widget child) {
                         return Localizations.override(
                           context: context,
@@ -351,6 +353,8 @@ class DateTimeFormField extends FormField<DateTime> {
   _DateTimeFormFieldState createState() => _DateTimeFormFieldState();
 }
 
+typedef DateTimeFormatter = String Function(DateTime dateTime);
+
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   bool readOnly = false;
 
@@ -386,12 +390,10 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   @override
   void didChange(DateTime value) {
     super.didChange(value);
-
     if (widget.controller.value != value) {
       widget.controller.value = value;
-      widget.controller._controller.text =
-          value == null ? '' : _formatter(value);
     }
+    widget.controller._controller.text = value == null ? '' : _formatter(value);
   }
 
   @override
@@ -413,9 +415,6 @@ class DateTimeController<DateTime> extends ValueNotifier {
 
   DateTimeController({DateTime value}) : super(value);
 
-  TimeOfDay get _timeOfDay => value == null
-      ? TimeOfDay(hour: 0, minute: 0)
-      : TimeOfDay(hour: value.hour, minute: value.minute);
+  TimeOfDay get _timeOfDay =>
+      value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
 }
-
-typedef DateTimeFormatter = String Function(DateTime dateTime);
