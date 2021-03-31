@@ -101,6 +101,17 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
+                      formController.readOnly = !formController.readOnly;
+                      (context as Element).markNeedsBuild();
+                    },
+                    child: Text(
+                        formController.readOnly ? 'editable' : 'readonly'));
+              },
+            ),
+            Builder(
+              builder: (context) {
+                return TextButton(
+                    onPressed: () {
                       if (formController.isHide('username')) {
                         formController.hideKeys = [];
                       } else {

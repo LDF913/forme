@@ -53,9 +53,11 @@ class ClearableTextFormField extends FormField<String> {
                   icon: Icon(state.obscureText
                       ? Icons.visibility
                       : Icons.visibility_off),
-                  onPressed: () {
-                    state.toggleObsureText();
-                  },
+                  onPressed: state.readOnly
+                      ? null
+                      : () {
+                          state.toggleObsureText();
+                        },
                 ));
               }
 
@@ -157,10 +159,7 @@ class _TextFormFieldState extends FormFieldState<String> {
   }
 
   void _handleChanged() {
-    if (widget.controller.text != value)
-      didChange(widget.controller.text);
-    else
-      setState(() {});
+    if (widget.controller.text != value) didChange(widget.controller.text);
   }
 }
 
@@ -302,7 +301,7 @@ class DateTimeFormField extends FormField<DateTime> {
 
               suffixes.add(IconButton(
                 constraints: BoxConstraints(),
-                onPressed: pickTime,
+                onPressed: state.readOnly ? null : pickTime,
                 icon: Icon(Icons.calendar_today),
               ));
 
@@ -405,10 +404,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   }
 
   void _handleChanged() {
-    if (widget.controller.value != value)
-      didChange(widget.controller.value);
-    else
-      setState(() {});
+    if (widget.controller.value != value) didChange(widget.controller.value);
   }
 }
 

@@ -590,8 +590,8 @@ class _FormItemWidget extends StatefulWidget {
 class _FormItemWidgetState extends State<_FormItemWidget> {
   bool hide = false;
   Map<String, dynamic> map = {};
-
-  get padding => widget.padding ?? EdgeInsets.zero;
+  get flex => map['flex'] ?? widget.flex ?? 1;
+  get padding => map['padding'] ?? widget.padding ?? EdgeInsets.zero;
   @override
   Widget build(BuildContext context) {
     Widget buildChild() {
@@ -599,7 +599,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
       return Visibility(
         child: Expanded(
           child: Padding(padding: padding, child: widget.builder(context, map)),
-          flex: widget.flex ?? 1,
+          flex: flex,
         ),
         visible: !hide,
       );
