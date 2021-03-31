@@ -8,8 +8,9 @@ class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
   final TextEditingController controller;
   ClearableTextFormField(
-    String label,
     String controlKey, {
+    String label,
+    String hintLabel,
     Key key,
     this.controller,
     String initialValue,
@@ -49,7 +50,6 @@ class ClearableTextFormField extends FormField<String> {
               }
               if (passwordVisible) {
                 suffixes.add(IconButton(
-                  padding: EdgeInsets.zero,
                   icon: Icon(state.obscureText
                       ? Icons.visibility
                       : Icons.visibility_off),
@@ -62,17 +62,15 @@ class ClearableTextFormField extends FormField<String> {
               Widget suffixIcon = suffixes.isEmpty
                   ? null
                   : Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween, // added line
                       mainAxisSize: MainAxisSize.min, // added line
                       children: suffixes,
                     );
 
               final InputDecoration effectiveDecoration = InputDecoration(
-                      contentPadding: EdgeInsets.zero,
-                      labelText: label,
                       prefixIcon: prefixIcon,
-                      suffixIcon: suffixIcon)
+                      suffixIcon: suffixIcon,
+                      labelText: label,
+                      hintText: hintLabel)
                   .applyDefaults(Theme.of(field.context).inputDecorationTheme);
               void onChangedHandler(String value) {
                 field.didChange(value);
@@ -82,23 +80,23 @@ class ClearableTextFormField extends FormField<String> {
               }
 
               TextField textField = TextField(
-                controller: controller,
-                focusNode: focusNode,
-                decoration:
-                    effectiveDecoration.copyWith(errorText: field.errorText),
-                keyboardType: keyboardType,
-                autofocus: autofocus,
-                obscureText: state.obscureText,
-                maxLines: maxLines,
-                minLines: minLines,
-                maxLength: maxLength,
-                onChanged: onChangedHandler,
-                onTap: onTap,
-                onSubmitted: onSubmitted,
-                enabled: true,
-                readOnly: state.readOnly,
-                inputFormatters: inputFormatters,
-              );
+                  textAlignVertical: TextAlignVertical.center,
+                  controller: controller,
+                  focusNode: focusNode,
+                  decoration:
+                      effectiveDecoration.copyWith(errorText: field.errorText),
+                  keyboardType: keyboardType,
+                  autofocus: autofocus,
+                  obscureText: state.obscureText,
+                  maxLines: maxLines,
+                  minLines: minLines,
+                  maxLength: maxLength,
+                  onChanged: onChangedHandler,
+                  onTap: onTap,
+                  onSubmitted: onSubmitted,
+                  enabled: true,
+                  readOnly: state.readOnly,
+                  inputFormatters: inputFormatters);
 
               return textField;
             }
@@ -130,7 +128,7 @@ class _TextFormFieldState extends FormFieldState<String> {
   @override
   void initState() {
     obscureText = widget.obscureText;
-    widget.controller.addListener(_handleControllerChanged);
+    widget.controller.addListener(_handleChanged);
     super.initState();
   }
 
@@ -142,7 +140,7 @@ class _TextFormFieldState extends FormFieldState<String> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleChanged);
     super.dispose();
   }
 
@@ -158,8 +156,11 @@ class _TextFormFieldState extends FormFieldState<String> {
     super.reset();
   }
 
-  void _handleControllerChanged() {
-    if (widget.controller.text != value) didChange(widget.controller.text);
+  void _handleChanged() {
+    if (widget.controller.text != value)
+      didChange(widget.controller.text);
+    else
+      setState(() {});
   }
 }
 
@@ -214,9 +215,6 @@ class _ClearIconState extends State<_ClearIcon> {
     return Visibility(
         visible: visible,
         child: IconButton(
-          padding: EdgeInsets.zero,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
           onPressed: () {
             widget.clear();
           },
@@ -229,6 +227,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final DateTimeController controller;
   final DateTime initialValue;
   final String label;
+  final String hintLabel;
   final DateTimeFormatter formatter;
   final String controlKey;
   final FormFieldValidator<DateTime> validator;
@@ -236,8 +235,10 @@ class DateTimeFormField extends FormField<DateTime> {
   final Locale locale;
   final FocusNode focusNode;
 
-  DateTimeFormField(this.label, this.controlKey,
+  DateTimeFormField(this.controlKey,
       {Key key,
+      this.label,
+      this.hintLabel,
       this.controller,
       this.initialValue,
       this.formatter,
@@ -253,76 +254,83 @@ class DateTimeFormField extends FormField<DateTime> {
           key: key,
           builder: (field) {
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
+
+            void pickTime() {
+              showDatePicker(
+                      locale: locale ?? Locale('zh', 'CN'),
+                      context: state.context,
+                      initialDate: controller.value ?? DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2099))
+                  .then((date) {
+                if (date != null) {
+                  if (useTime)
+                    showTimePicker(
+                      context: state.context,
+                      initialTime: controller._timeOfDay,
+                      builder: (BuildContext context, Widget child) {
+                        return Localizations.override(
+                          context: context,
+                          locale: locale ?? Locale('zh', 'CN'),
+                          child: child,
+                        );
+                      },
+                    ).then((value) {
+                      if (value != null) {
+                        DateTime dateTime = DateTime(date.year, date.month,
+                            date.day, value.hour, value.minute);
+                        state.didChange(dateTime);
+                        focusNode.requestFocus();
+                      }
+                    });
+                  else {
+                    state.didChange(date);
+                    focusNode.requestFocus();
+                  }
+                }
+              });
+            }
+
             Widget buildChild() {
               List<Widget> suffixes = [];
 
               if (!state.readOnly) {
                 suffixes.add(_ClearIcon(controller._controller, focusNode, () {
-                  state.suffixPressed = true;
                   state.didChange(null);
                 }));
               }
 
+              suffixes.add(IconButton(
+                constraints: BoxConstraints(),
+                onPressed: pickTime,
+                icon: Icon(Icons.calendar_today),
+              ));
+
               Widget suffixIcon = suffixes.isEmpty
                   ? null
                   : Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween, // added line
-                      mainAxisSize: MainAxisSize.min, // added line
+                      mainAxisSize: MainAxisSize.min,
                       children: suffixes,
                     );
 
               final InputDecoration effectiveDecoration = InputDecoration(
-                      contentPadding: EdgeInsets.zero,
-                      labelText: label,
-                      suffixIcon: suffixIcon)
+                      hintText: hintLabel,
+                      suffixIcon: suffixIcon,
+                      labelText: label)
                   .applyDefaults(Theme.of(field.context).inputDecorationTheme);
 
               TextField textField = TextField(
+                textAlignVertical: TextAlignVertical.center,
                 focusNode: focusNode,
                 controller: controller._controller,
                 decoration:
                     effectiveDecoration.copyWith(errorText: field.errorText),
                 obscureText: false,
                 maxLines: 1,
-                onTap: () {
-                  if (state.suffixPressed) {
-                    state.suffixPressed = false;
-                    return;
-                  }
-                  showDatePicker(
-                          locale: locale ?? Locale('zh', 'CN'),
-                          context: state.context,
-                          initialDate: controller.value ?? DateTime.now(),
-                          firstDate: DateTime(2000),
-                          lastDate: DateTime(2099))
-                      .then((date) {
-                    if (date != null) {
-                      if (useTime)
-                        showTimePicker(
-                          context: state.context,
-                          initialTime: controller._timeOfDay,
-                          builder: (BuildContext context, Widget child) {
-                            return Localizations.override(
-                              context: context,
-                              locale: locale ?? Locale('zh', 'CN'),
-                              child: child,
-                            );
-                          },
-                        ).then((value) {
-                          if (value != null) {
-                            DateTime dateTime = DateTime(date.year, date.month,
-                                date.day, value.hour, value.minute);
-                            state.didChange(dateTime);
-                          }
-                        });
-                      else
-                        state.didChange(date);
-                    }
-                  });
-                },
+                onTap: null,
                 enabled: true,
                 readOnly: true,
+                style: TextStyle(fontSize: 12),
               );
               return textField;
             }
@@ -346,7 +354,6 @@ class DateTimeFormField extends FormField<DateTime> {
 
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   bool readOnly = false;
-  bool suffixPressed = false;
 
   DateTimeFormatter formatter;
 
@@ -357,7 +364,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
   @override
   void initState() {
-    widget.controller.addListener(_handleControllerChanged);
+    widget.controller.addListener(_handleChanged);
 
     if (widget.formatter == null) {
       formatter = (dateTime) {
@@ -373,7 +380,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
   @override
   void dispose() {
-    widget.controller.removeListener(_handleControllerChanged);
+    widget.controller.removeListener(_handleChanged);
     super.dispose();
   }
 
@@ -397,8 +404,11 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
     super.reset();
   }
 
-  void _handleControllerChanged() {
-    if (widget.controller.value != value) didChange(widget.controller.value);
+  void _handleChanged() {
+    if (widget.controller.value != value)
+      didChange(widget.controller.value);
+    else
+      setState(() {});
   }
 }
 

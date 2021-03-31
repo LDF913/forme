@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:my_flutter/form/button.dart';
 
 import 'form/checkbox_group.dart';
 import 'form/form_builder.dart';
@@ -225,11 +224,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Builder(
               builder: (context) {
-                ButtonController buttonController =
-                    formController.getController('button');
                 return TextButton(
                     onPressed: () {
-                      buttonController.child = Icon(Icons.add);
                       if (formController.isReadOnly('button'))
                         formController.readOnlyKeys = [];
                       else
@@ -249,6 +245,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     child: Text('age focus'));
               },
+            ),
+            Builder(
+              builder: (context) {
+                return TextButton(
+                    onPressed: () {
+                      formController.rebuild('username', {
+                        'label': DateTime.now().toString(),
+                      });
+                    },
+                    child: Text('change username\'s label'));
+              },
             )
           ]),
         ));
@@ -258,15 +265,16 @@ class _MyHomePageState extends State<MyHomePage> {
     FormBuilder builder =
         FormBuilder(formController, padding: EdgeInsets.all(5))
           ..textField(
-            '用户名',
             'username',
+            label: '用户名',
             clearable: true,
             flex: 3,
             validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
           )
           ..checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
           ..nextLine()
-          ..textField('密码', 'password',
+          ..textField('password',
+              hintLabel: '密码',
               obscureText: true,
               passwordVisible: true,
               clearable: true,
@@ -276,8 +284,8 @@ class _MyHomePageState extends State<MyHomePage> {
           }, flex: 0, label: '登录')
           ..nextLine()
           ..numberField(
-            '年龄',
             'age',
+            hintLabel: '年龄',
             clearable: true,
             flex: 3,
             min: 14,
@@ -302,9 +310,16 @@ class _MyHomePageState extends State<MyHomePage> {
             label: '单选框',
           )
           ..nextLine()
-          ..datetimeField('开始日期', 'startTime', useTime: true)
-          ..datetimeField('开始日期', 'startTime', useTime: true)
-          ..datetimeField('开始日期', 'startTime', useTime: true);
+          ..datetimeField(
+            'startTime',
+            useTime: true,
+            hintLabel: '开始日期',
+          )
+          ..datetimeField(
+            'endTime',
+            useTime: true,
+            hintLabel: '结束日期',
+          );
     return builder.build();
   }
 }

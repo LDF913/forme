@@ -6,13 +6,12 @@ import 'package:provider/provider.dart';
 class Button extends StatefulWidget {
   final VoidCallback onPressed;
   final VoidCallback onLongPress;
-  final ButtonController controller;
   final String label;
   final Widget child;
   final String controlKey;
 
   const Button(this.controlKey, this.onPressed,
-      {Key key, this.onLongPress, this.controller, this.label, this.child})
+      {Key key, this.onLongPress, this.label, this.child})
       : assert(label != null || child != null),
         assert(onPressed != null),
         assert(controlKey != null),
@@ -22,25 +21,8 @@ class Button extends StatefulWidget {
   State<StatefulWidget> createState() => _ButtonState();
 }
 
-class ButtonController extends ChangeNotifier {
-  Widget _child;
-
-  ButtonController({Widget child}) : this._child = child;
-
-  set child(Widget child) {
-    if (_child != child) {
-      _child = child;
-      notifyListeners();
-    }
-  }
-}
-
 class _ButtonState extends State<Button> {
-  ButtonController controller;
-  ButtonController get _controller => widget.controller ?? controller;
-
   bool readOnly = false;
-  Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -60,44 +42,6 @@ class _ButtonState extends State<Button> {
     return TextButton(
         onPressed: readOnly ? null : widget.onPressed,
         onLongPress: readOnly ? null : widget.onLongPress,
-        child: _controller._child);
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.controller == null) {
-      controller = ButtonController(child: widget.child ?? Text(widget.label));
-    } else {
-      widget.controller._child =
-          widget.controller._child ?? widget.child ?? Text(widget.label);
-      widget.controller.addListener(_handleChange);
-    }
-  }
-
-  @override
-  void didUpdateWidget(Button oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.controller != oldWidget.controller) {
-      if (oldWidget.controller != null)
-        oldWidget.controller.removeListener(_handleChange);
-      widget.controller.addListener(_handleChange);
-      if (oldWidget.controller != null && widget.controller == null)
-        controller = ButtonController(child: oldWidget.controller._child);
-      if (widget.controller != null) {
-        if (oldWidget.controller == null) controller = null;
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    if (widget.controller != null)
-      widget.controller.removeListener(_handleChange);
-    super.dispose();
-  }
-
-  void _handleChange() {
-    setState(() {});
+        child: widget.child ?? Text(widget.label));
   }
 }
