@@ -35,7 +35,7 @@ class FormBuilder {
       ValueChanged<String> onSubmitted,
       Key key,
       int flex,
-      Icon prefixIcon,
+      Widget prefixIcon,
       int maxLength,
       ValueChanged<String> onChanged,
       FormFieldValidator<double> validator,
@@ -48,70 +48,89 @@ class FormBuilder {
       bool visible = true,
       EdgeInsetsGeometry padding,
       int decimal = 0}) {
-    List<TextInputFormatter> formatters = [
-      TextInputFormatter.withFunction((oldValue, newValue) {
-        if (newValue.text == '') return newValue;
-        double parsed = double.tryParse(newValue.text);
-        if (parsed == null) {
-          return oldValue;
-        }
-        if (decimal != null) {
-          int indexOfPoint = newValue.text.indexOf(".");
-          if (indexOfPoint != -1) {
-            int decimalNum = newValue.text.length - (indexOfPoint + 1);
-            if (decimalNum > decimal) {
+    TextEditingController controller = formController._controllers
+        .putIfAbsent(controlKey, () => TextEditingController());
+    FocusNode focusNode =
+        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+
+    _builders.add(_FormItemWidget(
+      formController,
+      controlKey: controlKey,
+      flex: flex,
+      padding: padding ?? this.padding,
+      builder: (context, map) {
+        int _decimal = map['decimal'] ?? decimal;
+        double _max = map['max'] ?? max;
+        double _min = map['min'] ?? min;
+        List<TextInputFormatter> formatters = [
+          TextInputFormatter.withFunction((oldValue, newValue) {
+            if (newValue.text == '') return newValue;
+            double parsed = double.tryParse(newValue.text);
+            if (parsed == null) {
               return oldValue;
             }
-          }
-        }
+            if (decimal != null) {
+              int indexOfPoint = newValue.text.indexOf(".");
+              if (indexOfPoint != -1) {
+                int decimalNum = newValue.text.length - (indexOfPoint + 1);
+                if (decimalNum > _decimal) {
+                  return oldValue;
+                }
+              }
+            }
 
-        if (max != null && parsed > max) {
-          return oldValue;
-        }
-        return newValue;
-      }),
-      FilteringTextInputFormatter.allow(
-          decimal > 0 ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))
-    ];
-    FormFieldValidator<String> fieldValidator = (value) {
-      if (value == null || value == '') {
-        return validator(null);
-      }
-      String msg;
-      double parsedValue = double.parse(value);
-      if (validator != null) {
-        msg = validator(parsedValue);
-      }
-      if (msg != null) {
-        return msg;
-      }
-      if (min != null && min > parsedValue) {
-        return '必须大于:$min';
-      }
-      if (max != null && max < parsedValue) {
-        return '必须小于:$max';
-      }
-      return null;
-    };
-    textField(controlKey,
-        hintLabel: hintLabel,
-        label: label,
-        onTap: onTap,
-        padding: padding ?? this.padding,
-        onSubmitted: onSubmitted,
-        key: key,
-        obscureText: false,
-        flex: flex,
-        maxLines: 1,
-        prefixIcon: prefixIcon,
-        keyboardType: TextInputType.number,
-        onChanged: onChanged,
-        autovalidateMode: autovalidateMode,
-        clearable: clearable,
-        readOnly: readOnly,
-        visible: visible,
-        validator: fieldValidator,
-        inputFormatters: formatters);
+            if (_max != null && parsed > _max) {
+              return oldValue;
+            }
+            return newValue;
+          }),
+          FilteringTextInputFormatter.allow(
+              decimal > 0 ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))
+        ];
+        FormFieldValidator<String> fieldValidator = (value) {
+          if (value == null || value == '') {
+            return validator(null);
+          }
+          String msg;
+          double parsedValue = double.parse(value);
+          if (validator != null) {
+            msg = validator(parsedValue);
+          }
+          if (msg != null) {
+            return msg;
+          }
+          if (_min != null && _min > parsedValue) {
+            return '必须大于:$_min';
+          }
+          if (_max != null && _max < parsedValue) {
+            return '必须小于:$_max';
+          }
+          return null;
+        };
+
+        return ClearableTextFormField(
+          controlKey,
+          key: key,
+          hintLabel: map['hintLabel'] ?? hintLabel,
+          label: map['label'] ?? label,
+          focusNode: focusNode,
+          maxLines: 1,
+          passwordVisible: false,
+          obscureText: false,
+          controller: controller,
+          onTap: onTap,
+          onFieldSubmitted: onSubmitted,
+          keyboardType: TextInputType.number,
+          validator: fieldValidator,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          clearable: map['clearable'] ?? clearable,
+          prefixIcon: map['prefixIcon'] ?? prefixIcon,
+          initialValue: map['initialValue'] ?? initialValue,
+          onChanged: onChanged,
+          inputFormatters: formatters,
+        );
+      },
+    ));
   }
 
   void textField(String controlKey,
@@ -123,7 +142,7 @@ class FormBuilder {
       bool obscureText: false,
       int flex,
       int maxLines = 1,
-      Icon prefixIcon,
+      Widget prefixIcon,
       TextInputType keyboardType,
       int maxLength,
       ValueChanged<String> onChanged,
@@ -144,39 +163,43 @@ class FormBuilder {
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
 
-    List<TextInputFormatter> formatters = inputFormatters ?? [];
-    if (regExp != null) {
-      formatters.add(
-        FilteringTextInputFormatter.allow(RegExp(regExp)),
-      );
-    }
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
       flex: flex,
       padding: padding ?? this.padding,
-      builder: (context, map) => ClearableTextFormField(
-        controlKey,
-        key: key,
-        hintLabel: map['hintLabel'] ?? hintLabel,
-        label: map['label'] ?? label,
-        focusNode: focusNode,
-        maxLength: map['maxLength'] ?? maxLength,
-        maxLines: map['maxLines'] ?? maxLines,
-        obscureText: obscureText,
-        controller: controller,
-        onTap: onTap,
-        onFieldSubmitted: onSubmitted,
-        keyboardType: keyboardType,
-        validator: validator,
-        autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-        clearable: map['clearable'] ?? clearable,
-        prefixIcon: map['prefixIcon'] ?? prefixIcon,
-        passwordVisible: passwordVisible,
-        initialValue: map['initialValue'] ?? initialValue,
-        onChanged: onChanged,
-        inputFormatters: formatters,
-      ),
+      builder: (context, map) {
+        List<TextInputFormatter> formatters = inputFormatters ?? [];
+        if (regExp != null) {
+          String _regExp = map['regExp'] ?? regExp;
+          if (_regExp != null)
+            formatters.add(
+              FilteringTextInputFormatter.allow(RegExp(_regExp)),
+            );
+        }
+        return ClearableTextFormField(
+          controlKey,
+          key: key,
+          hintLabel: map['hintLabel'] ?? hintLabel,
+          label: map['label'] ?? label,
+          focusNode: focusNode,
+          maxLength: map['maxLength'] ?? maxLength,
+          maxLines: map['maxLines'] ?? maxLines,
+          obscureText: obscureText,
+          controller: controller,
+          onTap: onTap,
+          onFieldSubmitted: onSubmitted,
+          keyboardType: keyboardType,
+          validator: validator,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          clearable: map['clearable'] ?? clearable,
+          prefixIcon: map['prefixIcon'] ?? prefixIcon,
+          passwordVisible: map['passwordVisible'] ?? passwordVisible,
+          initialValue: map['initialValue'] ?? initialValue,
+          onChanged: onChanged,
+          inputFormatters: formatters,
+        );
+      },
     ));
   }
 

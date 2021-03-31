@@ -29,7 +29,7 @@ class ClearableTextFormField extends FormField<String> {
     ValueChanged<String> onFieldSubmitted,
     bool clearable,
     bool passwordVisible,
-    Icon prefixIcon,
+    Widget prefixIcon,
     List<TextInputFormatter> inputFormatters,
   })  : assert(controlKey != null),
         super(
