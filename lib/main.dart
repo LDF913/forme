@@ -276,6 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 formController.setValue('checkbox', [0, 1]);
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
+                formController.setValue('remark', 'hello world');
                 print(formController.getData());
               },
               child: Text('set&get form data'),
@@ -287,62 +288,77 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     FormBuilder builder =
         FormBuilder(formController, padding: EdgeInsets.all(5))
-          ..textField(
-            'username',
-            label: '用户名',
-            clearable: true,
-            flex: 3,
-            validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
-          )
-          ..checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
-          ..nextLine()
-          ..textField('password',
-              hintLabel: '密码',
-              obscureText: true,
-              passwordVisible: true,
+            .textField(
+              'username',
+              label: '用户名',
               clearable: true,
-              flex: 1)
-          ..button('button', () {
-            print('x');
-          }, flex: 0, label: '登录')
-          ..nextLine()
-          ..numberField(
-            'age',
-            hintLabel: '年龄',
-            clearable: true,
-            flex: 3,
-            min: 14,
-            max: 99,
-            validator: (value) => value == null ? '不为空' : null,
-          )
-          ..checkboxGroup(
-            'checkbox',
-            [
-              CheckboxButton('男', controlKey: 'man'),
-              CheckboxButton('女'),
-            ],
-            label: '性别',
-            validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
-          )
-          ..radioGroup(
-            'radio',
-            [
-              RadioButton('1', '1', controlKey: 'radio 1'),
-              RadioButton('2', '2'),
-            ],
-            label: '单选框',
-          )
-          ..nextLine()
-          ..datetimeField(
-            'startTime',
-            useTime: true,
-            hintLabel: '开始日期',
-          )
-          ..datetimeField(
-            'endTime',
-            useTime: true,
-            hintLabel: '结束日期',
-          );
+              flex: 3,
+              validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
+            )
+            .checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
+            .nextLine()
+            .textField('password',
+                hintLabel: '密码',
+                obscureText: true,
+                passwordVisible: true,
+                clearable: true,
+                flex: 1)
+            .button('button', () {
+              print('x');
+            }, flex: 0, label: '登录')
+            .nextLine()
+            .numberField(
+              'age',
+              hintLabel: '年龄',
+              clearable: true,
+              flex: 3,
+              min: 14,
+              max: 99,
+              validator: (value) => value == null ? '不为空' : null,
+            )
+            .checkboxGroup(
+              'checkbox',
+              [
+                CheckboxButton('男', controlKey: 'man'),
+                CheckboxButton('女'),
+              ],
+              label: '性别',
+              validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
+            )
+            .radioGroup(
+              'radio',
+              [
+                RadioButton('1', '1', controlKey: 'radio 1'),
+                RadioButton('2', '2'),
+              ],
+              label: '单选框',
+            )
+            .nextLine()
+            .datetimeField(
+              'startTime',
+              useTime: true,
+              hintLabel: '开始日期',
+            )
+            .datetimeField(
+              'endTime',
+              useTime: true,
+              hintLabel: '结束日期',
+            )
+            .nextLine()
+            .textField('remark',
+                hintLabel: '备注',
+                maxLines: 5,
+                flex: 1,
+                clearable: true,
+                maxLength: 500)
+            .nextLine()
+            .dropdown('123')
+            .items([
+              DropdownMenuItem(
+                child: Text(''),
+                value: '123',
+              )
+            ]);
     return builder.build();
   }
 }

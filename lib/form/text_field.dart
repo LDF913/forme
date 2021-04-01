@@ -331,7 +331,6 @@ class DateTimeFormField extends FormField<DateTime> {
                 onTap: null,
                 enabled: true,
                 readOnly: true,
-                style: TextStyle(fontSize: 12),
               );
               return textField;
             }

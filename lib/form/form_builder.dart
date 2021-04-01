@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:my_flutter/form/drop_down.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
 import 'text_field.dart';
@@ -21,14 +22,15 @@ class FormBuilder {
           'FormController can not be null',
         );
 
-  void nextLine() {
+  FormBuilder nextLine() {
     if (_builders.length > 0) {
       _builderss.add(_builders);
       _builders = [];
     }
+    return this;
   }
 
-  void numberField(String controlKey,
+  FormBuilder numberField(String controlKey,
       {String hintLabel,
       String label,
       VoidCallback onTap,
@@ -131,9 +133,10 @@ class FormBuilder {
         );
       },
     ));
+    return this;
   }
 
-  void textField(String controlKey,
+  FormBuilder textField(String controlKey,
       {String hintLabel,
       String label,
       VoidCallback onTap,
@@ -201,9 +204,10 @@ class FormBuilder {
         );
       },
     ));
+    return this;
   }
 
-  void radios(String controlKey, List<RadioButton> radios,
+  FormBuilder radios(String controlKey, List<RadioButton> radios,
       {RadioGroupController controller,
       Key key,
       dynamic initialValue,
@@ -233,9 +237,10 @@ class FormBuilder {
         autovalidateMode: autovalidateMode,
       ),
     ));
+    return this;
   }
 
-  void radioGroup(String controlKey, List<RadioButton> radios,
+  FormBuilder radioGroup(String controlKey, List<RadioButton> radios,
       {Key key,
       String label,
       RadioGroupController controller,
@@ -267,9 +272,10 @@ class FormBuilder {
       ),
     ));
     nextLine();
+    return this;
   }
 
-  void checkboxs(String controlKey, List<CheckboxButton> checkboxs,
+  FormBuilder checkboxs(String controlKey, List<CheckboxButton> checkboxs,
       {CheckboxGroupController controller,
       Key key,
       List<int> initialValue,
@@ -299,9 +305,10 @@ class FormBuilder {
       ),
       flex: flex,
     ));
+    return this;
   }
 
-  void checkboxGroup(String controlKey, List<CheckboxButton> checkboxs,
+  FormBuilder checkboxGroup(String controlKey, List<CheckboxButton> checkboxs,
       {Key key,
       String label,
       List<int> initialValue,
@@ -332,9 +339,10 @@ class FormBuilder {
       ),
     ));
     nextLine();
+    return this;
   }
 
-  void button(String controlKey, VoidCallback onPressed,
+  FormBuilder button(String controlKey, VoidCallback onPressed,
       {Key key,
       String label,
       Widget child,
@@ -362,9 +370,10 @@ class FormBuilder {
                 ),
               )),
     );
+    return this;
   }
 
-  void datetimeField(String controlKey,
+  FormBuilder datetimeField(String controlKey,
       {String label,
       String hintLabel,
       bool readOnly = false,
@@ -395,6 +404,16 @@ class FormBuilder {
                 useTime: map['useTime'] ?? useTime,
               )),
     );
+    return this;
+  }
+
+  DropDownloadBuilder dropdown(
+    String controlKey, {
+    bool readOnly = false,
+    bool visible = true,
+  }) {
+    return DropDownloadBuilder(this, controlKey,
+        readOnly: readOnly, visible: visible);
   }
 
   Widget build() {
@@ -621,5 +640,38 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     setState(() {
       this.map = map;
     });
+  }
+}
+
+class DropDownloadBuilder {
+  final FormBuilder _builder;
+  final String controlKey;
+  final bool readOnly;
+  final bool visible;
+  final EdgeInsets padding;
+
+  DropDownloadBuilder(this._builder, this.controlKey,
+      {this.readOnly, this.visible, this.padding});
+
+  FormBuilder items(List<DropdownMenuItem> items) {
+    return dataProvider(Future.delayed(Duration.zero, () => items));
+  }
+
+  FormBuilder dataProvider(Future<List<DropdownMenuItem>> dataProvider) {
+    _builder._setInitialStateKey(readOnly, visible, controlKey);
+    DropDownController controller = _builder.formController._controllers
+        .putIfAbsent(controlKey, () => DropDownController());
+    FocusNode focusNode = _builder.formController._focusNodes
+        .putIfAbsent(controlKey, () => FocusNode());
+
+    _builder._builders.add(
+      _FormItemWidget(_builder.formController,
+          controlKey: controlKey,
+          flex: 1,
+          padding: _builder.padding ?? this.padding,
+          builder: (context, map) => DropDownFormField(
+              controlKey, controller, focusNode, dataProvider)),
+    );
+    return _builder;
   }
 }
