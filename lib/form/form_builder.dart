@@ -450,6 +450,7 @@ class FormBuilder {
           child: Consumer<FormController>(
             builder: (context, c, child) {
               return Visibility(
+                maintainState: true,
                 child: Column(
                   children: rows,
                 ),
@@ -643,13 +644,13 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void initState() {
     super.initState();
-    _FormItemWidgetState oldState =
-        widget.formController._states[widget.controlKey];
-    if (oldState != null) {
-      map = oldState.map;
-      widget.formController._states.remove(widget.controlKey);
-    }
     widget.formController._states[widget.controlKey] = this;
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    widget.formController._states.remove(widget.controlKey);
   }
 
   @override
