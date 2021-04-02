@@ -12,12 +12,13 @@ class DropdownFormField extends FormField {
   final DropdownController controller;
   final FocusNode focusNode;
   final ValueChanged onChanged;
-  final Future<List<DropdownMenuItem>> dataProvider;
+  final List<DropdownMenuItem> items;
   final bool clearable;
+  final DropdownButtonBuilder selectedItemBuilder;
 
   DropdownFormField(
-      this.controlKey, this.controller, this.focusNode, this.dataProvider,
-      {this.onChanged, this.clearable})
+      this.controlKey, this.controller, this.focusNode, this.items,
+      {this.onChanged, this.clearable, this.selectedItemBuilder})
       : super(
           builder: (field) {
             final _DropdownFormFieldState state =
@@ -49,6 +50,15 @@ class DropdownFormField extends FormField {
                 ));
               }
               icons.add(Icon(Icons.arrow_drop_down));
+
+              bool hasValue = controller.value == null ||
+                  (controller.value != null &&
+                      items
+                          .any((element) => element.value == controller.value));
+
+              if (!hasValue) {
+                throw 'pls clear dropdown value before you reload items!';
+              }
               return Focus(
                 canRequestFocus: false,
                 skipTraversal: true,
@@ -56,20 +66,20 @@ class DropdownFormField extends FormField {
                   return InputDecorator(
                     decoration: effectiveDecoration.copyWith(
                         errorText: field.errorText),
-                    isEmpty: state.value == null,
+                    isEmpty: controller.value == null,
                     isFocused: Focus.of(context).hasFocus,
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton(
-                        selectedItemBuilder: (BuildContext context) {
-                          return state.items
-                              .map<Widget>((DropdownMenuItem item) {
-                            return SingleChildScrollView(
-                              child: item.child,
-                            );
-                          }).toList();
-                        },
-                        items: state.items,
-                        value: state.value,
+                        selectedItemBuilder: selectedItemBuilder ??
+                            (BuildContext context) {
+                              return items.map<Widget>((DropdownMenuItem item) {
+                                return SingleChildScrollView(
+                                  child: item.child,
+                                );
+                              }).toList();
+                            },
+                        items: items,
+                        value: controller.value,
                         icon: Row(
                           children: icons,
                           mainAxisSize: MainAxisSize.min,
@@ -106,20 +116,12 @@ class DropdownFormField extends FormField {
 class _DropdownFormFieldState extends FormFieldState {
   bool readOnly = false;
   bool loaded = false;
-  List<DropdownMenuItem> items = [];
   @override
   DropdownFormField get widget => super.widget as DropdownFormField;
 
   @override
   void initState() {
     widget.controller.addListener(_handleChanged);
-
-    widget.dataProvider.then((value) {
-      setState(() {
-        items = value == null ? [] : List.from(value);
-        loaded = true;
-      });
-    });
     super.initState();
   }
 

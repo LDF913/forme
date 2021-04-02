@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:my_flutter/form/drop_down.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
 import 'text_field.dart';
 import 'radio_group.dart';
 import 'checkbox_group.dart';
+import 'drop_down.dart';
 
 typedef FormWidgetBuilder = Widget Function(
     BuildContext context, Map<String, dynamic> map);
@@ -207,7 +207,7 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder radios(String controlKey, List<RadioButton> radios,
+  FormBuilder radios(String controlKey, List<RadioButton> items,
       {RadioGroupController controller,
       Key key,
       dynamic initialValue,
@@ -228,7 +228,7 @@ class FormBuilder {
       padding: padding ?? this.padding,
       builder: (context, map) => RadioGroup(
         controlKey,
-        List.from(radios),
+        List.from(map['items'] ?? items),
         key: key,
         controller: controller,
         initialValue: map['initialValue'] ?? initialValue,
@@ -240,7 +240,7 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder radioGroup(String controlKey, List<RadioButton> radios,
+  FormBuilder radioGroup(String controlKey, List<RadioButton> items,
       {Key key,
       String label,
       RadioGroupController controller,
@@ -261,7 +261,7 @@ class FormBuilder {
       padding: padding ?? this.padding,
       builder: (context, map) => RadioGroup(
         controlKey,
-        List.from(radios),
+        List.from(map['items'] ?? items),
         key: key,
         controller: controller,
         initialValue: map['initialValue'] ?? initialValue,
@@ -275,7 +275,7 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder checkboxs(String controlKey, List<CheckboxButton> checkboxs,
+  FormBuilder checkboxs(String controlKey, List<CheckboxButton> items,
       {CheckboxGroupController controller,
       Key key,
       List<int> initialValue,
@@ -295,7 +295,7 @@ class FormBuilder {
       padding: padding ?? this.padding,
       builder: (context, map) => CheckboxGroup(
         controlKey,
-        List.from(checkboxs),
+        List.from(map['items'] ?? items),
         key: key,
         controller: controller,
         initialValue: map['initialValue'] ?? initialValue,
@@ -308,7 +308,7 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder checkboxGroup(String controlKey, List<CheckboxButton> checkboxs,
+  FormBuilder checkboxGroup(String controlKey, List<CheckboxButton> items,
       {Key key,
       String label,
       List<int> initialValue,
@@ -328,7 +328,7 @@ class FormBuilder {
       padding: padding ?? this.padding,
       builder: (context, map) => CheckboxGroup(
         controlKey,
-        List.from(checkboxs),
+        List.from(map['items'] ?? items),
         key: key,
         controller: controller,
         initialValue: map['initialValue'] ?? initialValue,
@@ -407,10 +407,32 @@ class FormBuilder {
     return this;
   }
 
-  DropdownBuilder dropdown(String controlKey,
-      {bool readOnly = false, bool visible = true, bool clearable = true}) {
-    return DropdownBuilder(this, controlKey,
-        readOnly: readOnly, visible: visible, clearable: clearable);
+  FormBuilder dropdown(String controlKey,
+      {bool readOnly = false,
+      bool visible = true,
+      bool clearable = true,
+      List<DropdownMenuItem> items,
+      DropdownButtonBuilder selectedItemBuilder}) {
+    DropdownController controller = formController._controllers
+        .putIfAbsent(controlKey, () => DropdownController());
+    FocusNode focusNode =
+        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    _builders.add(
+      _FormItemWidget(formController,
+          controlKey: controlKey,
+          flex: 1,
+          padding: padding ?? this.padding,
+          builder: (context, map) => DropdownFormField(
+                controlKey,
+                controller,
+                focusNode,
+                map['items'] ?? items ?? [],
+                clearable: map['clearable'] ?? clearable,
+                selectedItemBuilder:
+                    map['selectedItemBuilder'] ?? selectedItemBuilder,
+              )),
+    );
+    return this;
   }
 
   Widget build() {
@@ -441,6 +463,15 @@ class FormBuilder {
   void _setInitialStateKey(bool readOnly, bool visible, String controlKey) {
     if (readOnly) formController._addReadOnlyKey(controlKey);
     if (!visible) formController._addHideKey(controlKey);
+  }
+
+  static List<DropdownMenuItem> toItems(List<String> items) {
+    return items
+        .map((e) => DropdownMenuItem(
+              child: Text(e),
+              value: e,
+            ))
+        .toList();
   }
 }
 
@@ -637,43 +668,5 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     setState(() {
       this.map = map;
     });
-  }
-}
-
-class DropdownBuilder {
-  final FormBuilder _builder;
-  final String controlKey;
-  final bool readOnly;
-  final bool visible;
-  final EdgeInsets padding;
-  final bool clearable;
-
-  DropdownBuilder(this._builder, this.controlKey,
-      {this.readOnly, this.visible, this.padding, this.clearable});
-
-  FormBuilder items(List<DropdownMenuItem> items) {
-    return dataProvider(Future.delayed(Duration.zero, () => items));
-  }
-
-  FormBuilder dataProvider(Future<List<DropdownMenuItem>> dataProvider) {
-    _builder._setInitialStateKey(readOnly, visible, controlKey);
-    DropdownController controller = _builder.formController._controllers
-        .putIfAbsent(controlKey, () => DropdownController());
-    FocusNode focusNode = _builder.formController._focusNodes
-        .putIfAbsent(controlKey, () => FocusNode());
-    _builder._builders.add(
-      _FormItemWidget(_builder.formController,
-          controlKey: controlKey,
-          flex: 1,
-          padding: _builder.padding ?? this.padding,
-          builder: (context, map) => DropdownFormField(
-                controlKey,
-                controller,
-                focusNode,
-                dataProvider,
-                clearable: clearable,
-              )),
-    );
-    return _builder;
   }
 }

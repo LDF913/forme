@@ -13,6 +13,8 @@ class CheckboxGroupController extends ValueNotifier<List<int>> {
   List<String> _readOnlyKeys = [];
   CheckboxGroupController({List<int> value}) : super(value);
 
+  List<int> get value => super.value == null ? [] : super.value;
+
   set readOnlyKeys(List<String> keys) {
     _readOnlyKeys.clear();
     if (keys != null) _readOnlyKeys.addAll(keys);

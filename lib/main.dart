@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -281,6 +283,29 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: Text('set&get form data'),
             ),
+            TextButton(
+              onPressed: () {
+                formController.setValue('dropdown', null);
+                formController.rebuild('dropdown', {
+                  'items':
+                      FormBuilder.toItems([Random().nextDouble().toString()])
+                });
+              },
+              child: Text('load dropdownitems'),
+            ),
+            TextButton(
+              onPressed: () {
+                formController.setValue('checkbox', null);
+                formController.rebuild('checkbox', {
+                  'items': [
+                    CheckboxButton('男'),
+                    CheckboxButton('女'),
+                    CheckboxButton('未知'),
+                  ]
+                });
+              },
+              child: Text('reload sex checkboxs'),
+            ),
           ]),
         ));
   }
@@ -352,14 +377,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 clearable: true,
                 maxLength: 500)
             .nextLine()
-            .textField('xyz')
-            .dropdown('123')
-            .items([
-              DropdownMenuItem(
-                child: Text('12sadasdsadasdsadasdsadsadsadsadsadsadasd3213'),
-                value: '123',
-              )
-            ]);
+            .dropdown('dropdown');
     return builder.build();
   }
 }
