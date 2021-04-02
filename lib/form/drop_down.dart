@@ -3,39 +3,86 @@ import 'package:provider/provider.dart';
 
 import 'form_builder.dart';
 
-class DropDownController extends ValueNotifier {
-  DropDownController({dynamic value}) : super(value);
+class DropdownController extends ValueNotifier {
+  DropdownController({dynamic value}) : super(value);
 }
 
-class DropDownFormField extends FormField {
+class DropdownFormField extends FormField {
   final String controlKey;
-  final DropDownController controller;
+  final DropdownController controller;
   final FocusNode focusNode;
   final ValueChanged onChanged;
   final Future<List<DropdownMenuItem>> dataProvider;
+  final bool clearable;
 
-  DropDownFormField(
+  DropdownFormField(
       this.controlKey, this.controller, this.focusNode, this.dataProvider,
-      {this.onChanged})
+      {this.onChanged, this.clearable})
       : super(
           builder: (field) {
-            final _DropDownFormFieldState state =
-                field as _DropDownFormFieldState;
+            final _DropdownFormFieldState state =
+                field as _DropdownFormFieldState;
 
             void onChangedHandler(dynamic value) {
               field.didChange(value);
               if (onChanged != null) {
                 onChanged(value);
               }
+              focusNode.requestFocus();
             }
 
             Widget buildWidget() {
-              return DropdownButton(
-                isExpanded: true,
-                focusNode: focusNode,
-                value: controller.value,
-                items: state.items,
-                onChanged: state.readOnly ? null : onChangedHandler,
+              final InputDecoration effectiveDecoration =
+                  InputDecoration().applyDefaults(
+                Theme.of(field.context).inputDecorationTheme,
+              );
+              List<Widget> icons = [];
+              if (clearable && !state.readOnly && controller.value != null) {
+                icons.add(Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: GestureDetector(
+                    child: Icon(Icons.clear),
+                    onTap: () {
+                      onChangedHandler(null);
+                    },
+                  ),
+                ));
+              }
+              icons.add(Icon(Icons.arrow_drop_down));
+              return Focus(
+                canRequestFocus: false,
+                skipTraversal: true,
+                child: Builder(builder: (BuildContext context) {
+                  return InputDecorator(
+                    decoration: effectiveDecoration.copyWith(
+                        errorText: field.errorText),
+                    isEmpty: state.value == null,
+                    isFocused: Focus.of(context).hasFocus,
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton(
+                        selectedItemBuilder: (BuildContext context) {
+                          return state.items
+                              .map<Widget>((DropdownMenuItem item) {
+                            return SingleChildScrollView(
+                              child: item.child,
+                            );
+                          }).toList();
+                        },
+                        items: state.items,
+                        value: state.value,
+                        icon: Row(
+                          children: icons,
+                          mainAxisSize: MainAxisSize.min,
+                        ),
+                        onChanged: state.readOnly ? null : onChangedHandler,
+                        isDense: true,
+                        isExpanded: true,
+                        focusNode: focusNode,
+                        autofocus: false,
+                      ),
+                    ),
+                  );
+                }),
               );
             }
 
@@ -53,15 +100,15 @@ class DropDownFormField extends FormField {
         );
 
   @override
-  _DropDownFormFieldState createState() => _DropDownFormFieldState();
+  _DropdownFormFieldState createState() => _DropdownFormFieldState();
 }
 
-class _DropDownFormFieldState extends FormFieldState {
+class _DropdownFormFieldState extends FormFieldState {
   bool readOnly = false;
   bool loaded = false;
   List<DropdownMenuItem> items = [];
   @override
-  DropDownFormField get widget => super.widget as DropDownFormField;
+  DropdownFormField get widget => super.widget as DropdownFormField;
 
   @override
   void initState() {

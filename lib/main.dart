@@ -280,7 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 print(formController.getData());
               },
               child: Text('set&get form data'),
-            )
+            ),
           ]),
         ));
   }
@@ -352,10 +352,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 clearable: true,
                 maxLength: 500)
             .nextLine()
+            .textField('xyz')
             .dropdown('123')
             .items([
               DropdownMenuItem(
-                child: Text(''),
+                child: Text('12sadasdsadasdsadasdsadsadsadsadsadsadasd3213'),
                 value: '123',
               )
             ]);

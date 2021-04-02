@@ -407,13 +407,10 @@ class FormBuilder {
     return this;
   }
 
-  DropDownloadBuilder dropdown(
-    String controlKey, {
-    bool readOnly = false,
-    bool visible = true,
-  }) {
-    return DropDownloadBuilder(this, controlKey,
-        readOnly: readOnly, visible: visible);
+  DropdownBuilder dropdown(String controlKey,
+      {bool readOnly = false, bool visible = true, bool clearable = true}) {
+    return DropdownBuilder(this, controlKey,
+        readOnly: readOnly, visible: visible, clearable: clearable);
   }
 
   Widget build() {
@@ -643,15 +640,16 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 }
 
-class DropDownloadBuilder {
+class DropdownBuilder {
   final FormBuilder _builder;
   final String controlKey;
   final bool readOnly;
   final bool visible;
   final EdgeInsets padding;
+  final bool clearable;
 
-  DropDownloadBuilder(this._builder, this.controlKey,
-      {this.readOnly, this.visible, this.padding});
+  DropdownBuilder(this._builder, this.controlKey,
+      {this.readOnly, this.visible, this.padding, this.clearable});
 
   FormBuilder items(List<DropdownMenuItem> items) {
     return dataProvider(Future.delayed(Duration.zero, () => items));
@@ -659,18 +657,22 @@ class DropDownloadBuilder {
 
   FormBuilder dataProvider(Future<List<DropdownMenuItem>> dataProvider) {
     _builder._setInitialStateKey(readOnly, visible, controlKey);
-    DropDownController controller = _builder.formController._controllers
-        .putIfAbsent(controlKey, () => DropDownController());
+    DropdownController controller = _builder.formController._controllers
+        .putIfAbsent(controlKey, () => DropdownController());
     FocusNode focusNode = _builder.formController._focusNodes
         .putIfAbsent(controlKey, () => FocusNode());
-
     _builder._builders.add(
       _FormItemWidget(_builder.formController,
           controlKey: controlKey,
           flex: 1,
           padding: _builder.padding ?? this.padding,
-          builder: (context, map) => DropDownFormField(
-              controlKey, controller, focusNode, dataProvider)),
+          builder: (context, map) => DropdownFormField(
+                controlKey,
+                controller,
+                focusNode,
+                dataProvider,
+                clearable: clearable,
+              )),
     );
     return _builder;
   }
