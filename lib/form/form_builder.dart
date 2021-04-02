@@ -449,11 +449,11 @@ class FormBuilder {
           create: (context) => formController,
           child: Consumer<FormController>(
             builder: (context, c, child) {
-              if (c._hide) {
-                return SizedBox.shrink();
-              }
-              return Column(
-                children: rows,
+              return Visibility(
+                child: Column(
+                  children: rows,
+                ),
+                visible: !c._hide,
               );
             },
           ),
@@ -520,6 +520,7 @@ class FormController extends ChangeNotifier {
     _controllers.values.forEach((element) {
       element.dispose();
     });
+    _states.clear();
   }
 
   Map<String, dynamic> getData() {
@@ -638,10 +639,22 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   Map<String, dynamic> map = {};
   get flex => map['flex'] ?? widget.flex ?? 1;
   get padding => map['padding'] ?? widget.padding ?? EdgeInsets.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    _FormItemWidgetState oldState =
+        widget.formController._states[widget.controlKey];
+    if (oldState != null) {
+      map = oldState.map;
+      widget.formController._states.remove(widget.controlKey);
+    }
+    widget.formController._states[widget.controlKey] = this;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget buildChild() {
-      widget.formController._states[widget.controlKey] = this;
       return Visibility(
         child: Expanded(
           child: Padding(padding: padding, child: widget.builder(context, map)),
