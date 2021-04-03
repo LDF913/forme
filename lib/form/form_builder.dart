@@ -412,7 +412,9 @@ class FormBuilder {
       bool visible = true,
       bool clearable = true,
       List<DropdownMenuItem> items,
-      DropdownButtonBuilder selectedItemBuilder}) {
+      DropdownButtonBuilder selectedItemBuilder,
+      FormFieldValidator validator,
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     DropdownController controller = formController._controllers
         .putIfAbsent(controlKey, () => DropdownController());
     FocusNode focusNode =
@@ -428,6 +430,8 @@ class FormBuilder {
                 focusNode,
                 map['items'] ?? items ?? [],
                 clearable: map['clearable'] ?? clearable,
+                validator: validator,
+                autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
                 selectedItemBuilder:
                     map['selectedItemBuilder'] ?? selectedItemBuilder,
               )),
@@ -466,13 +470,17 @@ class FormBuilder {
     if (!visible) formController._addHideKey(controlKey);
   }
 
-  static List<DropdownMenuItem> toItems(List<String> items) {
+  static List<DropdownMenuItem> toDropdownItems(List<String> items) {
     return items
         .map((e) => DropdownMenuItem(
               child: Text(e),
               value: e,
             ))
         .toList();
+  }
+
+  static List<CheckboxButton> toCheckboxButtons(List<String> items) {
+    return items.map((e) => CheckboxButton(e)).toList();
   }
 }
 

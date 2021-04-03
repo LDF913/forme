@@ -15,11 +15,19 @@ class DropdownFormField extends FormField {
   final List<DropdownMenuItem> items;
   final bool clearable;
   final DropdownButtonBuilder selectedItemBuilder;
+  final FormFieldValidator validator;
+  final AutovalidateMode autovalidateMode;
 
   DropdownFormField(
       this.controlKey, this.controller, this.focusNode, this.items,
-      {this.onChanged, this.clearable, this.selectedItemBuilder})
+      {this.onChanged,
+      this.clearable,
+      this.selectedItemBuilder,
+      this.validator,
+      this.autovalidateMode})
       : super(
+          validator: validator,
+          autovalidateMode: autovalidateMode,
           builder: (field) {
             final _DropdownFormFieldState state =
                 field as _DropdownFormFieldState;
