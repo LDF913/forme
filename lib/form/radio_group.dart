@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'form_builder.dart';
-import 'package:provider/provider.dart';
+import 'form_theme.dart';
 
 class RadioButton {
   final dynamic value;
@@ -49,16 +49,15 @@ class RadioGroup extends FormField {
           autovalidateMode: autovalidateMode,
           validator: validator,
           builder: (field) {
+            FormTheme theme = FormTheme.of(field.context);
+            TextStyle errorStyle = FormTheme.getErrorStyle(field.context);
             final _RadioGroupState state = field as _RadioGroupState;
-            Color errorColor = Theme.of(field.context).errorColor ?? Colors.red;
             List<Widget> widgets = [];
             if (label != null) {
-              Text text;
-              if (state.errorText != null) {
-                text = Text(label, style: TextStyle(color: errorColor));
-              } else {
-                text = Text(label);
-              }
+              Text text = Text(
+                label,
+                style: FormTheme.getLabelStyle(field.context, state.hasError),
+              );
               widgets.add(Container(
                   child: Row(
                 children: [Flexible(child: text)],
@@ -89,17 +88,18 @@ class RadioGroup extends FormField {
                 ],
               ));
             }
-            if (state.errorText != null) {
+            if (state.hasError) {
               widgets.add(Row(
                 children: [
-                  Flexible(
-                      child: Text(state.errorText,
-                          style: TextStyle(color: errorColor)))
+                  Flexible(child: Text(state.errorText, style: errorStyle))
                 ],
               ));
             }
-            return Wrap(
-              children: widgets,
+            return Padding(
+              child: Wrap(
+                children: widgets,
+              ),
+              padding: theme.getPadding(controlKey),
             );
           },
         );

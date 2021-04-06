@@ -439,13 +439,15 @@ class FormBuilder {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 c._rebuild = false;
               });
-              return Visibility(
-                maintainState: true,
-                child: Column(
-                  children: rows,
-                ),
-                visible: !c._hide,
-              );
+              return Theme(
+                  data: formController.theme.themeData ?? Theme.of(context),
+                  child: Visibility(
+                    maintainState: true,
+                    child: Column(
+                      children: rows,
+                    ),
+                    visible: !c._hide,
+                  ));
             },
           ),
         ));

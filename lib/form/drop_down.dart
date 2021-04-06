@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import 'form_builder.dart';
+import 'form_theme.dart';
 
 class DropdownController extends ValueNotifier {
   DropdownController({dynamic value}) : super(value);
@@ -64,36 +64,40 @@ class DropdownFormField extends FormField {
             if (!hasValue) {
               throw 'pls clear dropdown value before you reload items!';
             }
+            FormTheme theme = FormTheme.of(field.context);
             return Focus(
               canRequestFocus: false,
               skipTraversal: true,
               child: Builder(builder: (BuildContext context) {
-                return InputDecorator(
-                  decoration:
-                      effectiveDecoration.copyWith(errorText: field.errorText),
-                  isEmpty: controller.value == null,
-                  isFocused: Focus.of(context).hasFocus,
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton(
-                      selectedItemBuilder: selectedItemBuilder ??
-                          (BuildContext context) {
-                            return items.map<Widget>((DropdownMenuItem item) {
-                              return SingleChildScrollView(
-                                child: item.child,
-                              );
-                            }).toList();
-                          },
-                      items: items,
-                      value: controller.value,
-                      icon: Row(
-                        children: icons,
-                        mainAxisSize: MainAxisSize.min,
+                return Padding(
+                  padding: theme.getPadding(controlKey),
+                  child: InputDecorator(
+                    decoration: effectiveDecoration.copyWith(
+                        errorText: field.errorText),
+                    isEmpty: controller.value == null,
+                    isFocused: Focus.of(context).hasFocus,
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton(
+                        selectedItemBuilder: selectedItemBuilder ??
+                            (BuildContext context) {
+                              return items.map<Widget>((DropdownMenuItem item) {
+                                return SingleChildScrollView(
+                                  child: item.child,
+                                );
+                              }).toList();
+                            },
+                        items: items,
+                        value: controller.value,
+                        icon: Row(
+                          children: icons,
+                          mainAxisSize: MainAxisSize.min,
+                        ),
+                        onChanged: readOnly ? null : onChangedHandler,
+                        isDense: true,
+                        isExpanded: true,
+                        focusNode: focusNode,
+                        autofocus: false,
                       ),
-                      onChanged: readOnly ? null : onChangedHandler,
-                      isDense: true,
-                      isExpanded: true,
-                      focusNode: focusNode,
-                      autofocus: false,
                     ),
                   ),
                 );

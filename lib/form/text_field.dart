@@ -76,8 +76,7 @@ class ClearableTextFormField extends FormField<String> {
                     suffixIcon: suffixIcon,
                     labelText: label,
                     hintText: hintLabel)
-                .applyDefaults(
-                    theme.inputDecorationThemeBuilder(field.context));
+                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
             void onChangedHandler(String value) {
               field.didChange(value);
               if (onChanged != null) {
@@ -104,7 +103,10 @@ class ClearableTextFormField extends FormField<String> {
                 readOnly: readOnly,
                 inputFormatters: inputFormatters);
 
-            return textField;
+            return Padding(
+              child: textField,
+              padding: theme.getPadding(controlKey),
+            );
           },
         );
 
@@ -243,8 +245,8 @@ class DateTimeFormField extends FormField<DateTime> {
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
           builder: (field) {
+            final FormTheme theme = FormTheme.of(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
-
             void pickTime() {
               DateTime value = initialValue ?? DateTime.now();
               showDatePicker(
@@ -324,7 +326,8 @@ class DateTimeFormField extends FormField<DateTime> {
               enabled: true,
               readOnly: true,
             );
-            return textField;
+            return Padding(
+                padding: theme.getPadding(controlKey), child: textField);
           },
         );
 

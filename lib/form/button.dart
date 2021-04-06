@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'form_builder.dart';
 import 'package:provider/provider.dart';
 
+import 'form_theme.dart';
+
 class Button extends StatefulWidget {
   final VoidCallback onPressed;
   final VoidCallback onLongPress;
@@ -26,9 +28,13 @@ class _ButtonState extends State<Button> {
   Widget build(BuildContext context) {
     bool readOnly =
         context.read<FormController>().isReadOnly(widget.controlKey);
-    return TextButton(
-        onPressed: readOnly ? null : widget.onPressed,
-        onLongPress: readOnly ? null : widget.onLongPress,
-        child: widget.child ?? Text(widget.label));
+    EdgeInsets padding = FormTheme.of(context).getPadding(widget.controlKey);
+    return Padding(
+      padding: padding,
+      child: TextButton(
+          onPressed: readOnly ? null : widget.onPressed,
+          onLongPress: readOnly ? null : widget.onLongPress,
+          child: widget.child ?? Text(widget.label)),
+    );
   }
 }

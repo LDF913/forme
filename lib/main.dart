@@ -21,9 +21,11 @@ class MyApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       theme: ThemeData(
-        backgroundColor: Colors.white,
-        primarySwatch: Colors.blue,
-      ),
+          backgroundColor: Colors.white,
+          primarySwatch: Colors.blue,
+          checkboxTheme: CheckboxThemeData()
+              .copyWith(checkColor: MaterialStateProperty.all(Colors.red)),
+          inputDecorationTheme: InputDecorationTheme().copyWith()),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -297,14 +299,17 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.theme.inputDecorationThemeBuilder = (context) {
-                  return Theme.of(context).inputDecorationTheme.copyWith(
-                      labelStyle:
-                          TextStyle(fontSize: 12, color: Colors.yellow));
-                };
+                formController.theme.checkboxLabelStyle =
+                    TextStyle(fontSize: 30);
+                formController.theme.themeData = Theme.of(context).copyWith(
+                    checkboxTheme: CheckboxThemeData(
+                        checkColor: MaterialStateProperty.all(Colors.yellow)),
+                    inputDecorationTheme: InputDecorationTheme(
+                        labelStyle:
+                            TextStyle(fontSize: 20, color: Colors.yellow)));
               },
-              child: Text('change textfield theme'),
-            ),
+              child: Text('set new form theme'),
+            )
           ]),
         ));
   }
@@ -355,6 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
             RadioButton('2', '2'),
           ],
           label: '单选框',
+          validator: (value) => value == null ? 'select one !' : null,
         )
         .nextLine()
         .datetimeField(
