@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/form/form_theme.dart';
 import 'package:provider/provider.dart';
 
 import 'form_builder.dart';
@@ -39,11 +40,15 @@ class ClearableTextFormField extends FormField<String> {
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
           builder: (FormFieldState<String> field) {
+            final FormTheme theme = FormBuilder.of(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
             Widget buildWidget() {
               List<Widget> suffixes = [];
 
-              if (clearable && !state.readOnly) {
+              bool readOnly =
+                  FormController.of(field.context).isReadOnly(controlKey);
+
+              if (clearable && !readOnly) {
                 suffixes.add(_ClearIcon(controller, focusNode, () {
                   state.didChange('');
                 }));
@@ -53,7 +58,7 @@ class ClearableTextFormField extends FormField<String> {
                   icon: Icon(state.obscureText
                       ? Icons.visibility
                       : Icons.visibility_off),
-                  onPressed: state.readOnly
+                  onPressed: readOnly
                       ? null
                       : () {
                           state.toggleObsureText();
@@ -73,7 +78,8 @@ class ClearableTextFormField extends FormField<String> {
                       suffixIcon: suffixIcon,
                       labelText: label,
                       hintText: hintLabel)
-                  .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+                  .applyDefaults(theme.textfieldTheme
+                      .getInputDecorationTheme(field.context));
               void onChangedHandler(String value) {
                 field.didChange(value);
                 if (onChanged != null) {
@@ -97,7 +103,7 @@ class ClearableTextFormField extends FormField<String> {
                   onTap: onTap,
                   onSubmitted: onSubmitted,
                   enabled: true,
-                  readOnly: state.readOnly,
+                  readOnly: readOnly,
                   inputFormatters: inputFormatters);
 
               return textField;
@@ -105,11 +111,6 @@ class ClearableTextFormField extends FormField<String> {
 
             return Consumer<FormController>(
                 builder: (context, c, child) {
-                  bool currentReadOnly = c.isReadOnly(controlKey);
-                  if (state.readOnly != currentReadOnly) {
-                    state.readOnly = currentReadOnly;
-                    return buildWidget();
-                  }
                   return child;
                 },
                 child: buildWidget());
@@ -122,7 +123,6 @@ class ClearableTextFormField extends FormField<String> {
 
 class _TextFormFieldState extends FormFieldState<String> {
   bool obscureText = false;
-  bool readOnly = false;
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
@@ -293,9 +293,11 @@ class DateTimeFormField extends FormField<DateTime> {
             }
 
             Widget buildChild() {
+              bool readOnly =
+                  FormController.of(field.context).isReadOnly(controlKey);
               List<Widget> suffixes = [];
 
-              if (!state.readOnly) {
+              if (!readOnly) {
                 suffixes.add(_ClearIcon(controller._controller, focusNode, () {
                   state.didChange(null);
                 }));
@@ -303,7 +305,7 @@ class DateTimeFormField extends FormField<DateTime> {
 
               suffixes.add(IconButton(
                 constraints: BoxConstraints(),
-                onPressed: state.readOnly ? null : pickTime,
+                onPressed: readOnly ? null : pickTime,
                 icon: Icon(Icons.calendar_today),
               ));
 
@@ -337,11 +339,6 @@ class DateTimeFormField extends FormField<DateTime> {
 
             return Consumer<FormController>(
                 builder: (context, c, child) {
-                  bool currentReadOnly = c.isReadOnly(controlKey);
-                  if (state.readOnly != currentReadOnly) {
-                    state.readOnly = currentReadOnly;
-                    return buildChild();
-                  }
                   return child;
                 },
                 child: buildChild());
@@ -355,8 +352,6 @@ class DateTimeFormField extends FormField<DateTime> {
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
-  bool readOnly = false;
-
   DateTimeFormatter formatter;
 
   DateTimeFormatter get _formatter => widget.formatter ?? formatter;

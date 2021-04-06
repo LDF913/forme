@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/form/form_theme.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
 import 'text_field.dart';
@@ -464,14 +465,28 @@ class FormBuilder {
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {
     return items.map((e) => CheckboxButton(e)).toList();
   }
+
+  static FormTheme of(BuildContext context) {
+    return context.read<FormController>().theme;
+  }
 }
 
 class FormController extends ChangeNotifier {
   bool _hide = false;
   bool _readOnly = false;
+
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
+  final FormTheme theme = FormTheme();
+
+  FormController() {
+    theme.addListener(_themeChange);
+  }
+
+  static FormController of(BuildContext context) {
+    return context.read<FormController>();
+  }
 
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
@@ -500,6 +515,10 @@ class FormController extends ChangeNotifier {
     if (state != null) state.rebuild(map);
   }
 
+  void _themeChange() {
+    notifyListeners();
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -512,6 +531,7 @@ class FormController extends ChangeNotifier {
       element.dispose();
     });
     _states.clear();
+    theme.dispose();
   }
 
   Map<String, dynamic> getData() {
@@ -626,6 +646,7 @@ class _FormItemWidget extends StatefulWidget {
 
 class _FormItemWidgetState extends State<_FormItemWidget> {
   bool hide = false;
+  bool readOnly = false;
   Map<String, dynamic> map = {};
   get flex => map['flex'] ?? widget.flex ?? 1;
 
@@ -656,8 +677,10 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     return Consumer<FormController>(
       builder: (context, v, child) {
         bool currentHide = v.isHide(widget.controlKey);
-        if (currentHide != hide) {
+        bool currentReadOnly = v.isReadOnly(widget.controlKey);
+        if (currentHide != hide || currentReadOnly != readOnly) {
           hide = currentHide;
+          readOnly = currentReadOnly;
           return buildChild();
         }
         return child;

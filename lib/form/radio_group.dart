@@ -66,9 +66,12 @@ class RadioGroup extends FormField {
                 )));
               }
 
+              bool readOnly =
+                  FormController.of(field.context).isReadOnly(controlKey);
+
               for (RadioButton button in buttons) {
                 bool isReadOnly =
-                    state.readOnly || controller.isReadOnly(button.controlKey);
+                    readOnly || controller.isReadOnly(button.controlKey);
                 widgets.add(Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -103,11 +106,6 @@ class RadioGroup extends FormField {
 
             return Consumer<FormController>(
               builder: (context, v, child) {
-                bool currentReadOnly = v.isReadOnly(controlKey);
-                if (currentReadOnly != state.readOnly) {
-                  state.readOnly = currentReadOnly;
-                  return buildChild();
-                }
                 return child;
               },
               child: buildChild(),
@@ -120,8 +118,6 @@ class RadioGroup extends FormField {
 }
 
 class _RadioGroupState extends FormFieldState {
-  bool readOnly = false;
-
   @override
   RadioGroup get widget => super.widget as RadioGroup;
 

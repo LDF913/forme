@@ -29,9 +29,6 @@ class DropdownFormField extends FormField {
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
-            final _DropdownFormFieldState state =
-                field as _DropdownFormFieldState;
-
             void onChangedHandler(dynamic value) {
               field.didChange(value);
               if (onChanged != null) {
@@ -45,8 +42,10 @@ class DropdownFormField extends FormField {
                   InputDecoration().applyDefaults(
                 Theme.of(field.context).inputDecorationTheme,
               );
+              bool readOnly =
+                  FormController.of(field.context).isReadOnly(controlKey);
               List<Widget> icons = [];
-              if (clearable && !state.readOnly && controller.value != null) {
+              if (clearable && !readOnly && controller.value != null) {
                 icons.add(Padding(
                   padding: EdgeInsets.only(right: 10),
                   child: GestureDetector(
@@ -92,7 +91,7 @@ class DropdownFormField extends FormField {
                           children: icons,
                           mainAxisSize: MainAxisSize.min,
                         ),
-                        onChanged: state.readOnly ? null : onChangedHandler,
+                        onChanged: readOnly ? null : onChangedHandler,
                         isDense: true,
                         isExpanded: true,
                         focusNode: focusNode,
@@ -106,11 +105,6 @@ class DropdownFormField extends FormField {
 
             return Consumer<FormController>(
                 builder: (context, c, child) {
-                  bool currentReadOnly = c.isReadOnly(controlKey);
-                  if (state.readOnly != currentReadOnly) {
-                    state.readOnly = currentReadOnly;
-                    return buildWidget();
-                  }
                   return child;
                 },
                 child: buildWidget());
@@ -122,7 +116,6 @@ class DropdownFormField extends FormField {
 }
 
 class _DropdownFormFieldState extends FormFieldState {
-  bool readOnly = false;
   bool loaded = false;
   @override
   DropdownFormField get widget => super.widget as DropdownFormField;

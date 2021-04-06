@@ -75,10 +75,12 @@ class CheckboxGroup extends FormField<List<int>> {
                   value = [];
                 }
 
+                bool readOnly =
+                    FormController.of(field.context).isReadOnly(controlKey);
                 for (int i = 0; i < buttons.length; i++) {
                   CheckboxButton button = buttons[i];
-                  bool isReadOnly = state.readOnly ||
-                      controller.isReadOnly(button.controlKey);
+                  bool isReadOnly =
+                      readOnly || controller.isReadOnly(button.controlKey);
                   widgets.add(Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -119,11 +121,6 @@ class CheckboxGroup extends FormField<List<int>> {
 
               return Consumer<FormController>(
                 builder: (context, v, child) {
-                  bool currentReadOnly = v.isReadOnly(controlKey);
-                  if (currentReadOnly != state.readOnly) {
-                    state.readOnly = currentReadOnly;
-                    return buildChild();
-                  }
                   return child;
                 },
                 child: buildChild(),
@@ -137,8 +134,6 @@ class CheckboxGroup extends FormField<List<int>> {
 class _CheckboxGroupState extends FormFieldState<List<int>> {
   @override
   CheckboxGroup get widget => super.widget as CheckboxGroup;
-
-  bool readOnly = false;
 
   @override
   void initState() {

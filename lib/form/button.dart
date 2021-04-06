@@ -22,23 +22,18 @@ class Button extends StatefulWidget {
 }
 
 class _ButtonState extends State<Button> {
-  bool readOnly = false;
-
   @override
   Widget build(BuildContext context) {
     return Consumer<FormController>(
         builder: (context, v, child) {
-          bool currentReadOnly = v.isReadOnly(widget.controlKey);
-          if (currentReadOnly != readOnly) {
-            readOnly = currentReadOnly;
-            return buildChild();
-          }
           return child;
         },
         child: buildChild());
   }
 
   Widget buildChild() {
+    bool readOnly =
+        context.read<FormController>().isReadOnly(widget.controlKey);
     return TextButton(
         onPressed: readOnly ? null : widget.onPressed,
         onLongPress: readOnly ? null : widget.onLongPress,
