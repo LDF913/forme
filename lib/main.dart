@@ -297,8 +297,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.theme.textfieldTheme
-                    .inputDecorationThemeBuilder = (context) {
+                formController.theme.inputDecorationThemeBuilder = (context) {
                   return Theme.of(context).inputDecorationTheme.copyWith(
                       labelStyle:
                           TextStyle(fontSize: 12, color: Colors.yellow));

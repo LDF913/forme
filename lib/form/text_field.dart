@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/form/form_theme.dart';
 
 import 'form_builder.dart';
+import 'form_theme.dart';
 
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
@@ -76,8 +76,8 @@ class ClearableTextFormField extends FormField<String> {
                     suffixIcon: suffixIcon,
                     labelText: label,
                     hintText: hintLabel)
-                .applyDefaults(theme.textfieldTheme
-                    .getInputDecorationTheme(field.context));
+                .applyDefaults(
+                    theme.inputDecorationThemeBuilder(field.context));
             void onChangedHandler(String value) {
               field.didChange(value);
               if (onChanged != null) {
