@@ -1,126 +1,16 @@
-# flutter form builder
+# flutter_application_1
 
- flutter form builder
- 
- ## basic usage
- 
-```
-import 'form/checkbox_group.dart';
-import 'form/form_util.dart';
-import 'form/radio_group.dart';
+A new Flutter project.
 
-FormController formController = FormController();
+## Getting Started
 
-FormBuilder builder = FormBuilder(formController: formController)
-  ..textField(
-	'用户名',
-	controlKey: 'username',
-	clearable: true,
-	validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
-  )
-  ..nextLine()
-  ..textField('密码',
-	  controlKey: '456',
-	  obscureText: true,
-	  passwordVisible: true,
-	  clearable: true,
-	  flex: 1)
-  ..checkboxGroup([CheckboxButton('男'), CheckboxButton('女')],
-	  label: '性别',
-	  validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
-	  controlKey: 'checkbox')
-  ..radioGroup(
-	  [RadioButton('1', '1'), RadioButton('2', '2'), RadioButton('3', '3')],
-	  label: '单选框', controlKey: 'radio', initialValue: 2);
-return builder.build();
-```
+This project is a starting point for a Flutter application.
 
+A few resources to get you started if this is your first Flutter project:
 
-## form widget archetype
-```
-Form(
-	child :
-		Column(
-			children : [
-				Row(
-					 Expanded(
-						child : formField
-					  )
-				)
-				...
-			]
-		)
+- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
-)
-```
-
-## hide|show formfields 
-
-hide:
-```
-formController.hideKeys = [controlKey1,controlKey2];
-```
-
-show:
-```
-formController.hideKeys = [];
-```
-
-## make formfields readonly|editable
-
-readonly:
-```
-formController.readOnlyKeys = [controlKey1,controlKey2];
-```
-
-editable:
-```
-formController.readOnlyKeys = [];
-```
-
-## hide|show form
-
-```
-formController.hide = true|false;
-```
-
-## make form readonly|editable
-
-```
-formController.readOnly = true|false
-```
-
-## reset form
-
-all form field will rebuild !
-```
-formController.reset();
-```
-
-## validate form
-
-all form field will rebuild
-
-```
-if(formController.validate()) submit();
-```
-
-
-## listen form field value change
-
-```
-TextEditingController controller;
-
-controller.addListener((){
-	String value = controller.text;
-	//do not change controller value here !!!
-});
-```
-
-## currently support form fields
-
-1. Simple Textfield (clearable)
-2. Simple PasswordField (clearable & password visiable)
-3. RadioGroup
-4. CheckboxGroup
-
+For help getting started with Flutter, view our
+[online documentation](https://flutter.dev/docs), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.

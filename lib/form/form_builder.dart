@@ -14,9 +14,8 @@ class FormBuilder {
   List<_FormItemWidget> _builders = [];
   List<List<_FormItemWidget>> _builderss = [];
   final FormController formController;
-  final EdgeInsetsGeometry padding;
 
-  FormBuilder(this.formController, {this.padding})
+  FormBuilder(this.formController)
       : assert(
           formController != null,
           'FormController can not be null',
@@ -48,7 +47,6 @@ class FormBuilder {
       bool clearable = false,
       bool readOnly = false,
       bool visible = true,
-      EdgeInsetsGeometry padding,
       int decimal = 0}) {
     TextEditingController controller = formController._controllers
         .putIfAbsent(controlKey, () => TextEditingController());
@@ -59,7 +57,6 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       flex: flex,
-      padding: padding ?? this.padding,
       builder: (context, map) {
         int _decimal = map['decimal'] ?? decimal;
         double _max = map['max'] ?? max;
@@ -157,7 +154,6 @@ class FormBuilder {
       bool visible = true,
       String initialValue,
       String regExp,
-      EdgeInsetsGeometry padding,
       List<TextInputFormatter> inputFormatters}) {
     _setInitialStateKey(readOnly, visible, controlKey);
 
@@ -170,7 +166,6 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       flex: flex,
-      padding: padding ?? this.padding,
       builder: (context, map) {
         List<TextInputFormatter> formatters = inputFormatters ?? [];
         if (regExp != null) {
@@ -216,7 +211,6 @@ class FormBuilder {
       int flex = 0,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool readOnly = false,
-      EdgeInsetsGeometry padding,
       bool visible = true}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
@@ -225,7 +219,6 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       flex: flex,
-      padding: padding ?? this.padding,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -249,7 +242,6 @@ class FormBuilder {
       ValueChanged onChanged,
       bool readOnly = false,
       bool visible = true,
-      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
@@ -258,7 +250,6 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
-      padding: padding ?? this.padding,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -283,7 +274,6 @@ class FormBuilder {
       ValueChanged<List<int>> onChanged,
       bool readOnly = false,
       bool visible = true,
-      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0}) {
     _setInitialStateKey(readOnly, visible, controlKey);
@@ -292,7 +282,6 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
-      padding: padding ?? this.padding,
       builder: (context, map) => CheckboxGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -316,7 +305,6 @@ class FormBuilder {
       FormFieldValidator<List<int>> validator,
       bool readOnly = false,
       bool visible = true,
-      EdgeInsetsGeometry padding,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
@@ -325,7 +313,6 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
-      padding: padding ?? this.padding,
       builder: (context, map) => CheckboxGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -350,14 +337,12 @@ class FormBuilder {
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
-      Alignment alignment,
-      EdgeInsetsGeometry padding}) {
+      Alignment alignment}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(
       _FormItemWidget(formController,
           controlKey: controlKey,
           flex: flex,
-          padding: padding ?? this.padding,
           builder: (context, map) => Align(
                 alignment: alignment ?? Alignment.centerLeft,
                 child: Button(
@@ -381,8 +366,7 @@ class FormBuilder {
       int flex = 1,
       DateTimeFormatter formatter,
       FormFieldValidator<DateTime> validator,
-      bool useTime,
-      EdgeInsetsGeometry padding}) {
+      bool useTime}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
@@ -392,7 +376,6 @@ class FormBuilder {
       _FormItemWidget(formController,
           controlKey: controlKey,
           flex: flex,
-          padding: padding ?? this.padding,
           builder: (context, map) => DateTimeFormField(
                 controlKey,
                 hintLabel: map['hintLabel'] ?? hintLabel,
@@ -423,7 +406,6 @@ class FormBuilder {
       _FormItemWidget(formController,
           controlKey: controlKey,
           flex: 1,
-          padding: padding ?? this.padding,
           builder: (context, map) => DropdownFormField(
                 controlKey,
                 controller,
@@ -635,9 +617,8 @@ class _FormItemWidget extends StatefulWidget {
   final String controlKey;
   final int flex;
   final FormWidgetBuilder builder;
-  final EdgeInsetsGeometry padding;
   const _FormItemWidget(this.formController,
-      {Key key, this.controlKey, this.flex, this.builder, this.padding})
+      {Key key, this.controlKey, this.flex, this.builder})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -647,7 +628,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   bool hide = false;
   Map<String, dynamic> map = {};
   get flex => map['flex'] ?? widget.flex ?? 1;
-  get padding => map['padding'] ?? widget.padding ?? EdgeInsets.zero;
 
   @override
   void initState() {
@@ -666,7 +646,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     Widget buildChild() {
       return Visibility(
         child: Expanded(
-          child: Padding(padding: padding, child: widget.builder(context, map)),
+          child: widget.builder(context, map),
           flex: flex,
         ),
         visible: !hide,

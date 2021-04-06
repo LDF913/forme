@@ -307,8 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm() {
-    FormBuilder builder = FormBuilder(formController,
-            padding: EdgeInsets.all(5))
+    FormBuilder builder = FormBuilder(formController)
         .textField(
           'username',
           label: '用户名',
