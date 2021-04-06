@@ -1,5 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
+import 'form_builder.dart';
 
 typedef ThemeBuild<T> = T Function(BuildContext context);
 
@@ -7,6 +8,10 @@ class FormTheme extends ChangeNotifier {
   TextfieldTheme _textfieldTheme = TextfieldTheme();
 
   get textfieldTheme => _textfieldTheme;
+
+  static FormTheme of(BuildContext context) {
+    return FormController.of(context).theme;
+  }
 
   FormTheme() {
     _textfieldTheme.addListener(() {

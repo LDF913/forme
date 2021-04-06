@@ -53,77 +53,68 @@ class CheckboxGroup extends FormField<List<int>> {
               final _CheckboxGroupState state = field as _CheckboxGroupState;
               Color errorColor =
                   Theme.of(field.context).errorColor ?? Colors.red;
-              Widget buildChild() {
-                List<Widget> widgets = [];
-                if (label != null) {
-                  Text text;
-                  if (state.errorText != null) {
-                    text = Text(label, style: TextStyle(color: errorColor));
-                  } else {
-                    text = Text(label);
-                  }
-                  widgets.add(Container(
-                      child: Row(
-                    children: [Flexible(child: text)],
-                  )));
-                }
-
-                List<int> value;
-                if (controller.value != null) {
-                  value = List.from(controller.value);
-                } else {
-                  value = [];
-                }
-
-                bool readOnly =
-                    FormController.of(field.context).isReadOnly(controlKey);
-                for (int i = 0; i < buttons.length; i++) {
-                  CheckboxButton button = buttons[i];
-                  bool isReadOnly =
-                      readOnly || controller.isReadOnly(button.controlKey);
-                  widgets.add(Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Checkbox(
-                          value: value.contains(i),
-                          onChanged: isReadOnly
-                              ? null
-                              : (v) {
-                                  if (value.contains(i))
-                                    value.remove(i);
-                                  else
-                                    value.add(i);
-                                  field.didChange(value);
-                                  if (onChanged != null)
-                                    onChanged(List.from(value));
-                                }),
-                      Text(
-                        button.label,
-                      ),
-                    ],
-                  ));
-                }
-
+              List<Widget> widgets = [];
+              if (label != null) {
+                Text text;
                 if (state.errorText != null) {
-                  widgets.add(Row(
-                    children: [
-                      Flexible(
-                        child: Text(state.errorText,
-                            style: TextStyle(color: errorColor)),
-                      )
-                    ],
-                  ));
+                  text = Text(label, style: TextStyle(color: errorColor));
+                } else {
+                  text = Text(label);
                 }
-                return Wrap(
-                  children: widgets,
-                );
+                widgets.add(Container(
+                    child: Row(
+                  children: [Flexible(child: text)],
+                )));
               }
 
-              return Consumer<FormController>(
-                builder: (context, v, child) {
-                  return child;
-                },
-                child: buildChild(),
+              List<int> value;
+              if (controller.value != null) {
+                value = List.from(controller.value);
+              } else {
+                value = [];
+              }
+
+              bool readOnly =
+                  FormController.of(field.context).isReadOnly(controlKey);
+              for (int i = 0; i < buttons.length; i++) {
+                CheckboxButton button = buttons[i];
+                bool isReadOnly =
+                    readOnly || controller.isReadOnly(button.controlKey);
+                widgets.add(Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Checkbox(
+                        value: value.contains(i),
+                        onChanged: isReadOnly
+                            ? null
+                            : (v) {
+                                if (value.contains(i))
+                                  value.remove(i);
+                                else
+                                  value.add(i);
+                                field.didChange(value);
+                                if (onChanged != null)
+                                  onChanged(List.from(value));
+                              }),
+                    Text(
+                      button.label,
+                    ),
+                  ],
+                ));
+              }
+
+              if (state.errorText != null) {
+                widgets.add(Row(
+                  children: [
+                    Flexible(
+                      child: Text(state.errorText,
+                          style: TextStyle(color: errorColor)),
+                    )
+                  ],
+                ));
+              }
+              return Wrap(
+                children: widgets,
               );
             });
 

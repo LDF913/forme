@@ -436,6 +436,9 @@ class FormBuilder {
           create: (context) => formController,
           child: Consumer<FormController>(
             builder: (context, c, child) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                c._rebuild = false;
+              });
               return Visibility(
                 maintainState: true,
                 child: Column(
@@ -465,15 +468,12 @@ class FormBuilder {
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {
     return items.map((e) => CheckboxButton(e)).toList();
   }
-
-  static FormTheme of(BuildContext context) {
-    return context.read<FormController>().theme;
-  }
 }
 
 class FormController extends ChangeNotifier {
   bool _hide = false;
   bool _readOnly = false;
+  bool _rebuild = false;
 
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
@@ -516,6 +516,7 @@ class FormController extends ChangeNotifier {
   }
 
   void _themeChange() {
+    _rebuild = true;
     notifyListeners();
   }
 
@@ -647,6 +648,7 @@ class _FormItemWidget extends StatefulWidget {
 class _FormItemWidgetState extends State<_FormItemWidget> {
   bool hide = false;
   bool readOnly = false;
+  bool forceRebuild = false;
   Map<String, dynamic> map = {};
   get flex => map['flex'] ?? widget.flex ?? 1;
 
@@ -676,6 +678,10 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
     return Consumer<FormController>(
       builder: (context, v, child) {
+        if (forceRebuild || v._rebuild) {
+          forceRebuild = false;
+          return buildChild();
+        }
         bool currentHide = v.isHide(widget.controlKey);
         bool currentReadOnly = v.isReadOnly(widget.controlKey);
         if (currentHide != hide || currentReadOnly != readOnly) {
@@ -691,6 +697,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   void rebuild(Map<String, dynamic> map) {
     setState(() {
+      this.forceRebuild = true;
       this.map = map;
     });
   }

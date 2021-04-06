@@ -24,14 +24,6 @@ class Button extends StatefulWidget {
 class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
-    return Consumer<FormController>(
-        builder: (context, v, child) {
-          return child;
-        },
-        child: buildChild());
-  }
-
-  Widget buildChild() {
     bool readOnly =
         context.read<FormController>().isReadOnly(widget.controlKey);
     return TextButton(

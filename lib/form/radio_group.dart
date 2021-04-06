@@ -51,64 +51,55 @@ class RadioGroup extends FormField {
           builder: (field) {
             final _RadioGroupState state = field as _RadioGroupState;
             Color errorColor = Theme.of(field.context).errorColor ?? Colors.red;
-            Widget buildChild() {
-              List<Widget> widgets = [];
-              if (label != null) {
-                Text text;
-                if (state.errorText != null) {
-                  text = Text(label, style: TextStyle(color: errorColor));
-                } else {
-                  text = Text(label);
-                }
-                widgets.add(Container(
-                    child: Row(
-                  children: [Flexible(child: text)],
-                )));
-              }
-
-              bool readOnly =
-                  FormController.of(field.context).isReadOnly(controlKey);
-
-              for (RadioButton button in buttons) {
-                bool isReadOnly =
-                    readOnly || controller.isReadOnly(button.controlKey);
-                widgets.add(Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Radio(
-                        value: button.value,
-                        groupValue: state.value,
-                        onChanged: isReadOnly
-                            ? null
-                            : (v) {
-                                field.didChange(v);
-                                if (onChanged != null) onChanged(v);
-                              }),
-                    Text(
-                      button.label,
-                    ),
-                  ],
-                ));
-              }
+            List<Widget> widgets = [];
+            if (label != null) {
+              Text text;
               if (state.errorText != null) {
-                widgets.add(Row(
-                  children: [
-                    Flexible(
-                        child: Text(state.errorText,
-                            style: TextStyle(color: errorColor)))
-                  ],
-                ));
+                text = Text(label, style: TextStyle(color: errorColor));
+              } else {
+                text = Text(label);
               }
-              return Wrap(
-                children: widgets,
-              );
+              widgets.add(Container(
+                  child: Row(
+                children: [Flexible(child: text)],
+              )));
             }
 
-            return Consumer<FormController>(
-              builder: (context, v, child) {
-                return child;
-              },
-              child: buildChild(),
+            bool readOnly =
+                FormController.of(field.context).isReadOnly(controlKey);
+
+            for (RadioButton button in buttons) {
+              bool isReadOnly =
+                  readOnly || controller.isReadOnly(button.controlKey);
+              widgets.add(Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Radio(
+                      value: button.value,
+                      groupValue: state.value,
+                      onChanged: isReadOnly
+                          ? null
+                          : (v) {
+                              field.didChange(v);
+                              if (onChanged != null) onChanged(v);
+                            }),
+                  Text(
+                    button.label,
+                  ),
+                ],
+              ));
+            }
+            if (state.errorText != null) {
+              widgets.add(Row(
+                children: [
+                  Flexible(
+                      child: Text(state.errorText,
+                          style: TextStyle(color: errorColor)))
+                ],
+              ));
+            }
+            return Wrap(
+              children: widgets,
             );
           },
         );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_application_1/form/form_theme.dart';
-import 'package:provider/provider.dart';
 
 import 'form_builder.dart';
 
@@ -40,80 +39,72 @@ class ClearableTextFormField extends FormField<String> {
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
           builder: (FormFieldState<String> field) {
-            final FormTheme theme = FormBuilder.of(field.context);
+            final FormTheme theme = FormTheme.of(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
-            Widget buildWidget() {
-              List<Widget> suffixes = [];
+            List<Widget> suffixes = [];
 
-              bool readOnly =
-                  FormController.of(field.context).isReadOnly(controlKey);
+            bool readOnly =
+                FormController.of(field.context).isReadOnly(controlKey);
 
-              if (clearable && !readOnly) {
-                suffixes.add(_ClearIcon(controller, focusNode, () {
-                  state.didChange('');
-                }));
-              }
-              if (passwordVisible) {
-                suffixes.add(IconButton(
-                  icon: Icon(state.obscureText
-                      ? Icons.visibility
-                      : Icons.visibility_off),
-                  onPressed: readOnly
-                      ? null
-                      : () {
-                          state.toggleObsureText();
-                        },
-                ));
-              }
-
-              Widget suffixIcon = suffixes.isEmpty
-                  ? null
-                  : Row(
-                      mainAxisSize: MainAxisSize.min, // added line
-                      children: suffixes,
-                    );
-
-              final InputDecoration effectiveDecoration = InputDecoration(
-                      prefixIcon: prefixIcon,
-                      suffixIcon: suffixIcon,
-                      labelText: label,
-                      hintText: hintLabel)
-                  .applyDefaults(theme.textfieldTheme
-                      .getInputDecorationTheme(field.context));
-              void onChangedHandler(String value) {
-                field.didChange(value);
-                if (onChanged != null) {
-                  onChanged(value);
-                }
-              }
-
-              TextField textField = TextField(
-                  textAlignVertical: TextAlignVertical.center,
-                  controller: controller,
-                  focusNode: focusNode,
-                  decoration:
-                      effectiveDecoration.copyWith(errorText: field.errorText),
-                  keyboardType: keyboardType,
-                  autofocus: autofocus,
-                  obscureText: state.obscureText,
-                  maxLines: maxLines,
-                  minLines: minLines,
-                  maxLength: maxLength,
-                  onChanged: onChangedHandler,
-                  onTap: onTap,
-                  onSubmitted: onSubmitted,
-                  enabled: true,
-                  readOnly: readOnly,
-                  inputFormatters: inputFormatters);
-
-              return textField;
+            if (clearable && !readOnly) {
+              suffixes.add(_ClearIcon(controller, focusNode, () {
+                state.didChange('');
+              }));
+            }
+            if (passwordVisible) {
+              suffixes.add(IconButton(
+                icon: Icon(state.obscureText
+                    ? Icons.visibility
+                    : Icons.visibility_off),
+                onPressed: readOnly
+                    ? null
+                    : () {
+                        state.toggleObsureText();
+                      },
+              ));
             }
 
-            return Consumer<FormController>(
-                builder: (context, c, child) {
-                  return child;
-                },
-                child: buildWidget());
+            Widget suffixIcon = suffixes.isEmpty
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min, // added line
+                    children: suffixes,
+                  );
+
+            final InputDecoration effectiveDecoration = InputDecoration(
+                    prefixIcon: prefixIcon,
+                    suffixIcon: suffixIcon,
+                    labelText: label,
+                    hintText: hintLabel)
+                .applyDefaults(theme.textfieldTheme
+                    .getInputDecorationTheme(field.context));
+            void onChangedHandler(String value) {
+              field.didChange(value);
+              if (onChanged != null) {
+                onChanged(value);
+              }
+            }
+
+            TextField textField = TextField(
+                textAlignVertical: TextAlignVertical.center,
+                controller: controller,
+                focusNode: focusNode,
+                decoration:
+                    effectiveDecoration.copyWith(errorText: field.errorText),
+                keyboardType: keyboardType,
+                autofocus: autofocus,
+                obscureText: state.obscureText,
+                maxLines: maxLines,
+                minLines: minLines,
+                maxLength: maxLength,
+                onChanged: onChangedHandler,
+                onTap: onTap,
+                onSubmitted: onSubmitted,
+                enabled: true,
+                readOnly: readOnly,
+                inputFormatters: inputFormatters);
+
+            return textField;
           },
         );
 
@@ -292,56 +283,48 @@ class DateTimeFormField extends FormField<DateTime> {
               });
             }
 
-            Widget buildChild() {
-              bool readOnly =
-                  FormController.of(field.context).isReadOnly(controlKey);
-              List<Widget> suffixes = [];
+            bool readOnly =
+                FormController.of(field.context).isReadOnly(controlKey);
+            List<Widget> suffixes = [];
 
-              if (!readOnly) {
-                suffixes.add(_ClearIcon(controller._controller, focusNode, () {
-                  state.didChange(null);
-                }));
-              }
-
-              suffixes.add(IconButton(
-                constraints: BoxConstraints(),
-                onPressed: readOnly ? null : pickTime,
-                icon: Icon(Icons.calendar_today),
-              ));
-
-              Widget suffixIcon = suffixes.isEmpty
-                  ? null
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: suffixes,
-                    );
-
-              final InputDecoration effectiveDecoration = InputDecoration(
-                      hintText: hintLabel,
-                      suffixIcon: suffixIcon,
-                      labelText: label)
-                  .applyDefaults(Theme.of(field.context).inputDecorationTheme);
-
-              TextField textField = TextField(
-                textAlignVertical: TextAlignVertical.center,
-                focusNode: focusNode,
-                controller: controller._controller,
-                decoration:
-                    effectiveDecoration.copyWith(errorText: field.errorText),
-                obscureText: false,
-                maxLines: 1,
-                onTap: null,
-                enabled: true,
-                readOnly: true,
-              );
-              return textField;
+            if (!readOnly) {
+              suffixes.add(_ClearIcon(controller._controller, focusNode, () {
+                state.didChange(null);
+              }));
             }
 
-            return Consumer<FormController>(
-                builder: (context, c, child) {
-                  return child;
-                },
-                child: buildChild());
+            suffixes.add(IconButton(
+              constraints: BoxConstraints(),
+              onPressed: readOnly ? null : pickTime,
+              icon: Icon(Icons.calendar_today),
+            ));
+
+            Widget suffixIcon = suffixes.isEmpty
+                ? null
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: suffixes,
+                  );
+
+            final InputDecoration effectiveDecoration = InputDecoration(
+                    hintText: hintLabel,
+                    suffixIcon: suffixIcon,
+                    labelText: label)
+                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+
+            TextField textField = TextField(
+              textAlignVertical: TextAlignVertical.center,
+              focusNode: focusNode,
+              controller: controller._controller,
+              decoration:
+                  effectiveDecoration.copyWith(errorText: field.errorText),
+              obscureText: false,
+              maxLines: 1,
+              onTap: null,
+              enabled: true,
+              readOnly: true,
+            );
+            return textField;
           },
         );
 
