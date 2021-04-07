@@ -53,11 +53,12 @@ class RadioGroup extends FormField {
           autovalidateMode: autovalidateMode,
           validator: validator,
           builder: (field) {
-            FormTheme theme = FormTheme.of(field.context);
-            RadioGroupTheme radioGroupTheme = theme.radioGroupTheme;
+            FormThemeData formThemeData =
+                FormThemeData.of(controlKey, field.context);
+            RadioGroupTheme radioGroupTheme = formThemeData.radioGroupTheme;
+            ThemeData themeData = formThemeData.getThemeData(field.context);
 
             final _RadioGroupState state = field as _RadioGroupState;
-            ThemeData themeData = Theme.of(field.context);
             bool readOnly =
                 FormController.of(field.context).isReadOnly(controlKey);
             List<Widget> widgets = [];
@@ -65,9 +66,9 @@ class RadioGroup extends FormField {
               Text text = Text(label,
                   textAlign: TextAlign.left,
                   style:
-                      FormTheme.getLabelStyle(field.context, state.hasError));
+                      FormThemeData.getLabelStyle(themeData, state.hasError));
               widgets.add(Padding(
-                padding: theme.labelPadding ?? EdgeInsets.zero,
+                padding: formThemeData.labelPadding ?? EdgeInsets.zero,
                 child: Row(
                   children: [Flexible(child: text)],
                 ),
@@ -152,14 +153,14 @@ class RadioGroup extends FormField {
                   children: [
                     Flexible(
                       child: Text(state.errorText,
-                          style: FormTheme.getErrorStyle(field.context)),
+                          style: FormThemeData.getErrorStyle(themeData)),
                     )
                   ],
                 ),
               ));
             }
 
-            return theme.widgetWrapper(
+            return formThemeData.widgetWrapper(
                 controlKey,
                 Column(
                   children: widgets,

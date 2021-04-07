@@ -39,7 +39,10 @@ class ClearableTextFormField extends FormField<String> {
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
           builder: (FormFieldState<String> field) {
-            final FormTheme theme = FormTheme.of(field.context);
+            final FormThemeData formThemeData =
+                FormThemeData.of(controlKey, field.context);
+            final ThemeData themeData =
+                formThemeData.getThemeData(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
             List<Widget> suffixes = [];
 
@@ -76,7 +79,7 @@ class ClearableTextFormField extends FormField<String> {
                     suffixIcon: suffixIcon,
                     labelText: label,
                     hintText: hintLabel)
-                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+                .applyDefaults(themeData.inputDecorationTheme);
             void onChangedHandler(String value) {
               field.didChange(value);
               if (onChanged != null) {
@@ -103,7 +106,8 @@ class ClearableTextFormField extends FormField<String> {
                 readOnly: readOnly,
                 inputFormatters: inputFormatters);
 
-            return theme.widgetWrapper(controlKey, textField, field.context);
+            return formThemeData.widgetWrapper(
+                controlKey, textField, field.context);
           },
         );
 
@@ -242,7 +246,10 @@ class DateTimeFormField extends FormField<DateTime> {
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
           builder: (field) {
-            final FormTheme theme = FormTheme.of(field.context);
+            final FormThemeData formThemeData =
+                FormThemeData.of(controlKey, field.context);
+            final ThemeData themeData =
+                formThemeData.getThemeData(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             void pickTime() {
               DateTime value = initialValue ?? DateTime.now();
@@ -309,7 +316,7 @@ class DateTimeFormField extends FormField<DateTime> {
                     hintText: hintLabel,
                     suffixIcon: suffixIcon,
                     labelText: label)
-                .applyDefaults(Theme.of(field.context).inputDecorationTheme);
+                .applyDefaults(themeData.inputDecorationTheme);
 
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
@@ -323,7 +330,8 @@ class DateTimeFormField extends FormField<DateTime> {
               enabled: true,
               readOnly: true,
             );
-            return theme.widgetWrapper(controlKey, textField, field.context);
+            return formThemeData.widgetWrapper(
+                controlKey, textField, field.context);
           },
         );
 

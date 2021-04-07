@@ -57,7 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     formController = FormController();
-    // formController.theme = FormTheme.defaultTheme;
+    formController.themeData = FormThemeData.defaultThemeData;
   }
 
   @override
@@ -301,7 +301,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.theme = FormTheme.defaultTheme;
+                formController.themeData = FormThemeData().setControlTheme(
+                    'checkbox', FormThemeData.defaultThemeData);
               },
               child: Text('set new form theme'),
             )

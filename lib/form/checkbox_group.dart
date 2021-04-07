@@ -53,10 +53,12 @@ class CheckboxGroup extends FormField<List<int>> {
             validator: validator,
             initialValue: initialValue,
             builder: (field) {
-              FormTheme theme = FormTheme.of(field.context);
-              CheckboxGroupTheme checkboxGroupTheme = theme.checkboxGroupTheme;
+              FormThemeData formThemeData =
+                  FormThemeData.of(controlKey, field.context);
+              CheckboxGroupTheme checkboxGroupTheme =
+                  formThemeData.checkboxGroupTheme;
+              ThemeData themeData = formThemeData.getThemeData(field.context);
               final _CheckboxGroupState state = field as _CheckboxGroupState;
-              ThemeData themeData = Theme.of(field.context);
               bool readOnly =
                   FormController.of(field.context).isReadOnly(controlKey);
               List<Widget> widgets = [];
@@ -64,9 +66,9 @@ class CheckboxGroup extends FormField<List<int>> {
                 Text text = Text(label,
                     textAlign: TextAlign.left,
                     style:
-                        FormTheme.getLabelStyle(field.context, state.hasError));
+                        FormThemeData.getLabelStyle(themeData, state.hasError));
                 widgets.add(Padding(
-                  padding: theme.labelPadding ?? EdgeInsets.zero,
+                  padding: formThemeData.labelPadding ?? EdgeInsets.zero,
                   child: Row(
                     children: [Flexible(child: text)],
                   ),
@@ -164,14 +166,14 @@ class CheckboxGroup extends FormField<List<int>> {
                     children: [
                       Flexible(
                         child: Text(state.errorText,
-                            style: FormTheme.getErrorStyle(field.context)),
+                            style: FormThemeData.getErrorStyle(themeData)),
                       )
                     ],
                   ),
                 ));
               }
 
-              return theme.widgetWrapper(
+              return formThemeData.widgetWrapper(
                   controlKey,
                   Column(
                     children: widgets,

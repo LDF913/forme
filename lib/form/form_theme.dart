@@ -6,30 +6,49 @@ typedef WidgetWrapper = Widget Function(
     String controlKey, Widget child, BuildContext context);
 typedef ThemeDataBuilder = ThemeData Function(BuildContext context);
 
-class FormTheme {
+class FormThemeData {
+  bool _isControlTheme = false;
+
   final ThemeDataBuilder themeDataBuilder;
   final EdgeInsets labelPadding;
-  final Map<String, EdgeInsets> controlPaddings;
   final CheckboxGroupTheme checkboxGroupTheme;
   final RadioGroupTheme radioGroupTheme;
   final WidgetWrapper wrapper;
+  final Map<String, FormThemeData> _controlThemeDatas = {};
 
   get widgetWrapper => wrapper == null ? (a, b, c) => b : wrapper;
 
-  FormTheme(
+  FormThemeData(
       {this.themeDataBuilder,
       this.labelPadding,
-      this.controlPaddings,
       this.checkboxGroupTheme = const CheckboxGroupTheme(),
       this.radioGroupTheme = const RadioGroupTheme(),
       this.wrapper});
 
-  static FormTheme of(BuildContext context) {
-    return FormController.of(context).theme;
+  static FormThemeData of(String controlKey, BuildContext context) {
+    FormThemeData root = FormController.of(context).themeData;
+    return root._controlThemeDatas[controlKey] ?? root;
   }
 
-  static TextStyle getErrorStyle(BuildContext context) {
-    ThemeData themeData = Theme.of(context);
+  ThemeData getThemeData(BuildContext context) {
+    if (_isControlTheme) {
+      return this.themeDataBuilder(context);
+    }
+    return Theme.of(context);
+  }
+
+  FormThemeData setControlTheme(String controlKey, FormThemeData data) {
+    assert(!_isControlTheme);
+    if (data == null) {
+      _controlThemeDatas.remove(controlKey);
+    } else {
+      data._isControlTheme = true;
+      _controlThemeDatas[controlKey] = data;
+    }
+    return this;
+  }
+
+  static TextStyle getErrorStyle(ThemeData themeData) {
     InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
     final Color color = themeData.errorColor;
     return themeData.textTheme.caption
@@ -37,8 +56,7 @@ class FormTheme {
         .merge(inputDecorationTheme.errorStyle);
   }
 
-  static TextStyle getLabelStyle(BuildContext context, bool hasError) {
-    ThemeData themeData = Theme.of(context);
+  static TextStyle getLabelStyle(ThemeData themeData, bool hasError) {
     InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
     TextStyle errorStyle = inputDecorationTheme.errorStyle;
     return themeData.textTheme.subtitle1
@@ -51,7 +69,7 @@ class FormTheme {
         .merge(inputDecorationTheme.labelStyle);
   }
 
-  static DefaultTheme defaultTheme = DefaultTheme._();
+  static DefaultThemeData defaultThemeData = DefaultThemeData._();
 }
 
 class HexColor extends Color {
@@ -96,8 +114,8 @@ class RadioGroupTheme extends CheckboxGroupTheme {
             widgetsSpace: widgetsSpace);
 }
 
-class DefaultTheme extends FormTheme {
-  DefaultTheme._()
+class DefaultThemeData extends FormThemeData {
+  DefaultThemeData._()
       : super(
             checkboxGroupTheme: RadioGroupTheme(labelSpace: 10),
             radioGroupTheme: RadioGroupTheme(labelSpace: 10),

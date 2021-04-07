@@ -474,18 +474,18 @@ class FormController extends ChangeNotifier {
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
-  FormTheme _theme = FormTheme();
+  FormThemeData _themeData = FormThemeData();
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, _FormItemWidgetState> _states = {};
-  final ChangeNotifier _themeNotifier = ChangeNotifier();
+  final ChangeNotifier _themeDataNotifier = ChangeNotifier();
 
-  get theme => _theme;
+  get themeData => _themeData;
 
-  set theme(FormTheme theme) {
+  set themeData(FormThemeData theme) {
     if (theme != null) {
-      _theme = theme;
-      _themeNotifier.notifyListeners();
+      _themeData = theme;
+      _themeDataNotifier.notifyListeners();
     }
   }
 
@@ -523,7 +523,7 @@ class FormController extends ChangeNotifier {
       element.dispose();
     });
     _states.clear();
-    _themeNotifier.dispose();
+    _themeDataNotifier.dispose();
   }
 
   Map<String, dynamic> getData() {
@@ -714,12 +714,12 @@ class _FormWidgetState extends State<_FormWidget> {
   @override
   void initState() {
     super.initState();
-    widget.formController._themeNotifier.addListener(handleThemeChange);
+    widget.formController._themeDataNotifier.addListener(handleThemeChange);
   }
 
   void dispose() {
     super.dispose();
-    widget.formController._themeNotifier.removeListener(handleThemeChange);
+    widget.formController._themeDataNotifier.removeListener(handleThemeChange);
   }
 
   void handleThemeChange() {
@@ -757,8 +757,8 @@ class _FormWidgetState extends State<_FormWidget> {
 
   ThemeData getThemeData(BuildContext context) {
     ThemeData themeData;
-    if (widget.formController.theme.themeDataBuilder != null) {
-      themeData = widget.formController.theme.themeDataBuilder(context);
+    if (widget.formController.themeData.themeDataBuilder != null) {
+      themeData = widget.formController.themeData.themeDataBuilder(context);
     } else {
       themeData = Theme.of(context);
     }

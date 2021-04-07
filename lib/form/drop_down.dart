@@ -37,11 +37,13 @@ class DropdownFormField extends FormField {
               focusNode.requestFocus();
             }
 
-            FormTheme theme = FormTheme.of(field.context);
+            FormThemeData formThemeData =
+                FormThemeData.of(controlKey, field.context);
+            ThemeData themeData = formThemeData.getThemeData(field.context);
 
             final InputDecoration effectiveDecoration =
                 InputDecoration().applyDefaults(
-              Theme.of(field.context).inputDecorationTheme,
+              themeData.inputDecorationTheme,
             );
             bool readOnly =
                 FormController.of(field.context).isReadOnly(controlKey);
@@ -67,7 +69,6 @@ class DropdownFormField extends FormField {
               throw 'pls clear dropdown value before you reload items!';
             }
 
-            ThemeData themeData = Theme.of(field.context);
             Widget child = Focus(
               canRequestFocus: false,
               skipTraversal: true,
@@ -79,9 +80,10 @@ class DropdownFormField extends FormField {
                   isFocused: Focus.of(context).hasFocus,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton(
-                      focusColor: themeData.focusColor,
                       iconDisabledColor: themeData.disabledColor,
-                      iconEnabledColor: themeData.primaryColor,
+                      iconEnabledColor: Focus.of(context).hasFocus
+                          ? themeData.primaryColor
+                          : themeData.unselectedWidgetColor,
                       selectedItemBuilder: selectedItemBuilder ??
                           (BuildContext context) {
                             return items.map<Widget>((DropdownMenuItem item) {
@@ -106,7 +108,8 @@ class DropdownFormField extends FormField {
                 );
               }),
             );
-            return theme.widgetWrapper(controlKey, child, field.context);
+            return formThemeData.widgetWrapper(
+                controlKey, child, field.context);
           },
         );
 
