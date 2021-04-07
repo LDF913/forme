@@ -17,15 +17,20 @@ class DropdownFormField extends FormField {
   final DropdownButtonBuilder selectedItemBuilder;
   final FormFieldValidator validator;
   final AutovalidateMode autovalidateMode;
+  final EdgeInsets padding;
 
   DropdownFormField(
-      this.controlKey, this.controller, this.focusNode, this.items,
-      {this.onChanged,
-      this.clearable,
-      this.selectedItemBuilder,
-      this.validator,
-      this.autovalidateMode})
-      : super(
+    this.controlKey,
+    this.controller,
+    this.focusNode,
+    this.items, {
+    this.onChanged,
+    this.clearable,
+    this.selectedItemBuilder,
+    this.validator,
+    this.autovalidateMode,
+    this.padding,
+  }) : super(
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
@@ -37,9 +42,8 @@ class DropdownFormField extends FormField {
               focusNode.requestFocus();
             }
 
-            FormThemeData formThemeData =
-                FormThemeData.of(controlKey, field.context);
-            ThemeData themeData = formThemeData.getThemeData(field.context);
+            FormThemeData formThemeData = FormThemeData.of(field.context);
+            ThemeData themeData = Theme.of(field.context);
 
             final InputDecoration effectiveDecoration =
                 InputDecoration().applyDefaults(
@@ -108,8 +112,10 @@ class DropdownFormField extends FormField {
                 );
               }),
             );
-            return formThemeData.widgetWrapper(
-                controlKey, child, field.context);
+            return Padding(
+              child: child,
+              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
+            );
           },
         );
 

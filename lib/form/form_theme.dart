@@ -2,50 +2,24 @@ import 'package:flutter/material.dart';
 
 import 'form_builder.dart';
 
-typedef WidgetWrapper = Widget Function(
-    String controlKey, Widget child, BuildContext context);
 typedef ThemeDataBuilder = ThemeData Function(BuildContext context);
 
 class FormThemeData {
-  bool _isControlTheme = false;
-
+  final EdgeInsets padding;
   final ThemeDataBuilder themeDataBuilder;
   final EdgeInsets labelPadding;
   final CheckboxGroupTheme checkboxGroupTheme;
   final RadioGroupTheme radioGroupTheme;
-  final WidgetWrapper wrapper;
-  final Map<String, FormThemeData> _controlThemeDatas = {};
-
-  get widgetWrapper => wrapper == null ? (a, b, c) => b : wrapper;
 
   FormThemeData(
-      {this.themeDataBuilder,
+      {this.padding = EdgeInsets.zero,
+      this.themeDataBuilder,
       this.labelPadding,
       this.checkboxGroupTheme = const CheckboxGroupTheme(),
-      this.radioGroupTheme = const RadioGroupTheme(),
-      this.wrapper});
+      this.radioGroupTheme = const RadioGroupTheme()});
 
-  static FormThemeData of(String controlKey, BuildContext context) {
-    FormThemeData root = FormController.of(context).themeData;
-    return root._controlThemeDatas[controlKey] ?? root;
-  }
-
-  ThemeData getThemeData(BuildContext context) {
-    if (_isControlTheme) {
-      return this.themeDataBuilder(context);
-    }
-    return Theme.of(context);
-  }
-
-  FormThemeData setControlTheme(String controlKey, FormThemeData data) {
-    assert(!_isControlTheme);
-    if (data == null) {
-      _controlThemeDatas.remove(controlKey);
-    } else {
-      data._isControlTheme = true;
-      _controlThemeDatas[controlKey] = data;
-    }
-    return this;
+  static FormThemeData of(BuildContext context) {
+    return FormController.of(context).themeData;
   }
 
   static TextStyle getErrorStyle(ThemeData themeData) {
@@ -70,21 +44,6 @@ class FormThemeData {
   }
 
   static DefaultThemeData defaultThemeData = DefaultThemeData._();
-
-  FormThemeData apply({
-    ThemeDataBuilder themeDataBuilder,
-    EdgeInsets labelPadding,
-    CheckboxGroupTheme checkboxGroupTheme,
-    RadioGroupTheme radioGroupTheme,
-    WidgetWrapper wrapper,
-  }) {
-    return FormThemeData(
-        themeDataBuilder: themeDataBuilder ?? this.themeDataBuilder,
-        labelPadding: labelPadding ?? this.labelPadding,
-        checkboxGroupTheme: checkboxGroupTheme ?? this.checkboxGroupTheme,
-        radioGroupTheme: radioGroupTheme ?? this.radioGroupTheme,
-        wrapper: wrapper ?? wrapper);
-  }
 }
 
 class HexColor extends Color {
@@ -132,12 +91,9 @@ class RadioGroupTheme extends CheckboxGroupTheme {
 class DefaultThemeData extends FormThemeData {
   DefaultThemeData._()
       : super(
+            padding: EdgeInsets.all(5),
             checkboxGroupTheme: RadioGroupTheme(labelSpace: 10),
             radioGroupTheme: RadioGroupTheme(labelSpace: 10),
-            wrapper: (controlKey, child, context) => Padding(
-                  padding: EdgeInsets.all(5),
-                  child: child,
-                ),
             themeDataBuilder: (context) => _buildLightTheme(context),
             labelPadding: const EdgeInsets.only(top: 10, bottom: 10));
 

@@ -301,8 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.themeData = FormThemeData().setControlTheme(
-                    'checkbox', FormThemeData.defaultThemeData);
+                formController.themeData = FormThemeData();
               },
               child: Text('set new form theme'),
             )

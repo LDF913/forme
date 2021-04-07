@@ -48,7 +48,8 @@ class FormBuilder {
       bool clearable = false,
       bool readOnly = false,
       bool visible = true,
-      int decimal = 0}) {
+      int decimal = 0,
+      EdgeInsets padding}) {
     TextEditingController controller = formController._controllers
         .putIfAbsent(controlKey, () => TextEditingController());
     FocusNode focusNode =
@@ -128,6 +129,7 @@ class FormBuilder {
           initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
           inputFormatters: formatters,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
@@ -155,7 +157,8 @@ class FormBuilder {
       bool visible = true,
       String initialValue,
       String regExp,
-      List<TextInputFormatter> inputFormatters}) {
+      List<TextInputFormatter> inputFormatters,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
 
     TextEditingController controller = formController._controllers
@@ -197,6 +200,7 @@ class FormBuilder {
           initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
           inputFormatters: formatters,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
@@ -212,7 +216,8 @@ class FormBuilder {
       int flex = 0,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool readOnly = false,
-      bool visible = true}) {
+      bool visible = true,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
@@ -229,6 +234,8 @@ class FormBuilder {
         validator: validator,
         onChanged: onChanged,
         autovalidateMode: autovalidateMode,
+        padding: map['padding'] ?? padding,
+        split: 0,
       ),
     ));
     return this;
@@ -244,7 +251,8 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      int split = 2}) {
+      int split = 2,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
@@ -263,6 +271,7 @@ class FormBuilder {
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
         split: split,
+        padding: map['padding'] ?? padding,
       ),
     ));
     nextLine();
@@ -278,7 +287,8 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      int flex = 0}) {
+      int flex = 0,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
@@ -295,6 +305,7 @@ class FormBuilder {
         onChanged: onChanged,
         autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
         split: 0,
+        padding: map['padding'] ?? padding,
       ),
       flex: flex,
     ));
@@ -310,7 +321,8 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      int split = 2}) {
+      int split = 2,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
@@ -329,6 +341,7 @@ class FormBuilder {
         onChanged: onChanged,
         autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
         split: split,
+        padding: map['padding'] ?? padding,
       ),
     ));
     nextLine();
@@ -343,7 +356,8 @@ class FormBuilder {
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
-      Alignment alignment}) {
+      Alignment alignment,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(
       _FormItemWidget(formController,
@@ -358,6 +372,7 @@ class FormBuilder {
                   label: map['label'] ?? label,
                   child: map['child'] ?? child,
                   onLongPress: onLongPress,
+                  padding: map['padding'] ?? padding,
                 ),
               )),
     );
@@ -372,7 +387,8 @@ class FormBuilder {
       int flex = 1,
       DateTimeFormatter formatter,
       FormFieldValidator<DateTime> validator,
-      bool useTime}) {
+      bool useTime,
+      EdgeInsets padding}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
@@ -391,6 +407,7 @@ class FormBuilder {
                 formatter: formatter,
                 validator: validator,
                 useTime: map['useTime'] ?? useTime,
+                padding: map['padding'] ?? padding,
               )),
     );
     return this;
@@ -403,7 +420,8 @@ class FormBuilder {
       List<DropdownMenuItem> items,
       DropdownButtonBuilder selectedItemBuilder,
       FormFieldValidator validator,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      EdgeInsets padding}) {
     DropdownController controller = formController._controllers
         .putIfAbsent(controlKey, () => DropdownController());
     FocusNode focusNode =
@@ -422,22 +440,34 @@ class FormBuilder {
                 autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
                 selectedItemBuilder:
                     map['selectedItemBuilder'] ?? selectedItemBuilder,
+                padding: map['padding'] ?? padding,
               )),
     );
     return this;
   }
 
   FormBuilder divider(String controlKey,
-      {double height = 1.0, bool visible = true}) {
+      {double height = 1.0,
+      bool visible = true,
+      EdgeInsets padding = const EdgeInsets.only(left: 5, right: 5)}) {
     _setInitialStateKey(false, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
       flex: 1,
-      builder: (context, map) => Divider(
-        height: map['height'] ?? height ?? 1.0,
-      ),
+      builder: (context, map) {
+        FormThemeData formThemeData = FormThemeData.of(context);
+        return Padding(
+          padding: map['padding'] ??
+              padding ??
+              formThemeData.padding ??
+              EdgeInsets.zero,
+          child: Divider(
+            height: map['height'] ?? height ?? 1.0,
+          ),
+        );
+      },
     ));
     nextLine();
     return this;

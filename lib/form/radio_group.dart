@@ -37,6 +37,7 @@ class RadioGroup extends FormField {
   final String controlKey;
   final ValueChanged onChanged;
   final int split;
+  final EdgeInsets padding;
 
   RadioGroup(this.controlKey, this.buttons,
       {Key key,
@@ -46,17 +47,17 @@ class RadioGroup extends FormField {
       this.onChanged,
       this.validator,
       this.autovalidateMode = AutovalidateMode.disabled,
-      this.split = 0})
+      this.split = 0,
+      this.padding})
       : assert(controlKey != null),
         super(
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           validator: validator,
           builder: (field) {
-            FormThemeData formThemeData =
-                FormThemeData.of(controlKey, field.context);
+            FormThemeData formThemeData = FormThemeData.of(field.context);
             RadioGroupTheme radioGroupTheme = formThemeData.radioGroupTheme;
-            ThemeData themeData = formThemeData.getThemeData(field.context);
+            ThemeData themeData = Theme.of(field.context);
 
             final _RadioGroupState state = field as _RadioGroupState;
             bool readOnly =
@@ -160,12 +161,12 @@ class RadioGroup extends FormField {
               ));
             }
 
-            return formThemeData.widgetWrapper(
-                controlKey,
-                Column(
-                  children: widgets,
-                ),
-                field.context);
+            return Padding(
+              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
+              child: Column(
+                children: widgets,
+              ),
+            );
           },
         );
 

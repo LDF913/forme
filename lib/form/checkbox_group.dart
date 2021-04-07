@@ -37,6 +37,7 @@ class CheckboxGroup extends FormField<List<int>> {
   final String controlKey;
   final ValueChanged<List<int>> onChanged;
   final int split;
+  final EdgeInsets padding;
 
   CheckboxGroup(this.controlKey, this.buttons,
       {Key key,
@@ -45,6 +46,7 @@ class CheckboxGroup extends FormField<List<int>> {
       this.label,
       this.validator,
       this.onChanged,
+      this.padding,
       this.autovalidateMode = AutovalidateMode.disabled,
       this.split = 0})
       : assert(controlKey != null),
@@ -53,11 +55,10 @@ class CheckboxGroup extends FormField<List<int>> {
             validator: validator,
             initialValue: initialValue,
             builder: (field) {
-              FormThemeData formThemeData =
-                  FormThemeData.of(controlKey, field.context);
+              FormThemeData formThemeData = FormThemeData.of(field.context);
               CheckboxGroupTheme checkboxGroupTheme =
                   formThemeData.checkboxGroupTheme;
-              ThemeData themeData = formThemeData.getThemeData(field.context);
+              ThemeData themeData = Theme.of(field.context);
               final _CheckboxGroupState state = field as _CheckboxGroupState;
               bool readOnly =
                   FormController.of(field.context).isReadOnly(controlKey);
@@ -173,12 +174,12 @@ class CheckboxGroup extends FormField<List<int>> {
                 ));
               }
 
-              return formThemeData.widgetWrapper(
-                  controlKey,
-                  Column(
-                    children: widgets,
-                  ),
-                  field.context);
+              return Padding(
+                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
+                child: Column(
+                  children: widgets,
+                ),
+              );
             });
 
   @override

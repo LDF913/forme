@@ -7,6 +7,7 @@ import 'form_theme.dart';
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
   final TextEditingController controller;
+  final EdgeInsets padding;
   ClearableTextFormField(
     String controlKey, {
     String label,
@@ -31,6 +32,7 @@ class ClearableTextFormField extends FormField<String> {
     bool passwordVisible,
     Widget prefixIcon,
     List<TextInputFormatter> inputFormatters,
+    this.padding,
   })  : assert(controlKey != null),
         super(
           key: key,
@@ -39,10 +41,8 @@ class ClearableTextFormField extends FormField<String> {
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
           builder: (FormFieldState<String> field) {
-            final FormThemeData formThemeData =
-                FormThemeData.of(controlKey, field.context);
-            final ThemeData themeData =
-                formThemeData.getThemeData(field.context);
+            final FormThemeData formThemeData = FormThemeData.of(field.context);
+            final ThemeData themeData = Theme.of(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
             List<Widget> suffixes = [];
 
@@ -106,8 +106,10 @@ class ClearableTextFormField extends FormField<String> {
                 readOnly: readOnly,
                 inputFormatters: inputFormatters);
 
-            return formThemeData.widgetWrapper(
-                controlKey, textField, field.context);
+            return Padding(
+              child: textField,
+              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
+            );
           },
         );
 
@@ -227,6 +229,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final bool useTime;
   final Locale locale;
   final FocusNode focusNode;
+  final EdgeInsets padding;
 
   DateTimeFormField(this.controlKey,
       {Key key,
@@ -239,17 +242,16 @@ class DateTimeFormField extends FormField<DateTime> {
       this.locale,
       this.focusNode,
       this.useTime = false,
-      AutovalidateMode autovalidateMode})
+      AutovalidateMode autovalidateMode,
+      this.padding})
       : assert(controlKey != null),
         super(
           validator: validator,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
           builder: (field) {
-            final FormThemeData formThemeData =
-                FormThemeData.of(controlKey, field.context);
-            final ThemeData themeData =
-                formThemeData.getThemeData(field.context);
+            final FormThemeData formThemeData = FormThemeData.of(field.context);
+            final ThemeData themeData = Theme.of(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             void pickTime() {
               DateTime value = initialValue ?? DateTime.now();
@@ -330,8 +332,10 @@ class DateTimeFormField extends FormField<DateTime> {
               enabled: true,
               readOnly: true,
             );
-            return formThemeData.widgetWrapper(
-                controlKey, textField, field.context);
+
+            return Padding(
+                child: textField,
+                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero);
           },
         );
 
