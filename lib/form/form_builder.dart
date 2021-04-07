@@ -427,35 +427,25 @@ class FormBuilder {
     return this;
   }
 
+  FormBuilder divider(String controlKey,
+      {double height = 1.0, bool visible = true}) {
+    _setInitialStateKey(false, visible, controlKey);
+    nextLine();
+    _builders.add(_FormItemWidget(
+      formController,
+      controlKey: controlKey,
+      flex: 1,
+      builder: (context, map) => Divider(
+        height: map['height'] ?? height ?? 1.0,
+      ),
+    ));
+    nextLine();
+    return this;
+  }
+
   Widget build() {
     nextLine();
-    List<Row> rows = [];
-    for (List<_FormItemWidget> builders in _builderss) {
-      rows.add(Row(
-        children: builders,
-      ));
-    }
-    return Form(
-        key: formController._formKey,
-        child: ChangeNotifierProvider(
-          create: (context) => formController,
-          child: Consumer<FormController>(
-            builder: (context, c, child) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                c._rebuild = false;
-              });
-              return Theme(
-                  data: formController.theme.themeData ?? Theme.of(context),
-                  child: Visibility(
-                    maintainState: true,
-                    child: Column(
-                      children: rows,
-                    ),
-                    visible: !c._hide,
-                  ));
-            },
-          ),
-        ));
+    return _FormWidget(_builderss, formController);
   }
 
   void _setInitialStateKey(bool readOnly, bool visible, String controlKey) {
@@ -480,25 +470,24 @@ class FormBuilder {
 class FormController extends ChangeNotifier {
   bool _hide = false;
   bool _readOnly = false;
-  bool _rebuild = false;
 
   final GlobalKey _formKey = GlobalKey<FormState>();
   final Set<String> _hideKeys = {};
   final Set<String> _readOnlyKeys = {};
-  final FormTheme theme = FormTheme();
-
-  FormController() {
-    theme.addListener(_themeChange);
-  }
-
-  static FormController of(BuildContext context) {
-    return context.read<FormController>();
-  }
-
+  FormTheme _theme = FormTheme();
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
-
   final Map<String, _FormItemWidgetState> _states = {};
+  final ChangeNotifier _themeNotifier = ChangeNotifier();
+
+  get theme => _theme;
+
+  set theme(FormTheme theme) {
+    if (theme != null) {
+      _theme = theme;
+      _themeNotifier.notifyListeners();
+    }
+  }
 
   void requestFocus(String controlKey) {
     FocusNode focusNode = _focusNodes[controlKey];
@@ -522,11 +511,6 @@ class FormController extends ChangeNotifier {
     if (state != null) state.rebuild(map);
   }
 
-  void _themeChange() {
-    _rebuild = true;
-    notifyListeners();
-  }
-
   @override
   void dispose() {
     super.dispose();
@@ -539,7 +523,7 @@ class FormController extends ChangeNotifier {
       element.dispose();
     });
     _states.clear();
-    theme.dispose();
+    _themeNotifier.dispose();
   }
 
   Map<String, dynamic> getData() {
@@ -610,10 +594,12 @@ class FormController extends ChangeNotifier {
   }
 
   void reset() {
+    assert(_state != null);
     _state.reset();
   }
 
   bool validate() {
+    assert(_state != null);
     return _state.validate();
   }
 
@@ -637,6 +623,10 @@ class FormController extends ChangeNotifier {
 
   bool isReadOnly(String key) {
     return _readOnly || _readOnlyKeys.contains(key);
+  }
+
+  static FormController of(BuildContext context) {
+    return context.read<FormController>();
   }
 }
 
@@ -685,7 +675,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
     return Consumer<FormController>(
       builder: (context, v, child) {
-        if (forceRebuild || v._rebuild) {
+        if (forceRebuild) {
           forceRebuild = false;
           return buildChild();
         }
@@ -707,5 +697,71 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
       this.forceRebuild = true;
       this.map = map;
     });
+  }
+}
+
+class _FormWidget extends StatefulWidget {
+  final List<List<_FormItemWidget>> builderss;
+  final FormController formController;
+
+  const _FormWidget(this.builderss, this.formController, {Key key})
+      : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _FormWidgetState();
+}
+
+class _FormWidgetState extends State<_FormWidget> {
+  @override
+  void initState() {
+    super.initState();
+    widget.formController._themeNotifier.addListener(handleThemeChange);
+  }
+
+  void dispose() {
+    super.dispose();
+    widget.formController._themeNotifier.removeListener(handleThemeChange);
+  }
+
+  void handleThemeChange() {
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    List<Row> rows = [];
+    for (List<_FormItemWidget> builders in widget.builderss) {
+      rows.add(Row(
+        children: builders,
+      ));
+    }
+
+    return Theme(
+        data: getThemeData(context),
+        child: Form(
+            key: widget.formController._formKey,
+            child: ChangeNotifierProvider<FormController>(
+              create: (context) => widget.formController,
+              child: Consumer<FormController>(
+                builder: (context, c, child) {
+                  return Visibility(
+                    maintainState: true,
+                    child: Column(
+                      children: rows,
+                    ),
+                    visible: !c._hide,
+                  );
+                },
+              ),
+            )));
+  }
+
+  ThemeData getThemeData(BuildContext context) {
+    ThemeData themeData;
+    if (widget.formController.theme.themeDataBuilder != null) {
+      themeData = widget.formController.theme.themeDataBuilder(context);
+    } else {
+      themeData = Theme.of(context);
+    }
+    return themeData;
   }
 }

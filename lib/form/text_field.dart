@@ -103,10 +103,7 @@ class ClearableTextFormField extends FormField<String> {
                 readOnly: readOnly,
                 inputFormatters: inputFormatters);
 
-            return Padding(
-              child: textField,
-              padding: theme.getPadding(controlKey),
-            );
+            return theme.widgetWrapper(controlKey, textField, field.context);
           },
         );
 
@@ -326,8 +323,7 @@ class DateTimeFormField extends FormField<DateTime> {
               enabled: true,
               readOnly: true,
             );
-            return Padding(
-                padding: theme.getPadding(controlKey), child: textField);
+            return theme.widgetWrapper(controlKey, textField, field.context);
           },
         );
 

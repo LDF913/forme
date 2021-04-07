@@ -37,6 +37,8 @@ class DropdownFormField extends FormField {
               focusNode.requestFocus();
             }
 
+            FormTheme theme = FormTheme.of(field.context);
+
             final InputDecoration effectiveDecoration =
                 InputDecoration().applyDefaults(
               Theme.of(field.context).inputDecorationTheme,
@@ -64,45 +66,47 @@ class DropdownFormField extends FormField {
             if (!hasValue) {
               throw 'pls clear dropdown value before you reload items!';
             }
-            FormTheme theme = FormTheme.of(field.context);
-            return Focus(
+
+            ThemeData themeData = Theme.of(field.context);
+            Widget child = Focus(
               canRequestFocus: false,
               skipTraversal: true,
               child: Builder(builder: (BuildContext context) {
-                return Padding(
-                  padding: theme.getPadding(controlKey),
-                  child: InputDecorator(
-                    decoration: effectiveDecoration.copyWith(
-                        errorText: field.errorText),
-                    isEmpty: controller.value == null,
-                    isFocused: Focus.of(context).hasFocus,
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton(
-                        selectedItemBuilder: selectedItemBuilder ??
-                            (BuildContext context) {
-                              return items.map<Widget>((DropdownMenuItem item) {
-                                return SingleChildScrollView(
-                                  child: item.child,
-                                );
-                              }).toList();
-                            },
-                        items: items,
-                        value: controller.value,
-                        icon: Row(
-                          children: icons,
-                          mainAxisSize: MainAxisSize.min,
-                        ),
-                        onChanged: readOnly ? null : onChangedHandler,
-                        isDense: true,
-                        isExpanded: true,
-                        focusNode: focusNode,
-                        autofocus: false,
+                return InputDecorator(
+                  decoration:
+                      effectiveDecoration.copyWith(errorText: field.errorText),
+                  isEmpty: controller.value == null,
+                  isFocused: Focus.of(context).hasFocus,
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton(
+                      focusColor: themeData.focusColor,
+                      iconDisabledColor: themeData.disabledColor,
+                      iconEnabledColor: themeData.primaryColor,
+                      selectedItemBuilder: selectedItemBuilder ??
+                          (BuildContext context) {
+                            return items.map<Widget>((DropdownMenuItem item) {
+                              return SingleChildScrollView(
+                                child: item.child,
+                              );
+                            }).toList();
+                          },
+                      items: items,
+                      value: controller.value,
+                      icon: Row(
+                        children: icons,
+                        mainAxisSize: MainAxisSize.min,
                       ),
+                      onChanged: readOnly ? null : onChangedHandler,
+                      isDense: true,
+                      isExpanded: true,
+                      focusNode: focusNode,
+                      autofocus: false,
                     ),
                   ),
                 );
               }),
             );
+            return theme.widgetWrapper(controlKey, child, field.context);
           },
         );
 

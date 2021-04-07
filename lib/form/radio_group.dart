@@ -159,14 +159,12 @@ class RadioGroup extends FormField {
               ));
             }
 
-            return Padding(
-              padding: theme.getPadding(controlKey),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: widgets,
-              ),
-            );
+            return theme.widgetWrapper(
+                controlKey,
+                Column(
+                  children: widgets,
+                ),
+                field.context);
           },
         );
 
