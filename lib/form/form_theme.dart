@@ -70,6 +70,21 @@ class FormThemeData {
   }
 
   static DefaultThemeData defaultThemeData = DefaultThemeData._();
+
+  FormThemeData apply({
+    ThemeDataBuilder themeDataBuilder,
+    EdgeInsets labelPadding,
+    CheckboxGroupTheme checkboxGroupTheme,
+    RadioGroupTheme radioGroupTheme,
+    WidgetWrapper wrapper,
+  }) {
+    return FormThemeData(
+        themeDataBuilder: themeDataBuilder ?? this.themeDataBuilder,
+        labelPadding: labelPadding ?? this.labelPadding,
+        checkboxGroupTheme: checkboxGroupTheme ?? this.checkboxGroupTheme,
+        radioGroupTheme: radioGroupTheme ?? this.radioGroupTheme,
+        wrapper: wrapper ?? wrapper);
+  }
 }
 
 class HexColor extends Color {
