@@ -2,62 +2,43 @@ import 'package:flutter/material.dart';
 
 import 'form_builder.dart';
 
-class FormTheme extends ControlTheme {
+class FormTheme extends ChangeNotifier {
   ThemeData _themeData;
-  Map<String, ControlTheme> _controlThemes = {};
+  EdgeInsets _padding;
+  EdgeInsets _labelPadding;
 
+  Map<String, EdgeInsets> _controlPaddings = {};
+
+  CheckboxGroupTheme _checkboxGroupTheme = CheckboxGroupTheme();
+  RadioGroupTheme _radioGroupTheme = RadioGroupTheme();
+
+  get labelPadding => _labelPadding;
+  get checkboxGroupTheme => _checkboxGroupTheme;
+  get radioGroupTheme => _radioGroupTheme;
   get themeData => _themeData;
 
-  set themeData(ThemeData themeData) {
-    if (_themeData != themeData) {
-      _themeData = themeData;
-      notifyListeners();
-    }
+  void set(
+      {ThemeData themeData,
+      EdgeInsets padding,
+      EdgeInsets labelPadding,
+      CheckboxGroupTheme checkboxGroupTheme,
+      RadioGroupTheme radioGroupTheme}) {
+    _themeData = themeData ?? this._themeData;
+    _padding = padding ?? this._padding;
+    _checkboxGroupTheme = checkboxGroupTheme ?? _checkboxGroupTheme;
+    _radioGroupTheme = radioGroupTheme ?? _radioGroupTheme;
+    notifyListeners();
   }
 
   EdgeInsets getPadding(String controlKey) {
-    return _getControlTheme(controlKey).padding ?? padding;
+    return _controlPaddings[controlKey] ?? _padding ?? EdgeInsets.all(5);
   }
 
-  set padding(EdgeInsets padding) {
-    super.padding = padding ?? EdgeInsets.zero;
-    notifyListeners();
-  }
-
-  double getCheckboxLabeSpace(String controlKey) {
-    return _getControlTheme(controlKey).checkboxLabelSpace ??
-        checkboxLabelSpace;
-  }
-
-  double getCheckboxSpace(String controlKey) {
-    return _getControlTheme(controlKey).checkboxSpace ?? checkboxSpace;
-  }
-
-  set checkboxLabelSpace(double space) {
-    super.checkboxLabelSpace = space ?? 0;
-    notifyListeners();
-  }
-
-  set checkboxSpace(double space) {
-    super.checkboxSpace = space ?? 0;
-    notifyListeners();
-  }
-
-  TextStyle getCheckboxLabelStyle(String controlKey) {
-    return _getControlTheme(controlKey).checkboxLabelStyle ??
-        checkboxLabelStyle;
-  }
-
-  set checkboxLabelStyle(TextStyle style) {
-    super.checkboxLabelStyle = style;
-    notifyListeners();
-  }
-
-  void setControlTheme(String controlKey, ControlTheme theme) {
-    if (theme == null) {
-      _controlThemes.remove(controlKey);
+  void setPadding(String controlKey, EdgeInsets padding) {
+    if (padding == null) {
+      _controlPaddings.remove(controlKey);
     } else {
-      _controlThemes[controlKey] = theme;
+      _controlPaddings[controlKey] = padding;
     }
     notifyListeners();
   }
@@ -88,21 +69,46 @@ class FormTheme extends ControlTheme {
                 : themeData.hintColor)
         .merge(inputDecorationTheme.labelStyle);
   }
+}
 
-  ControlTheme _getControlTheme(String controlKey) {
-    return _controlThemes[controlKey] ?? this;
+class HexColor extends Color {
+  HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
+
+  static int _getColorFromHex(String hexColor) {
+    hexColor = hexColor.toUpperCase().replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return int.parse(hexColor, radix: 16);
   }
 }
 
-class ControlTheme with ChangeNotifier {
-  EdgeInsets padding;
-  double checkboxLabelSpace;
-  double checkboxSpace;
-  TextStyle checkboxLabelStyle;
+class CheckboxGroupTheme {
+  final double labelSpace;
+  final double widgetsSpace;
+  final TextStyle labelStyle;
+  final EdgeInsets widgetsPadding;
+  final EdgeInsets errorTextPadding;
 
-  ControlTheme({
-    this.padding = const EdgeInsets.all(5),
-    this.checkboxLabelSpace = 8,
-    this.checkboxSpace = 8,
-  });
+  CheckboxGroupTheme(
+      {this.labelSpace,
+      this.widgetsSpace,
+      this.labelStyle,
+      this.widgetsPadding,
+      this.errorTextPadding});
+}
+
+class RadioGroupTheme extends CheckboxGroupTheme {
+  RadioGroupTheme({
+    double labelSpace,
+    double widgetsSpace,
+    TextStyle labelStyle,
+    EdgeInsets widgetsPadding,
+    EdgeInsets errorTextPadding,
+  }) : super(
+            errorTextPadding: errorTextPadding,
+            labelSpace: labelSpace,
+            labelStyle: labelStyle,
+            widgetsPadding: widgetsPadding,
+            widgetsSpace: widgetsSpace);
 }

@@ -6,8 +6,10 @@ class RadioButton {
   final dynamic value;
   final String label;
   final String controlKey;
+  final bool ignoreSplit;
 
-  RadioButton(this.value, this.label, {this.controlKey});
+  RadioButton(this.value, this.label,
+      {this.controlKey, this.ignoreSplit = false});
 }
 
 class RadioGroupController extends ValueNotifier {
@@ -34,6 +36,7 @@ class RadioGroup extends FormField {
   final AutovalidateMode autovalidateMode;
   final String controlKey;
   final ValueChanged onChanged;
+  final int split;
 
   RadioGroup(this.controlKey, this.buttons,
       {Key key,
@@ -42,7 +45,8 @@ class RadioGroup extends FormField {
       this.label,
       this.onChanged,
       this.validator,
-      this.autovalidateMode = AutovalidateMode.disabled})
+      this.autovalidateMode = AutovalidateMode.disabled,
+      this.split = 0})
       : assert(controlKey != null),
         super(
           initialValue: initialValue,
@@ -50,56 +54,118 @@ class RadioGroup extends FormField {
           validator: validator,
           builder: (field) {
             FormTheme theme = FormTheme.of(field.context);
-            TextStyle errorStyle = FormTheme.getErrorStyle(field.context);
-            final _RadioGroupState state = field as _RadioGroupState;
-            List<Widget> widgets = [];
-            if (label != null) {
-              Text text = Text(
-                label,
-                style: FormTheme.getLabelStyle(field.context, state.hasError),
-              );
-              widgets.add(Container(
-                  child: Row(
-                children: [Flexible(child: text)],
-              )));
-            }
+            RadioGroupTheme radioGroupTheme = theme.radioGroupTheme;
 
+            final _RadioGroupState state = field as _RadioGroupState;
+            ThemeData themeData = Theme.of(field.context);
             bool readOnly =
                 FormController.of(field.context).isReadOnly(controlKey);
+            List<Widget> widgets = [];
+            if (label != null) {
+              Text text = Text(label,
+                  textAlign: TextAlign.left,
+                  style:
+                      FormTheme.getLabelStyle(field.context, state.hasError));
+              widgets.add(Padding(
+                padding: theme.labelPadding ?? EdgeInsets.zero,
+                child: Row(
+                  children: [Flexible(child: text)],
+                ),
+              ));
+            }
 
-            for (RadioButton button in buttons) {
+            List<Widget> wrapWidgets = [];
+
+            TextStyle labelStyle = radioGroupTheme.labelStyle ?? TextStyle();
+            for (int i = 0; i < buttons.length; i++) {
+              RadioButton button = buttons[i];
               bool isReadOnly =
                   readOnly || controller.isReadOnly(button.controlKey);
-              widgets.add(Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Radio(
-                      value: button.value,
-                      groupValue: state.value,
-                      onChanged: isReadOnly
+              bool isSelected = button.value == controller.value;
+              Color color = isReadOnly
+                  ? themeData.disabledColor
+                  : isSelected
+                      ? themeData.primaryColor
+                      : themeData.unselectedWidgetColor;
+
+              Widget checkbox = Padding(
+                padding: radioGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(4.0)),
+                      onTap: isReadOnly
                           ? null
-                          : (v) {
-                              field.didChange(v);
-                              if (onChanged != null) onChanged(v);
-                            }),
-                  Text(
-                    button.label,
-                  ),
-                ],
-              ));
+                          : () {
+                              var value = button.value;
+                              field.didChange(value);
+                              if (onChanged != null) onChanged(value);
+                            },
+                      child: Row(
+                        children: [
+                          Icon(
+                              isSelected
+                                  ? Icons.radio_button_checked
+                                  : Icons.radio_button_checked_outlined,
+                              size: labelStyle.fontSize,
+                              color: color),
+                          SizedBox(
+                            width: radioGroupTheme.labelSpace ?? 4.0,
+                          ),
+                          split == 0
+                              ? Text(
+                                  button.label,
+                                  style: labelStyle,
+                                )
+                              : Flexible(
+                                  child: Text(
+                                    button.label,
+                                    style: labelStyle,
+                                  ),
+                                )
+                        ],
+                      )),
+                ),
+              );
+
+              if (split <= 0) {
+                wrapWidgets.add(checkbox);
+                if (i < buttons.length - 1)
+                  wrapWidgets.add(SizedBox(
+                    width: radioGroupTheme.widgetsSpace,
+                  ));
+              } else {
+                wrapWidgets.add(FractionallySizedBox(
+                  widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                  child: checkbox,
+                ));
+              }
             }
+
+            widgets.add(Wrap(children: wrapWidgets));
+
             if (state.hasError) {
-              widgets.add(Row(
-                children: [
-                  Flexible(child: Text(state.errorText, style: errorStyle))
-                ],
+              widgets.add(Padding(
+                padding: radioGroupTheme.errorTextPadding ?? EdgeInsets.zero,
+                child: Row(
+                  children: [
+                    Flexible(
+                      child: Text(state.errorText,
+                          style: FormTheme.getErrorStyle(field.context)),
+                    )
+                  ],
+                ),
               ));
             }
+
             return Padding(
-              child: Wrap(
+              padding: theme.getPadding(controlKey),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: widgets,
               ),
-              padding: theme.getPadding(controlKey),
             );
           },
         );

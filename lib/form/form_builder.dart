@@ -243,7 +243,8 @@ class FormBuilder {
       ValueChanged onChanged,
       bool readOnly = false,
       bool visible = true,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      int split = 2}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
@@ -261,6 +262,7 @@ class FormBuilder {
         validator: validator,
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
+        split: split,
       ),
     ));
     nextLine();
@@ -292,6 +294,7 @@ class FormBuilder {
         validator: validator,
         onChanged: onChanged,
         autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+        split: 0,
       ),
       flex: flex,
     ));
@@ -306,7 +309,8 @@ class FormBuilder {
       FormFieldValidator<List<int>> validator,
       bool readOnly = false,
       bool visible = true,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled}) {
+      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      int split = 2}) {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
@@ -324,6 +328,7 @@ class FormBuilder {
         validator: validator,
         onChanged: onChanged,
         autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+        split: split,
       ),
     ));
     nextLine();

@@ -6,7 +6,8 @@ import 'form_theme.dart';
 class CheckboxButton {
   final String label;
   final String controlKey;
-  CheckboxButton(this.label, {this.controlKey});
+  final bool ignoreSplit;
+  CheckboxButton(this.label, {this.controlKey, this.ignoreSplit = false});
 }
 
 class CheckboxGroupController extends ValueNotifier<List<int>> {
@@ -35,6 +36,7 @@ class CheckboxGroup extends FormField<List<int>> {
   final AutovalidateMode autovalidateMode;
   final String controlKey;
   final ValueChanged<List<int>> onChanged;
+  final int split;
 
   CheckboxGroup(this.controlKey, this.buttons,
       {Key key,
@@ -43,7 +45,8 @@ class CheckboxGroup extends FormField<List<int>> {
       this.label,
       this.validator,
       this.onChanged,
-      this.autovalidateMode = AutovalidateMode.disabled})
+      this.autovalidateMode = AutovalidateMode.disabled,
+      this.split = 0})
       : assert(controlKey != null),
         super(
             autovalidateMode: autovalidateMode,
@@ -51,26 +54,23 @@ class CheckboxGroup extends FormField<List<int>> {
             initialValue: initialValue,
             builder: (field) {
               FormTheme theme = FormTheme.of(field.context);
+              CheckboxGroupTheme checkboxGroupTheme = theme.checkboxGroupTheme;
               final _CheckboxGroupState state = field as _CheckboxGroupState;
-              TextStyle errorStyle = FormTheme.getErrorStyle(field.context);
+              ThemeData themeData = Theme.of(field.context);
               bool readOnly =
                   FormController.of(field.context).isReadOnly(controlKey);
               List<Widget> widgets = [];
               if (label != null) {
-                Text text;
-                if (state.errorText != null) {
-                  text = Text(label, style: errorStyle);
-                } else {
-                  text = Text(
-                    label,
+                Text text = Text(label,
+                    textAlign: TextAlign.left,
                     style:
-                        FormTheme.getLabelStyle(field.context, state.hasError),
-                  );
-                }
-                widgets.add(Container(
-                    child: Row(
-                  children: [Flexible(child: text)],
-                )));
+                        FormTheme.getLabelStyle(field.context, state.hasError));
+                widgets.add(Padding(
+                  padding: theme.labelPadding ?? EdgeInsets.zero,
+                  child: Row(
+                    children: [Flexible(child: text)],
+                  ),
+                ));
               }
 
               List<int> value;
@@ -80,33 +80,29 @@ class CheckboxGroup extends FormField<List<int>> {
                 value = [];
               }
 
+              List<Widget> wrapWidgets = [];
+
               TextStyle labelStyle =
-                  theme.getCheckboxLabelStyle(controlKey) ?? TextStyle();
-              ThemeData themeData = Theme.of(field.context);
-              CheckboxThemeData checkboxThemeData =
-                  themeData.checkboxTheme ?? CheckboxThemeData();
+                  checkboxGroupTheme.labelStyle ?? TextStyle();
               for (int i = 0; i < buttons.length; i++) {
                 CheckboxButton button = buttons[i];
                 bool isReadOnly =
                     readOnly || controller.isReadOnly(button.controlKey);
-                widgets.add(Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    InkWell(
-                        child: value.contains(i)
-                            ? Icon(
-                                Icons.check_box,
-                                size: labelStyle.fontSize,
-                                color: isReadOnly
-                                    ? themeData.disabledColor
-                                    : checkboxThemeData.checkColor
-                                        .resolve({MaterialState.selected}),
-                              )
-                            : Icon(Icons.check_box_outline_blank,
-                                size: labelStyle.fontSize,
-                                color: isReadOnly
-                                    ? themeData.disabledColor
-                                    : null),
+
+                Color color = isReadOnly
+                    ? themeData.disabledColor
+                    : value.contains(i)
+                        ? themeData.primaryColor
+                        : themeData.unselectedWidgetColor;
+
+                Widget checkbox = Padding(
+                  padding:
+                      checkboxGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(4.0)),
                         onTap: isReadOnly
                             ? null
                             : () {
@@ -117,33 +113,69 @@ class CheckboxGroup extends FormField<List<int>> {
                                 field.didChange(value);
                                 if (onChanged != null)
                                   onChanged(List.from(value));
-                              }),
-                    SizedBox(
-                      width: theme.getCheckboxLabeSpace(controlKey),
-                    ),
-                    Text(
-                      button.label,
-                      style: labelStyle,
-                    ),
-                    SizedBox(
-                      width: theme.getCheckboxSpace(controlKey),
-                    ),
-                  ],
+                              },
+                        child: Row(
+                          children: [
+                            value.contains(i)
+                                ? Icon(Icons.check_box,
+                                    size: labelStyle.fontSize, color: color)
+                                : Icon(Icons.check_box_outline_blank,
+                                    size: labelStyle.fontSize, color: color),
+                            SizedBox(
+                              width: checkboxGroupTheme.labelSpace ?? 4.0,
+                            ),
+                            split == 0
+                                ? Text(
+                                    button.label,
+                                    style: labelStyle,
+                                  )
+                                : Flexible(
+                                    child: Text(
+                                      button.label,
+                                      style: labelStyle,
+                                    ),
+                                  )
+                          ],
+                        )),
+                  ),
+                );
+
+                if (split <= 0) {
+                  wrapWidgets.add(checkbox);
+                  if (i < buttons.length - 1)
+                    wrapWidgets.add(SizedBox(
+                      width: checkboxGroupTheme.widgetsSpace ?? 4.0,
+                    ));
+                } else {
+                  wrapWidgets.add(FractionallySizedBox(
+                    widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                    child: checkbox,
+                  ));
+                }
+              }
+
+              widgets.add(Wrap(children: wrapWidgets));
+
+              if (state.hasError) {
+                widgets.add(Padding(
+                  padding:
+                      checkboxGroupTheme.errorTextPadding ?? EdgeInsets.zero,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(state.errorText,
+                            style: FormTheme.getErrorStyle(field.context)),
+                      )
+                    ],
+                  ),
                 ));
               }
 
-              if (state.errorText != null) {
-                widgets.add(Row(
-                  children: [
-                    Flexible(
-                      child: Text(state.errorText, style: errorStyle),
-                    )
-                  ],
-                ));
-              }
               return Padding(
                 padding: theme.getPadding(controlKey),
-                child: Wrap(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: widgets,
                 ),
               );

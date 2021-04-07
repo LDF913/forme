@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'form/checkbox_group.dart';
 import 'form/form_builder.dart';
+import 'form/form_theme.dart';
 import 'form/radio_group.dart';
 
 void main() => runApp(MyApp());
@@ -299,14 +300,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.theme.checkboxLabelStyle =
-                    TextStyle(fontSize: 30);
-                formController.theme.themeData = Theme.of(context).copyWith(
-                    checkboxTheme: CheckboxThemeData(
-                        checkColor: MaterialStateProperty.all(Colors.yellow)),
-                    inputDecorationTheme: InputDecorationTheme(
-                        labelStyle:
-                            TextStyle(fontSize: 20, color: Colors.yellow)));
+                formController.theme.set(
+                    themeData: Theme.of(context)
+                        .copyWith(primaryColor: HexColor('#54D3C2')));
               },
               child: Text('set new form theme'),
             )
@@ -315,6 +311,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm() {
+    RadioGroupTheme radioGroupTheme = RadioGroupTheme(labelSpace: 10);
+    formController.theme.set(
+        themeData: buildLightTheme(context),
+        labelPadding: const EdgeInsets.only(top: 8, bottom: 8),
+        radioGroupTheme: radioGroupTheme,
+        checkboxGroupTheme: radioGroupTheme);
     FormBuilder builder = FormBuilder(formController)
         .textField(
           'username',
@@ -323,7 +325,7 @@ class _MyHomePageState extends State<MyHomePage> {
           flex: 3,
           validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
         )
-        .checkboxs('rememberMe', [CheckboxButton('记住')], flex: 0)
+        .checkboxs('rememberMe', [CheckboxButton('记住')])
         .nextLine()
         .textField('password',
             hintLabel: '密码',
@@ -349,6 +351,9 @@ class _MyHomePageState extends State<MyHomePage> {
           [
             CheckboxButton('男', controlKey: 'man'),
             CheckboxButton('女'),
+            CheckboxButton('女'),
+            CheckboxButton('女'),
+            CheckboxButton('very loooooooooooooong text', ignoreSplit: true),
           ],
           label: '性别',
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
@@ -384,5 +389,67 @@ class _MyHomePageState extends State<MyHomePage> {
         .dropdown('dropdown',
             validator: (value) => value == null ? 'select something !' : null);
     return builder.build();
+  }
+
+  static TextTheme _buildTextTheme(TextTheme base) {
+    const String fontName = 'WorkSans';
+    return base.copyWith(
+      headline1: base.headline1.copyWith(fontFamily: fontName),
+      headline2: base.headline2.copyWith(fontFamily: fontName),
+      headline3: base.headline3.copyWith(fontFamily: fontName),
+      headline4: base.headline4.copyWith(fontFamily: fontName),
+      headline5: base.headline5.copyWith(fontFamily: fontName),
+      headline6: base.headline6.copyWith(fontFamily: fontName),
+      button: base.button.copyWith(fontFamily: fontName),
+      caption: base.caption.copyWith(fontFamily: fontName),
+      bodyText1: base.bodyText1.copyWith(fontFamily: fontName),
+      bodyText2: base.bodyText2.copyWith(fontFamily: fontName),
+      subtitle1: base.subtitle1.copyWith(fontFamily: fontName),
+      subtitle2: base.subtitle2.copyWith(fontFamily: fontName),
+      overline: base.overline.copyWith(fontFamily: fontName),
+    );
+  }
+
+  static ThemeData buildLightTheme(context) {
+    final Color primaryColor = HexColor('#54D3C2');
+    final Color secondaryColor = HexColor('#54D3C2');
+    final ColorScheme colorScheme = const ColorScheme.light().copyWith(
+      primary: primaryColor,
+      secondary: secondaryColor,
+    );
+    final ThemeData base = ThemeData.light();
+    return base.copyWith(
+      inputDecorationTheme: InputDecorationTheme(
+          labelStyle: TextStyle(
+            color: Colors.grey,
+            fontWeight: FontWeight.normal,
+            fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
+          ),
+          hintStyle: TextStyle(
+            color: Colors.grey,
+            fontWeight: FontWeight.normal,
+            fontSize: MediaQuery.of(context).size.width > 360 ? 18 : 16,
+          )),
+      colorScheme: colorScheme,
+      primaryColor: primaryColor,
+      buttonColor: primaryColor,
+      indicatorColor: Colors.white,
+      splashColor: Colors.white24,
+      splashFactory: InkRipple.splashFactory,
+      accentColor: secondaryColor,
+      canvasColor: Colors.white,
+      unselectedWidgetColor: Colors.grey.withOpacity(0.6),
+      backgroundColor: const Color(0xFFFFFFFF),
+      scaffoldBackgroundColor: const Color(0xFFF6F6F6),
+      errorColor: const Color(0xFFB00020),
+      buttonTheme: ButtonThemeData(
+        colorScheme: colorScheme,
+        textTheme: ButtonTextTheme.primary,
+      ),
+      textTheme: _buildTextTheme(base.textTheme),
+      primaryTextTheme: _buildTextTheme(base.primaryTextTheme),
+      accentTextTheme: _buildTextTheme(base.accentTextTheme),
+      platform: TargetPlatform.iOS,
+    );
   }
 }
