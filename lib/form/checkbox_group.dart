@@ -4,32 +4,21 @@ import 'form_theme.dart';
 
 class CheckboxButton {
   final String label;
-  final String controlKey;
   final bool ignoreSplit;
-  final bool isReadOnly;
+  final bool readOnly;
+  final bool visible;
   final TextStyle textStyle;
   CheckboxButton(this.label,
-      {this.controlKey,
-      this.ignoreSplit = false,
-      this.isReadOnly = false,
+      {this.ignoreSplit = false,
+      this.readOnly = false,
+      this.visible = true,
       this.textStyle});
 }
 
 class CheckboxGroupController extends ValueNotifier<List<int>> {
-  List<String> _readOnlyKeys = [];
   CheckboxGroupController({List<int> value}) : super(value);
 
   List<int> get value => super.value == null ? [] : super.value;
-
-  set readOnlyKeys(List<String> keys) {
-    _readOnlyKeys.clear();
-    if (keys != null) _readOnlyKeys.addAll(keys);
-    notifyListeners();
-  }
-
-  bool isReadOnly(String key) {
-    return _readOnlyKeys.contains(key);
-  }
 }
 
 class CheckboxGroup extends FormField<List<int>> {
@@ -90,12 +79,12 @@ class CheckboxGroup extends FormField<List<int>> {
 
               List<Widget> wrapWidgets = [];
 
-              TextStyle labelStyle =
-                  checkboxGroupTheme.labelStyle ?? TextStyle();
               for (int i = 0; i < buttons.length; i++) {
                 CheckboxButton button = buttons[i];
-                bool isReadOnly =
-                    readOnly || controller.isReadOnly(button.controlKey);
+                TextStyle labelStyle = button.textStyle ??
+                    checkboxGroupTheme.labelStyle ??
+                    TextStyle();
+                bool isReadOnly = readOnly || button.readOnly;
 
                 Color color = isReadOnly
                     ? themeData.disabledColor
@@ -149,15 +138,21 @@ class CheckboxGroup extends FormField<List<int>> {
                 );
 
                 if (split <= 0) {
-                  wrapWidgets.add(checkbox);
-                  if (i < buttons.length - 1)
+                  wrapWidgets.add(Visibility(
+                    child: checkbox,
+                    visible: button.visible,
+                  ));
+                  if (button.visible && i < buttons.length - 1)
                     wrapWidgets.add(SizedBox(
                       width: 8.0,
                     ));
                 } else {
-                  wrapWidgets.add(FractionallySizedBox(
-                    widthFactor: button.ignoreSplit ? 1 : 1 / split,
-                    child: checkbox,
+                  wrapWidgets.add(Visibility(
+                    child: FractionallySizedBox(
+                      widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                      child: checkbox,
+                    ),
+                    visible: button.visible,
                   ));
                 }
               }

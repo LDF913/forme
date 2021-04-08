@@ -6,24 +6,18 @@ class RadioButton {
   final String label;
   final String controlKey;
   final bool ignoreSplit;
+  final bool readOnly;
+  final bool visible;
 
   RadioButton(this.value, this.label,
-      {this.controlKey, this.ignoreSplit = false});
+      {this.controlKey,
+      this.ignoreSplit = false,
+      this.readOnly = false,
+      this.visible = true});
 }
 
 class RadioGroupController extends ValueNotifier {
-  List<String> _readOnlyKeys = [];
   RadioGroupController({value}) : super(value);
-
-  set readOnlyKeys(List<String> keys) {
-    _readOnlyKeys.clear();
-    if (keys != null) _readOnlyKeys.addAll(keys);
-    notifyListeners();
-  }
-
-  bool isReadOnly(String key) {
-    return _readOnlyKeys.contains(key);
-  }
 }
 
 class RadioGroup extends FormField {
@@ -80,8 +74,7 @@ class RadioGroup extends FormField {
             TextStyle labelStyle = radioGroupTheme.labelStyle ?? TextStyle();
             for (int i = 0; i < buttons.length; i++) {
               RadioButton button = buttons[i];
-              bool isReadOnly =
-                  readOnly || controller.isReadOnly(button.controlKey);
+              bool isReadOnly = readOnly || button.readOnly;
               bool isSelected = button.value == controller.value;
               Color color = isReadOnly
                   ? themeData.disabledColor
@@ -89,7 +82,7 @@ class RadioGroup extends FormField {
                       ? themeData.primaryColor
                       : themeData.unselectedWidgetColor;
 
-              Widget checkbox = Padding(
+              Widget radio = Padding(
                 padding: radioGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
                 child: Material(
                   color: Colors.transparent,
@@ -131,15 +124,21 @@ class RadioGroup extends FormField {
               );
 
               if (split <= 0) {
-                wrapWidgets.add(checkbox);
-                if (i < buttons.length - 1)
+                wrapWidgets.add(Visibility(
+                  child: radio,
+                  visible: button.visible,
+                ));
+                if (button.visible && i < buttons.length - 1)
                   wrapWidgets.add(SizedBox(
                     width: 8.0,
                   ));
               } else {
-                wrapWidgets.add(FractionallySizedBox(
-                  widthFactor: button.ignoreSplit ? 1 : 1 / split,
-                  child: checkbox,
+                wrapWidgets.add(Visibility(
+                  child: FractionallySizedBox(
+                    widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                    child: radio,
+                  ),
+                  visible: button.visible,
                 ));
               }
             }

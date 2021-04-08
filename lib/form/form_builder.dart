@@ -56,10 +56,10 @@ class FormBuilder {
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
 
     _builders.add(_FormItemWidget(
-      formController,
+      visible,
+      readOnly,
       controlKey: controlKey,
       flex: flex,
-      visible: visible,
       builder: (context, map) {
         int _decimal = map['decimal'] ?? decimal;
         double _max = map['max'] ?? max;
@@ -167,11 +167,10 @@ class FormBuilder {
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
 
     _builders.add(_FormItemWidget(
-      formController,
+      visible,
+      readOnly,
       controlKey: controlKey,
       flex: flex,
-      visible: visible,
-      readOnly: readOnly,
       builder: (context, map) {
         List<TextInputFormatter> formatters = inputFormatters ?? [];
         if (regExp != null) {
@@ -224,11 +223,10 @@ class FormBuilder {
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
     _builders.add(_FormItemWidget(
-      formController,
+      visible,
+      readOnly,
       controlKey: controlKey,
       flex: flex,
-      visible: visible,
-      readOnly: readOnly,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -262,10 +260,9 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => RadioGroupController());
     nextLine();
     _builders.add(_FormItemWidget(
-      formController,
+      visible,
+      readOnly,
       controlKey: controlKey,
-      visible: visible,
-      readOnly: readOnly,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -298,14 +295,9 @@ class FormBuilder {
       EdgeInsets padding}) {
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
-    controller.readOnlyKeys = items
-        .where((element) => element.isReadOnly)
-        .map((e) => e.controlKey)
-        .toList();
     _builders.add(_FormItemWidget(
-      formController,
-      visible: visible,
-      readOnly: readOnly,
+      visible,
+      readOnly,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -340,15 +332,10 @@ class FormBuilder {
       EdgeInsets padding}) {
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
-    controller.readOnlyKeys = items
-        .where((element) => element.isReadOnly && element.controlKey != null)
-        .map((e) => e.controlKey)
-        .toList();
     nextLine();
     _builders.add(_FormItemWidget(
-      formController,
-      visible: visible,
-      readOnly: readOnly,
+      visible,
+      readOnly,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -383,10 +370,8 @@ class FormBuilder {
       Alignment alignment,
       EdgeInsets padding}) {
     _builders.add(
-      _FormItemWidget(formController,
+      _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
-          visible: visible,
-          readOnly: readOnly,
           flex: flex,
           builder: (context, map) => Align(
                 alignment: alignment ?? Alignment.centerLeft,
@@ -420,11 +405,9 @@ class FormBuilder {
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
-      _FormItemWidget(formController,
+      _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
           flex: flex,
-          visible: visible,
-          readOnly: readOnly,
           builder: (context, map) => DateTimeFormField(
                 controlKey,
                 hintLabel: map['hintLabel'] ?? hintLabel,
@@ -455,10 +438,8 @@ class FormBuilder {
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
-      _FormItemWidget(formController,
+      _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
-          visible: visible,
-          readOnly: readOnly,
           flex: 1,
           builder: (context, map) => DropdownFormField(
                 controlKey,
@@ -483,10 +464,9 @@ class FormBuilder {
       EdgeInsets padding = const EdgeInsets.only(left: 5, right: 5)}) {
     nextLine();
     _builders.add(_FormItemWidget(
-      formController,
+      visible,
+      true,
       controlKey: controlKey,
-      visible: visible,
-      readOnly: true,
       flex: 1,
       builder: (context, map) {
         FormThemeData formThemeData = FormThemeData.of(context);
@@ -683,19 +663,13 @@ class FormController extends ChangeNotifier {
 }
 
 class _FormItemWidget extends StatefulWidget {
-  final FormController formController;
   final String controlKey;
   final int flex;
   final bool visible;
   final bool readOnly;
   final FormWidgetBuilder builder;
-  const _FormItemWidget(this.formController,
-      {Key key,
-      this.controlKey,
-      this.flex,
-      this.builder,
-      this.visible = true,
-      this.readOnly = false})
+  const _FormItemWidget(this.visible, this.readOnly,
+      {Key key, this.controlKey, this.flex, this.builder})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -730,13 +704,13 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   @override
   void deactivate() {
-    widget.formController._states.remove(widget.controlKey);
+    FormController.of(context)._states.remove(widget.controlKey);
     super.deactivate();
   }
 
   @override
   Widget build(BuildContext context) {
-    widget.formController._states[widget.controlKey] = this;
+    FormController.of(context)._states[widget.controlKey] = this;
     return Visibility(
       child: Expanded(
         child: widget.builder(context, map),

@@ -93,7 +93,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       formController.hide = !formController.hide;
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.hide ? 'show' : 'hide'));
+                    child:
+                        Text(formController.hide ? 'show form' : 'hide form'));
               },
             ),
             Builder(
@@ -103,48 +104,35 @@ class _MyHomePageState extends State<MyHomePage> {
                       formController.readOnly = !formController.readOnly;
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(
-                        formController.readOnly ? 'editable' : 'readonly'));
+                    child: Text(formController.readOnly
+                        ? 'set form editable'
+                        : 'set form readonly'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.rebuild('username', {'visible': false});
+                      formController.setVisible(
+                          'username', !formController.isVisible('username'));
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text('hide username'));
+                    child: Text(formController.isVisible('username')
+                        ? 'hide username'
+                        : 'show username'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.rebuild('username', {'readOnly': true});
+                      formController.setReadOnly(
+                          'username', !formController.isReadOnly('username'));
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text('set username readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.rebuild('checkbox', {'readOnly': true});
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text('set checkbox readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.rebuild('radio', {'visible': false});
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text('hide radio'));
+                    child: Text(formController.isReadOnly('username')
+                        ? 'set username editable'
+                        : 'set username readonly'));
               },
             ),
             Builder(
@@ -176,36 +164,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Builder(
               builder: (context) {
-                CheckboxGroupController cgc =
-                    formController.getController('checkbox');
                 return TextButton(
-                    onPressed: () {
-                      if (cgc.isReadOnly('man'))
-                        cgc.readOnlyKeys = [];
-                      else
-                        cgc.readOnlyKeys = ['man'];
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(cgc.isReadOnly('man')
-                        ? 'set man selectable'
-                        : 'set man readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                RadioGroupController rgc =
-                    formController.getController('radio');
-                return TextButton(
-                    onPressed: () {
-                      if (rgc.isReadOnly('radio 1'))
-                        rgc.readOnlyKeys = [];
-                      else
-                        rgc.readOnlyKeys = ['radio 1'];
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(rgc.isReadOnly('radio 1')
-                        ? 'set radio 1 selectable'
-                        : 'set radio 1 readonly'));
+                    onPressed: () {}, child: Text('set man readonly'));
               },
             ),
             Builder(
@@ -221,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.rebuild('username', {
+                      formController.update('username', {
                         'label': DateTime.now().toString(),
                       });
                     },
@@ -254,8 +214,8 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               onPressed: () {
                 formController.setValue('checkbox', null);
-                formController.rebuild('checkbox', {
-                  'items': [CheckboxButton('hia', isReadOnly: true)],
+                formController.update('checkbox', {
+                  'items': [CheckboxButton('I\'m readonly', readOnly: true)],
                 });
               },
               child: Text('reload sex checkboxs'),
@@ -303,7 +263,8 @@ class _MyHomePageState extends State<MyHomePage> {
         .checkboxGroup(
           'checkbox',
           [
-            CheckboxButton('男', controlKey: 'man', isReadOnly: false),
+            CheckboxButton('男', visible: false),
+            CheckboxButton('女', visible: true),
           ],
           label: '性别',
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
