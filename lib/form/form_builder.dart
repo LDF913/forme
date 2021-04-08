@@ -171,6 +171,7 @@ class FormBuilder {
       controlKey: controlKey,
       flex: flex,
       visible: visible,
+      readOnly: readOnly,
       builder: (context, map) {
         List<TextInputFormatter> formatters = inputFormatters ?? [];
         if (regExp != null) {
@@ -227,6 +228,7 @@ class FormBuilder {
       controlKey: controlKey,
       flex: flex,
       visible: visible,
+      readOnly: readOnly,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -263,6 +265,7 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       visible: visible,
+      readOnly: readOnly,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -302,6 +305,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       formController,
       visible: visible,
+      readOnly: readOnly,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -344,6 +348,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       formController,
       visible: visible,
+      readOnly: readOnly,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -381,6 +386,7 @@ class FormBuilder {
       _FormItemWidget(formController,
           controlKey: controlKey,
           visible: visible,
+          readOnly: readOnly,
           flex: flex,
           builder: (context, map) => Align(
                 alignment: alignment ?? Alignment.centerLeft,
@@ -418,6 +424,7 @@ class FormBuilder {
           controlKey: controlKey,
           flex: flex,
           visible: visible,
+          readOnly: readOnly,
           builder: (context, map) => DateTimeFormField(
                 controlKey,
                 hintLabel: map['hintLabel'] ?? hintLabel,
@@ -451,6 +458,7 @@ class FormBuilder {
       _FormItemWidget(formController,
           controlKey: controlKey,
           visible: visible,
+          readOnly: readOnly,
           flex: 1,
           builder: (context, map) => DropdownFormField(
                 controlKey,
@@ -478,6 +486,7 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       visible: visible,
+      readOnly: true,
       flex: 1,
       builder: (context, map) {
         FormThemeData formThemeData = FormThemeData.of(context);
@@ -557,6 +566,31 @@ class FormController extends ChangeNotifier {
     if (state != null) state.rebuild(map);
   }
 
+  void update(String controlKey, Map<String, dynamic> map) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state != null) state.update(map);
+  }
+
+  void setVisible(String controlKey, bool visible) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state != null) state.visible = visible;
+  }
+
+  void setReadOnly(String controlKey, bool readOnly) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state != null) state.readOnly = readOnly;
+  }
+
+  bool isVisible(String controlKey) {
+    _FormItemWidgetState state = _states[controlKey];
+    return state.visible ?? false;
+  }
+
+  bool isReadOnly(String controlKey) {
+    _FormItemWidgetState state = _states[controlKey];
+    return state.readOnly ?? false;
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -625,7 +659,9 @@ class FormController extends ChangeNotifier {
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
       _readOnly = readOnly;
-      notifyListeners();
+      _states.forEach((key, value) {
+        value.readOnly = _readOnly;
+      }); //TODO find a better way to implementing this
     }
   }
 
@@ -651,9 +687,15 @@ class _FormItemWidget extends StatefulWidget {
   final String controlKey;
   final int flex;
   final bool visible;
+  final bool readOnly;
   final FormWidgetBuilder builder;
   const _FormItemWidget(this.formController,
-      {Key key, this.controlKey, this.flex, this.builder, this.visible = true})
+      {Key key,
+      this.controlKey,
+      this.flex,
+      this.builder,
+      this.visible = true,
+      this.readOnly = false})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -661,8 +703,25 @@ class _FormItemWidget extends StatefulWidget {
 
 class _FormItemWidgetState extends State<_FormItemWidget> {
   Map<String, dynamic> map = {};
-  get visible => map['visible'] ?? widget.visible ?? false;
+  get visible => map['visible'] ?? widget.visible ?? true;
+  get readOnly => map['readOnly'] ?? widget.readOnly ?? false;
   get flex => map['flex'] ?? widget.flex ?? 1;
+
+  set readOnly(bool readOnly) {
+    if (readOnly != this.readOnly) {
+      setState(() {
+        map['readOnly'] = readOnly;
+      });
+    }
+  }
+
+  set visible(bool visible) {
+    if (visible != this.visible) {
+      setState(() {
+        map['visible'] = visible;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -689,7 +748,20 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   void rebuild(Map<String, dynamic> map) {
     setState(() {
-      this.map = map;
+      this.map = map ?? {};
+    });
+  }
+
+  void update(Map<String, dynamic> map) {
+    if (map == null) return;
+    setState(() {
+      map.forEach((key, value) {
+        if (value == null) {
+          this.map.remove(key);
+        } else {
+          this.map[key] = value;
+        }
+      });
     });
   }
 }
