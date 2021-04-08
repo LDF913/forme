@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'form_builder.dart';
 import 'form_theme.dart';
 
 class RadioButton {
@@ -38,6 +37,7 @@ class RadioGroup extends FormField {
   final ValueChanged onChanged;
   final int split;
   final EdgeInsets padding;
+  final bool readOnly;
 
   RadioGroup(this.controlKey, this.buttons,
       {Key key,
@@ -48,7 +48,8 @@ class RadioGroup extends FormField {
       this.validator,
       this.autovalidateMode = AutovalidateMode.disabled,
       this.split = 0,
-      this.padding})
+      this.padding,
+      this.readOnly = false})
       : assert(controlKey != null),
         super(
           initialValue: initialValue,
@@ -60,8 +61,6 @@ class RadioGroup extends FormField {
             ThemeData themeData = Theme.of(field.context);
 
             final _RadioGroupState state = field as _RadioGroupState;
-            bool readOnly =
-                FormController.of(field.context).isReadOnly(controlKey);
             List<Widget> widgets = [];
             if (label != null) {
               Text text = Text(label,

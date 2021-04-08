@@ -59,6 +59,7 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       flex: flex,
+      visible: visible,
       builder: (context, map) {
         int _decimal = map['decimal'] ?? decimal;
         double _max = map['max'] ?? max;
@@ -130,6 +131,7 @@ class FormBuilder {
           onChanged: onChanged,
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
+          readOnly: map['readOnly'] ?? readOnly,
         );
       },
     ));
@@ -159,8 +161,6 @@ class FormBuilder {
       String regExp,
       List<TextInputFormatter> inputFormatters,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
-
     TextEditingController controller = formController._controllers
         .putIfAbsent(controlKey, () => TextEditingController());
     FocusNode focusNode =
@@ -170,6 +170,7 @@ class FormBuilder {
       formController,
       controlKey: controlKey,
       flex: flex,
+      visible: visible,
       builder: (context, map) {
         List<TextInputFormatter> formatters = inputFormatters ?? [];
         if (regExp != null) {
@@ -201,6 +202,7 @@ class FormBuilder {
           onChanged: onChanged,
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
+          readOnly: map['readOnly'] ?? readOnly,
         );
       },
     ));
@@ -218,13 +220,13 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
       flex: flex,
+      visible: visible,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -236,6 +238,7 @@ class FormBuilder {
         autovalidateMode: autovalidateMode,
         padding: map['padding'] ?? padding,
         split: 0,
+        readOnly: map['readOnly'] ?? readOnly,
       ),
     ));
     return this;
@@ -253,13 +256,13 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int split = 2,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     RadioGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => RadioGroupController());
     nextLine();
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
+      visible: visible,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.from(map['items'] ?? items),
@@ -272,6 +275,7 @@ class FormBuilder {
         onChanged: onChanged,
         split: split,
         padding: map['padding'] ?? padding,
+        readOnly: map['readOnly'] ?? readOnly,
       ),
     ));
     nextLine();
@@ -289,7 +293,6 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
     controller.readOnlyKeys = items
@@ -298,6 +301,7 @@ class FormBuilder {
         .toList();
     _builders.add(_FormItemWidget(
       formController,
+      visible: visible,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -311,6 +315,7 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           split: 0,
           padding: map['padding'] ?? padding,
+          readOnly: map['readOnly'] ?? readOnly,
         );
       },
       flex: flex,
@@ -329,7 +334,6 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int split = 2,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
     controller.readOnlyKeys = items
@@ -339,6 +343,7 @@ class FormBuilder {
     nextLine();
     _builders.add(_FormItemWidget(
       formController,
+      visible: visible,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -354,6 +359,7 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           split: split,
           padding: map['padding'] ?? padding,
+          readOnly: map['readOnly'] ?? readOnly,
         );
       },
     ));
@@ -371,10 +377,10 @@ class FormBuilder {
       bool visible = true,
       Alignment alignment,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     _builders.add(
       _FormItemWidget(formController,
           controlKey: controlKey,
+          visible: visible,
           flex: flex,
           builder: (context, map) => Align(
                 alignment: alignment ?? Alignment.centerLeft,
@@ -386,6 +392,7 @@ class FormBuilder {
                   child: map['child'] ?? child,
                   onLongPress: onLongPress,
                   padding: map['padding'] ?? padding,
+                  readOnly: map['readOnly'] ?? readOnly,
                 ),
               )),
     );
@@ -402,7 +409,6 @@ class FormBuilder {
       FormFieldValidator<DateTime> validator,
       bool useTime,
       EdgeInsets padding}) {
-    _setInitialStateKey(readOnly, visible, controlKey);
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
     FocusNode focusNode =
@@ -411,6 +417,7 @@ class FormBuilder {
       _FormItemWidget(formController,
           controlKey: controlKey,
           flex: flex,
+          visible: visible,
           builder: (context, map) => DateTimeFormField(
                 controlKey,
                 hintLabel: map['hintLabel'] ?? hintLabel,
@@ -421,6 +428,7 @@ class FormBuilder {
                 validator: validator,
                 useTime: map['useTime'] ?? useTime,
                 padding: map['padding'] ?? padding,
+                readOnly: map['readOnly'] ?? readOnly,
               )),
     );
     return this;
@@ -442,6 +450,7 @@ class FormBuilder {
     _builders.add(
       _FormItemWidget(formController,
           controlKey: controlKey,
+          visible: visible,
           flex: 1,
           builder: (context, map) => DropdownFormField(
                 controlKey,
@@ -454,6 +463,7 @@ class FormBuilder {
                 selectedItemBuilder:
                     map['selectedItemBuilder'] ?? selectedItemBuilder,
                 padding: map['padding'] ?? padding,
+                readOnly: map['readOnly'] ?? readOnly,
               )),
     );
     return this;
@@ -463,11 +473,11 @@ class FormBuilder {
       {double height = 1.0,
       bool visible = true,
       EdgeInsets padding = const EdgeInsets.only(left: 5, right: 5)}) {
-    _setInitialStateKey(false, visible, controlKey);
     nextLine();
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
+      visible: visible,
       flex: 1,
       builder: (context, map) {
         FormThemeData formThemeData = FormThemeData.of(context);
@@ -491,11 +501,6 @@ class FormBuilder {
     return _FormWidget(_builderss, formController);
   }
 
-  void _setInitialStateKey(bool readOnly, bool visible, String controlKey) {
-    if (readOnly) formController._addReadOnlyKey(controlKey);
-    if (!visible) formController._addHideKey(controlKey);
-  }
-
   static List<DropdownMenuItem> toDropdownItems(List<String> items) {
     return items
         .map((e) => DropdownMenuItem(
@@ -515,8 +520,6 @@ class FormController extends ChangeNotifier {
   bool _readOnly = false;
 
   final GlobalKey _formKey = GlobalKey<FormState>();
-  final Set<String> _hideKeys = {};
-  final Set<String> _readOnlyKeys = {};
   FormThemeData _themeData = FormThemeData();
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
@@ -557,8 +560,6 @@ class FormController extends ChangeNotifier {
   @override
   void dispose() {
     super.dispose();
-    _hideKeys.clear();
-    _readOnlyKeys.clear();
     _focusNodes.values.forEach((element) {
       element.dispose();
     });
@@ -587,14 +588,6 @@ class FormController extends ChangeNotifier {
 
   dynamic getController(String controlKey) {
     return _controllers[controlKey];
-  }
-
-  void _addHideKey(String controlKey) {
-    _hideKeys.add(controlKey);
-  }
-
-  void _addReadOnlyKey(String controlKey) {
-    _readOnlyKeys.add(controlKey);
   }
 
   dynamic _getValue(dynamic valueNotifier) {
@@ -648,26 +641,6 @@ class FormController extends ChangeNotifier {
 
   get _state => _formKey.currentState;
 
-  set hideKeys(List<String> keys) {
-    _hideKeys.clear();
-    if (keys != null) _hideKeys.addAll(keys);
-    notifyListeners();
-  }
-
-  set readOnlyKeys(List<String> keys) {
-    _readOnlyKeys.clear();
-    if (keys != null) _readOnlyKeys.addAll(keys);
-    notifyListeners();
-  }
-
-  bool isHide(String key) {
-    return _hide || _hideKeys.contains(key);
-  }
-
-  bool isReadOnly(String key) {
-    return _readOnly || _readOnlyKeys.contains(key);
-  }
-
   static FormController of(BuildContext context) {
     return context.read<FormController>();
   }
@@ -677,19 +650,18 @@ class _FormItemWidget extends StatefulWidget {
   final FormController formController;
   final String controlKey;
   final int flex;
+  final bool visible;
   final FormWidgetBuilder builder;
   const _FormItemWidget(this.formController,
-      {Key key, this.controlKey, this.flex, this.builder})
+      {Key key, this.controlKey, this.flex, this.builder, this.visible = true})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
 }
 
 class _FormItemWidgetState extends State<_FormItemWidget> {
-  bool hide = false;
-  bool readOnly = false;
-  bool forceRebuild = false;
   Map<String, dynamic> map = {};
+  get visible => map['visible'] ?? widget.visible ?? false;
   get flex => map['flex'] ?? widget.flex ?? 1;
 
   @override
@@ -706,38 +678,17 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   @override
   Widget build(BuildContext context) {
-    Widget buildChild() {
-      return Visibility(
-        child: Expanded(
-          child: widget.builder(context, map),
-          flex: flex,
-        ),
-        visible: !hide,
-      );
-    }
-
-    return Consumer<FormController>(
-      builder: (context, v, child) {
-        if (forceRebuild) {
-          forceRebuild = false;
-          return buildChild();
-        }
-        bool currentHide = v.isHide(widget.controlKey);
-        bool currentReadOnly = v.isReadOnly(widget.controlKey);
-        if (currentHide != hide || currentReadOnly != readOnly) {
-          hide = currentHide;
-          readOnly = currentReadOnly;
-          return buildChild();
-        }
-        return child;
-      },
-      child: buildChild(),
+    return Visibility(
+      child: Expanded(
+        child: widget.builder(context, map),
+        flex: flex,
+      ),
+      visible: visible,
     );
   }
 
   void rebuild(Map<String, dynamic> map) {
     setState(() {
-      this.forceRebuild = true;
       this.map = map;
     });
   }

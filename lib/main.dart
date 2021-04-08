@@ -111,64 +111,40 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      if (formController.isHide('username')) {
-                        formController.hideKeys = [];
-                      } else {
-                        formController.hideKeys = ['username'];
-                      }
+                      formController.rebuild('username', {'visible': false});
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isHide('username')
-                        ? 'show username'
-                        : 'hide username'));
+                    child: Text('hide username'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      if (formController.isReadOnly('username')) {
-                        formController.readOnlyKeys = [];
-                      } else {
-                        formController.readOnlyKeys = ['username'];
-                      }
+                      formController.rebuild('username', {'readOnly': true});
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isReadOnly('username')
-                        ? 'set username editable'
-                        : 'set username readonly'));
+                    child: Text('set username readonly'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      if (formController.isReadOnly('checkbox')) {
-                        formController.readOnlyKeys = [];
-                      } else {
-                        formController.readOnlyKeys = ['checkbox'];
-                      }
+                      formController.rebuild('checkbox', {'readOnly': true});
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isReadOnly('checkbox')
-                        ? 'set checkbox selectable'
-                        : 'set checkbox readonly'));
+                    child: Text('set checkbox readonly'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      if (formController.isHide('radio')) {
-                        formController.hideKeys = [];
-                      } else {
-                        formController.hideKeys = ['radio'];
-                      }
+                      formController.rebuild('radio', {'visible': false});
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isHide('radio')
-                        ? 'show radio'
-                        : 'hide radio'));
+                    child: Text('hide radio'));
               },
             ),
             Builder(
@@ -230,21 +206,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: Text(rgc.isReadOnly('radio 1')
                         ? 'set radio 1 selectable'
                         : 'set radio 1 readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      if (formController.isReadOnly('button'))
-                        formController.readOnlyKeys = [];
-                      else
-                        formController.readOnlyKeys = ['button'];
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(formController.isReadOnly('button')
-                        ? 'set button pressable'
-                        : 'set button readonly'));
               },
             ),
             Builder(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'form_builder.dart';
 import 'form_theme.dart';
 
 class DropdownController extends ValueNotifier {
@@ -18,19 +17,18 @@ class DropdownFormField extends FormField {
   final FormFieldValidator validator;
   final AutovalidateMode autovalidateMode;
   final EdgeInsets padding;
+  final bool readOnly;
 
   DropdownFormField(
-    this.controlKey,
-    this.controller,
-    this.focusNode,
-    this.items, {
-    this.onChanged,
-    this.clearable,
-    this.selectedItemBuilder,
-    this.validator,
-    this.autovalidateMode,
-    this.padding,
-  }) : super(
+      this.controlKey, this.controller, this.focusNode, this.items,
+      {this.onChanged,
+      this.clearable,
+      this.selectedItemBuilder,
+      this.validator,
+      this.autovalidateMode,
+      this.padding,
+      this.readOnly = false})
+      : super(
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
@@ -49,8 +47,6 @@ class DropdownFormField extends FormField {
                 InputDecoration().applyDefaults(
               themeData.inputDecorationTheme,
             );
-            bool readOnly =
-                FormController.of(field.context).isReadOnly(controlKey);
             List<Widget> icons = [];
             if (clearable && !readOnly && controller.value != null) {
               icons.add(Padding(

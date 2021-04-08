@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'form_builder.dart';
 import 'form_theme.dart';
 
 class CheckboxButton {
@@ -44,6 +43,7 @@ class CheckboxGroup extends FormField<List<int>> {
   final ValueChanged<List<int>> onChanged;
   final int split;
   final EdgeInsets padding;
+  final bool readOnly;
 
   CheckboxGroup(this.controlKey, this.buttons,
       {Key key,
@@ -54,7 +54,8 @@ class CheckboxGroup extends FormField<List<int>> {
       this.onChanged,
       this.padding,
       this.autovalidateMode = AutovalidateMode.disabled,
-      this.split = 0})
+      this.split = 0,
+      this.readOnly = false})
       : assert(controlKey != null),
         super(
             autovalidateMode: autovalidateMode,
@@ -66,8 +67,6 @@ class CheckboxGroup extends FormField<List<int>> {
                   formThemeData.checkboxGroupTheme;
               ThemeData themeData = Theme.of(field.context);
               final _CheckboxGroupState state = field as _CheckboxGroupState;
-              bool readOnly =
-                  FormController.of(field.context).isReadOnly(controlKey);
               List<Widget> widgets = [];
               if (label != null) {
                 Text text = Text(label,

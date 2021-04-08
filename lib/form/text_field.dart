@@ -1,39 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'form_builder.dart';
 import 'form_theme.dart';
 
 class ClearableTextFormField extends FormField<String> {
   final bool obscureText;
   final TextEditingController controller;
   final EdgeInsets padding;
-  ClearableTextFormField(
-    String controlKey, {
-    String label,
-    String hintLabel,
-    Key key,
-    this.controller,
-    String initialValue,
-    FocusNode focusNode,
-    TextInputType keyboardType,
-    bool autofocus = false,
-    this.obscureText = false,
-    int maxLines = 1,
-    int minLines,
-    int maxLength,
-    ValueChanged<String> onChanged,
-    GestureTapCallback onTap,
-    ValueChanged<String> onSubmitted,
-    FormFieldValidator<String> validator,
-    AutovalidateMode autovalidateMode,
-    ValueChanged<String> onFieldSubmitted,
-    bool clearable,
-    bool passwordVisible,
-    Widget prefixIcon,
-    List<TextInputFormatter> inputFormatters,
-    this.padding,
-  })  : assert(controlKey != null),
+  final bool readOnly;
+  ClearableTextFormField(String controlKey,
+      {String label,
+      String hintLabel,
+      Key key,
+      this.controller,
+      String initialValue,
+      FocusNode focusNode,
+      TextInputType keyboardType,
+      bool autofocus = false,
+      this.obscureText = false,
+      int maxLines = 1,
+      int minLines,
+      int maxLength,
+      ValueChanged<String> onChanged,
+      GestureTapCallback onTap,
+      ValueChanged<String> onSubmitted,
+      FormFieldValidator<String> validator,
+      AutovalidateMode autovalidateMode,
+      ValueChanged<String> onFieldSubmitted,
+      bool clearable,
+      bool passwordVisible,
+      Widget prefixIcon,
+      List<TextInputFormatter> inputFormatters,
+      this.padding,
+      this.readOnly = false})
+      : assert(controlKey != null),
         super(
           key: key,
           initialValue: initialValue ?? '',
@@ -45,9 +44,6 @@ class ClearableTextFormField extends FormField<String> {
             final ThemeData themeData = Theme.of(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
             List<Widget> suffixes = [];
-
-            bool readOnly =
-                FormController.of(field.context).isReadOnly(controlKey);
 
             if (clearable && !readOnly) {
               suffixes.add(_ClearIcon(controller, focusNode, () {
@@ -230,6 +226,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final Locale locale;
   final FocusNode focusNode;
   final EdgeInsets padding;
+  final bool readOnly;
 
   DateTimeFormField(this.controlKey,
       {Key key,
@@ -243,7 +240,8 @@ class DateTimeFormField extends FormField<DateTime> {
       this.focusNode,
       this.useTime = false,
       AutovalidateMode autovalidateMode,
-      this.padding})
+      this.padding,
+      this.readOnly = false})
       : assert(controlKey != null),
         super(
           validator: validator,
@@ -291,8 +289,6 @@ class DateTimeFormField extends FormField<DateTime> {
               });
             }
 
-            bool readOnly =
-                FormController.of(field.context).isReadOnly(controlKey);
             List<Widget> suffixes = [];
 
             if (!readOnly) {
