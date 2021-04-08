@@ -18,11 +18,15 @@ class DropdownFormField extends FormField {
   final AutovalidateMode autovalidateMode;
   final EdgeInsets padding;
   final bool readOnly;
+  final String labelText;
+  final String hintText;
 
   DropdownFormField(
       this.controlKey, this.controller, this.focusNode, this.items,
       {this.onChanged,
       this.clearable,
+      this.labelText,
+      this.hintText,
       this.selectedItemBuilder,
       this.validator,
       this.autovalidateMode,
@@ -44,7 +48,8 @@ class DropdownFormField extends FormField {
             ThemeData themeData = Theme.of(field.context);
 
             final InputDecoration effectiveDecoration =
-                InputDecoration().applyDefaults(
+                InputDecoration(labelText: labelText, hintText: hintText)
+                    .applyDefaults(
               themeData.inputDecorationTheme,
             );
             List<Widget> icons = [];

@@ -8,8 +8,8 @@ class ClearableTextFormField extends FormField<String> {
   final EdgeInsets padding;
   final bool readOnly;
   ClearableTextFormField(String controlKey,
-      {String label,
-      String hintLabel,
+      {String labelText,
+      String hintText,
       Key key,
       this.controller,
       String initialValue,
@@ -73,8 +73,8 @@ class ClearableTextFormField extends FormField<String> {
             final InputDecoration effectiveDecoration = InputDecoration(
                     prefixIcon: prefixIcon,
                     suffixIcon: suffixIcon,
-                    labelText: label,
-                    hintText: hintLabel)
+                    labelText: labelText,
+                    hintText: hintText)
                 .applyDefaults(themeData.inputDecorationTheme);
             void onChangedHandler(String value) {
               field.didChange(value);
@@ -217,8 +217,8 @@ class _ClearIconState extends State<_ClearIcon> {
 class DateTimeFormField extends FormField<DateTime> {
   final DateTimeController controller;
   final DateTime initialValue;
-  final String label;
-  final String hintLabel;
+  final String labelText;
+  final String hintText;
   final DateTimeFormatter formatter;
   final String controlKey;
   final FormFieldValidator<DateTime> validator;
@@ -230,8 +230,8 @@ class DateTimeFormField extends FormField<DateTime> {
 
   DateTimeFormField(this.controlKey,
       {Key key,
-      this.label,
-      this.hintLabel,
+      this.labelText,
+      this.hintText,
       this.controller,
       this.initialValue,
       this.formatter,
@@ -311,9 +311,9 @@ class DateTimeFormField extends FormField<DateTime> {
                   );
 
             final InputDecoration effectiveDecoration = InputDecoration(
-                    hintText: hintLabel,
+                    hintText: hintText,
                     suffixIcon: suffixIcon,
-                    labelText: label)
+                    labelText: labelText)
                 .applyDefaults(themeData.inputDecorationTheme);
 
             TextField textField = TextField(

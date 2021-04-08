@@ -182,7 +182,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 return TextButton(
                     onPressed: () {
                       formController.update('username', {
-                        'label': DateTime.now().toString(),
+                        'labelText': DateTime.now().toString(),
                       });
                     },
                     child: Text('change username\'s label'));
@@ -234,7 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
     FormBuilder builder = FormBuilder(formController)
         .textField(
           'username',
-          label: '用户名',
+          labelText: '用户名',
           clearable: true,
           flex: 3,
           validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
@@ -242,7 +242,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .checkboxs('rememberMe', [CheckboxButton('记住')])
         .nextLine()
         .textField('password',
-            hintLabel: '密码',
+            hintText: '密码',
             obscureText: true,
             passwordVisible: true,
             clearable: true,
@@ -253,7 +253,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .numberField(
           'age',
-          hintLabel: '年龄',
+          hintText: '年龄',
           clearable: true,
           flex: 3,
           min: 14,
@@ -284,22 +284,23 @@ class _MyHomePageState extends State<MyHomePage> {
         .datetimeField(
           'startTime',
           useTime: true,
-          hintLabel: '开始日期',
+          hintText: '开始日期',
         )
         .datetimeField(
           'endTime',
           useTime: true,
-          hintLabel: '结束日期',
+          hintText: '结束日期',
         )
         .nextLine()
         .textField('remark',
-            hintLabel: '备注',
+            hintText: '备注',
             maxLines: 5,
             flex: 1,
             clearable: true,
             maxLength: 500)
         .nextLine()
         .dropdown('dropdown',
+            labelText: '下拉框',
             validator: (value) => value == null ? 'select something !' : null);
     return builder.build();
   }

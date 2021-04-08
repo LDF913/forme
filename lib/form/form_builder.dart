@@ -31,8 +31,8 @@ class FormBuilder {
   }
 
   FormBuilder numberField(String controlKey,
-      {String hintLabel,
-      String label,
+      {String hintText,
+      String labelText,
       VoidCallback onTap,
       ValueChanged<String> onSubmitted,
       Key key,
@@ -113,8 +113,8 @@ class FormBuilder {
         return ClearableTextFormField(
           controlKey,
           key: key,
-          hintLabel: map['hintLabel'] ?? hintLabel,
-          label: map['label'] ?? label,
+          hintText: map['hintText'] ?? hintText,
+          labelText: map['labelText'] ?? labelText,
           focusNode: focusNode,
           maxLines: 1,
           passwordVisible: false,
@@ -139,8 +139,8 @@ class FormBuilder {
   }
 
   FormBuilder textField(String controlKey,
-      {String hintLabel,
-      String label,
+      {String hintText,
+      String labelText,
       VoidCallback onTap,
       ValueChanged<String> onSubmitted,
       Key key,
@@ -165,7 +165,6 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => TextEditingController());
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
-
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -183,8 +182,8 @@ class FormBuilder {
         return ClearableTextFormField(
           controlKey,
           key: key,
-          hintLabel: map['hintLabel'] ?? hintLabel,
-          label: map['label'] ?? label,
+          hintText: map['hintText'] ?? hintText,
+          labelText: map['labelText'] ?? labelText,
           focusNode: focusNode,
           maxLength: map['maxLength'] ?? maxLength,
           maxLines: map['maxLines'] ?? maxLines,
@@ -391,8 +390,8 @@ class FormBuilder {
   }
 
   FormBuilder datetimeField(String controlKey,
-      {String label,
-      String hintLabel,
+      {String labelText,
+      String hintText,
       bool readOnly = false,
       bool visible = true,
       int flex = 1,
@@ -410,8 +409,8 @@ class FormBuilder {
           flex: flex,
           builder: (context, map) => DateTimeFormField(
                 controlKey,
-                hintLabel: map['hintLabel'] ?? hintLabel,
-                label: map['label'] ?? label,
+                hintText: map['hintText'] ?? hintText,
+                labelText: map['labelText'] ?? labelText,
                 focusNode: focusNode,
                 controller: controller,
                 formatter: formatter,
@@ -425,7 +424,9 @@ class FormBuilder {
   }
 
   FormBuilder dropdown(String controlKey,
-      {bool readOnly = false,
+      {String labelText,
+      String hintText,
+      bool readOnly = false,
       bool visible = true,
       bool clearable = true,
       List<DropdownMenuItem> items,
@@ -446,6 +447,8 @@ class FormBuilder {
                 controller,
                 focusNode,
                 map['items'] ?? items ?? [],
+                labelText: map['labelText'] ?? labelText,
+                hintText: map['hintText'] ?? hintText,
                 clearable: map['clearable'] ?? clearable,
                 validator: validator,
                 autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
@@ -641,7 +644,7 @@ class FormController extends ChangeNotifier {
       _readOnly = readOnly;
       _states.forEach((key, value) {
         value.readOnly = _readOnly;
-      }); //TODO find a better way to implementing this
+      });
     }
   }
 
