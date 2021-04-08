@@ -7,7 +7,13 @@ class CheckboxButton {
   final String label;
   final String controlKey;
   final bool ignoreSplit;
-  CheckboxButton(this.label, {this.controlKey, this.ignoreSplit = false});
+  final bool isReadOnly;
+  final TextStyle textStyle;
+  CheckboxButton(this.label,
+      {this.controlKey,
+      this.ignoreSplit = false,
+      this.isReadOnly = false,
+      this.textStyle});
 }
 
 class CheckboxGroupController extends ValueNotifier<List<int>> {
@@ -125,7 +131,7 @@ class CheckboxGroup extends FormField<List<int>> {
                                 : Icon(Icons.check_box_outline_blank,
                                     size: labelStyle.fontSize, color: color),
                             SizedBox(
-                              width: checkboxGroupTheme.labelSpace ?? 4.0,
+                              width: 4.0,
                             ),
                             split == 0
                                 ? Text(
@@ -147,7 +153,7 @@ class CheckboxGroup extends FormField<List<int>> {
                   wrapWidgets.add(checkbox);
                   if (i < buttons.length - 1)
                     wrapWidgets.add(SizedBox(
-                      width: checkboxGroupTheme.widgetsSpace ?? 4.0,
+                      width: 8.0,
                     ));
                 } else {
                   wrapWidgets.add(FractionallySizedBox(
@@ -177,6 +183,7 @@ class CheckboxGroup extends FormField<List<int>> {
               return Padding(
                 padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: widgets,
                 ),
               );

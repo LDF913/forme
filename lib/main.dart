@@ -294,7 +294,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 formController.setValue('checkbox', null);
                 formController.rebuild('checkbox', {
-                  'items': FormBuilder.toCheckboxButtons(['男', '女', '未知']),
+                  'items': [CheckboxButton('hia', isReadOnly: true)],
                 });
               },
               child: Text('reload sex checkboxs'),
@@ -342,9 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .checkboxGroup(
           'checkbox',
           [
-            CheckboxButton('男', controlKey: 'man'),
-            CheckboxButton('女'),
-            CheckboxButton('very loooooooooooooong text', ignoreSplit: true),
+            CheckboxButton('男', controlKey: 'man', isReadOnly: false),
           ],
           label: '性别',
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,

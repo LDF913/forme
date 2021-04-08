@@ -59,41 +59,50 @@ class HexColor extends Color {
 }
 
 class CheckboxGroupTheme {
-  final double labelSpace;
-  final double widgetsSpace;
   final TextStyle labelStyle;
   final EdgeInsets widgetsPadding;
   final EdgeInsets errorTextPadding;
 
-  const CheckboxGroupTheme(
-      {this.labelSpace,
-      this.widgetsSpace,
-      this.labelStyle,
-      this.widgetsPadding,
-      this.errorTextPadding});
+  const CheckboxGroupTheme({
+    this.labelStyle,
+    this.widgetsPadding,
+    this.errorTextPadding,
+  });
+
+  CheckboxGroupTheme copyWith({
+    TextStyle labelStyle,
+    EdgeInsets widgetsPadding,
+    EdgeInsets errorTextPadding,
+    Color selectedColor,
+    Color unselectedColor,
+    Color disabledColor,
+  }) {
+    return CheckboxGroupTheme(
+      labelStyle: labelStyle ?? this.labelStyle,
+      widgetsPadding: widgetsPadding ?? this.widgetsPadding,
+      errorTextPadding: errorTextPadding ?? this.errorTextPadding,
+    );
+  }
 }
 
 class RadioGroupTheme extends CheckboxGroupTheme {
   const RadioGroupTheme({
-    double labelSpace,
-    double widgetsSpace,
     TextStyle labelStyle,
     EdgeInsets widgetsPadding,
     EdgeInsets errorTextPadding,
   }) : super(
-            errorTextPadding: errorTextPadding,
-            labelSpace: labelSpace,
-            labelStyle: labelStyle,
-            widgetsPadding: widgetsPadding,
-            widgetsSpace: widgetsSpace);
+          errorTextPadding: errorTextPadding,
+          labelStyle: labelStyle,
+          widgetsPadding: widgetsPadding,
+        );
 }
 
 class DefaultThemeData extends FormThemeData {
   DefaultThemeData._()
       : super(
             padding: EdgeInsets.all(5),
-            checkboxGroupTheme: RadioGroupTheme(labelSpace: 10),
-            radioGroupTheme: RadioGroupTheme(labelSpace: 10),
+            checkboxGroupTheme: CheckboxGroupTheme(),
+            radioGroupTheme: RadioGroupTheme(),
             themeDataBuilder: (context) => _buildLightTheme(context),
             labelPadding: const EdgeInsets.only(top: 10, bottom: 10));
 

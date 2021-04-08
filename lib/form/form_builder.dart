@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
+import 'checkbox_group.dart';
 import 'form_theme.dart';
 import 'text_field.dart';
 import 'radio_group.dart';
-import 'checkbox_group.dart';
 import 'drop_down.dart';
 
 typedef FormWidgetBuilder = Widget Function(
@@ -292,21 +292,27 @@ class FormBuilder {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
+    controller.readOnlyKeys = items
+        .where((element) => element.isReadOnly)
+        .map((e) => e.controlKey)
+        .toList();
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
-      builder: (context, map) => CheckboxGroup(
-        controlKey,
-        List.from(map['items'] ?? items),
-        key: key,
-        controller: controller,
-        initialValue: map['initialValue'] ?? initialValue,
-        validator: validator,
-        onChanged: onChanged,
-        autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-        split: 0,
-        padding: map['padding'] ?? padding,
-      ),
+      builder: (context, map) {
+        return CheckboxGroup(
+          controlKey,
+          List.from(map['items'] ?? items),
+          key: key,
+          controller: controller,
+          initialValue: map['initialValue'] ?? initialValue,
+          validator: validator,
+          onChanged: onChanged,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          split: 0,
+          padding: map['padding'] ?? padding,
+        );
+      },
       flex: flex,
     ));
     return this;
@@ -326,23 +332,30 @@ class FormBuilder {
     _setInitialStateKey(readOnly, visible, controlKey);
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => CheckboxGroupController());
+    controller.readOnlyKeys = items
+        .where((element) => element.isReadOnly && element.controlKey != null)
+        .map((e) => e.controlKey)
+        .toList();
     nextLine();
     _builders.add(_FormItemWidget(
       formController,
       controlKey: controlKey,
-      builder: (context, map) => CheckboxGroup(
-        controlKey,
-        List.from(map['items'] ?? items),
-        key: key,
-        controller: controller,
-        initialValue: map['initialValue'] ?? initialValue,
-        label: map['label'] ?? label,
-        validator: validator,
-        onChanged: onChanged,
-        autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-        split: split,
-        padding: map['padding'] ?? padding,
-      ),
+      builder: (context, map) {
+        return CheckboxGroup(
+          controlKey,
+          List.from(map['items'] ??
+              items), //TOOD need clear controller's readonly keys if map has new items ?
+          key: key,
+          controller: controller,
+          initialValue: map['initialValue'] ?? initialValue,
+          label: map['label'] ?? label,
+          validator: validator,
+          onChanged: onChanged,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          split: split,
+          padding: map['padding'] ?? padding,
+        );
+      },
     ));
     nextLine();
     return this;

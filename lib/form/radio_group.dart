@@ -113,7 +113,7 @@ class RadioGroup extends FormField {
                               size: labelStyle.fontSize,
                               color: color),
                           SizedBox(
-                            width: radioGroupTheme.labelSpace ?? 4.0,
+                            width: 4.0,
                           ),
                           split == 0
                               ? Text(
@@ -135,7 +135,7 @@ class RadioGroup extends FormField {
                 wrapWidgets.add(checkbox);
                 if (i < buttons.length - 1)
                   wrapWidgets.add(SizedBox(
-                    width: radioGroupTheme.widgetsSpace,
+                    width: 8.0,
                   ));
               } else {
                 wrapWidgets.add(FractionallySizedBox(
@@ -164,6 +164,7 @@ class RadioGroup extends FormField {
             return Padding(
               padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: widgets,
               ),
             );
