@@ -211,10 +211,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.setValue('dropdown', null);
-                formController.rebuild('dropdown', {
-                  'items': FormBuilder.toDropdownItems(
-                      [Random().nextDouble().toString()])
+                formController.update('dropdown', {'loading': true});
+
+                Future.delayed(Duration(seconds: 2), () {
+                  formController.setValue('dropdown', null);
+                  formController.rebuild('dropdown', {
+                    'items': FormBuilder.toDropdownItems(
+                        [Random().nextDouble().toString()])
+                  });
                 });
               },
               child: Text('load dropdownitems'),

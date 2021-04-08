@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'form_theme.dart';
@@ -21,6 +22,8 @@ class DropdownFormField extends FormField {
   final String labelText;
   final String hintText;
   final TextStyle style;
+  final double iconSize;
+  final bool loading;
 
   DropdownFormField(
       this.controlKey, this.controller, this.focusNode, this.items,
@@ -33,7 +36,9 @@ class DropdownFormField extends FormField {
       this.autovalidateMode,
       this.padding,
       this.readOnly = false,
-      this.style})
+      this.style,
+      this.iconSize = 24,
+      this.loading = false})
       : super(
           validator: validator,
           autovalidateMode: autovalidateMode,
@@ -76,17 +81,10 @@ class DropdownFormField extends FormField {
               throw 'pls clear dropdown value before you reload items!';
             }
 
-            Widget child = Focus(
-              canRequestFocus: false,
-              skipTraversal: true,
-              child: Builder(builder: (BuildContext context) {
-                return InputDecorator(
-                  decoration:
-                      effectiveDecoration.copyWith(errorText: field.errorText),
-                  isEmpty: controller.value == null,
-                  isFocused: Focus.of(context).hasFocus,
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton(
+            WidgetBuilder dropdownBuilder =
+                (context) => DropdownButtonHideUnderline(
+                        child: DropdownButton(
+                      iconSize: iconSize,
                       style: style,
                       iconDisabledColor: themeData.disabledColor,
                       iconEnabledColor: Focus.of(context).hasFocus
@@ -106,16 +104,42 @@ class DropdownFormField extends FormField {
                         children: icons,
                         mainAxisSize: MainAxisSize.min,
                       ),
-                      onChanged: readOnly ? null : onChangedHandler,
+                      onChanged: readOnly || loading ? null : onChangedHandler,
                       isDense: true,
                       isExpanded: true,
                       focusNode: focusNode,
                       autofocus: false,
-                    ),
-                  ),
-                );
-              }),
-            );
+                    ));
+
+            Widget loadingIndicator;
+
+            if (loading) {
+              double size = iconSize;
+              loadingIndicator = SizedBox(
+                width: size,
+                height: size,
+                child: CircularProgressIndicator(),
+              );
+            }
+
+            Widget child = Focus(
+                canRequestFocus: false,
+                skipTraversal: true,
+                child: Builder(
+                    builder: (context) => InputDecorator(
+                          decoration: effectiveDecoration.copyWith(
+                              errorText: field.errorText),
+                          isEmpty: controller.value == null,
+                          isFocused: Focus.of(context).hasFocus,
+                          child: loading
+                              ? Stack(
+                                  alignment: AlignmentDirectional.center,
+                                  children: [
+                                      dropdownBuilder(context),
+                                      loadingIndicator
+                                    ])
+                              : dropdownBuilder(context),
+                        )));
             return Padding(
               child: child,
               padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,

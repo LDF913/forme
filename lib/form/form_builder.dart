@@ -440,7 +440,8 @@ class FormBuilder {
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       EdgeInsets padding,
-      TextStyle style}) {
+      TextStyle style,
+      bool loading = false}) {
     DropdownController controller = formController._controllers
         .putIfAbsent(controlKey, () => DropdownController());
     FocusNode focusNode =
@@ -464,6 +465,7 @@ class FormBuilder {
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
                 style: map['style'] ?? style,
+                loading: map['loading'] ?? loading,
               )),
     );
     return this;
