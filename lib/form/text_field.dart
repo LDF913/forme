@@ -31,7 +31,8 @@ class ClearableTextFormField extends FormField<String> {
       Widget prefixIcon,
       List<TextInputFormatter> inputFormatters,
       this.padding,
-      this.readOnly = false})
+      this.readOnly = false,
+      TextStyle style})
       : assert(controlKey != null),
         super(
           key: key,
@@ -84,6 +85,7 @@ class ClearableTextFormField extends FormField<String> {
             }
 
             TextField textField = TextField(
+                style: style,
                 textAlignVertical: TextAlignVertical.center,
                 controller: controller,
                 focusNode: focusNode,
@@ -227,6 +229,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final FocusNode focusNode;
   final EdgeInsets padding;
   final bool readOnly;
+  final TextStyle style;
 
   DateTimeFormField(this.controlKey,
       {Key key,
@@ -241,7 +244,8 @@ class DateTimeFormField extends FormField<DateTime> {
       this.useTime = false,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.readOnly = false})
+      this.readOnly = false,
+      this.style})
       : assert(controlKey != null),
         super(
           validator: validator,
@@ -327,6 +331,7 @@ class DateTimeFormField extends FormField<DateTime> {
               onTap: null,
               enabled: true,
               readOnly: true,
+              style: style,
             );
 
             return Padding(

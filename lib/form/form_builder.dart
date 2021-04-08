@@ -49,7 +49,8 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       int decimal = 0,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      TextStyle style}) {
     TextEditingController controller = formController._controllers
         .putIfAbsent(controlKey, () => TextEditingController());
     FocusNode focusNode =
@@ -132,6 +133,7 @@ class FormBuilder {
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
+          style: map['style'] ?? style,
         );
       },
     ));
@@ -160,7 +162,8 @@ class FormBuilder {
       String initialValue,
       String regExp,
       List<TextInputFormatter> inputFormatters,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      TextStyle style}) {
     TextEditingController controller = formController._controllers
         .putIfAbsent(controlKey, () => TextEditingController());
     FocusNode focusNode =
@@ -202,6 +205,7 @@ class FormBuilder {
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
+          style: map['style'] ?? style,
         );
       },
     ));
@@ -348,7 +352,7 @@ class FormBuilder {
           validator: validator,
           onChanged: onChanged,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          split: split,
+          split: map['split'] ?? split,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
         );
@@ -398,7 +402,8 @@ class FormBuilder {
       DateTimeFormatter formatter,
       FormFieldValidator<DateTime> validator,
       bool useTime,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      TextStyle style}) {
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
     FocusNode focusNode =
@@ -413,11 +418,12 @@ class FormBuilder {
                 labelText: map['labelText'] ?? labelText,
                 focusNode: focusNode,
                 controller: controller,
-                formatter: formatter,
+                formatter: map['formatter'] ?? formatter,
                 validator: validator,
                 useTime: map['useTime'] ?? useTime,
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
+                style: map['style'] ?? style,
               )),
     );
     return this;
@@ -433,7 +439,8 @@ class FormBuilder {
       DropdownButtonBuilder selectedItemBuilder,
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      TextStyle style}) {
     DropdownController controller = formController._controllers
         .putIfAbsent(controlKey, () => DropdownController());
     FocusNode focusNode =
@@ -456,6 +463,7 @@ class FormBuilder {
                     map['selectedItemBuilder'] ?? selectedItemBuilder,
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
+                style: map['style'] ?? style,
               )),
     );
     return this;
@@ -527,6 +535,28 @@ class FormController extends ChangeNotifier {
     }
   }
 
+  get hide => _hide;
+
+  set hide(bool hide) {
+    if (_hide != hide) {
+      _hide = hide;
+      notifyListeners();
+    }
+  }
+
+  get readOnly => _readOnly;
+
+  set readOnly(bool readOnly) {
+    if (_readOnly != readOnly) {
+      _readOnly = readOnly;
+      _states.forEach((key, value) {
+        value.readOnly = _readOnly;
+      });
+    }
+  }
+
+  get _state => _formKey.currentState;
+
   void requestFocus(String controlKey) {
     FocusNode focusNode = _focusNodes[controlKey];
     if (focusNode == null) return;
@@ -545,46 +575,33 @@ class FormController extends ChangeNotifier {
   }
 
   void rebuild(String controlKey, Map<String, dynamic> map) {
-    _FormItemWidgetState state = _states[controlKey];
-    if (state != null) state.rebuild(map);
+    _ifFormItemWidgetStatePresent(controlKey, (state) => state.rebuild(map));
   }
 
   void update(String controlKey, Map<String, dynamic> map) {
-    _FormItemWidgetState state = _states[controlKey];
-    if (state != null) state.update(map);
+    _ifFormItemWidgetStatePresent(controlKey, (state) => state.update(map));
   }
 
   void setVisible(String controlKey, bool visible) {
-    _FormItemWidgetState state = _states[controlKey];
-    if (state != null) state.visible = visible;
+    _ifFormItemWidgetStatePresent(
+        controlKey, (state) => state.visible = visible);
   }
 
   void setReadOnly(String controlKey, bool readOnly) {
-    _FormItemWidgetState state = _states[controlKey];
-    if (state != null) state.readOnly = readOnly;
+    _ifFormItemWidgetStatePresent(
+        controlKey, (state) => state.readOnly = readOnly);
   }
 
   bool isVisible(String controlKey) {
-    _FormItemWidgetState state = _states[controlKey];
-    return state.visible ?? false;
+    return _ifFormItemWidgetStatePresent(
+            controlKey, (state) => state.visible) ??
+        false;
   }
 
   bool isReadOnly(String controlKey) {
-    _FormItemWidgetState state = _states[controlKey];
-    return state.readOnly ?? false;
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _focusNodes.values.forEach((element) {
-      element.dispose();
-    });
-    _controllers.values.forEach((element) {
-      element.dispose();
-    });
-    _states.clear();
-    _themeDataNotifier.dispose();
+    return _ifFormItemWidgetStatePresent(
+            controlKey, (state) => state.readOnly) ??
+        false;
   }
 
   Map<String, dynamic> getData() {
@@ -607,6 +624,37 @@ class FormController extends ChangeNotifier {
     return _controllers[controlKey];
   }
 
+  void reset() {
+    assert(_state != null);
+    _state.reset();
+  }
+
+  bool validate() {
+    assert(_state != null);
+    return _state.validate();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _focusNodes.values.forEach((element) {
+      element.dispose();
+    });
+    _controllers.values.forEach((element) {
+      element.dispose();
+    });
+    _states.clear();
+    _themeDataNotifier.dispose();
+  }
+
+  dynamic _ifFormItemWidgetStatePresent(String controlKey, Function consumer) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state != null) {
+      return consumer(state);
+    }
+    return null;
+  }
+
   dynamic _getValue(dynamic valueNotifier) {
     if (valueNotifier is ValueNotifier) {
       if (valueNotifier is TextEditingController) {
@@ -627,38 +675,6 @@ class FormController extends ChangeNotifier {
       }
     }
   }
-
-  get hide => _hide;
-
-  set hide(bool hide) {
-    if (_hide != hide) {
-      _hide = hide;
-      notifyListeners();
-    }
-  }
-
-  get readOnly => _readOnly;
-
-  set readOnly(bool readOnly) {
-    if (_readOnly != readOnly) {
-      _readOnly = readOnly;
-      _states.forEach((key, value) {
-        value.readOnly = _readOnly;
-      });
-    }
-  }
-
-  void reset() {
-    assert(_state != null);
-    _state.reset();
-  }
-
-  bool validate() {
-    assert(_state != null);
-    return _state.validate();
-  }
-
-  get _state => _formKey.currentState;
 
   static FormController of(BuildContext context) {
     return context.read<FormController>();

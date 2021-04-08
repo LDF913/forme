@@ -97,6 +97,7 @@ class RadioGroup extends FormField {
                               if (onChanged != null) onChanged(value);
                             },
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                               isSelected

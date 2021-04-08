@@ -165,7 +165,15 @@ class _MyHomePageState extends State<MyHomePage> {
             Builder(
               builder: (context) {
                 return TextButton(
-                    onPressed: () {}, child: Text('set man readonly'));
+                    onPressed: () {
+                      formController.update('checkbox', {
+                        'items': [
+                          CheckboxButton('男', readOnly: true),
+                          CheckboxButton('女')
+                        ]
+                      });
+                    },
+                    child: Text('set man readonly'));
               },
             ),
             Builder(
@@ -263,9 +271,10 @@ class _MyHomePageState extends State<MyHomePage> {
         .checkboxGroup(
           'checkbox',
           [
-            CheckboxButton('男', visible: false),
-            CheckboxButton('女', visible: true),
+            CheckboxButton('男'),
+            CheckboxButton('女'),
           ],
+          split: 2,
           label: '性别',
           validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
         )

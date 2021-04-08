@@ -112,6 +112,7 @@ class CheckboxGroup extends FormField<List<int>> {
                                   onChanged(List.from(value));
                               },
                         child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             value.contains(i)
                                 ? Icon(Icons.check_box,

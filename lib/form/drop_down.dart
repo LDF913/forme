@@ -20,6 +20,7 @@ class DropdownFormField extends FormField {
   final bool readOnly;
   final String labelText;
   final String hintText;
+  final TextStyle style;
 
   DropdownFormField(
       this.controlKey, this.controller, this.focusNode, this.items,
@@ -31,7 +32,8 @@ class DropdownFormField extends FormField {
       this.validator,
       this.autovalidateMode,
       this.padding,
-      this.readOnly = false})
+      this.readOnly = false,
+      this.style})
       : super(
           validator: validator,
           autovalidateMode: autovalidateMode,
@@ -85,6 +87,7 @@ class DropdownFormField extends FormField {
                   isFocused: Focus.of(context).hasFocus,
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton(
+                      style: style,
                       iconDisabledColor: themeData.disabledColor,
                       iconEnabledColor: Focus.of(context).hasFocus
                           ? themeData.primaryColor
