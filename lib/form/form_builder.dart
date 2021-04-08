@@ -726,17 +726,17 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void initState() {
     super.initState();
-    widget.formController._states[widget.controlKey] = this;
   }
 
   @override
-  void dispose() {
-    super.dispose();
+  void deactivate() {
     widget.formController._states.remove(widget.controlKey);
+    super.deactivate();
   }
 
   @override
   Widget build(BuildContext context) {
+    widget.formController._states[widget.controlKey] = this;
     return Visibility(
       child: Expanded(
         child: widget.builder(context, map),
