@@ -205,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
                 formController.setValue('remark', 'hello world');
+                formController.setValue('selector', ['15', '14']);
                 print(formController.getData());
               },
               child: Text('set&get form data'),
@@ -212,17 +213,17 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               onPressed: () {
                 FocusScope.of(context).requestFocus(FocusNode());
-                formController.update('dropdown', {'loading': true});
+                formController.update('selector', {'loading': true});
 
                 Future.delayed(Duration(seconds: 2), () {
-                  formController.setValue('dropdown', null);
-                  formController.rebuild('dropdown', {
-                    'items': FormBuilder.toDropdownItems(
+                  formController.setValue('selector', null);
+                  formController.rebuild('selector', {
+                    'items': FormBuilder.toSelectorItems(
                         [Random().nextDouble().toString()])
                   });
                 });
               },
-              child: Text('load dropdownitems'),
+              child: Text('load selectoritems'),
             ),
             TextButton(
               onPressed: () {
@@ -281,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           split: 2,
           label: '性别',
-          validator: (value) => (value ?? []).length == 0 ? '请选择性别' : null,
+          validator: (value) => (value ?? []).isEmpty ? '请选择性别' : null,
         )
         .divider('divider')
         .radioGroup(
@@ -313,26 +314,15 @@ class _MyHomePageState extends State<MyHomePage> {
             clearable: true,
             maxLength: 500)
         .nextLine()
-        .dropdown('dropdown',
-            labelText: '下拉框',
-            items: FormBuilder.toDropdownItems([
-              '1',
-              '2',
-              '3',
-              '4',
-              '5',
-              '6',
-              '7',
-              '8',
-              '9',
-              '10',
-              '11',
-              '12',
-              '13',
-              '14',
-              '15'
-            ]),
-            validator: (value) => value == null ? 'select something !' : null);
+        .selector('selector',
+            labelText: '选择器',
+            multi: true,
+            items: FormBuilder.toSelectorItems(
+                new List<int>.generate(100, (i) => i + 1)
+                    .map((e) => e.toString())
+                    .toList()),
+            validator: (value) =>
+                (value ?? []).isEmpty ? 'select something !' : null);
     return builder.build();
   }
 }

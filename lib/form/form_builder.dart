@@ -6,7 +6,7 @@ import 'checkbox_group.dart';
 import 'form_theme.dart';
 import 'text_field.dart';
 import 'radio_group.dart';
-import 'drop_down.dart';
+import 'selector.dart';
 
 typedef FormWidgetBuilder = Widget Function(
     BuildContext context, Map<String, dynamic> map);
@@ -431,28 +431,30 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder dropdown(String controlKey,
-      {String labelText,
-      String hintText,
-      bool readOnly = false,
-      bool visible = true,
-      bool clearable = true,
-      List<DropdownItem> items,
-      DropdownButtonBuilder selectedItemBuilder,
-      FormFieldValidator validator,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      EdgeInsets padding,
-      TextStyle style,
-      bool loading = false}) {
-    DropdownController controller = formController._controllers
-        .putIfAbsent(controlKey, () => DropdownController());
+  FormBuilder selector(
+    String controlKey, {
+    String labelText,
+    String hintText,
+    bool readOnly = false,
+    bool visible = true,
+    bool clearable = true,
+    List<SelectorItem> items,
+    FormFieldValidator validator,
+    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+    EdgeInsets padding,
+    TextStyle style,
+    bool loading = false,
+    bool multi = false,
+  }) {
+    SelectorController controller = formController._controllers
+        .putIfAbsent(controlKey, () => SelectorController());
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
           flex: 1,
-          builder: (context, map) => DropdownFormField(
+          builder: (context, map) => SelectorFormField(
                 controlKey,
                 controller,
                 focusNode,
@@ -462,12 +464,11 @@ class FormBuilder {
                 clearable: map['clearable'] ?? clearable,
                 validator: validator,
                 autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-                selectedItemBuilder:
-                    map['selectedItemBuilder'] ?? selectedItemBuilder,
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
                 style: map['style'] ?? style,
                 loading: map['loading'] ?? loading,
+                multi: map['multi'] ?? multi,
               )),
     );
     return this;
@@ -505,8 +506,8 @@ class FormBuilder {
     return _FormWidget(_builderss, formController);
   }
 
-  static List<DropdownItem> toDropdownItems(List<String> items) {
-    return items.map((e) => DropdownItem(e)).toList();
+  static List<SelectorItem> toSelectorItems(List<String> items) {
+    return items.map((e) => SelectorItem(e, e)).toList();
   }
 
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {
@@ -658,9 +659,8 @@ class FormController extends ChangeNotifier {
     if (valueNotifier is ValueNotifier) {
       if (valueNotifier is TextEditingController) {
         return valueNotifier.text;
-      } else {
-        return valueNotifier.value;
       }
+      return valueNotifier.value;
     }
     return null;
   }
