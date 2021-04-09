@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import 'form_theme.dart';
@@ -7,12 +6,20 @@ class DropdownController extends ValueNotifier {
   DropdownController({dynamic value}) : super(value);
 }
 
+class DropdownItem {
+  final bool value;
+  final String label;
+  final bool readOnly;
+
+  DropdownItem(this.label, {this.value, this.readOnly});
+}
+
 class DropdownFormField extends FormField {
   final String controlKey;
   final DropdownController controller;
   final FocusNode focusNode;
   final ValueChanged onChanged;
-  final List<DropdownMenuItem> items;
+  final List<DropdownItem> items;
   final bool clearable;
   final DropdownButtonBuilder selectedItemBuilder;
   final FormFieldValidator validator;
@@ -60,7 +67,10 @@ class DropdownFormField extends FormField {
               themeData.inputDecorationTheme,
             );
             List<Widget> icons = [];
-            if (clearable && !readOnly && controller.value != null) {
+            if (clearable &&
+                !readOnly &&
+                controller.value != null &&
+                !loading) {
               icons.add(Padding(
                 padding: EdgeInsets.only(right: 10),
                 child: GestureDetector(
@@ -71,7 +81,19 @@ class DropdownFormField extends FormField {
                 ),
               ));
             }
-            icons.add(Icon(Icons.arrow_drop_down));
+            if (loading)
+              icons.add(Padding(
+                  child: SizedBox(
+                    width: iconSize,
+                    height: iconSize,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  padding: EdgeInsets.only(right: 10)));
+            icons.add(Icon(
+              Icons.arrow_drop_down,
+            ));
 
             bool hasValue = controller.value == null ||
                 (controller.value != null &&
@@ -79,47 +101,6 @@ class DropdownFormField extends FormField {
 
             if (!hasValue) {
               throw 'pls clear dropdown value before you reload items!';
-            }
-
-            WidgetBuilder dropdownBuilder =
-                (context) => DropdownButtonHideUnderline(
-                        child: DropdownButton(
-                      iconSize: iconSize,
-                      style: style,
-                      iconDisabledColor: themeData.disabledColor,
-                      iconEnabledColor: Focus.of(context).hasFocus
-                          ? themeData.primaryColor
-                          : themeData.unselectedWidgetColor,
-                      selectedItemBuilder: selectedItemBuilder ??
-                          (BuildContext context) {
-                            return items.map<Widget>((DropdownMenuItem item) {
-                              return SingleChildScrollView(
-                                child: item.child,
-                              );
-                            }).toList();
-                          },
-                      items: items,
-                      value: controller.value,
-                      icon: Row(
-                        children: icons,
-                        mainAxisSize: MainAxisSize.min,
-                      ),
-                      onChanged: readOnly || loading ? null : onChangedHandler,
-                      isDense: true,
-                      isExpanded: true,
-                      focusNode: focusNode,
-                      autofocus: false,
-                    ));
-
-            Widget loadingIndicator;
-
-            if (loading) {
-              double size = iconSize;
-              loadingIndicator = SizedBox(
-                width: size,
-                height: size,
-                child: CircularProgressIndicator(),
-              );
             }
 
             Widget child = Focus(
@@ -131,14 +112,38 @@ class DropdownFormField extends FormField {
                               errorText: field.errorText),
                           isEmpty: controller.value == null,
                           isFocused: Focus.of(context).hasFocus,
-                          child: loading
-                              ? Stack(
-                                  alignment: AlignmentDirectional.center,
-                                  children: [
-                                      dropdownBuilder(context),
-                                      loadingIndicator
-                                    ])
-                              : dropdownBuilder(context),
+                          child: DropdownButtonHideUnderline(
+                              child: DropdownButton(
+                            iconSize: iconSize,
+                            style: style,
+                            iconDisabledColor: themeData.disabledColor,
+                            iconEnabledColor: Focus.of(context).hasFocus
+                                ? themeData.primaryColor
+                                : themeData.unselectedWidgetColor,
+                            selectedItemBuilder: selectedItemBuilder ??
+                                (BuildContext context) {
+                                  return items.map<Widget>((DropdownItem item) {
+                                    return SingleChildScrollView(
+                                      child: Text(item.label),
+                                    );
+                                  }).toList();
+                                },
+                            items: items
+                                .map((e) => DropdownMenuItem(
+                                    child: Text(e.label), value: e.value))
+                                .toList(),
+                            value: controller.value,
+                            icon: Row(
+                              children: icons,
+                              mainAxisSize: MainAxisSize.min,
+                            ),
+                            onChanged:
+                                readOnly || loading ? null : onChangedHandler,
+                            isDense: true,
+                            isExpanded: true,
+                            focusNode: focusNode,
+                            autofocus: false,
+                          )),
                         )));
             return Padding(
               child: child,

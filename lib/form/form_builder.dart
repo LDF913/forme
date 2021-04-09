@@ -403,7 +403,8 @@ class FormBuilder {
       FormFieldValidator<DateTime> validator,
       bool useTime,
       EdgeInsets padding,
-      TextStyle style}) {
+      TextStyle style,
+      int maxLines = 1}) {
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
     FocusNode focusNode =
@@ -424,6 +425,7 @@ class FormBuilder {
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
                 style: map['style'] ?? style,
+                maxLines: map['maxLines'] ?? maxLines,
               )),
     );
     return this;
@@ -435,7 +437,7 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       bool clearable = true,
-      List<DropdownMenuItem> items,
+      List<DropdownItem> items,
       DropdownButtonBuilder selectedItemBuilder,
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
@@ -503,13 +505,8 @@ class FormBuilder {
     return _FormWidget(_builderss, formController);
   }
 
-  static List<DropdownMenuItem> toDropdownItems(List<String> items) {
-    return items
-        .map((e) => DropdownMenuItem(
-              child: Text(e),
-              value: e,
-            ))
-        .toList();
+  static List<DropdownItem> toDropdownItems(List<String> items) {
+    return items.map((e) => DropdownItem(e)).toList();
   }
 
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {

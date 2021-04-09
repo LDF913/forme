@@ -211,6 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
+                FocusScope.of(context).requestFocus(FocusNode());
                 formController.update('dropdown', {'loading': true});
 
                 Future.delayed(Duration(seconds: 2), () {
@@ -314,6 +315,23 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .dropdown('dropdown',
             labelText: '下拉框',
+            items: FormBuilder.toDropdownItems([
+              '1',
+              '2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              '10',
+              '11',
+              '12',
+              '13',
+              '14',
+              '15'
+            ]),
             validator: (value) => value == null ? 'select something !' : null);
     return builder.build();
   }

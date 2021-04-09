@@ -230,6 +230,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final EdgeInsets padding;
   final bool readOnly;
   final TextStyle style;
+  final int maxLines;
 
   DateTimeFormField(this.controlKey,
       {Key key,
@@ -245,7 +246,8 @@ class DateTimeFormField extends FormField<DateTime> {
       AutovalidateMode autovalidateMode,
       this.padding,
       this.readOnly = false,
-      this.style})
+      this.style,
+      this.maxLines = 1})
       : assert(controlKey != null),
         super(
           validator: validator,
@@ -327,7 +329,7 @@ class DateTimeFormField extends FormField<DateTime> {
               decoration:
                   effectiveDecoration.copyWith(errorText: field.errorText),
               obscureText: false,
-              maxLines: 1,
+              maxLines: maxLines,
               onTap: null,
               enabled: true,
               readOnly: true,
@@ -342,14 +344,20 @@ class DateTimeFormField extends FormField<DateTime> {
 
   @override
   _DateTimeFormFieldState createState() => _DateTimeFormFieldState();
+
+  static DateTimeFormatter defaultDateTimeFormatter = (dateTime) =>
+      '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
+
+  static DateTimeFormatter defaultDateFormatter = (dateTime) =>
+      '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
 }
 
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
 class _DateTimeFormFieldState extends FormFieldState<DateTime> {
-  DateTimeFormatter formatter;
-
-  DateTimeFormatter get _formatter => widget.formatter ?? formatter;
+  DateTimeFormatter get _formatter => widget.formatter ?? widget.useTime
+      ? DateTimeFormField.defaultDateTimeFormatter
+      : DateTimeFormField.defaultDateFormatter;
 
   @override
   DateTimeFormField get widget => super.widget as DateTimeFormField;
@@ -357,16 +365,6 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   @override
   void initState() {
     widget.controller.addListener(_handleChanged);
-
-    if (widget.formatter == null) {
-      formatter = (dateTime) {
-        if (widget.useTime)
-          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-        else
-          return '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
-      };
-    }
-
     super.initState();
   }
 
