@@ -450,6 +450,7 @@ class FormBuilder {
         .putIfAbsent(controlKey, () => SelectorController());
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    nextLine();
     _builders.add(
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
@@ -471,6 +472,7 @@ class FormBuilder {
                 multi: map['multi'] ?? multi,
               )),
     );
+    nextLine();
     return this;
   }
 
