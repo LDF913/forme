@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/form/text_field.dart';
 
 import 'form_theme.dart';
 
@@ -106,53 +105,75 @@ class SelectorFormField extends FormField<List> {
             icons.add(Icon(
               Icons.arrow_drop_down,
             ));
-            Widget tags = controller.value.isEmpty
-                ? null
-                : Wrap(
-                    children: controller.value.map((e) {
-                      SelectorItem item = _getItem(e);
-                      return InkWell(
-                        onTap: () {
-                          onChangedHandler(controller.value
-                              .where((element) => element != e)
-                              .toList());
-                        },
-                        child: Padding(
-                          padding: EdgeInsets.only(right: 10),
-                          child: Chip(
-                              backgroundColor: item == null
-                                  ? themeData.errorColor
-                                  : themeData.primaryColor.withOpacity(0.6),
-                              label: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    item == null ? 'unknow' : item.label,
-                                    style: style ?? TextStyle(),
-                                  ),
-                                  SizedBox(
-                                    width: 4,
-                                  ),
-                                  Icon(
-                                    Icons.clear,
-                                    size: 12,
-                                  )
-                                ],
-                              )),
-                        ),
-                      );
-                    }).toList(),
+
+            Widget tags;
+
+            if (controller.value.isNotEmpty) {
+              if (!multi) {
+                SelectorItem item = _getItem(controller.value[0]);
+                if (item == null) {
+                  tags = Padding(
+                    child: Text('unknow',
+                        style: TextStyle(color: themeData.errorColor)),
+                    padding: EdgeInsets.only(left: 5, right: 5, top: 5),
                   );
+                } else
+                  tags = Padding(
+                    child: Text(item.label),
+                    padding: EdgeInsets.only(left: 5, right: 5, top: 5),
+                  );
+              } else {
+                tags = Wrap(
+                  children: controller.value.map((e) {
+                    SelectorItem item = _getItem(e);
+                    return InkWell(
+                      onTap: () {
+                        onChangedHandler(controller.value
+                            .where((element) => element != e)
+                            .toList());
+                      },
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 10),
+                        child: Chip(
+                            backgroundColor: item == null
+                                ? themeData.errorColor
+                                : themeData.primaryColor.withOpacity(0.6),
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  item == null ? 'unknow' : item.label,
+                                  style: style ?? TextStyle(),
+                                ),
+                                SizedBox(
+                                  width: 4,
+                                ),
+                                Icon(
+                                  Icons.clear,
+                                  size: 12,
+                                )
+                              ],
+                            )),
+                      ),
+                    );
+                  }).toList(),
+                );
+              }
+            }
             final InputDecoration effectiveDecoration = InputDecoration(
+                contentPadding: multi ? EdgeInsets.zero : null,
                 labelText: labelText,
                 hintText: hintText,
                 suffixIcon: Row(
                   children: icons,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                 )).applyDefaults(
               themeData.inputDecorationTheme,
             );
+
             Widget child = Focus(
+                focusNode: focusNode,
                 canRequestFocus: true,
                 skipTraversal: true,
                 child: Builder(
@@ -182,8 +203,8 @@ class SelectorFormField extends FormField<List> {
                             decoration: effectiveDecoration.copyWith(
                                 errorText: field.errorText),
                             isEmpty: controller.value.isEmpty,
-                            isFocused: focusNode.hasFocus,
-                            child: tags ?? Text(""),
+                            isFocused: Focus.of(context).hasFocus,
+                            child: tags,
                           ),
                         )));
             return Padding(
@@ -504,7 +525,7 @@ class _ClearableTextFieldState extends State<_ClearableTextField> {
   Widget build(BuildContext context) {
     return TextField(
         controller: controller,
-        autofocus: true,
+        autofocus: false,
         decoration: InputDecoration(
           suffixIcon: Visibility(
               visible: controller.text != '',
