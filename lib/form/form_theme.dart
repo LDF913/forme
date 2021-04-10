@@ -104,7 +104,7 @@ class DefaultThemeData extends FormThemeData {
             checkboxGroupTheme: CheckboxGroupTheme(),
             radioGroupTheme: RadioGroupTheme(),
             themeDataBuilder: (context) => _buildLightTheme(context),
-            labelPadding: const EdgeInsets.only(top: 10, bottom: 10));
+            labelPadding: const EdgeInsets.symmetric(horizontal: 10));
 
   static TextTheme _buildTextTheme(TextTheme base) {
     const String fontName = 'WorkSans';

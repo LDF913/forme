@@ -328,7 +328,7 @@ class _SelectableDialogState extends State<_SelectableDialog> {
               ),
             ),
             Padding(
-                padding: EdgeInsets.only(left: 20, right: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _ClearableTextField((value) {
                   setState(() {
                     filter = value;
@@ -382,7 +382,7 @@ class _SelectableDialogState extends State<_SelectableDialog> {
             ? widget.themeData.primaryColor
             : widget.themeData.unselectedWidgetColor;
         return SimpleDialogOption(
-            padding: EdgeInsets.only(left: 6),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
             onPressed: () {
               toggle(i, context);
             },
@@ -420,7 +420,7 @@ class _SelectableDialogState extends State<_SelectableDialog> {
         ? widget.themeData.primaryColor
         : widget.themeData.unselectedWidgetColor;
     return SimpleDialogOption(
-      padding: EdgeInsets.only(left: 6),
+      padding: EdgeInsets.symmetric(horizontal: 6),
       onPressed: () {
         toggle(i, context);
       },
@@ -526,7 +526,9 @@ class _ClearableTextFieldState extends State<_ClearableTextField> {
     return TextField(
         controller: controller,
         autofocus: false,
+        maxLines: 1,
         decoration: InputDecoration(
+          border: OutlineInputBorder(),
           suffixIcon: Visibility(
               visible: controller.text != '',
               child: IconButton(

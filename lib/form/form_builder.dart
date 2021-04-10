@@ -479,7 +479,7 @@ class FormBuilder {
   FormBuilder divider(String controlKey,
       {double height = 1.0,
       bool visible = true,
-      EdgeInsets padding = const EdgeInsets.only(left: 5, right: 5)}) {
+      EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 5)}) {
     nextLine();
     _builders.add(_FormItemWidget(
       visible,

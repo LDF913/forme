@@ -83,7 +83,7 @@ class _MyHomePageState extends State<MyHomePage> {
         body: SingleChildScrollView(
           child: Wrap(children: [
             Padding(
-              padding: EdgeInsets.only(left: 20, right: 20),
+              padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
             ),
             Builder(
@@ -205,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
                 formController.setValue('remark', 'hello world');
-                formController.setValue('selector', ['15', '14']);
+                formController.setValue('selector', ['1x4']);
                 print(formController.getData());
               },
               child: Text('set&get form data'),
