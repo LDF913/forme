@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'form_builder.dart';
 import 'form_theme.dart';
 
 class SwitchGroupController extends ValueNotifier<List<int>> {
@@ -10,34 +11,33 @@ class SwitchGroupController extends ValueNotifier<List<int>> {
       super.value = value == null ? [] : List.of(value);
 }
 
-class SwitchGroup extends FormField<List<int>> {
-  final SwitchGroupController controller;
+class SwitchGroup extends FormBuilderField<List<int>> {
   final List<String> items;
   final String label;
-  final String controlKey;
-  final ValueChanged onChanged;
   final EdgeInsets padding;
-  final bool readOnly;
   final bool hasSelectAllSwitch;
 
-  SwitchGroup(this.controlKey,
+  SwitchGroup(String controlKey, SwitchGroupController controller,
       {Key key,
-      this.controller,
       this.label,
       this.items,
-      this.onChanged,
+      bool readOnly = false,
+      ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.readOnly = false,
       this.hasSelectAllSwitch = true})
       : assert(controlKey != null, items != null),
         super(
+          controlKey,
+          controller,
+          readOnly,
+          onChanged,
           key: key,
           autovalidateMode: autovalidateMode,
           validator: validator,
           builder: (field) {
-            final _SwitchGroupState state = field as _SwitchGroupState;
+            final FormBuilderFieldState state = field as FormBuilderFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
             List<int> indexs =
@@ -159,41 +159,5 @@ class SwitchGroup extends FormField<List<int>> {
         );
 
   @override
-  _SwitchGroupState createState() => _SwitchGroupState();
-}
-
-class _SwitchGroupState extends FormFieldState<List<int>> {
-  @override
-  SwitchGroup get widget => super.widget as SwitchGroup;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_handleControllerChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_handleControllerChanged);
-    super.dispose();
-  }
-
-  @override
-  void didChange(dynamic value) {
-    super.didChange(value);
-    if (widget.controller.value != value) widget.controller.value = value ?? [];
-  }
-
-  @override
-  void reset() {
-    widget.controller.value = [];
-    super.reset();
-  }
-
-  void _handleControllerChanged() {
-    if (widget.controller.value != value)
-      didChange(widget.controller.value);
-    else
-      setState(() {});
-  }
+  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
 }

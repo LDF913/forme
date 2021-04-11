@@ -1,49 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'form_builder.dart';
 import 'form_theme.dart';
 
-class ClearableTextFormField extends FormField<String> {
+class ClearableTextFormField extends FormBuilderField<String> {
   final bool obscureText;
-  final TextEditingController controller;
   final EdgeInsets padding;
-  final bool readOnly;
-  final ValueChanged<String> onChanged;
-  ClearableTextFormField(String controlKey,
-      {String labelText,
-      String hintText,
-      Key key,
-      this.controller,
-      FocusNode focusNode,
-      TextInputType keyboardType,
-      bool autofocus = false,
-      this.obscureText = false,
-      int maxLines = 1,
-      int minLines,
-      int maxLength,
-      this.onChanged,
-      GestureTapCallback onTap,
-      ValueChanged<String> onSubmitted,
-      FormFieldValidator<String> validator,
-      AutovalidateMode autovalidateMode,
-      ValueChanged<String> onFieldSubmitted,
-      bool clearable,
-      bool passwordVisible,
-      Widget prefixIcon,
-      List<TextInputFormatter> inputFormatters,
-      this.padding,
-      this.readOnly = false,
-      TextStyle style})
-      : assert(controlKey != null),
+  ClearableTextFormField(
+    String controlKey,
+    TextEditingController controller, {
+    String labelText,
+    String hintText,
+    Key key,
+    FocusNode focusNode,
+    TextInputType keyboardType,
+    bool autofocus = false,
+    this.obscureText = false,
+    int maxLines = 1,
+    int minLines,
+    int maxLength,
+    ValueChanged<String> onChanged,
+    GestureTapCallback onTap,
+    ValueChanged<String> onSubmitted,
+    FormFieldValidator<String> validator,
+    AutovalidateMode autovalidateMode,
+    ValueChanged<String> onFieldSubmitted,
+    bool clearable,
+    bool passwordVisible,
+    Widget prefixIcon,
+    List<TextInputFormatter> inputFormatters,
+    this.padding,
+    TextStyle style,
+    bool readOnly = false,
+  })  : assert(controlKey != null),
         super(
+          controlKey,
+          controller,
+          readOnly,
+          onChanged,
           key: key,
           validator: validator,
-          enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
-          builder: (FormFieldState<String> field) {
-            final FormThemeData formThemeData = FormThemeData.of(field.context);
-            final ThemeData themeData = Theme.of(field.context);
+          builder: (field) {
             final _TextFormFieldState state = field as _TextFormFieldState;
-
+            FormThemeData formThemeData = FormThemeData.of(field.context);
+            ThemeData themeData = Theme.of(field.context);
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
@@ -109,17 +110,17 @@ class ClearableTextFormField extends FormField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextFormFieldState extends FormFieldState<String> {
+class _TextFormFieldState extends FormBuilderFieldState<String> {
   bool obscureText = false;
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
+  TextEditingController get controller => super.controller;
 
   @override
   void initState() {
-    obscureText = widget.obscureText;
-    widget.controller.addListener(_handleChanged);
     super.initState();
+    obscureText = widget.obscureText;
   }
 
   void toggleObsureText() {
@@ -129,33 +130,28 @@ class _TextFormFieldState extends FormFieldState<String> {
   }
 
   @override
-  void dispose() {
-    widget.controller.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  @override
   void didChange(String value) {
-    super.didChange(value);
-    if (widget.onChanged != null) {
-      widget.onChanged(value);
+    super.superDidChange(value);
+    if (onChanged != null) {
+      onChanged(value);
     }
-    if (widget.controller.text != value) {
-      widget.controller.text = value ?? '';
+    if (controller.text != value) {
+      controller.text = value ?? '';
     }
   }
 
   @override
   void reset() {
-    widget.controller.text = '';
-    if (widget.onChanged != null) {
-      widget.onChanged('');
+    super.superReset();
+    controller.text = '';
+    if (onChanged != null) {
+      onChanged('');
     }
-    super.reset();
   }
 
-  void _handleChanged() {
-    if (widget.controller.text != value) didChange(widget.controller.text);
+  @protected
+  void handleChanged() {
+    if (controller.text != value) didChange(controller.text);
   }
 }
 
@@ -227,40 +223,38 @@ class DateTimeController<DateTime> extends ValueNotifier {
       value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
 }
 
-class DateTimeFormField extends FormField<DateTime> {
-  final DateTimeController controller;
+class DateTimeFormField extends FormBuilderField<DateTime> {
   final DateTimeFormatter formatter;
-  final String controlKey;
   final bool useTime;
   final Locale locale;
   final EdgeInsets padding;
-  final bool readOnly;
   final int maxLines;
-  final ValueChanged<DateTime> onChanged;
 
-  DateTimeFormField(this.controlKey,
+  DateTimeFormField(String controlKey, DateTimeController controller,
       {Key key,
       String labelText,
       String hintText,
       TextStyle style,
-      this.controller,
+      bool readOnly,
       this.formatter,
       this.locale,
       FocusNode focusNode,
       this.useTime = false,
+      ValueChanged<DateTime> onChanged,
       FormFieldValidator<DateTime> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.readOnly = false,
-      this.maxLines = 1,
-      this.onChanged})
+      this.maxLines = 1})
       : assert(controlKey != null),
         super(
+          controlKey,
+          controller,
+          readOnly,
+          onChanged,
           validator: validator,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
           builder: (field) {
-            print(controller);
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
@@ -361,49 +355,26 @@ class DateTimeFormField extends FormField<DateTime> {
 
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
-class _DateTimeFormFieldState extends FormFieldState<DateTime> {
+class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   DateTimeFormatter get _formatter => widget.formatter ?? widget.useTime
       ? DateTimeFormField.defaultDateTimeFormatter
       : DateTimeFormField.defaultDateFormatter;
+
+  TextEditingController get textEditingController =>
+      (super.controller as DateTimeController)._controller;
 
   @override
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void initState() {
-    widget.controller.addListener(_handleChanged);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  @override
   void didChange(DateTime value) {
     super.didChange(value);
-    if (widget.controller.value != value) {
-      widget.controller.value = value;
-      if (widget.onChanged != null) {
-        widget.onChanged(value);
-      }
-    }
-    widget.controller._controller.text = value == null ? '' : _formatter(value);
+    textEditingController.text = value == null ? '' : _formatter(value);
   }
 
   @override
   void reset() {
-    widget.controller.value = null;
-    widget.controller._controller.text = '';
-    if (widget.onChanged != null) {
-      widget.onChanged(null);
-    }
     super.reset();
-  }
-
-  void _handleChanged() {
-    if (widget.controller.value != value) didChange(widget.controller.value);
+    textEditingController.text = '';
   }
 }

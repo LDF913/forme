@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
+import 'form_builder.dart';
 import 'form_theme.dart';
 
 class SelectorController extends ValueNotifier<List<dynamic>> {
@@ -17,50 +18,42 @@ class SelectorItem {
   SelectorItem(this.label, this.value);
 }
 
-class SelectorFormField extends FormField<List> {
-  final String controlKey;
-  final SelectorController controller;
+class SelectorFormField extends FormBuilderField<List> {
   final FocusNode focusNode;
   final bool clearable;
   final EdgeInsets padding;
-  final bool readOnly;
   final String labelText;
   final String hintText;
   final TextStyle style;
   final double iconSize;
   final bool loading;
   final bool multi;
-  final ValueChanged<List> onChanged;
 
-  SelectorFormField(this.controlKey, this.controller, this.focusNode,
-      List<SelectorItem> items,
+  SelectorFormField(String controlKey, this.focusNode, List<SelectorItem> items,
+      SelectorController controller,
       {Key key,
-      this.onChanged,
+      bool readOnly = false,
+      ValueChanged<List> onChanged,
       this.clearable,
       this.labelText,
       this.hintText,
       FormFieldValidator<List> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.readOnly = false,
       this.style,
       this.iconSize = 24,
       this.loading = false,
       this.multi = false})
       : super(
+          controlKey,
+          controller,
+          readOnly,
+          onChanged,
           key: key,
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
-            void onChangedHandler(List value) {
-              final _SelectorFormFieldState state =
-                  field as _SelectorFormFieldState;
-              state.didChange(value);
-              if (onChanged != null) {
-                onChanged(value.map((e) => e.value).toList());
-              }
-              focusNode.requestFocus();
-            }
+            final FormBuilderFieldState state = field as FormBuilderFieldState;
 
             int _getIndex(dynamic value) {
               for (int i = 0; i < items.length; i++) {
@@ -88,7 +81,8 @@ class SelectorFormField extends FormField<List> {
                 child: GestureDetector(
                   child: Icon(Icons.clear),
                   onTap: () {
-                    onChangedHandler([]);
+                    state.didChange([]);
+                    focusNode.requestFocus();
                   },
                 ),
               ));
@@ -131,9 +125,10 @@ class SelectorFormField extends FormField<List> {
                       onTap: readOnly
                           ? null
                           : () {
-                              onChangedHandler(controller.value
+                              state.didChange(controller.value
                                   .where((element) => element != e)
                                   .toList());
+                              focusNode.requestFocus();
                             },
                       child: Padding(
                         padding: EdgeInsets.only(right: 10),
@@ -199,9 +194,10 @@ class SelectorFormField extends FormField<List> {
                                         .where((element) => element != null)
                                         .toList(),
                                     (indexs) {
-                                      onChangedHandler(indexs
+                                      state.didChange(indexs
                                           .map((e) => items[e].value)
                                           .toList());
+                                      focusNode.requestFocus();
                                     },
                                     multi: multi,
                                     title: labelText ?? hintText,
@@ -223,41 +219,7 @@ class SelectorFormField extends FormField<List> {
         );
 
   @override
-  _SelectorFormFieldState createState() => _SelectorFormFieldState();
-}
-
-class _SelectorFormFieldState extends FormFieldState<List> {
-  bool loaded = false;
-  @override
-  SelectorFormField get widget => super.widget as SelectorFormField;
-
-  @override
-  void initState() {
-    widget.controller.addListener(_handleChanged);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_handleChanged);
-    super.dispose();
-  }
-
-  @override
-  void didChange(dynamic value) {
-    super.didChange(value);
-    if (widget.controller.value != value) widget.controller.value = value;
-  }
-
-  @override
-  void reset() {
-    widget.controller.value = [];
-    super.reset();
-  }
-
-  void _handleChanged() {
-    if (widget.controller.value != value) didChange(widget.controller.value);
-  }
+  FormBuilderFieldState<List> createState() => FormBuilderFieldState();
 }
 
 typedef _SelectedCallback = void Function(List<int> indexs);

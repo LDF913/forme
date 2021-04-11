@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'form_builder.dart';
 import 'form_theme.dart';
 
 class RadioButton {
@@ -20,28 +21,27 @@ class RadioGroupController extends ValueNotifier {
   RadioGroupController({value}) : super(value);
 }
 
-class RadioGroup extends FormField {
+class RadioGroup extends FormBuilderField {
   final List<RadioButton> buttons;
-  final RadioGroupController controller;
   final String label;
-  final String controlKey;
-  final ValueChanged onChanged;
   final int split;
   final EdgeInsets padding;
-  final bool readOnly;
 
-  RadioGroup(this.controlKey, this.buttons,
+  RadioGroup(String controlKey, this.buttons, RadioGroupController controller,
       {Key key,
-      this.controller,
       this.label,
-      this.onChanged,
+      ValueChanged onChanged,
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode,
       this.split = 0,
       this.padding,
-      this.readOnly = false})
+      bool readOnly = false})
       : assert(controlKey != null),
         super(
+          controlKey,
+          controller,
+          readOnly,
+          onChanged,
           key: key,
           autovalidateMode: autovalidateMode,
           validator: validator,
@@ -50,7 +50,7 @@ class RadioGroup extends FormField {
             RadioGroupTheme radioGroupTheme = formThemeData.radioGroupTheme;
             ThemeData themeData = Theme.of(field.context);
 
-            final _RadioGroupState state = field as _RadioGroupState;
+            final FormBuilderFieldState state = field as FormBuilderFieldState;
             List<Widget> widgets = [];
             if (label != null) {
               Text text = Text(label,
@@ -89,8 +89,9 @@ class RadioGroup extends FormField {
                           ? null
                           : () {
                               var value = button.value;
-                              state.didChange(value);
-                              if (onChanged != null) onChanged(value);
+                              if (value != controller.value) {
+                                state.didChange(value);
+                              }
                             },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -167,41 +168,5 @@ class RadioGroup extends FormField {
         );
 
   @override
-  _RadioGroupState createState() => _RadioGroupState();
-}
-
-class _RadioGroupState extends FormFieldState {
-  @override
-  RadioGroup get widget => super.widget as RadioGroup;
-
-  @override
-  void initState() {
-    super.initState();
-    widget.controller.addListener(_handleControllerChanged);
-  }
-
-  @override
-  void dispose() {
-    widget.controller.removeListener(_handleControllerChanged);
-    super.dispose();
-  }
-
-  @override
-  void didChange(dynamic value) {
-    super.didChange(value);
-    if (widget.controller.value != value) widget.controller.value = value;
-  }
-
-  @override
-  void reset() {
-    widget.controller.value = null;
-    super.reset();
-  }
-
-  void _handleControllerChanged() {
-    if (widget.controller.value != value)
-      didChange(widget.controller.value);
-    else
-      setState(() {});
-  }
+  FormBuilderFieldState createState() => FormBuilderFieldState();
 }

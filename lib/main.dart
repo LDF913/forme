@@ -252,6 +252,9 @@ class _MyHomePageState extends State<MyHomePage> {
           labelText: '用户名',
           clearable: true,
           flex: 3,
+          onChanged: (value) {
+            print(value);
+          },
           validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
         )
         .checkboxs('rememberMe', [CheckboxButton('记住')])
@@ -287,6 +290,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           split: 2,
           label: '性别',
+          onChanged: (value) => print(value),
           validator: (value) => (value ?? []).isEmpty ? '请选择性别' : null,
         )
         .divider('divider')
@@ -296,12 +300,17 @@ class _MyHomePageState extends State<MyHomePage> {
             RadioButton('1', '1', controlKey: 'radio 1'),
             RadioButton('2', '2'),
           ],
+          onChanged: (value) => print(value),
           label: '单选框',
           validator: (value) => value == null ? 'select one !' : null,
         )
         .divider('divider')
         .nextLine()
-        .datetimeField('startTime', useTime: true, hintText: '开始日期')
+        .datetimeField(
+          'startTime',
+          useTime: true,
+          hintText: '开始日期',
+        )
         .datetimeField(
           'endTime',
           useTime: true,
@@ -322,6 +331,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 new List<int>.generate(100, (i) => i + 1)
                     .map((e) => e.toString())
                     .toList()),
+            onChanged: (value) => print(value),
             validator: (value) =>
                 (value ?? []).isEmpty ? 'select something !' : null)
         .nextLine()

@@ -145,6 +145,9 @@ class DefaultThemeData extends FormThemeData {
           fontWeight: FontWeight.normal,
           fontSize: 18,
         ),
+        focusedErrorBorder: UnderlineInputBorder(
+            borderSide:
+                Divider.createBorderSide(context, color: base.errorColor)),
         errorBorder: UnderlineInputBorder(
             borderSide:
                 Divider.createBorderSide(context, color: base.errorColor)),
