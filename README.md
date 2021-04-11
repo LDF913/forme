@@ -111,3 +111,4 @@ formController.themeData = FormThemeData.defaultThemeData;//a theme from  https:
 3. RadioGroup
 4. DateTimeField
 5. Selector(Dropdown like)
+6. SwitchGroup
