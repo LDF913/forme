@@ -212,10 +212,8 @@ class FormBuilder {
   FormBuilder radios(String controlKey, List<RadioButton> items,
       {RadioGroupController controller,
       Key key,
-      FormFieldValidator validator,
       ValueChanged onChanged,
       int flex = 0,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       bool readOnly = false,
       bool visible = true,
       EdgeInsets padding}) {
@@ -231,9 +229,8 @@ class FormBuilder {
         List.of(map['items'] ?? items),
         key: key,
         controller: controller,
-        validator: validator,
         onChanged: onChanged,
-        autovalidateMode: autovalidateMode,
+        autovalidateMode: AutovalidateMode.disabled,
         padding: map['padding'] ?? padding,
         split: 0,
         readOnly: map['readOnly'] ?? readOnly,
@@ -281,11 +278,9 @@ class FormBuilder {
   FormBuilder checkboxs(String controlKey, List<CheckboxButton> items,
       {CheckboxGroupController controller,
       Key key,
-      FormFieldValidator validator,
       ValueChanged<List<int>> onChanged,
       bool readOnly = false,
       bool visible = true,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       int flex = 0,
       EdgeInsets padding}) {
     CheckboxGroupController controller = formController._controllers
@@ -300,9 +295,8 @@ class FormBuilder {
           List.of(map['items'] ?? items),
           key: key,
           controller: controller,
-          validator: validator,
           onChanged: onChanged,
-          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          autovalidateMode: AutovalidateMode.disabled,
           split: 0,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
@@ -489,13 +483,21 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder switchGroup(String controlKey,
-      {String label,
-      bool visible = true,
-      bool readOnly = false,
-      EdgeInsets padding}) {
+  FormBuilder switchGroup(
+    String controlKey, {
+    String label,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets padding,
+    List<String> items,
+    bool hasSelectAllSwitch,
+    ValueChanged<List<int>> onChanged,
+    FormFieldValidator<List<int>> validator,
+    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+  }) {
     SwitchGroupController controller = formController._controllers
         .putIfAbsent(controlKey, () => SwitchGroupController());
+    nextLine();
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -507,6 +509,43 @@ class FormBuilder {
           controller: controller,
           label: map['label'] ?? label,
           readOnly: map['readOnly'] ?? readOnly,
+          items: map['items'] ?? items ?? [],
+          hasSelectAllSwitch:
+              map['hasSelectAllSwitch'] ?? hasSelectAllSwitch ?? true,
+          validator: validator,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          onChanged: onChanged,
+        );
+      },
+    ));
+    nextLine();
+    return this;
+  }
+
+  FormBuilder switch1(
+    String controlKey, {
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets padding,
+    int flex = 0,
+    ValueChanged<List<int>> onChanged,
+  }) {
+    SwitchGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => SwitchGroupController());
+    _builders.add(_FormItemWidget(
+      visible,
+      readOnly,
+      controlKey: controlKey,
+      flex: flex,
+      builder: (context, map) {
+        return SwitchGroup(
+          controlKey,
+          controller: controller,
+          readOnly: map['readOnly'] ?? readOnly,
+          items: [''],
+          hasSelectAllSwitch: false,
+          autovalidateMode: AutovalidateMode.disabled,
+          onChanged: onChanged,
         );
       },
     ));

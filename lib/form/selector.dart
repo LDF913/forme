@@ -139,8 +139,8 @@ class SelectorFormField extends FormField<List> {
                             backgroundColor: item == null
                                 ? themeData.errorColor
                                 : readOnly
-                                    ? themeData.disabledColor
-                                    : themeData.primaryColor.withOpacity(0.6),
+                                    ? themeData.primaryColor.withOpacity(0.5)
+                                    : themeData.primaryColor,
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [

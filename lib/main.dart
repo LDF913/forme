@@ -198,14 +198,15 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                /* formController.setValue('username', 'username');
+                formController.setValue('username', 'username');
                 formController.setValue('password', '123456');
                 formController.setValue('age', '21');
                 formController.setValue('checkbox', [0, 1]);
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
                 formController.setValue('remark', 'hello world');
-                formController.setValue('selector', ['1x4']); */
+                formController.setValue('selector', ['14']);
+                formController.setValue('switch', [2]);
                 print(formController.getData());
               },
               child: Text('set&get form data'),
@@ -254,6 +255,7 @@ class _MyHomePageState extends State<MyHomePage> {
           validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
         )
         .checkboxs('rememberMe', [CheckboxButton('记住')])
+        .switch1('123')
         .nextLine()
         .textField('password',
             hintText: '密码',
@@ -324,7 +326,11 @@ class _MyHomePageState extends State<MyHomePage> {
             validator: (value) =>
                 (value ?? []).isEmpty ? 'select something !' : null)
         .nextLine()
-          ..switchGroup('switchs', label: 'switch');
+        .switchGroup('switch',
+            label: 'switch',
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'select one pls !' : null,
+            items: List<String>.generate(3, (index) => index.toString()));
     return builder.build();
   }
 }

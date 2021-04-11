@@ -376,7 +376,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
   @override
   void reset() {
-    widget.controller.value = '';
+    widget.controller.value = null;
     widget.controller._controller.text = widget.controller.value == null
         ? ''
         : _formatter(widget.controller.value);

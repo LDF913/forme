@@ -10,7 +10,7 @@ class SwitchGroupController extends ValueNotifier<List<int>> {
       super.value = value == null ? [] : List.of(value);
 }
 
-class SwitchGroup extends FormField {
+class SwitchGroup extends FormField<List<int>> {
   final SwitchGroupController controller;
   final List<String> items;
   final String label;
@@ -24,7 +24,7 @@ class SwitchGroup extends FormField {
       {Key key,
       this.controller,
       this.label,
-      this.items = const ['1', '2', '3'],
+      this.items,
       this.onChanged,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
@@ -42,7 +42,8 @@ class SwitchGroup extends FormField {
             ThemeData themeData = Theme.of(field.context);
             List<int> indexs =
                 List<int>.generate(items.length, (index) => index);
-            bool selectAll = listEquals(indexs, controller.value);
+            bool selectAll =
+                indexs.every((element) => controller.value.contains(element));
 
             void onChangeValue(List<int> value) {
               field.didChange(value);
@@ -109,21 +110,23 @@ class SwitchGroup extends FormField {
 
             for (int i = 0; i < items.length; i++) {
               String item = items[i];
+              List<Widget> children = [];
+              if (item != '') {
+                children.add(Expanded(child: Text(item)));
+              }
+              children.add(CupertinoSwitch(
+                value: controller.value.contains(i),
+                onChanged: readOnly
+                    ? null
+                    : (value) {
+                        changeValue(i);
+                      },
+                activeColor: themeData.primaryColor,
+              ));
               columns.add(InkWell(
                 child: Padding(
                   child: Row(
-                    children: [
-                      Expanded(child: Text(item)),
-                      CupertinoSwitch(
-                        value: controller.value.contains(i),
-                        onChanged: readOnly
-                            ? null
-                            : (value) {
-                                changeValue(i);
-                              },
-                        activeColor: themeData.primaryColor,
-                      )
-                    ],
+                    children: children,
                   ),
                   padding: EdgeInsets.all(8),
                 ),
@@ -134,9 +137,20 @@ class SwitchGroup extends FormField {
                       },
               ));
             }
+            if (state.hasError) {
+              columns.add(Row(
+                children: [
+                  Flexible(
+                    child: Text(state.errorText,
+                        style: FormThemeData.getErrorStyle(themeData)),
+                  )
+                ],
+              ));
+            }
 
             return Padding(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: columns,
               ),
               padding: formThemeData.padding ?? padding ?? EdgeInsets.zero,
@@ -148,7 +162,7 @@ class SwitchGroup extends FormField {
   _SwitchGroupState createState() => _SwitchGroupState();
 }
 
-class _SwitchGroupState extends FormFieldState {
+class _SwitchGroupState extends FormFieldState<List<int>> {
   @override
   SwitchGroup get widget => super.widget as SwitchGroup;
 
