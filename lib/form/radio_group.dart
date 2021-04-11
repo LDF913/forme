@@ -102,7 +102,7 @@ class RadioGroup extends FormField {
                           Icon(
                               isSelected
                                   ? Icons.radio_button_checked
-                                  : Icons.radio_button_checked_outlined,
+                                  : Icons.radio_button_off,
                               size: labelStyle.fontSize,
                               color: color),
                           SizedBox(

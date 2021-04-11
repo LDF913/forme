@@ -12,9 +12,8 @@ class SelectorController extends ValueNotifier<List<dynamic>> {
 class SelectorItem {
   final dynamic value;
   final String label;
-  final bool readOnly;
 
-  SelectorItem(this.label, this.value, {this.readOnly});
+  SelectorItem(this.label, this.value);
 }
 
 class SelectorFormField extends FormField<List> {
@@ -127,17 +126,21 @@ class SelectorFormField extends FormField<List> {
                   children: controller.value.map((e) {
                     SelectorItem item = _getItem(e);
                     return InkWell(
-                      onTap: () {
-                        onChangedHandler(controller.value
-                            .where((element) => element != e)
-                            .toList());
-                      },
+                      onTap: readOnly
+                          ? null
+                          : () {
+                              onChangedHandler(controller.value
+                                  .where((element) => element != e)
+                                  .toList());
+                            },
                       child: Padding(
                         padding: EdgeInsets.only(right: 10),
                         child: Chip(
                             backgroundColor: item == null
                                 ? themeData.errorColor
-                                : themeData.primaryColor.withOpacity(0.6),
+                                : readOnly
+                                    ? themeData.disabledColor
+                                    : themeData.primaryColor.withOpacity(0.6),
                             label: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -148,9 +151,12 @@ class SelectorFormField extends FormField<List> {
                                 SizedBox(
                                   width: 4,
                                 ),
-                                Icon(
-                                  Icons.clear,
-                                  size: 12,
+                                Visibility(
+                                  child: Icon(
+                                    Icons.clear,
+                                    size: 12,
+                                  ),
+                                  visible: !readOnly,
                                 )
                               ],
                             )),
@@ -431,7 +437,7 @@ class _SelectableDialogState extends State<_SelectableDialog> {
               Icon(
                   isSelected
                       ? Icons.radio_button_checked
-                      : Icons.radio_button_checked_outlined,
+                      : Icons.radio_button_off,
                   size: labelStyle.fontSize,
                   color: color),
               SizedBox(

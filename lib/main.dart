@@ -322,7 +322,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     .map((e) => e.toString())
                     .toList()),
             validator: (value) =>
-                (value ?? []).isEmpty ? 'select something !' : null);
+                (value ?? []).isEmpty ? 'select something !' : null)
+        .nextLine();
     return builder.build();
   }
 }
