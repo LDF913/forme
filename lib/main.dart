@@ -200,7 +200,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 formController.setValue('username', 'username');
                 formController.setValue('password', '123456');
-                formController.setValue('age', '21');
+                formController.setValue('age', '14');
                 formController.setValue('checkbox', [0, 1]);
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
@@ -269,11 +269,14 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .numberField(
           'age',
+          decimal: 2,
           hintText: '年龄',
           clearable: true,
           flex: 3,
-          min: 14,
           max: 99,
+          onChanged: (value) {
+            print(value);
+          },
           validator: (value) => value == null ? '不为空' : null,
         )
         .checkboxGroup(
@@ -298,11 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .divider('divider')
         .nextLine()
-        .datetimeField(
-          'startTime',
-          useTime: true,
-          hintText: '开始日期',
-        )
+        .datetimeField('startTime', useTime: true, hintText: '开始日期')
         .datetimeField(
           'endTime',
           useTime: true,

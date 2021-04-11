@@ -53,7 +53,9 @@ class SelectorFormField extends FormField<List> {
           autovalidateMode: autovalidateMode,
           builder: (field) {
             void onChangedHandler(List value) {
-              field.didChange(value);
+              final _SelectorFormFieldState state =
+                  field as _SelectorFormFieldState;
+              state.didChange(value);
               if (onChanged != null) {
                 onChanged(value.map((e) => e.value).toList());
               }

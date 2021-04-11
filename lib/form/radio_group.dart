@@ -89,7 +89,7 @@ class RadioGroup extends FormField {
                           ? null
                           : () {
                               var value = button.value;
-                              field.didChange(value);
+                              state.didChange(value);
                               if (onChanged != null) onChanged(value);
                             },
                       child: Row(

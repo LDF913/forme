@@ -100,7 +100,7 @@ class CheckboxGroup extends FormField<List<int>> {
                                   value.remove(i);
                                 else
                                   value.add(i);
-                                field.didChange(value);
+                                state.didChange(value);
                                 if (onChanged != null) onChanged(value);
                               },
                         child: Row(

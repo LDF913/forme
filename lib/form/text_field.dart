@@ -7,6 +7,7 @@ class ClearableTextFormField extends FormField<String> {
   final TextEditingController controller;
   final EdgeInsets padding;
   final bool readOnly;
+  final ValueChanged<String> onChanged;
   ClearableTextFormField(String controlKey,
       {String labelText,
       String hintText,
@@ -19,7 +20,7 @@ class ClearableTextFormField extends FormField<String> {
       int maxLines = 1,
       int minLines,
       int maxLength,
-      ValueChanged<String> onChanged,
+      this.onChanged,
       GestureTapCallback onTap,
       ValueChanged<String> onSubmitted,
       FormFieldValidator<String> validator,
@@ -42,6 +43,7 @@ class ClearableTextFormField extends FormField<String> {
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
             final _TextFormFieldState state = field as _TextFormFieldState;
+
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
@@ -75,12 +77,6 @@ class ClearableTextFormField extends FormField<String> {
                     labelText: labelText,
                     hintText: hintText)
                 .applyDefaults(themeData.inputDecorationTheme);
-            void onChangedHandler(String value) {
-              field.didChange(value);
-              if (onChanged != null) {
-                onChanged(value);
-              }
-            }
 
             TextField textField = TextField(
                 style: style,
@@ -95,7 +91,7 @@ class ClearableTextFormField extends FormField<String> {
                 maxLines: maxLines,
                 minLines: minLines,
                 maxLength: maxLength,
-                onChanged: onChangedHandler,
+                onChanged: (value) => field.didChange(value),
                 onTap: onTap,
                 onSubmitted: onSubmitted,
                 enabled: true,
@@ -141,12 +137,20 @@ class _TextFormFieldState extends FormFieldState<String> {
   @override
   void didChange(String value) {
     super.didChange(value);
-    if (widget.controller.text != value) widget.controller.text = value ?? '';
+    if (widget.onChanged != null) {
+      widget.onChanged(value);
+    }
+    if (widget.controller.text != value) {
+      widget.controller.text = value ?? '';
+    }
   }
 
   @override
   void reset() {
     widget.controller.text = '';
+    if (widget.onChanged != null) {
+      widget.onChanged('');
+    }
     super.reset();
   }
 
@@ -214,6 +218,15 @@ class _ClearIconState extends State<_ClearIcon> {
   }
 }
 
+class DateTimeController<DateTime> extends ValueNotifier {
+  TextEditingController _controller = new TextEditingController();
+
+  DateTimeController({DateTime value}) : super(value);
+
+  TimeOfDay get _timeOfDay =>
+      value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
+}
+
 class DateTimeFormField extends FormField<DateTime> {
   final DateTimeController controller;
   final DateTimeFormatter formatter;
@@ -223,6 +236,7 @@ class DateTimeFormField extends FormField<DateTime> {
   final EdgeInsets padding;
   final bool readOnly;
   final int maxLines;
+  final ValueChanged<DateTime> onChanged;
 
   DateTimeFormField(this.controlKey,
       {Key key,
@@ -238,13 +252,15 @@ class DateTimeFormField extends FormField<DateTime> {
       AutovalidateMode autovalidateMode,
       this.padding,
       this.readOnly = false,
-      this.maxLines = 1})
+      this.maxLines = 1,
+      this.onChanged})
       : assert(controlKey != null),
         super(
           validator: validator,
           autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
           key: key,
           builder: (field) {
+            print(controller);
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
@@ -370,6 +386,9 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
     super.didChange(value);
     if (widget.controller.value != value) {
       widget.controller.value = value;
+      if (widget.onChanged != null) {
+        widget.onChanged(value);
+      }
     }
     widget.controller._controller.text = value == null ? '' : _formatter(value);
   }
@@ -377,22 +396,14 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
   @override
   void reset() {
     widget.controller.value = null;
-    widget.controller._controller.text = widget.controller.value == null
-        ? ''
-        : _formatter(widget.controller.value);
+    widget.controller._controller.text = '';
+    if (widget.onChanged != null) {
+      widget.onChanged(null);
+    }
     super.reset();
   }
 
   void _handleChanged() {
     if (widget.controller.value != value) didChange(widget.controller.value);
   }
-}
-
-class DateTimeController<DateTime> extends ValueNotifier {
-  TextEditingController _controller = new TextEditingController();
-
-  DateTimeController({DateTime value}) : super(value);
-
-  TimeOfDay get _timeOfDay =>
-      value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
 }

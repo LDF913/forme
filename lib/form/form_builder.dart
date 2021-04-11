@@ -40,7 +40,7 @@ class FormBuilder {
       int flex,
       Widget prefixIcon,
       int maxLength,
-      ValueChanged<String> onChanged,
+      ValueChanged<double> onChanged,
       FormFieldValidator<double> validator,
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       double min,
@@ -65,9 +65,15 @@ class FormBuilder {
         int _decimal = map['decimal'] ?? decimal;
         double _max = map['max'] ?? max;
         double _min = map['min'] ?? min;
+        String regex = r'[0-9' +
+            (_decimal > 0 ? '.' : '') +
+            (_min != null && _min > 0 ? '' : '-') +
+            ']';
         List<TextInputFormatter> formatters = [
           TextInputFormatter.withFunction((oldValue, newValue) {
             if (newValue.text == '') return newValue;
+            if ((_min == null || _min < 0) && newValue.text == '-')
+              return newValue;
             double parsed = double.tryParse(newValue.text);
             if (parsed == null) {
               return oldValue;
@@ -87,8 +93,7 @@ class FormBuilder {
             }
             return newValue;
           }),
-          FilteringTextInputFormatter.allow(
-              decimal > 0 ? RegExp(r'[0-9.]') : RegExp(r'[0-9]'))
+          FilteringTextInputFormatter.allow(RegExp(regex))
         ];
         FormFieldValidator<String> fieldValidator = (value) {
           if (value == null || value == '') {
@@ -111,6 +116,7 @@ class FormBuilder {
           return null;
         };
 
+        bool _readOnly = map['readOnly'] ?? readOnly;
         return ClearableTextFormField(
           controlKey,
           key: key,
@@ -128,10 +134,15 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           clearable: map['clearable'] ?? clearable,
           prefixIcon: map['prefixIcon'] ?? prefixIcon,
-          onChanged: onChanged,
+          onChanged: (_readOnly || onChanged == null)
+              ? null
+              : (value) {
+                  double parsed = double.tryParse(value);
+                  onChanged(parsed);
+                },
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: _readOnly,
           style: map['style'] ?? style,
         );
       },
@@ -386,7 +397,8 @@ class FormBuilder {
       bool useTime,
       EdgeInsets padding,
       TextStyle style,
-      int maxLines = 1}) {
+      int maxLines = 1,
+      ValueChanged<DateTime> onChanged}) {
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController());
     FocusNode focusNode =
@@ -395,20 +407,20 @@ class FormBuilder {
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
           flex: flex,
-          builder: (context, map) => DateTimeFormField(
-                controlKey,
-                hintText: map['hintText'] ?? hintText,
-                labelText: map['labelText'] ?? labelText,
-                focusNode: focusNode,
-                controller: controller,
-                formatter: map['formatter'] ?? formatter,
-                validator: validator,
-                useTime: map['useTime'] ?? useTime,
-                padding: map['padding'] ?? padding,
-                readOnly: map['readOnly'] ?? readOnly,
-                style: map['style'] ?? style,
-                maxLines: map['maxLines'] ?? maxLines,
-              )),
+          builder: (context, map) => DateTimeFormField(controlKey,
+              key: UniqueKey(),
+              hintText: map['hintText'] ?? hintText,
+              labelText: map['labelText'] ?? labelText,
+              focusNode: focusNode,
+              controller: controller,
+              formatter: map['formatter'] ?? formatter,
+              validator: validator,
+              useTime: map['useTime'] ?? useTime,
+              padding: map['padding'] ?? padding,
+              readOnly: map['readOnly'] ?? readOnly,
+              style: map['style'] ?? style,
+              maxLines: map['maxLines'] ?? maxLines,
+              onChanged: onChanged)),
     );
     return this;
   }
@@ -847,6 +859,7 @@ class _FormWidgetState extends State<_FormWidget> {
     return Theme(
         data: getThemeData(context),
         child: Form(
+            onChanged: null,
             key: widget.formController._formKey,
             child: ChangeNotifierProvider<FormController>(
               create: (context) => widget.formController,

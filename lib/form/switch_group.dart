@@ -46,7 +46,7 @@ class SwitchGroup extends FormField<List<int>> {
                 indexs.every((element) => controller.value.contains(element));
 
             void onChangeValue(List<int> value) {
-              field.didChange(value);
+              state.didChange(value);
               if (onChanged != null) {
                 onChanged(value);
               }
