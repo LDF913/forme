@@ -23,10 +23,7 @@ class RadioGroupController extends ValueNotifier {
 class RadioGroup extends FormField {
   final List<RadioButton> buttons;
   final RadioGroupController controller;
-  final dynamic initialValue;
   final String label;
-  final FormFieldValidator validator;
-  final AutovalidateMode autovalidateMode;
   final String controlKey;
   final ValueChanged onChanged;
   final int split;
@@ -36,17 +33,16 @@ class RadioGroup extends FormField {
   RadioGroup(this.controlKey, this.buttons,
       {Key key,
       this.controller,
-      this.initialValue,
       this.label,
       this.onChanged,
-      this.validator,
-      this.autovalidateMode = AutovalidateMode.disabled,
+      FormFieldValidator validator,
+      AutovalidateMode autovalidateMode,
       this.split = 0,
       this.padding,
       this.readOnly = false})
       : assert(controlKey != null),
         super(
-          initialValue: initialValue,
+          key: key,
           autovalidateMode: autovalidateMode,
           validator: validator,
           builder: (field) {
@@ -193,12 +189,12 @@ class _RadioGroupState extends FormFieldState {
   @override
   void didChange(dynamic value) {
     super.didChange(value);
-    if (widget.controller.value != value) widget.controller.value = value ?? [];
+    if (widget.controller.value != value) widget.controller.value = value;
   }
 
   @override
   void reset() {
-    widget.controller.value = widget.initialValue ?? [];
+    widget.controller.value = null;
     super.reset();
   }
 

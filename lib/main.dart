@@ -198,14 +198,14 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.setValue('username', 'username');
+                /* formController.setValue('username', 'username');
                 formController.setValue('password', '123456');
                 formController.setValue('age', '21');
                 formController.setValue('checkbox', [0, 1]);
                 formController.setValue('radio', '1');
                 formController.setValue('startTime', DateTime(2019, 10, 1));
                 formController.setValue('remark', 'hello world');
-                formController.setValue('selector', ['1x4']);
+                formController.setValue('selector', ['1x4']); */
                 print(formController.getData());
               },
               child: Text('set&get form data'),
@@ -323,7 +323,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     .toList()),
             validator: (value) =>
                 (value ?? []).isEmpty ? 'select something !' : null)
-        .nextLine();
+        .nextLine()
+          ..switchGroup('switchs', label: 'switch');
     return builder.build();
   }
 }

@@ -7,6 +7,7 @@ import 'form_theme.dart';
 class SelectorController extends ValueNotifier<List<dynamic>> {
   SelectorController({List<dynamic> value}) : super(value);
   List<dynamic> get value => super.value == null ? [] : super.value;
+  void set(List value) => super.value == null ? [] : List.from(value);
 }
 
 class SelectorItem {
@@ -20,11 +21,7 @@ class SelectorFormField extends FormField<List> {
   final String controlKey;
   final SelectorController controller;
   final FocusNode focusNode;
-  final ValueChanged<List> onChanged;
-  final List<SelectorItem> items;
   final bool clearable;
-  final FormFieldValidator validator;
-  final AutovalidateMode autovalidateMode;
   final EdgeInsets padding;
   final bool readOnly;
   final String labelText;
@@ -33,15 +30,17 @@ class SelectorFormField extends FormField<List> {
   final double iconSize;
   final bool loading;
   final bool multi;
+  final ValueChanged<List> onChanged;
 
-  SelectorFormField(
-      this.controlKey, this.controller, this.focusNode, this.items,
-      {this.onChanged,
+  SelectorFormField(this.controlKey, this.controller, this.focusNode,
+      List<SelectorItem> items,
+      {Key key,
+      this.onChanged,
       this.clearable,
       this.labelText,
       this.hintText,
-      this.validator,
-      this.autovalidateMode,
+      FormFieldValidator<List> validator,
+      AutovalidateMode autovalidateMode,
       this.padding,
       this.readOnly = false,
       this.style,
@@ -49,6 +48,7 @@ class SelectorFormField extends FormField<List> {
       this.loading = false,
       this.multi = false})
       : super(
+          key: key,
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
@@ -249,7 +249,7 @@ class _SelectorFormFieldState extends FormFieldState<List> {
 
   @override
   void reset() {
-    widget.controller.value = widget.initialValue ?? [];
+    widget.controller.value = [];
     super.reset();
   }
 

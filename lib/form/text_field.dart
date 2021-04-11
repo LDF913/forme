@@ -12,7 +12,6 @@ class ClearableTextFormField extends FormField<String> {
       String hintText,
       Key key,
       this.controller,
-      String initialValue,
       FocusNode focusNode,
       TextInputType keyboardType,
       bool autofocus = false,
@@ -36,7 +35,6 @@ class ClearableTextFormField extends FormField<String> {
       : assert(controlKey != null),
         super(
           key: key,
-          initialValue: initialValue ?? '',
           validator: validator,
           enabled: true,
           autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
@@ -148,7 +146,7 @@ class _TextFormFieldState extends FormFieldState<String> {
 
   @override
   void reset() {
-    widget.controller.text = widget.initialValue ?? '';
+    widget.controller.text = '';
     super.reset();
   }
 
@@ -218,35 +216,28 @@ class _ClearIconState extends State<_ClearIcon> {
 
 class DateTimeFormField extends FormField<DateTime> {
   final DateTimeController controller;
-  final DateTime initialValue;
-  final String labelText;
-  final String hintText;
   final DateTimeFormatter formatter;
   final String controlKey;
-  final FormFieldValidator<DateTime> validator;
   final bool useTime;
   final Locale locale;
-  final FocusNode focusNode;
   final EdgeInsets padding;
   final bool readOnly;
-  final TextStyle style;
   final int maxLines;
 
   DateTimeFormField(this.controlKey,
       {Key key,
-      this.labelText,
-      this.hintText,
+      String labelText,
+      String hintText,
+      TextStyle style,
       this.controller,
-      this.initialValue,
       this.formatter,
-      this.validator,
       this.locale,
-      this.focusNode,
+      FocusNode focusNode,
       this.useTime = false,
+      FormFieldValidator<DateTime> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
       this.readOnly = false,
-      this.style,
       this.maxLines = 1})
       : assert(controlKey != null),
         super(
@@ -258,11 +249,11 @@ class DateTimeFormField extends FormField<DateTime> {
             final ThemeData themeData = Theme.of(field.context);
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             void pickTime() {
-              DateTime value = initialValue ?? DateTime.now();
+              DateTime value = controller.value ?? DateTime.now();
               showDatePicker(
                       locale: locale ?? Locale('zh', 'CN'),
                       context: state.context,
-                      initialDate: controller.value ?? value,
+                      initialDate: value,
                       firstDate: DateTime(2000),
                       lastDate: DateTime(2099))
                   .then((date) {
@@ -385,7 +376,7 @@ class _DateTimeFormFieldState extends FormFieldState<DateTime> {
 
   @override
   void reset() {
-    widget.controller.value = widget.initialValue;
+    widget.controller.value = '';
     widget.controller._controller.text = widget.controller.value == null
         ? ''
         : _formatter(widget.controller.value);

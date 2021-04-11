@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/form/switch_group.dart';
 import 'package:provider/provider.dart';
 import 'button.dart';
 import 'checkbox_group.dart';
@@ -44,7 +45,6 @@ class FormBuilder {
       AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
       double min,
       double max,
-      double initialValue,
       bool clearable = false,
       bool readOnly = false,
       bool visible = true,
@@ -128,7 +128,6 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           clearable: map['clearable'] ?? clearable,
           prefixIcon: map['prefixIcon'] ?? prefixIcon,
-          initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
@@ -159,7 +158,6 @@ class FormBuilder {
       bool passwordVisible = false,
       bool readOnly = false,
       bool visible = true,
-      String initialValue,
       String regExp,
       List<TextInputFormatter> inputFormatters,
       EdgeInsets padding,
@@ -200,7 +198,6 @@ class FormBuilder {
           clearable: map['clearable'] ?? clearable,
           prefixIcon: map['prefixIcon'] ?? prefixIcon,
           passwordVisible: map['passwordVisible'] ?? passwordVisible,
-          initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
           inputFormatters: formatters,
           padding: map['padding'] ?? padding,
@@ -215,7 +212,6 @@ class FormBuilder {
   FormBuilder radios(String controlKey, List<RadioButton> items,
       {RadioGroupController controller,
       Key key,
-      dynamic initialValue,
       FormFieldValidator validator,
       ValueChanged onChanged,
       int flex = 0,
@@ -232,10 +228,9 @@ class FormBuilder {
       flex: flex,
       builder: (context, map) => RadioGroup(
         controlKey,
-        List.from(map['items'] ?? items),
+        List.of(map['items'] ?? items),
         key: key,
         controller: controller,
-        initialValue: map['initialValue'] ?? initialValue,
         validator: validator,
         onChanged: onChanged,
         autovalidateMode: autovalidateMode,
@@ -251,7 +246,6 @@ class FormBuilder {
       {Key key,
       String label,
       RadioGroupController controller,
-      dynamic initialValue,
       FormFieldValidator validator,
       ValueChanged onChanged,
       bool readOnly = false,
@@ -268,10 +262,9 @@ class FormBuilder {
       controlKey: controlKey,
       builder: (context, map) => RadioGroup(
         controlKey,
-        List.from(map['items'] ?? items),
+        List.of(map['items'] ?? items),
         key: key,
         controller: controller,
-        initialValue: map['initialValue'] ?? initialValue,
         label: map['label'] ?? label,
         validator: validator,
         autovalidateMode: autovalidateMode,
@@ -288,7 +281,6 @@ class FormBuilder {
   FormBuilder checkboxs(String controlKey, List<CheckboxButton> items,
       {CheckboxGroupController controller,
       Key key,
-      List<int> initialValue,
       FormFieldValidator validator,
       ValueChanged<List<int>> onChanged,
       bool readOnly = false,
@@ -305,10 +297,9 @@ class FormBuilder {
       builder: (context, map) {
         return CheckboxGroup(
           controlKey,
-          List.from(map['items'] ?? items),
+          List.of(map['items'] ?? items),
           key: key,
           controller: controller,
-          initialValue: map['initialValue'] ?? initialValue,
           validator: validator,
           onChanged: onChanged,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
@@ -325,7 +316,6 @@ class FormBuilder {
   FormBuilder checkboxGroup(String controlKey, List<CheckboxButton> items,
       {Key key,
       String label,
-      List<int> initialValue,
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
       bool readOnly = false,
@@ -343,11 +333,9 @@ class FormBuilder {
       builder: (context, map) {
         return CheckboxGroup(
           controlKey,
-          List.from(map['items'] ??
-              items), //TOOD need clear controller's readonly keys if map has new items ?
+          List.of(map['items'] ?? items),
           key: key,
           controller: controller,
-          initialValue: map['initialValue'] ?? initialValue,
           label: map['label'] ?? label,
           validator: validator,
           onChanged: onChanged,
@@ -498,6 +486,30 @@ class FormBuilder {
       },
     ));
     nextLine();
+    return this;
+  }
+
+  FormBuilder switchGroup(String controlKey,
+      {String label,
+      bool visible = true,
+      bool readOnly = false,
+      EdgeInsets padding}) {
+    SwitchGroupController controller = formController._controllers
+        .putIfAbsent(controlKey, () => SwitchGroupController());
+    _builders.add(_FormItemWidget(
+      visible,
+      readOnly,
+      controlKey: controlKey,
+      flex: 1,
+      builder: (context, map) {
+        return SwitchGroup(
+          controlKey,
+          controller: controller,
+          label: map['label'] ?? label,
+          readOnly: map['readOnly'] ?? readOnly,
+        );
+      },
+    ));
     return this;
   }
 

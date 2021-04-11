@@ -19,15 +19,14 @@ class CheckboxGroupController extends ValueNotifier<List<int>> {
   CheckboxGroupController({List<int> value}) : super(value);
 
   List<int> get value => super.value == null ? [] : super.value;
+  void set(List<int> value) =>
+      super.value = value == null ? [] : List.of(value);
 }
 
 class CheckboxGroup extends FormField<List<int>> {
   final List<CheckboxButton> buttons;
   final CheckboxGroupController controller;
-  final List<int> initialValue;
   final String label;
-  final FormFieldValidator<List<int>> validator;
-  final AutovalidateMode autovalidateMode;
   final String controlKey;
   final ValueChanged<List<int>> onChanged;
   final int split;
@@ -37,19 +36,18 @@ class CheckboxGroup extends FormField<List<int>> {
   CheckboxGroup(this.controlKey, this.buttons,
       {Key key,
       this.controller,
-      this.initialValue,
       this.label,
-      this.validator,
       this.onChanged,
       this.padding,
-      this.autovalidateMode = AutovalidateMode.disabled,
       this.split = 0,
+      FormFieldValidator<List<int>> validator,
+      AutovalidateMode autovalidateMode,
       this.readOnly = false})
       : assert(controlKey != null),
         super(
+            key: key,
             autovalidateMode: autovalidateMode,
             validator: validator,
-            initialValue: initialValue,
             builder: (field) {
               FormThemeData formThemeData = FormThemeData.of(field.context);
               CheckboxGroupTheme checkboxGroupTheme =
@@ -70,12 +68,7 @@ class CheckboxGroup extends FormField<List<int>> {
                 ));
               }
 
-              List<int> value;
-              if (controller.value != null) {
-                value = List.from(controller.value);
-              } else {
-                value = [];
-              }
+              List<int> value = controller.value;
 
               List<Widget> wrapWidgets = [];
 
@@ -108,8 +101,7 @@ class CheckboxGroup extends FormField<List<int>> {
                                 else
                                   value.add(i);
                                 field.didChange(value);
-                                if (onChanged != null)
-                                  onChanged(List.from(value));
+                                if (onChanged != null) onChanged(value);
                               },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -212,7 +204,7 @@ class _CheckboxGroupState extends FormFieldState<List<int>> {
 
   @override
   void reset() {
-    widget.controller.value = widget.initialValue ?? [];
+    widget.controller.value = [];
     super.reset();
   }
 
