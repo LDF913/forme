@@ -1,16 +1,113 @@
-# flutter_application_1
+# flutter_form_builder
 
-A new Flutter project.
 
-## Getting Started
+## basic usage
 
-This project is a starting point for a Flutter application.
+``` dart
+FormController formController = FormController();
 
-A few resources to get you started if this is your first Flutter project:
+Widget form = FormBuilder(formController)
+	.textField(
+	  'username',//control key ,used to get|set value and control readonly|visible  state
+	  labelText: 'username',
+	  clearable: true,
+	  flex: 3,
+	  validator: (value) => (value ?? '').isEmpty ? 'can not be empty !' : null,
+	).build();
+```
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+## form method
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### hide|show form
+
+``` dart
+formController.visible = !formController.visible;
+```
+
+### set form readonly|editable
+
+``` dart
+formController.readOnly = !formController.readOnly;
+```
+
+### hide|show form field
+
+``` dart
+bool isVisible = formController.isVisible('form field\'s controlKey');
+formController.setVisible('form field\'s controlKey',!isVisible)
+```
+
+### set form field readonly|editable
+
+``` dart
+bool isReadOnly = formController.isReadOnly('form field\'s controlKey');
+formController.setReadOnly('form field\'s controlKey',!isReadOnly)
+```
+
+### validate form
+
+``` dart
+formController.validate();
+```
+
+### reset form
+
+``` dart
+formController.reset();
+```
+
+### focus form field
+```
+formController.requestFocus('form field\'s controlKey');
+```
+
+### update form field
+
+``` dart
+//update username's label
+formController.update('form field\'s controlKey', {
+	'labelText': DateTime.now().toString(),
+});
+```
+
+``` dart
+//update selector's items
+formController.setValue('selector', null);
+formController.rebuild('selector', {
+	'items': FormBuilder.toSelectorItems(
+		[Random().nextDouble().toString()])
+});
+```
+
+### set form field's value
+
+``` dart
+formController.setValue('controlKey',value);
+```
+
+### get form field's value
+
+``` dart
+formController.getValue('controlKey');
+```
+
+### get form data
+
+``` dart
+formController.getData(); //return a map
+```
+
+### set form theme
+
+``` dart
+formController.themeData = FormThemeData();//set original theme
+formController.themeData = FormThemeData.defaultThemeData;//a theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+```
+
+## currently support field
+
+1. TextField
+2. CheckboxGroup
+3. RadioGroup
+4. DateTimeField
+5. Selector(Dropdown like)

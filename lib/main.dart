@@ -90,11 +90,11 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.hide = !formController.hide;
+                      formController.visible = !formController.visible;
                       (context as Element).markNeedsBuild();
                     },
-                    child:
-                        Text(formController.hide ? 'show form' : 'hide form'));
+                    child: Text(
+                        formController.visible ? 'hide form' : 'show form'));
               },
             ),
             Builder(

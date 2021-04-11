@@ -516,7 +516,7 @@ class FormBuilder {
 }
 
 class FormController extends ChangeNotifier {
-  bool _hide = false;
+  bool _visible = true;
   bool _readOnly = false;
 
   final GlobalKey _formKey = GlobalKey<FormState>();
@@ -535,11 +535,11 @@ class FormController extends ChangeNotifier {
     }
   }
 
-  get hide => _hide;
+  get visible => _visible;
 
-  set hide(bool hide) {
-    if (_hide != hide) {
-      _hide = hide;
+  set visible(bool visible) {
+    if (_visible != visible) {
+      _visible = visible;
       notifyListeners();
     }
   }
@@ -806,7 +806,7 @@ class _FormWidgetState extends State<_FormWidget> {
                     child: Column(
                       children: rows,
                     ),
-                    visible: !c._hide,
+                    visible: c._visible,
                   );
                 },
               ),
