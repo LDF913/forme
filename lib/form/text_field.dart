@@ -130,11 +130,6 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   }
 
   @override
-  void didChange(String value) {
-    doChangeValue(value);
-  }
-
-  @override
   void doChangeValue(String value, {bool trigger = true}) {
     String replaceValue = value ?? '';
     super.superDidChange(replaceValue);
@@ -568,7 +563,10 @@ class _NumberFieldState extends FormBuilderFieldState<num> {
       toChange = value;
     }
     super.doChangeValue(toChange);
-    textEditingController.text = toChange == null ? '' : toChange.toString();
+    String numberStr = toChange == null ? '' : toChange.toString();
+    if (textEditingController.text != numberStr) {
+      textEditingController.text = numberStr;
+    }
   }
 
   @override
