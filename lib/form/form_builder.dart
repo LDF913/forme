@@ -792,7 +792,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   @override
   void deactivate() {
-    print('deactivate');
     FormController.of(context)._states.remove(widget.controlKey);
     super.deactivate();
   }
@@ -938,7 +937,6 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
   void reset() {
     super.reset();
     controller.value = widget.initialValue;
-    print(widget.initialValue);
     if (onChanged != null) {
       onChanged(null);
     }
