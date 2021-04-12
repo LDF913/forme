@@ -6,41 +6,41 @@ import 'form_theme.dart';
 class ClearableTextFormField extends FormBuilderField<String> {
   final bool obscureText;
   final EdgeInsets padding;
-  ClearableTextFormField(
-    String controlKey,
-    TextEditingController controller, {
-    String labelText,
-    String hintText,
-    Key key,
-    FocusNode focusNode,
-    TextInputType keyboardType,
-    bool autofocus = false,
-    this.obscureText = false,
-    int maxLines = 1,
-    int minLines,
-    int maxLength,
-    ValueChanged<String> onChanged,
-    GestureTapCallback onTap,
-    ValueChanged<String> onSubmitted,
-    FormFieldValidator<String> validator,
-    AutovalidateMode autovalidateMode,
-    ValueChanged<String> onFieldSubmitted,
-    bool clearable,
-    bool passwordVisible,
-    Widget prefixIcon,
-    List<TextInputFormatter> inputFormatters,
-    this.padding,
-    TextStyle style,
-    bool readOnly = false,
-  })  : assert(controlKey != null),
+  ClearableTextFormField(String controlKey, TextEditingController controller,
+      {String labelText,
+      String hintText,
+      Key key,
+      FocusNode focusNode,
+      TextInputType keyboardType,
+      bool autofocus = false,
+      this.obscureText = false,
+      int maxLines = 1,
+      int minLines,
+      int maxLength,
+      ValueChanged<String> onChanged,
+      GestureTapCallback onTap,
+      ValueChanged<String> onSubmitted,
+      FormFieldValidator<String> validator,
+      AutovalidateMode autovalidateMode,
+      ValueChanged<String> onFieldSubmitted,
+      bool clearable,
+      bool passwordVisible,
+      Widget prefixIcon,
+      List<TextInputFormatter> inputFormatters,
+      this.padding,
+      TextStyle style,
+      bool readOnly = false,
+      String initialValue})
+      : assert(controlKey != null),
         super(
           controlKey,
           controller,
           readOnly,
           onChanged,
           key: key,
+          initialValue: initialValue,
           validator: validator,
-          autovalidateMode: (autovalidateMode ?? AutovalidateMode.disabled),
+          autovalidateMode: autovalidateMode,
           builder: (field) {
             final _TextFormFieldState state = field as _TextFormFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
@@ -143,7 +143,7 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   @override
   void reset() {
     super.superReset();
-    controller.text = '';
+    controller.text = widget.initialValue;
     if (onChanged != null) {
       onChanged('');
     }
@@ -244,7 +244,8 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
       FormFieldValidator<DateTime> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.maxLines = 1})
+      this.maxLines = 1,
+      DateTime initialValue})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -252,7 +253,8 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
           readOnly,
           onChanged,
           validator: validator,
-          autovalidateMode: autovalidateMode ?? AutovalidateMode.always,
+          initialValue: initialValue,
+          autovalidateMode: autovalidateMode,
           key: key,
           builder: (field) {
             final FormThemeData formThemeData = FormThemeData.of(field.context);
@@ -367,6 +369,13 @@ class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
+  void initState() {
+    super.initState();
+    textEditingController.text =
+        widget.initialValue == null ? '' : _formatter(widget.initialValue);
+  }
+
+  @override
   void didChange(DateTime value) {
     super.didChange(value);
     textEditingController.text = value == null ? '' : _formatter(value);
@@ -375,6 +384,7 @@ class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   @override
   void reset() {
     super.reset();
-    textEditingController.text = '';
+    textEditingController.text =
+        widget.initialValue == null ? '' : _formatter(widget.initialValue);
   }
 }

@@ -31,19 +31,23 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
   final EdgeInsets padding;
 
   CheckboxGroup(
-      String controlKey, this.buttons, CheckboxGroupController controller,
-      {Key key,
-      this.label,
-      ValueChanged<List<int>> onChanged,
-      final bool readOnly,
-      this.padding,
-      this.split = 0,
-      FormFieldValidator<List<int>> validator,
-      AutovalidateMode autovalidateMode})
-      : assert(controlKey != null),
+    String controlKey,
+    this.buttons,
+    CheckboxGroupController controller, {
+    Key key,
+    this.label,
+    ValueChanged<List<int>> onChanged,
+    final bool readOnly,
+    this.padding,
+    this.split = 0,
+    FormFieldValidator<List<int>> validator,
+    AutovalidateMode autovalidateMode,
+    List<int> initialValue,
+  })  : assert(controlKey != null),
         super(controlKey, controller, readOnly, onChanged,
             key: key,
             autovalidateMode: autovalidateMode,
+            initialValue: initialValue,
             validator: validator, builder: (field) {
           FormThemeData formThemeData = FormThemeData.of(field.context);
           CheckboxGroupTheme checkboxGroupTheme =

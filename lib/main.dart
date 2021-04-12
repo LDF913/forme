@@ -247,16 +247,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm() {
     FormBuilder builder = FormBuilder(formController)
-        .textField(
-          'username',
-          labelText: '用户名',
-          clearable: true,
-          flex: 3,
-          onChanged: (value) {
-            print(value);
-          },
-          validator: (value) => (value ?? '').isEmpty ? '不为空' : null,
-        )
+        .textField('username', labelText: '用户名', clearable: true, flex: 3,
+            validator: (value) {
+          return (value ?? '').isEmpty ? '不为空' : null;
+        })
         .checkboxs('rememberMe', [CheckboxButton('记住')])
         .switch1('123')
         .nextLine()

@@ -35,7 +35,8 @@ class RadioGroup extends FormBuilderField {
       AutovalidateMode autovalidateMode,
       this.split = 0,
       this.padding,
-      bool readOnly = false})
+      bool readOnly = false,
+      dynamic initialValue})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -44,6 +45,7 @@ class RadioGroup extends FormBuilderField {
           onChanged,
           key: key,
           autovalidateMode: autovalidateMode,
+          initialValue: initialValue,
           validator: validator,
           builder: (field) {
             FormThemeData formThemeData = FormThemeData.of(field.context);

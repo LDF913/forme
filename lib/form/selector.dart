@@ -43,7 +43,8 @@ class SelectorFormField extends FormBuilderField<List> {
       this.style,
       this.iconSize = 24,
       this.loading = false,
-      this.multi = false})
+      this.multi = false,
+      List initialValue})
       : super(
           controlKey,
           controller,
@@ -51,6 +52,7 @@ class SelectorFormField extends FormBuilderField<List> {
           onChanged,
           key: key,
           validator: validator,
+          initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           builder: (field) {
             final FormBuilderFieldState state = field as FormBuilderFieldState;

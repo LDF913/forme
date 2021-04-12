@@ -17,17 +17,20 @@ class SwitchGroup extends FormBuilderField<List<int>> {
   final EdgeInsets padding;
   final bool hasSelectAllSwitch;
 
-  SwitchGroup(String controlKey, SwitchGroupController controller,
-      {Key key,
-      this.label,
-      this.items,
-      bool readOnly = false,
-      ValueChanged<List<int>> onChanged,
-      FormFieldValidator<List<int>> validator,
-      AutovalidateMode autovalidateMode,
-      this.padding,
-      this.hasSelectAllSwitch = true})
-      : assert(controlKey != null, items != null),
+  SwitchGroup(
+    String controlKey,
+    SwitchGroupController controller, {
+    Key key,
+    this.label,
+    this.items,
+    bool readOnly = false,
+    ValueChanged<List<int>> onChanged,
+    FormFieldValidator<List<int>> validator,
+    AutovalidateMode autovalidateMode,
+    this.padding,
+    this.hasSelectAllSwitch = true,
+    List<int> initialValue,
+  })  : assert(controlKey != null, items != null),
         super(
           controlKey,
           controller,
@@ -35,6 +38,7 @@ class SwitchGroup extends FormBuilderField<List<int>> {
           onChanged,
           key: key,
           autovalidateMode: autovalidateMode,
+          initialValue: initialValue,
           validator: validator,
           builder: (field) {
             final FormBuilderFieldState state = field as FormBuilderFieldState;

@@ -42,7 +42,7 @@ class FormBuilder {
       int maxLength,
       ValueChanged<double> onChanged,
       FormFieldValidator<double> validator,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      AutovalidateMode autovalidateMode,
       double min,
       double max,
       bool clearable = false,
@@ -157,7 +157,7 @@ class FormBuilder {
       int maxLength,
       ValueChanged<String> onChanged,
       FormFieldValidator<String> validator,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      AutovalidateMode autovalidateMode,
       bool clearable = false,
       bool passwordVisible = false,
       bool readOnly = false,
@@ -165,9 +165,10 @@ class FormBuilder {
       String regExp,
       List<TextInputFormatter> inputFormatters,
       EdgeInsets padding,
-      TextStyle style}) {
-    TextEditingController controller = formController._controllers
-        .putIfAbsent(controlKey, () => TextEditingController());
+      TextStyle style,
+      String initialValue}) {
+    TextEditingController controller = formController._controllers.putIfAbsent(
+        controlKey, () => TextEditingController(text: initialValue));
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(_FormItemWidget(
@@ -207,6 +208,7 @@ class FormBuilder {
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
           style: map['style'] ?? style,
+          initialValue: map['initialValue'] ?? initialValue,
         );
       },
     ));
@@ -220,9 +222,10 @@ class FormBuilder {
       int flex = 0,
       bool readOnly = false,
       bool visible = true,
-      EdgeInsets padding}) {
-    RadioGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => RadioGroupController());
+      EdgeInsets padding,
+      dynamic initialValue}) {
+    RadioGroupController controller = formController._controllers.putIfAbsent(
+        controlKey, () => RadioGroupController(value: initialValue));
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -238,24 +241,29 @@ class FormBuilder {
         padding: map['padding'] ?? padding,
         split: 0,
         readOnly: map['readOnly'] ?? readOnly,
+        initialValue: map['initialValue'] ?? initialValue,
       ),
     ));
     return this;
   }
 
-  FormBuilder radioGroup(String controlKey, List<RadioButton> items,
-      {Key key,
-      String label,
-      RadioGroupController controller,
-      FormFieldValidator validator,
-      ValueChanged onChanged,
-      bool readOnly = false,
-      bool visible = true,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
-      int split = 2,
-      EdgeInsets padding}) {
-    RadioGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => RadioGroupController());
+  FormBuilder radioGroup(
+    String controlKey,
+    List<RadioButton> items, {
+    Key key,
+    String label,
+    RadioGroupController controller,
+    FormFieldValidator validator,
+    ValueChanged onChanged,
+    bool readOnly = false,
+    bool visible = true,
+    AutovalidateMode autovalidateMode,
+    int split = 2,
+    EdgeInsets padding,
+    dynamic initialValue,
+  }) {
+    RadioGroupController controller = formController._controllers.putIfAbsent(
+        controlKey, () => RadioGroupController(value: initialValue));
     nextLine();
     _builders.add(_FormItemWidget(
       visible,
@@ -273,6 +281,7 @@ class FormBuilder {
         split: split,
         padding: map['padding'] ?? padding,
         readOnly: map['readOnly'] ?? readOnly,
+        initialValue: map['initialValue'] ?? initialValue,
       ),
     ));
     nextLine();
@@ -286,9 +295,11 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       int flex = 0,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      List<int> initialValue}) {
     CheckboxGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => CheckboxGroupController());
+        .putIfAbsent(
+            controlKey, () => CheckboxGroupController(value: initialValue));
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -304,6 +315,7 @@ class FormBuilder {
           split: 0,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
+          initialValue: map['initialValue'] ?? initialValue,
         );
       },
       flex: flex,
@@ -318,11 +330,13 @@ class FormBuilder {
       FormFieldValidator<List<int>> validator,
       bool readOnly = false,
       bool visible = true,
-      AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+      AutovalidateMode autovalidateMode,
       int split = 2,
-      EdgeInsets padding}) {
+      EdgeInsets padding,
+      List<int> initialValue}) {
     CheckboxGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => CheckboxGroupController());
+        .putIfAbsent(
+            controlKey, () => CheckboxGroupController(value: initialValue));
     nextLine();
     _builders.add(_FormItemWidget(
       visible,
@@ -341,6 +355,7 @@ class FormBuilder {
           split: map['split'] ?? split,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
+          initialValue: map['initialValue'] ?? initialValue,
         );
       },
     ));
@@ -392,9 +407,10 @@ class FormBuilder {
       EdgeInsets padding,
       TextStyle style,
       int maxLines = 1,
-      ValueChanged<DateTime> onChanged}) {
+      ValueChanged<DateTime> onChanged,
+      DateTime initialValue}) {
     DateTimeController controller = formController._controllers
-        .putIfAbsent(controlKey, () => DateTimeController());
+        .putIfAbsent(controlKey, () => DateTimeController(value: initialValue));
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
@@ -413,6 +429,7 @@ class FormBuilder {
               readOnly: map['readOnly'] ?? readOnly,
               style: map['style'] ?? style,
               maxLines: map['maxLines'] ?? maxLines,
+              initialValue: map['initialValue'] ?? initialValue,
               onChanged: onChanged)),
     );
     return this;
@@ -427,15 +444,16 @@ class FormBuilder {
     bool clearable = true,
     List<SelectorItem> items,
     FormFieldValidator validator,
-    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+    AutovalidateMode autovalidateMode,
     EdgeInsets padding,
     TextStyle style,
     bool loading = false,
     bool multi = false,
     ValueChanged<List> onChanged,
+    List initialValue,
   }) {
     SelectorController controller = formController._controllers
-        .putIfAbsent(controlKey, () => SelectorController());
+        .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(
@@ -458,6 +476,7 @@ class FormBuilder {
                 style: map['style'] ?? style,
                 loading: map['loading'] ?? loading,
                 multi: map['multi'] ?? multi,
+                initialValue: map['initialValue'] ?? initialValue,
               )),
     );
     return this;
@@ -500,10 +519,11 @@ class FormBuilder {
     bool hasSelectAllSwitch,
     ValueChanged<List<int>> onChanged,
     FormFieldValidator<List<int>> validator,
-    AutovalidateMode autovalidateMode = AutovalidateMode.disabled,
+    AutovalidateMode autovalidateMode,
+    List<int> initialValue,
   }) {
-    SwitchGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => SwitchGroupController());
+    SwitchGroupController controller = formController._controllers.putIfAbsent(
+        controlKey, () => SwitchGroupController(value: initialValue));
     nextLine();
     _builders.add(_FormItemWidget(
       visible,
@@ -521,6 +541,7 @@ class FormBuilder {
               map['hasSelectAllSwitch'] ?? hasSelectAllSwitch ?? true,
           validator: validator,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
         );
       },
@@ -529,16 +550,15 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder switch1(
-    String controlKey, {
-    bool visible = true,
-    bool readOnly = false,
-    EdgeInsets padding,
-    int flex = 0,
-    ValueChanged<List<int>> onChanged,
-  }) {
-    SwitchGroupController controller = formController._controllers
-        .putIfAbsent(controlKey, () => SwitchGroupController());
+  FormBuilder switch1(String controlKey,
+      {bool visible = true,
+      bool readOnly = false,
+      EdgeInsets padding,
+      int flex = 0,
+      ValueChanged<List<int>> onChanged,
+      int initialValue}) {
+    SwitchGroupController controller = formController._controllers.putIfAbsent(
+        controlKey, () => SwitchGroupController(value: [initialValue]));
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -553,6 +573,7 @@ class FormBuilder {
           hasSelectAllSwitch: false,
           autovalidateMode: AutovalidateMode.disabled,
           onChanged: onChanged,
+          initialValue: [map['initialValue']] ?? [initialValue],
         );
       },
     ));
@@ -694,6 +715,12 @@ class FormController extends ChangeNotifier {
     for (final FormFieldState<dynamic> field in _fields)
       hasError = !field.validate() || hasError;
     return !hasError;
+  }
+
+  bool validate1(String controlKey) {
+    FormBuilderFieldState state =
+        _fields.where((element) => (element.controlKey == controlKey)).first;
+    return state == null ? true : state.validate();
   }
 
   @override
@@ -881,7 +908,7 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
   @override
   Widget build(BuildContext context) {
     FormController.of(context)._fields.add(this);
-    return widget.builder(this);
+    return super.build(context);
   }
 
   @override
@@ -910,7 +937,8 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
   @override
   void reset() {
     super.reset();
-    controller.value = null;
+    controller.value = widget.initialValue;
+    print(widget.initialValue);
     if (onChanged != null) {
       onChanged(null);
     }
@@ -952,11 +980,13 @@ class FormBuilderField<T> extends FormField<T> {
     FormFieldBuilder<T> builder,
     FormFieldValidator<T> validator,
     AutovalidateMode autovalidateMode,
+    T initialValue,
   }) : super(
             key: key,
             builder: builder,
             validator: validator,
-            autovalidateMode: autovalidateMode);
+            autovalidateMode: autovalidateMode,
+            initialValue: initialValue);
 
   @override
   FormBuilderFieldState<T> createState() => FormBuilderFieldState<T>();
