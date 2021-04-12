@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'form_builder.dart';
 import 'form_theme.dart';
 
-class SelectorController extends ValueNotifier<List<dynamic>> {
-  SelectorController({List<dynamic> value}) : super(value);
+class SelectorController extends ValueNotifier<List> {
+  SelectorController({List value}) : super(value);
   List<dynamic> get value => super.value == null ? [] : super.value;
   void set(List value) => super.value == null ? [] : List.from(value);
 }
@@ -49,7 +49,7 @@ class SelectorFormField extends FormBuilderField<List> {
           controller,
           key: key,
           onChanged: onChanged,
-          replace: ()=>[],
+          replace: () => [],
           validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,

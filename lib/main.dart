@@ -318,7 +318,27 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) =>
                 (value == null || value.isEmpty) ? 'select one pls !' : null,
-            items: List<String>.generate(3, (index) => index.toString()));
+            items: List<String>.generate(3, (index) => index.toString()))
+        .slider(
+          'slider',
+          min: 1,
+          max: 100,
+          initialValue: 1,
+          onChanged: (value) {
+            formController.setValue('sliderText', value.round(),
+                trigger: false);
+          },
+        )
+        .numberField(
+          'sliderText',
+          min: 1,
+          max: 100,
+          onChanged: (value) {
+            formController.setValue(
+                'slider', value == null ? 1.0 : value.toDouble(),
+                trigger: false);
+          },
+        );
     return builder.build();
   }
 }

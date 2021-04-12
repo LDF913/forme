@@ -75,6 +75,11 @@ formController.reset1(controlKey);
 formController.requestFocus('form field\'s controlKey');
 ```
 
+### unfocus form field
+```
+formController.unFocus('form field\'s controlKey');
+```
+
 ### listen focus change
 
 ``` dart
@@ -142,3 +147,4 @@ formController.themeData = FormThemeData.defaultThemeData;//a theme from  https:
 4. DateTimeField
 5. Selector(Dropdown like)
 6. SwitchGroup
+7. NumberField

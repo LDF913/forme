@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_1/form/slider.dart';
 import 'package:provider/provider.dart';
 import 'switch_group.dart';
 import 'button.dart';
@@ -506,6 +507,44 @@ class FormBuilder {
           autovalidateMode: AutovalidateMode.disabled,
           onChanged: onChanged,
           initialValue: map['initialValue'] ?? initialValue ?? false,
+        );
+      },
+    ));
+    return this;
+  }
+
+  FormBuilder slider(String controlKey,
+      {bool visible = true,
+      bool readOnly = false,
+      EdgeInsets padding,
+      int flex = 0,
+      ValueChanged<double> onChanged,
+      FormFieldValidator<double> validator,
+      double initialValue,
+      double min = 0,
+      double max = 100,
+      int divisions}) {
+    SliderController controller = formController._controllers.putIfAbsent(
+        controlKey, () => SliderController(value: initialValue ?? min));
+    FocusNode focusNode = formController._newFocusNode(controlKey);
+    _builders.add(_FormItemWidget(
+      visible,
+      readOnly,
+      controlKey: controlKey,
+      flex: flex,
+      builder: (context, map) {
+        return SliderFormField(
+          controlKey,
+          controller,
+          readOnly: map['readOnly'] ?? readOnly,
+          autovalidateMode: AutovalidateMode.disabled,
+          onChanged: onChanged,
+          validator: validator,
+          min: map['min'] ?? min,
+          max: map['max'] ?? max,
+          divisions: map['divisions'] ?? divisions,
+          initialValue: map['initialValue'] ?? initialValue ?? min,
+          focusNode: focusNode,
         );
       },
     ));

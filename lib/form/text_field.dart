@@ -211,7 +211,7 @@ class _ClearIconState extends State<_ClearIcon> {
   }
 }
 
-class DateTimeController<DateTime> extends ValueNotifier {
+class DateTimeController extends ValueNotifier<DateTime> {
   TextEditingController _controller = new TextEditingController();
 
   DateTimeController({DateTime value}) : super(value);
@@ -372,8 +372,8 @@ class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   }
 
   @override
-  void didChange(DateTime value) {
-    super.didChange(value);
+  void doChangeValue(DateTime value, {bool trigger = true}) {
+    super.doChangeValue(value);
     textEditingController.text = value == null ? '' : _formatter(value);
   }
 
@@ -385,9 +385,9 @@ class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   }
 }
 
-class NumberController<Num> extends ValueNotifier {
+class NumberController extends ValueNotifier<num> {
   TextEditingController _controller = new TextEditingController();
-  NumberController({DateTime value}) : super(value);
+  NumberController({num value}) : super(value);
 }
 
 class NumberFormField extends FormBuilderField<num> {
@@ -560,14 +560,14 @@ class _NumberFieldState extends FormBuilderFieldState<num> {
   }
 
   @override
-  void didChange(dynamic value) {
+  void doChangeValue(dynamic value, {bool trigger = true}) {
     num toChange;
     if (value is String) {
       toChange = num.tryParse(value);
     } else {
       toChange = value;
     }
-    super.didChange(toChange);
+    super.doChangeValue(toChange);
     textEditingController.text = toChange == null ? '' : toChange.toString();
   }
 
