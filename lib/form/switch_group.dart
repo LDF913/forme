@@ -163,5 +163,10 @@ class SwitchGroup extends FormBuilderField<List<int>> {
         );
 
   @override
-  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
+  _SwitchGroupFieldState createState() => _SwitchGroupFieldState();
+}
+
+class _SwitchGroupFieldState extends FormBuilderFieldState<List<int>> {
+  @override
+  List<int> get value => super.value ?? [];
 }

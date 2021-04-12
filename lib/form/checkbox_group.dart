@@ -173,5 +173,10 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
         });
 
   @override
-  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
+  _CheckgroupFieldState createState() => _CheckgroupFieldState();
+}
+
+class _CheckgroupFieldState extends FormBuilderFieldState<List<int>> {
+  @override
+  List<int> get value => super.value ?? [];
 }

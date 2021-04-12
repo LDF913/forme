@@ -119,6 +119,9 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   TextEditingController get controller => super.controller;
 
   @override
+  String get value => super.value ?? '';
+
+  @override
   void initState() {
     super.initState();
     obscureText = widget.obscureText;

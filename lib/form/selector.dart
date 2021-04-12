@@ -221,7 +221,12 @@ class SelectorFormField extends FormBuilderField<List> {
         );
 
   @override
-  FormBuilderFieldState<List> createState() => FormBuilderFieldState();
+  _SelectorFieldState createState() => _SelectorFieldState();
+}
+
+class _SelectorFieldState extends FormBuilderFieldState<List> {
+  @override
+  List get value => super.value ?? [];
 }
 
 typedef _SelectedCallback = void Function(List<int> indexs);
