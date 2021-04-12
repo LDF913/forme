@@ -222,18 +222,26 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm() {
     FormBuilder builder = FormBuilder(formController)
-        .textField('username', labelText: '用户名', clearable: true, flex: 3,
+        .textField('username',
+            labelText: '用户名',
+            clearable: true,
+            flex: 3,
+            onChanged: (value) => print('username value changed $value'),
             validator: (value) {
-          return (value ?? '').isEmpty ? '不为空' : null;
-        })
+              return (value ?? '').isEmpty ? '不为空' : null;
+            })
         .checkboxs('rememberMe', [CheckboxButton('记住')])
-        .switch1('123')
+        .switch1(
+          'switch1',
+          onChanged: (value) => print('switch1 value changed $value'),
+        )
         .nextLine()
         .textField('password',
             hintText: '密码',
             obscureText: true,
             passwordVisible: true,
             clearable: true,
+            onChanged: (value) => print('password value changed $value'),
             flex: 1)
         .button('button', () {
           print('x');
@@ -246,9 +254,7 @@ class _MyHomePageState extends State<MyHomePage> {
           flex: 3,
           min: 14,
           max: 99,
-          onChanged: (value) {
-            print(value);
-          },
+          onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? '不为空' : null,
         )
         .checkboxGroup(
@@ -259,7 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
           split: 2,
           label: '性别',
-          onChanged: (value) => print(value),
+          onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => (value ?? []).isEmpty ? '请选择性别' : null,
         )
         .divider('divider')
@@ -269,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
             RadioButton('1', '1', controlKey: 'radio 1'),
             RadioButton('2', '2'),
           ],
-          onChanged: (value) => print(value),
+          onChanged: (value) => print('radio value changed $value'),
           label: '单选框',
           validator: (value) => value == null ? 'select one !' : null,
         )
@@ -279,11 +285,13 @@ class _MyHomePageState extends State<MyHomePage> {
           'startTime',
           useTime: true,
           hintText: '开始日期',
+          onChanged: (value) => print('startTime value changed $value'),
         )
         .datetimeField(
           'endTime',
           useTime: true,
           hintText: '结束日期',
+          onChanged: (value) => print('endTime value changed $value'),
         )
         .nextLine()
         .textField('remark',
@@ -291,6 +299,7 @@ class _MyHomePageState extends State<MyHomePage> {
             maxLines: 5,
             flex: 1,
             clearable: true,
+            onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
         .nextLine()
         .selector('selector',
@@ -300,12 +309,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 new List<int>.generate(100, (i) => i + 1)
                     .map((e) => e.toString())
                     .toList()),
-            onChanged: (value) => print(value),
+            onChanged: (value) => print('selector value changed $value'),
             validator: (value) =>
                 (value ?? []).isEmpty ? 'select something !' : null)
         .nextLine()
-        .switchGroup('switch',
+        .switchGroup('switchGroup',
             label: 'switch',
+            onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) =>
                 (value == null || value.isEmpty) ? 'select one pls !' : null,
             items: List<String>.generate(3, (index) => index.toString()));

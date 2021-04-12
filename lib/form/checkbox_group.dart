@@ -44,139 +44,142 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
     AutovalidateMode autovalidateMode,
     List<int> initialValue,
   })  : assert(controlKey != null),
-        super(controlKey, controller, readOnly, onChanged,
+        super(controlKey, controller,
             key: key,
+            onChanged: onChanged,
+            replace: () => [],
             autovalidateMode: autovalidateMode,
-            initialValue: initialValue,
-            validator: validator, builder: (field) {
-          FormThemeData formThemeData = FormThemeData.of(field.context);
-          CheckboxGroupTheme checkboxGroupTheme =
-              formThemeData.checkboxGroupTheme;
-          ThemeData themeData = Theme.of(field.context);
-          final FormBuilderFieldState state = field as FormBuilderFieldState;
-          List<Widget> widgets = [];
-          if (label != null) {
-            Text text = Text(label,
-                textAlign: TextAlign.left,
-                style: FormThemeData.getLabelStyle(themeData, state.hasError));
-            widgets.add(Padding(
-              padding: formThemeData.labelPadding ?? EdgeInsets.zero,
-              child: Row(
-                children: [Flexible(child: text)],
-              ),
-            ));
-          }
-
-          List<int> value = controller.value;
-
-          List<Widget> wrapWidgets = [];
-
-          for (int i = 0; i < buttons.length; i++) {
-            CheckboxButton button = buttons[i];
-            TextStyle labelStyle = button.textStyle ??
-                checkboxGroupTheme.labelStyle ??
-                TextStyle();
-            bool isReadOnly = readOnly || button.readOnly;
-
-            Color color = isReadOnly
-                ? themeData.disabledColor
-                : value.contains(i)
-                    ? themeData.primaryColor
-                    : themeData.unselectedWidgetColor;
-
-            Widget checkbox = Padding(
-              padding: checkboxGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                    borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-                    onTap: isReadOnly
-                        ? null
-                        : () {
-                            if (value.contains(i))
-                              value.remove(i);
-                            else
-                              value.add(i);
-                            state.didChange(value);
-                            if (onChanged != null) onChanged(value);
-                          },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        value.contains(i)
-                            ? Icon(Icons.check_box,
-                                size: labelStyle.fontSize, color: color)
-                            : Icon(Icons.check_box_outline_blank,
-                                size: labelStyle.fontSize, color: color),
-                        SizedBox(
-                          width: 4.0,
-                        ),
-                        split == 0
-                            ? Text(
-                                button.label,
-                                style: labelStyle,
-                              )
-                            : Flexible(
-                                child: Text(
-                                  button.label,
-                                  style: labelStyle,
-                                ),
-                              )
-                      ],
-                    )),
-              ),
-            );
-
-            if (split <= 0) {
-              wrapWidgets.add(Visibility(
-                child: checkbox,
-                visible: button.visible,
-              ));
-              if (button.visible && i < buttons.length - 1)
-                wrapWidgets.add(SizedBox(
-                  width: 8.0,
+            initialValue: initialValue ?? [],
+            validator: validator,
+            builder: (field) {
+              FormThemeData formThemeData = FormThemeData.of(field.context);
+              CheckboxGroupTheme checkboxGroupTheme =
+                  formThemeData.checkboxGroupTheme;
+              ThemeData themeData = Theme.of(field.context);
+              final FormBuilderFieldState state =
+                  field as FormBuilderFieldState;
+              List<Widget> widgets = [];
+              if (label != null) {
+                Text text = Text(label,
+                    textAlign: TextAlign.left,
+                    style:
+                        FormThemeData.getLabelStyle(themeData, state.hasError));
+                widgets.add(Padding(
+                  padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+                  child: Row(
+                    children: [Flexible(child: text)],
+                  ),
                 ));
-            } else {
-              wrapWidgets.add(Visibility(
-                child: FractionallySizedBox(
-                  widthFactor: button.ignoreSplit ? 1 : 1 / split,
-                  child: checkbox,
+              }
+
+              List<int> value = controller.value;
+
+              List<Widget> wrapWidgets = [];
+
+              for (int i = 0; i < buttons.length; i++) {
+                CheckboxButton button = buttons[i];
+                TextStyle labelStyle = button.textStyle ??
+                    checkboxGroupTheme.labelStyle ??
+                    TextStyle();
+                bool isReadOnly = readOnly || button.readOnly;
+
+                Color color = isReadOnly
+                    ? themeData.disabledColor
+                    : value.contains(i)
+                        ? themeData.primaryColor
+                        : themeData.unselectedWidgetColor;
+
+                Widget checkbox = Padding(
+                  padding:
+                      checkboxGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                        borderRadius:
+                            const BorderRadius.all(Radius.circular(4.0)),
+                        onTap: isReadOnly
+                            ? null
+                            : () {
+                                if (value.contains(i))
+                                  value.remove(i);
+                                else
+                                  value.add(i);
+                                state.didChange(value);
+                                if (onChanged != null) onChanged(value);
+                              },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            value.contains(i)
+                                ? Icon(Icons.check_box,
+                                    size: labelStyle.fontSize, color: color)
+                                : Icon(Icons.check_box_outline_blank,
+                                    size: labelStyle.fontSize, color: color),
+                            SizedBox(
+                              width: 4.0,
+                            ),
+                            split == 0
+                                ? Text(
+                                    button.label,
+                                    style: labelStyle,
+                                  )
+                                : Flexible(
+                                    child: Text(
+                                      button.label,
+                                      style: labelStyle,
+                                    ),
+                                  )
+                          ],
+                        )),
+                  ),
+                );
+
+                if (split <= 0) {
+                  wrapWidgets.add(Visibility(
+                    child: checkbox,
+                    visible: button.visible,
+                  ));
+                  if (button.visible && i < buttons.length - 1)
+                    wrapWidgets.add(SizedBox(
+                      width: 8.0,
+                    ));
+                } else {
+                  wrapWidgets.add(Visibility(
+                    child: FractionallySizedBox(
+                      widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                      child: checkbox,
+                    ),
+                    visible: button.visible,
+                  ));
+                }
+              }
+
+              widgets.add(Wrap(children: wrapWidgets));
+
+              if (state.hasError) {
+                widgets.add(Padding(
+                  padding:
+                      checkboxGroupTheme.errorTextPadding ?? EdgeInsets.zero,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(state.errorText,
+                            style: FormThemeData.getErrorStyle(themeData)),
+                      )
+                    ],
+                  ),
+                ));
+              }
+
+              return Padding(
+                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: widgets,
                 ),
-                visible: button.visible,
-              ));
-            }
-          }
-
-          widgets.add(Wrap(children: wrapWidgets));
-
-          if (state.hasError) {
-            widgets.add(Padding(
-              padding: checkboxGroupTheme.errorTextPadding ?? EdgeInsets.zero,
-              child: Row(
-                children: [
-                  Flexible(
-                    child: Text(state.errorText,
-                        style: FormThemeData.getErrorStyle(themeData)),
-                  )
-                ],
-              ),
-            ));
-          }
-
-          return Padding(
-            padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widgets,
-            ),
-          );
-        });
+              );
+            });
 
   @override
-  _CheckgroupFieldState createState() => _CheckgroupFieldState();
-}
-
-class _CheckgroupFieldState extends FormBuilderFieldState<List<int>> {
-  @override
-  List<int> get value => super.value ?? [];
+  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
 }

@@ -1,5 +1,4 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import 'form_builder.dart';
@@ -48,11 +47,11 @@ class SelectorFormField extends FormBuilderField<List> {
       : super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
           key: key,
+          onChanged: onChanged,
+          replace: ()=>[],
           validator: validator,
-          initialValue: initialValue,
+          initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
           builder: (field) {
             final FormBuilderFieldState state = field as FormBuilderFieldState;
@@ -221,12 +220,7 @@ class SelectorFormField extends FormBuilderField<List> {
         );
 
   @override
-  _SelectorFieldState createState() => _SelectorFieldState();
-}
-
-class _SelectorFieldState extends FormBuilderFieldState<List> {
-  @override
-  List get value => super.value ?? [];
+  FormBuilderFieldState<List> createState() => FormBuilderFieldState();
 }
 
 typedef _SelectedCallback = void Function(List<int> indexs);

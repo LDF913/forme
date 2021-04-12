@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/form/switch_group.dart';
 import 'package:provider/provider.dart';
+import 'switch_group.dart';
 import 'button.dart';
 import 'checkbox_group.dart';
 import 'form_theme.dart';
@@ -465,7 +465,7 @@ class FormBuilder {
       controlKey: controlKey,
       flex: 1,
       builder: (context, map) {
-        return SwitchGroup(
+        return SwitchGroupFormField(
           controlKey,
           controller,
           label: map['label'] ?? label,
@@ -489,26 +489,23 @@ class FormBuilder {
       bool readOnly = false,
       EdgeInsets padding,
       int flex = 0,
-      ValueChanged<List<int>> onChanged,
-      int initialValue}) {
-    SwitchGroupController controller = formController._controllers.putIfAbsent(
-        controlKey, () => SwitchGroupController(value: [initialValue]));
+      ValueChanged<bool> onChanged,
+      bool initialValue}) {
+    SwitchController controller = formController._controllers
+        .putIfAbsent(controlKey, () => SwitchController(value: initialValue));
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
       controlKey: controlKey,
       flex: flex,
       builder: (context, map) {
-        int _initialValue = map['initialValue'] ?? initialValue;
-        return SwitchGroup(
+        return SwitchFormField(
           controlKey,
           controller,
           readOnly: map['readOnly'] ?? readOnly,
-          items: [''],
-          hasSelectAllSwitch: false,
           autovalidateMode: AutovalidateMode.disabled,
           onChanged: onChanged,
-          initialValue: _initialValue == null ? null : [_initialValue],
+          initialValue: map['initialValue'] ?? initialValue ?? false,
         );
       },
     ));
@@ -534,6 +531,7 @@ class FormController extends ChangeNotifier {
   bool _readOnly = false;
 
   FormThemeData _themeData = FormThemeData();
+
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, _FormItemWidgetState> _states = {};
@@ -543,8 +541,12 @@ class FormController extends ChangeNotifier {
   final Map<String, List<ValueChanged<bool>>> _focusChangeMap = {};
 
   FocusNode _newFocusNode(String controlKey) {
-    FocusNode focusNode =
-        _focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    FocusNode focusNode = _focusNodes[controlKey];
+    if (focusNode != null) {
+      return focusNode;
+    }
+    focusNode = FocusNode();
+    _focusNodes[controlKey] = focusNode;
     focusNode.addListener(() {
       List<ValueChanged<bool>> list = _focusChangeMap[controlKey];
       if (list != null) {
@@ -660,20 +662,24 @@ class FormController extends ChangeNotifier {
     return map;
   }
 
-  void setValue(String controlKey, dynamic value) {
+  void setValue(String controlKey, dynamic value, {bool trigger = true}) {
     _fields
         .where((element) => (element.controlKey == controlKey))
         .forEach((element) {
-      element.didChange(value);
+      element.doChangeValue(value, trigger: trigger);
     });
-  }
-
-  dynamic getController(String controlKey) {
-    return _controllers[controlKey];
   }
 
   void reset() {
     for (final FormFieldState<dynamic> field in _fields) field.reset();
+  }
+
+  void reset1(String controlKey) {
+    _fields
+        .where((element) => (element.controlKey == controlKey))
+        .forEach((element) {
+      element.reset();
+    });
   }
 
   bool validate() {
@@ -859,10 +865,10 @@ class _FormWidgetState extends State<_FormWidget> {
 }
 
 class FormBuilderFieldState<T> extends FormFieldState<T> {
-  ValueNotifier get controller => (widget as FormBuilderField<T>)._controller;
-  bool get readOnly => (widget as FormBuilderField)._readOnly;
-  ValueChanged<T> get onChanged => (widget as FormBuilderField<T>)._onChanged;
-  String get controlKey => (widget as FormBuilderField<T>)._controlKey;
+  FormBuilderField<T> get widget => super.widget;
+  ValueNotifier get controller => widget.controller;
+  ValueChanged<T> get onChanged => widget.onChanged;
+  String get controlKey => widget.controlKey;
 
   @override
   void deactivate() {
@@ -877,24 +883,17 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
   }
 
   @override
-  void initState() {
-    controller.addListener(handleChanged);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    controller.removeListener(handleChanged);
-    super.dispose();
-  }
-
-  @override
   void didChange(T value) {
-    super.didChange(value);
-    if (controller.value != value) {
-      controller.value = value;
-      if (onChanged != null) {
-        onChanged(value);
+    doChangeValue(value);
+  }
+
+  void doChangeValue(T value, {bool trigger = true}) {
+    T replaceValue = _getValue(value);
+    super.didChange(replaceValue);
+    if (controller.value != replaceValue) {
+      controller.value = replaceValue;
+      if (onChanged != null && trigger) {
+        onChanged(replaceValue);
       }
     }
   }
@@ -902,9 +901,10 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
   @override
   void reset() {
     super.reset();
-    controller.value = widget.initialValue;
+    T value = _getValue(widget.initialValue);
+    controller.value = value;
     if (onChanged != null) {
-      onChanged(null);
+      onChanged(controller.value);
     }
   }
 
@@ -918,34 +918,31 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
     super.reset();
   }
 
-  @protected
-  void handleChanged() {
-    if (controller.value != value) didChange(controller.value);
-  }
-
-  @override
-  void setValue(T value) {
-    super.setValue(value);
+  T _getValue(T value) {
+    if (value == null && widget.replace != null) {
+      return widget.replace();
+    }
+    return value;
   }
 }
 
-class FormBuilderField<T> extends FormField<T> {
-  final ValueNotifier _controller;
-  final bool _readOnly;
-  final ValueChanged<T> _onChanged;
-  final String _controlKey;
+typedef NullValueReplace<T> = T Function();
 
-  FormBuilderField(
-    this._controlKey,
-    this._controller,
-    this._readOnly,
-    this._onChanged, {
-    Key key,
-    FormFieldBuilder<T> builder,
-    FormFieldValidator<T> validator,
-    AutovalidateMode autovalidateMode,
-    T initialValue,
-  }) : super(
+class FormBuilderField<T> extends FormField<T> {
+  final ValueNotifier controller;
+  final ValueChanged<T> onChanged;
+  final String controlKey;
+  final NullValueReplace<T> replace;
+
+  FormBuilderField(this.controlKey, this.controller,
+      {Key key,
+      this.replace,
+      this.onChanged,
+      FormFieldBuilder<T> builder,
+      FormFieldValidator<T> validator,
+      AutovalidateMode autovalidateMode,
+      T initialValue})
+      : super(
             key: key,
             builder: builder,
             validator: validator,

@@ -36,10 +36,9 @@ class ClearableTextFormField extends FormBuilderField<String> {
         super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
           key: key,
-          initialValue: initialValue,
+          onChanged: onChanged,
+          initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
@@ -48,7 +47,7 @@ class ClearableTextFormField extends FormBuilderField<String> {
             ThemeData themeData = Theme.of(field.context);
             List<Widget> suffixes = [];
 
-            if (clearable && !readOnly) {
+            if (clearable && !readOnly && controller.text.length > 0) {
               suffixes.add(_ClearIcon(controller, focusNode, () {
                 state.didChange('');
               }));
@@ -119,9 +118,6 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   TextEditingController get controller => super.controller;
 
   @override
-  String get value => super.value ?? '';
-
-  @override
   void initState() {
     super.initState();
     obscureText = widget.obscureText;
@@ -135,12 +131,18 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
 
   @override
   void didChange(String value) {
-    super.superDidChange(value);
-    if (onChanged != null) {
-      onChanged(value);
+    doChangeValue(value);
+  }
+
+  @override
+  void doChangeValue(String value, {bool trigger = true}) {
+    String replaceValue = value ?? '';
+    super.superDidChange(replaceValue);
+    if (onChanged != null && trigger) {
+      onChanged(replaceValue);
     }
-    if (controller.text != value) {
-      controller.text = value ?? '';
+    if (controller.text != replaceValue) {
+      controller.text = replaceValue ?? '';
     }
   }
 
@@ -149,13 +151,8 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
     super.superReset();
     controller.text = widget.initialValue ?? '';
     if (onChanged != null) {
-      onChanged('');
+      onChanged(controller.text);
     }
-  }
-
-  @protected
-  void handleChanged() {
-    if (controller.text != value) didChange(controller.text);
   }
 }
 
@@ -182,17 +179,13 @@ class _ClearIconState extends State<_ClearIcon> {
   void initState() {
     widget.controller.addListener(changeListener);
     visible = widget.controller.text != '';
-    if (widget.focusNode != null) {
-      widget.focusNode.addListener(changeListener);
-    }
+    widget.focusNode.addListener(changeListener);
     super.initState();
   }
 
   @override
   void dispose() {
-    if (widget.focusNode != null) {
-      widget.focusNode.removeListener(changeListener);
-    }
+    widget.focusNode.removeListener(changeListener);
     widget.controller.removeListener(changeListener);
     super.dispose();
   }
@@ -254,8 +247,7 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
         super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
+          onChanged: onChanged,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
@@ -426,8 +418,8 @@ class NumberFormField extends FormBuilderField<num> {
         super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
+          key: key,
+          onChanged: onChanged,
           validator: (value) {
             if (value == null) {
               return validator(null);
@@ -449,7 +441,6 @@ class NumberFormField extends FormBuilderField<num> {
           },
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          key: key,
           builder: (field) {
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
@@ -521,6 +512,10 @@ class NumberFormField extends FormBuilderField<num> {
                 num parsed = num.tryParse(value);
                 if (parsed != null) {
                   state.didChangeAndNotChangeText(parsed);
+                } else {
+                  if (value.isEmpty) {
+                    state.didChange(null);
+                  }
                 }
               },
               onTap: null,

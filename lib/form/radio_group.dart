@@ -41,9 +41,8 @@ class RadioGroup extends FormBuilderField {
         super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
           key: key,
+          onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,

@@ -11,13 +11,13 @@ class SwitchGroupController extends ValueNotifier<List<int>> {
       super.value = value == null ? [] : List.of(value);
 }
 
-class SwitchGroup extends FormBuilderField<List<int>> {
+class SwitchGroupFormField extends FormBuilderField<List<int>> {
   final List<String> items;
   final String label;
   final EdgeInsets padding;
   final bool hasSelectAllSwitch;
 
-  SwitchGroup(
+  SwitchGroupFormField(
     String controlKey,
     SwitchGroupController controller, {
     Key key,
@@ -34,27 +34,21 @@ class SwitchGroup extends FormBuilderField<List<int>> {
         super(
           controlKey,
           controller,
-          readOnly,
-          onChanged,
           key: key,
+          onChanged: onChanged,
+          replace: () => [],
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue,
+          initialValue: initialValue ?? [],
           validator: validator,
           builder: (field) {
-            final FormBuilderFieldState state = field as FormBuilderFieldState;
+            final FormBuilderFieldState<List<int>> state =
+                field as FormBuilderFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
             List<int> indexs =
                 List<int>.generate(items.length, (index) => index);
             bool selectAll =
                 indexs.every((element) => controller.value.contains(element));
-
-            void onChangeValue(List<int> value) {
-              state.didChange(value);
-              if (onChanged != null) {
-                onChanged(value);
-              }
-            }
 
             void changeValue(int index) {
               List<int> value = controller.value;
@@ -63,14 +57,14 @@ class SwitchGroup extends FormBuilderField<List<int>> {
               } else {
                 value.add(index);
               }
-              onChangeValue(value);
+              state.didChange(value);
             }
 
             void toggleValues() {
               if (selectAll) {
-                onChangeValue([]);
+                state.didChange([]);
               } else {
-                onChangeValue(indexs);
+                state.didChange(indexs);
               }
             }
 
@@ -115,9 +109,7 @@ class SwitchGroup extends FormBuilderField<List<int>> {
             for (int i = 0; i < items.length; i++) {
               String item = items[i];
               List<Widget> children = [];
-              if (item != '') {
-                children.add(Expanded(child: Text(item)));
-              }
+              children.add(Expanded(child: Text(item)));
               children.add(CupertinoSwitch(
                 value: controller.value.contains(i),
                 onChanged: readOnly
@@ -163,10 +155,88 @@ class SwitchGroup extends FormBuilderField<List<int>> {
         );
 
   @override
-  _SwitchGroupFieldState createState() => _SwitchGroupFieldState();
+  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
 }
 
-class _SwitchGroupFieldState extends FormBuilderFieldState<List<int>> {
+class SwitchController extends ValueNotifier<bool> {
+  SwitchController({value}) : super(value);
+  bool get value => super.value ?? false;
+}
+
+class SwitchFormField extends FormBuilderField<bool> {
+  final EdgeInsets padding;
+
+  SwitchFormField(
+    String controlKey,
+    SwitchController controller, {
+    Key key,
+    bool readOnly = false,
+    ValueChanged<bool> onChanged,
+    FormFieldValidator<bool> validator,
+    AutovalidateMode autovalidateMode,
+    this.padding,
+    bool initialValue,
+  })  : assert(controlKey != null),
+        super(
+          controlKey,
+          controller,
+          key: key,
+          onChanged: onChanged,
+          replace: () => false,
+          autovalidateMode: autovalidateMode,
+          initialValue: initialValue ?? false,
+          validator: validator,
+          builder: (field) {
+            final FormBuilderFieldState state = field as FormBuilderFieldState;
+            FormThemeData formThemeData = FormThemeData.of(field.context);
+            ThemeData themeData = Theme.of(field.context);
+
+            List<Widget> columns = [];
+            columns.add(InkWell(
+              child: Padding(
+                child: Row(
+                  children: [
+                    CupertinoSwitch(
+                      value: controller.value,
+                      onChanged: readOnly
+                          ? null
+                          : (value) {
+                              state.didChange(!controller.value);
+                            },
+                      activeColor: themeData.primaryColor,
+                    )
+                  ],
+                ),
+                padding: EdgeInsets.symmetric(horizontal: 8),
+              ),
+              onTap: readOnly
+                  ? null
+                  : () {
+                      state.didChange(!controller.value);
+                    },
+            ));
+
+            if (state.hasError) {
+              columns.add(Row(
+                children: [
+                  Flexible(
+                    child: Text(state.errorText,
+                        style: FormThemeData.getErrorStyle(themeData)),
+                  )
+                ],
+              ));
+            }
+
+            return Padding(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: columns,
+              ),
+              padding: formThemeData.padding ?? padding ?? EdgeInsets.zero,
+            );
+          },
+        );
+
   @override
-  List<int> get value => super.value ?? [];
+  FormBuilderFieldState<bool> createState() => FormBuilderFieldState();
 }
