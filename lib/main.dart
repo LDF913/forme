@@ -58,6 +58,9 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     formController = FormController();
     formController.themeData = FormThemeData.defaultThemeData;
+    formController.onFocusChange('username', (value) {
+      print('username focused: $value');
+    });
   }
 
   @override

@@ -51,8 +51,7 @@ class FormBuilder {
       TextStyle style}) {
     NumberController controller = formController._controllers
         .putIfAbsent(controlKey, () => NumberController());
-    FocusNode focusNode =
-        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    FocusNode focusNode = formController._newFocusNode(controlKey);
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -108,8 +107,7 @@ class FormBuilder {
       String initialValue}) {
     TextEditingController controller = formController._controllers.putIfAbsent(
         controlKey, () => TextEditingController(text: initialValue));
-    FocusNode focusNode =
-        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    FocusNode focusNode = formController._newFocusNode(controlKey);
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -349,8 +347,7 @@ class FormBuilder {
       DateTime initialValue}) {
     DateTimeController controller = formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController(value: initialValue));
-    FocusNode focusNode =
-        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    FocusNode focusNode = formController._newFocusNode(controlKey);
     _builders.add(
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
@@ -392,8 +389,7 @@ class FormBuilder {
   }) {
     SelectorController controller = formController._controllers
         .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
-    FocusNode focusNode =
-        formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    FocusNode focusNode = formController._newFocusNode(controlKey);
     _builders.add(
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
@@ -544,6 +540,22 @@ class FormController extends ChangeNotifier {
   final Set<FormBuilderFieldState<dynamic>> _fields =
       <FormBuilderFieldState<dynamic>>{};
   final ChangeNotifier _themeDataNotifier = ChangeNotifier();
+  final Map<String, List<ValueChanged<bool>>> _focusChangeMap = {};
+
+  FocusNode _newFocusNode(String controlKey) {
+    FocusNode focusNode =
+        _focusNodes.putIfAbsent(controlKey, () => FocusNode());
+    focusNode.addListener(() {
+      List<ValueChanged<bool>> list = _focusChangeMap[controlKey];
+      if (list != null) {
+        bool hasFocus = focusNode.hasFocus;
+        for (ValueChanged<bool> onChanged in list) {
+          onChanged(hasFocus);
+        }
+      }
+    });
+    return focusNode;
+  }
 
   get themeData => _themeData;
 
@@ -584,6 +596,21 @@ class FormController extends ChangeNotifier {
     FocusNode focusNode = _focusNodes[controlKey];
     if (focusNode == null) return;
     focusNode.unfocus();
+  }
+
+  void onFocusChange(String controlKey, ValueChanged<bool> onChanged) {
+    List<ValueChanged<bool>> list = _focusChangeMap[controlKey];
+    if (list == null) {
+      _focusChangeMap[controlKey] = [onChanged];
+    } else {
+      list.add(onChanged);
+    }
+  }
+
+  void offFocusChange(String controlKey, ValueChanged<bool> onChanged) {
+    List<ValueChanged<bool>> list = _focusChangeMap[controlKey];
+    if (list == null) return;
+    list.remove(onChanged);
   }
 
   dynamic getValue(String controlKey) {

@@ -14,6 +14,8 @@ Widget form = FormBuilder(formController)
 	  flex: 3,
 	  validator: (value) => (value ?? '').isEmpty ? 'can not be empty !' : null,
 	).build();
+
+formController.dispose();//don't forget to call dispose() method on FormController if you no need it any more!!!
 ```
 
 ## form method
