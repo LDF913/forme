@@ -115,10 +115,12 @@ formController.rebuild('selector', {
 ```
 
 ### set form field's value
-
+ 
 ``` dart
-formController.setValue('controlKey',value);
+formController.setValue('controlKey',value,trigger:false);
 ```
+
+trigger: whether  trigger onChanged or not
 
 ### get form field's value
 
