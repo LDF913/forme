@@ -55,13 +55,19 @@ formController.validate();
 ### validate one field
 
 ``` dart
-formController.validate(controlKey);
+formController.validate1(controlKey);
 ```
 
 ### reset form
 
 ``` dart
 formController.reset();
+```
+
+### reset one field
+
+``` dart
+formController.reset1(controlKey);
 ```
 
 ### focus form field
