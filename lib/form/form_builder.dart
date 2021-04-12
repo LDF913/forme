@@ -35,13 +35,11 @@ class FormBuilder {
       {String hintText,
       String labelText,
       VoidCallback onTap,
-      ValueChanged<String> onSubmitted,
       Key key,
       int flex,
       Widget prefixIcon,
-      int maxLength,
-      ValueChanged<double> onChanged,
-      FormFieldValidator<double> validator,
+      ValueChanged<num> onChanged,
+      FormFieldValidator<num> validator,
       AutovalidateMode autovalidateMode,
       double min,
       double max,
@@ -51,8 +49,8 @@ class FormBuilder {
       int decimal = 0,
       EdgeInsets padding,
       TextStyle style}) {
-    TextEditingController controller = formController._controllers
-        .putIfAbsent(controlKey, () => TextEditingController());
+    NumberController controller = formController._controllers
+        .putIfAbsent(controlKey, () => NumberController());
     FocusNode focusNode =
         formController._focusNodes.putIfAbsent(controlKey, () => FocusNode());
     _builders.add(_FormItemWidget(
@@ -61,81 +59,23 @@ class FormBuilder {
       controlKey: controlKey,
       flex: flex,
       builder: (context, map) {
-        int _decimal = map['decimal'] ?? decimal;
-        double _max = map['max'] ?? max;
-        double _min = map['min'] ?? min;
-        String regex = r'[0-9' +
-            (_decimal > 0 ? '.' : '') +
-            (_min != null && _min > 0 ? '' : '-') +
-            ']';
-        List<TextInputFormatter> formatters = [
-          TextInputFormatter.withFunction((oldValue, newValue) {
-            if (newValue.text == '') return newValue;
-            if ((_min == null || _min < 0) && newValue.text == '-')
-              return newValue;
-            double parsed = double.tryParse(newValue.text);
-            if (parsed == null) {
-              return oldValue;
-            }
-            if (decimal != null) {
-              int indexOfPoint = newValue.text.indexOf(".");
-              if (indexOfPoint != -1) {
-                int decimalNum = newValue.text.length - (indexOfPoint + 1);
-                if (decimalNum > _decimal) {
-                  return oldValue;
-                }
-              }
-            }
-
-            if (_max != null && parsed > _max) {
-              return oldValue;
-            }
-            return newValue;
-          }),
-          FilteringTextInputFormatter.allow(RegExp(regex))
-        ];
-        FormFieldValidator<String> fieldValidator = (value) {
-          if (value == null || value == '') {
-            return validator(null);
-          }
-          String msg;
-          double parsedValue = double.parse(value);
-          if (validator != null) {
-            msg = validator(parsedValue);
-          }
-          if (msg != null) {
-            return msg;
-          }
-          if (_min != null && _min > parsedValue) {
-            return '必须大于:$_min';
-          }
-          if (_max != null && _max < parsedValue) {
-            return '必须小于:$_max';
-          }
-          return null;
-        };
-
-        bool _readOnly = map['readOnly'] ?? readOnly;
-        return ClearableTextFormField(
+        return NumberFormField(
           controlKey,
           controller,
+          onChanged: onChanged,
           key: key,
+          decimal: decimal,
+          min: min,
+          max: max,
           hintText: map['hintText'] ?? hintText,
           labelText: map['labelText'] ?? labelText,
           focusNode: focusNode,
-          maxLines: 1,
-          passwordVisible: false,
-          obscureText: false,
-          onTap: onTap,
-          onFieldSubmitted: onSubmitted,
-          keyboardType: TextInputType.number,
-          validator: fieldValidator,
+          validator: validator,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           clearable: map['clearable'] ?? clearable,
           prefixIcon: map['prefixIcon'] ?? prefixIcon,
-          inputFormatters: formatters,
           padding: map['padding'] ?? padding,
-          readOnly: _readOnly,
+          readOnly: map['readOnly'] ?? readOnly,
           style: map['style'] ?? style,
         );
       },
@@ -147,7 +87,6 @@ class FormBuilder {
       {String hintText,
       String labelText,
       VoidCallback onTap,
-      ValueChanged<String> onSubmitted,
       Key key,
       bool obscureText: false,
       int flex,
@@ -196,7 +135,6 @@ class FormBuilder {
           maxLines: map['maxLines'] ?? maxLines,
           obscureText: obscureText,
           onTap: onTap,
-          onFieldSubmitted: onSubmitted,
           keyboardType: keyboardType,
           validator: validator,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
@@ -565,6 +503,7 @@ class FormBuilder {
       controlKey: controlKey,
       flex: flex,
       builder: (context, map) {
+        int _initialValue = map['initialValue'] ?? initialValue;
         return SwitchGroup(
           controlKey,
           controller,
@@ -573,7 +512,7 @@ class FormBuilder {
           hasSelectAllSwitch: false,
           autovalidateMode: AutovalidateMode.disabled,
           onChanged: onChanged,
-          initialValue: [map['initialValue']] ?? [initialValue],
+          initialValue: _initialValue == null ? null : [_initialValue],
         );
       },
     ));

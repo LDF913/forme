@@ -198,18 +198,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.setValue('username', 'username');
-                formController.setValue('password', '123456');
-                formController.setValue('age', '14');
-                formController.setValue('checkbox', [0, 1]);
-                formController.setValue('radio', '1');
-                formController.setValue('startTime', DateTime(2019, 10, 1));
-                formController.setValue('remark', 'hello world');
-                formController.setValue('selector', ['14']);
-                formController.setValue('switch', [2]);
                 print(formController.getData());
               },
-              child: Text('set&get form data'),
+              child: Text('get form data'),
             ),
             TextButton(
               onPressed: () {
@@ -266,10 +257,10 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .numberField(
           'age',
-          decimal: 2,
           hintText: '年龄',
           clearable: true,
           flex: 3,
+          min: 14,
           max: 99,
           onChanged: (value) {
             print(value);
