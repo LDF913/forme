@@ -52,6 +52,12 @@ formController.setReadOnly('form field\'s controlKey',!isReadOnly)
 formController.validate();
 ```
 
+### validate one field
+
+``` dart
+formController.validate(controlKey);
+```
+
 ### reset form
 
 ``` dart
@@ -61,6 +67,22 @@ formController.reset();
 ### focus form field
 ```
 formController.requestFocus('form field\'s controlKey');
+```
+
+### listen focus change
+
+``` dart
+onFocusChange(bool value){
+	print('username focused: $value');
+}
+
+formController.onFocusChange('username',onFocusChange);
+```
+
+### stop listen focus change
+
+``` dart
+formController.offFocusChange('username',onFocusChange);
 ```
 
 ### update form field

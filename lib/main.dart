@@ -138,67 +138,48 @@ class _MyHomePageState extends State<MyHomePage> {
                         : 'set username readonly'));
               },
             ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      setState(() {});
-                    },
-                    child: Text('rebuild page'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.validate();
-                    },
-                    child: Text('validate'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.reset();
-                    },
-                    child: Text('reset'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.update('checkbox', {
-                        'items': [
-                          CheckboxButton('男', readOnly: true),
-                          CheckboxButton('女')
-                        ]
-                      });
-                    },
-                    child: Text('set man readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.requestFocus('age');
-                    },
-                    child: Text('age focus'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formController.update('username', {
-                        'labelText': DateTime.now().toString(),
-                      });
-                    },
-                    child: Text('change username\'s label'));
-              },
-            ),
+            TextButton(
+                onPressed: () {
+                  setState(() {});
+                },
+                child: Text('rebuild page')),
+            TextButton(
+                onPressed: () {
+                  formController.validate();
+                },
+                child: Text('validate')),
+            TextButton(
+                onPressed: () {
+                  formController.validate1('username');
+                },
+                child: Text('validate username only')),
+            TextButton(
+                onPressed: () {
+                  formController.reset();
+                },
+                child: Text('reset')),
+            TextButton(
+                onPressed: () {
+                  formController.update('checkbox', {
+                    'items': [
+                      CheckboxButton('男', readOnly: true),
+                      CheckboxButton('女')
+                    ]
+                  });
+                },
+                child: Text('set man readonly')),
+            TextButton(
+                onPressed: () {
+                  formController.requestFocus('age');
+                },
+                child: Text('age focus')),
+            TextButton(
+                onPressed: () {
+                  formController.update('username', {
+                    'labelText': DateTime.now().toString(),
+                  });
+                },
+                child: Text('change username\'s label')),
             TextButton(
               onPressed: () {
                 print(formController.getData());
@@ -212,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 Future.delayed(Duration(seconds: 2), () {
                   formController.setValue('selector', null);
-                  formController.rebuild('selector', {
+                  formController.update('selector', {
                     'items': FormBuilder.toSelectorItems(
                         [Random().nextDouble().toString()])
                   });
