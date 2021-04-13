@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -59,11 +57,6 @@ class _MyHomePageState extends State<MyHomePage> {
     formController = FormController();
     formController.onFocusChange('username', (value) {
       print('username focused: $value');
-    });
-
-    Future.delayed(Duration(seconds: 5), () {
-      formController.themeData = FormThemeData();
-      print('changed !');
     });
   }
 
@@ -205,8 +198,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 Future.delayed(Duration(seconds: 2), () {
                   formController.setValue('selector', null);
                   formController.update('selector', {
-                    'items': FormBuilder.toSelectorItems(
-                        [Random().nextDouble().toString()])
+                    'loading': false,
+                    'multi': false,
+                    'items': ['1', '2']
                   });
                 });
               },
@@ -324,10 +318,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .selector('selector',
             labelText: 'selector',
             multi: true,
-            items: FormBuilder.toSelectorItems(
-                new List<int>.generate(100, (i) => i + 1)
-                    .map((e) => e.toString())
-                    .toList()),
+            items: List<int>.generate(100, (i) => i + 1).toList(),
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
         .nextLine()

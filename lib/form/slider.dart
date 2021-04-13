@@ -133,7 +133,7 @@ class _SliderFieldState extends FormBuilderFieldState<double> {
   @override
   SliderFormField get widget => super.widget as SliderFormField;
   @override
-  double get value => super.value == null ? widget.min : super.value.round();
+  double get value => super.value == null ? widget.min : super.value;
 }
 
 //copied from https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates

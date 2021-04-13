@@ -1,31 +1,21 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 import 'form_builder.dart';
 import 'form_theme.dart';
 
+typedef SelectedChecker = bool Function(dynamic value, dynamic selectedValue);
+typedef SelectItemRender = Widget Function(dynamic item, bool multiSelect,
+    bool isSelected, ThemeData themeData, FormThemeData formThemeData);
+typedef SelectedItemRender = Widget Function(dynamic item, bool multiSelect,
+    bool readOnly, ThemeData themeData, FormThemeData formThemeData);
+typedef SelectedSorter = void Function(List selected);
+
 class SelectorController extends ValueNotifier<List> {
   SelectorController({List value}) : super(value);
+  final UniqueKey _key = UniqueKey();
   List<dynamic> get value => super.value == null ? [] : super.value;
   void set(List value) => super.value == null ? [] : List.from(value);
-
-  TextEditingController _searchTextEditingController = TextEditingController();
-  FocusNode _searchFocusNode = FocusNode();
-
-  @override
-  void dispose() {
-    super.dispose();
-    _searchTextEditingController.dispose();
-    _searchFocusNode.dispose();
-  }
-}
-
-class SelectorItem {
-  final dynamic value;
-  final String label;
-
-  SelectorItem(this.label, this.value);
 }
 
 class SelectorFormField extends FormBuilderField<List> {
@@ -34,12 +24,55 @@ class SelectorFormField extends FormBuilderField<List> {
   final EdgeInsets padding;
   final String labelText;
   final String hintText;
-  final TextStyle style;
   final double iconSize;
   final bool loading;
   final bool multi;
+  final List items;
+  final SelectedChecker selectedChecker;
+  final SelectItemRender selectItemRender;
+  final SelectedItemRender selectedItemRender;
+  final SelectedSorter selectedSorter;
 
-  SelectorFormField(String controlKey, this.focusNode, List<SelectorItem> items,
+  static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
+      bool readOnly, ThemeData themeData, FormThemeData formThemeData) {
+    if (!multiSelect) {
+      return Padding(
+        child: Text(item.toString()),
+        padding: EdgeInsets.only(left: 5, right: 5, top: 5),
+      );
+    }
+    return Padding(
+        padding: EdgeInsets.only(right: 10),
+        child: Chip(
+            backgroundColor: readOnly
+                ? themeData.primaryColor.withOpacity(0.5)
+                : themeData.primaryColor,
+            label: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  item.toString(),
+                  style: TextStyle(),
+                ),
+                SizedBox(
+                  width: 4,
+                ),
+                Visibility(
+                  child: Icon(
+                    Icons.clear,
+                    size: 12,
+                  ),
+                  visible: !readOnly,
+                )
+              ],
+            )));
+  }
+
+  static bool _defaultSelectedChecker(dynamic v1, dynamic v2) {
+    return v1 == v2;
+  }
+
+  SelectorFormField(String controlKey, this.focusNode, this.items,
       SelectorController controller,
       {Key key,
       bool readOnly = false,
@@ -50,11 +83,14 @@ class SelectorFormField extends FormBuilderField<List> {
       FormFieldValidator<List> validator,
       AutovalidateMode autovalidateMode,
       this.padding,
-      this.style,
       this.iconSize = 24,
       this.loading = false,
       this.multi = false,
-      List initialValue})
+      List initialValue,
+      this.selectedChecker,
+      this.selectItemRender,
+      this.selectedItemRender,
+      this.selectedSorter})
       : super(
           controlKey,
           controller,
@@ -67,21 +103,11 @@ class SelectorFormField extends FormBuilderField<List> {
           builder: (field) {
             final FormBuilderFieldState state = field as FormBuilderFieldState;
 
-            int _getIndex(dynamic value) {
-              for (int i = 0; i < items.length; i++) {
-                if (items[i].value == value) return i;
-              }
-              return null;
-            }
-
-            SelectorItem _getItem(dynamic value) {
-              int index = _getIndex(value);
-              if (index == null) return null;
-              return items[index];
-            }
-
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
+
+            SelectedChecker checker =
+                selectedChecker ?? _defaultSelectedChecker;
 
             List<Widget> icons = [];
             if (clearable &&
@@ -109,70 +135,39 @@ class SelectorFormField extends FormBuilderField<List> {
                     ),
                   ),
                   padding: EdgeInsets.only(right: 10)));
-            icons.add(Icon(
-              Icons.arrow_drop_down,
-            ));
 
-            Widget tags;
+            if (!loading) {
+              icons.add(Icon(
+                Icons.arrow_drop_down,
+              ));
+            }
+
+            Widget widget;
 
             if (controller.value.isNotEmpty) {
+              SelectedItemRender render =
+                  selectedItemRender ?? _defaultSelectedItemRender;
               if (!multi) {
-                SelectorItem item = _getItem(controller.value[0]);
-                if (item == null) {
-                  tags = Padding(
-                    child: Text('unknow',
-                        style: TextStyle(color: themeData.errorColor)),
-                    padding: EdgeInsets.only(left: 5, right: 5, top: 5),
-                  );
-                } else
-                  tags = Padding(
-                    child: Text(item.label),
-                    padding: EdgeInsets.only(left: 5, right: 5, top: 5),
-                  );
+                widget = render(controller.value[0], multi, readOnly || loading,
+                    themeData, formThemeData);
               } else {
-                tags = Wrap(
-                  children: controller.value.map((e) {
-                    SelectorItem item = _getItem(e);
-                    return InkWell(
-                      onTap: readOnly
-                          ? null
-                          : () {
-                              state.didChange(controller.value
-                                  .where((element) => element != e)
-                                  .toList());
-                              focusNode.requestFocus();
-                            },
-                      child: Padding(
-                        padding: EdgeInsets.only(right: 10),
-                        child: Chip(
-                            backgroundColor: item == null
-                                ? themeData.errorColor
-                                : readOnly
-                                    ? themeData.primaryColor.withOpacity(0.5)
-                                    : themeData.primaryColor,
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  item == null ? 'unknow' : item.label,
-                                  style: style ?? TextStyle(),
-                                ),
-                                SizedBox(
-                                  width: 4,
-                                ),
-                                Visibility(
-                                  child: Icon(
-                                    Icons.clear,
-                                    size: 12,
-                                  ),
-                                  visible: !readOnly,
-                                )
-                              ],
-                            )),
-                      ),
-                    );
-                  }).toList(),
-                );
+                List value = List.from(controller.value);
+                if (selectedSorter != null) selectedSorter(value);
+                widget = Wrap(
+                    children: value.map((item) {
+                  return InkWell(
+                    onTap: readOnly
+                        ? null
+                        : () {
+                            state.didChange(controller.value
+                                .where((element) => !checker(item, element))
+                                .toList());
+                            focusNode.requestFocus();
+                          },
+                    child: render(item, multi, readOnly || loading, themeData,
+                        formThemeData),
+                  );
+                }).toList());
               }
             }
             FormController formController = FormController.of(field.context);
@@ -195,25 +190,39 @@ class SelectorFormField extends FormBuilderField<List> {
                 skipTraversal: true,
                 child: Builder(
                     builder: (context) => InkWell(
-                          onTap: (readOnly || loading)
+                          onTap: (readOnly ||
+                                  loading ||
+                                  items == null ||
+                                  items.isEmpty)
                               ? null
-                              : () {
-                                  Navigator.of(field.context,
+                              : () async {
+                                  List selected = await Navigator.of(
+                                          field.context,
                                           rootNavigator: true)
-                                      .push(MaterialPageRoute<Null>(
+                                      .push(MaterialPageRoute<List>(
+                                          settings: RouteSettings(
+                                              arguments: controller._key),
                                           builder: (BuildContext context) {
-                                            return SelectorDialog(
-                                              formController,
-                                            );
+                                            return _SelectorDialog(_Arguments(
+                                                formController,
+                                                selectItemRender,
+                                                checker,
+                                                controller.value,
+                                                items,
+                                                multi));
                                           },
                                           fullscreenDialog: true));
+                                  if (selected != null) {
+                                    field.didChange(selected);
+                                    focusNode.requestFocus();
+                                  }
                                 },
                           child: InputDecorator(
                             decoration: effectiveDecoration.copyWith(
                                 errorText: field.errorText),
                             isEmpty: controller.value.isEmpty,
                             isFocused: Focus.of(context).hasFocus,
-                            child: tags,
+                            child: widget,
                           ),
                         )));
             return Padding(
@@ -224,24 +233,65 @@ class SelectorFormField extends FormBuilderField<List> {
         );
 
   @override
-  FormBuilderFieldState<List> createState() => FormBuilderFieldState();
+  _SelectorFormFieldState createState() => _SelectorFormFieldState();
 }
 
-class SelectorDialog extends StatefulWidget {
-  final FormController formController;
+class _SelectorFormFieldState extends FormBuilderFieldState<List> {
+  UniqueKey get dialogKey => (widget.controller as SelectorController)._key;
 
-  const SelectorDialog(this.formController, {Key key}) : super(key: key);
   @override
-  SelectorDialogState createState() => new SelectorDialogState();
+  void didUpdateWidget(SelectorFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      bool isClosed = false;
+      Navigator.of(context).popUntil((route) {
+        if (isClosed) return true;
+        if (route is MaterialPageRoute) {
+          RouteSettings settings = route.settings;
+          if (settings != null && settings.arguments == dialogKey) return false;
+        }
+        isClosed = true;
+        return true;
+      });
+    });
+  }
 }
 
-class SelectorDialogState extends State<SelectorDialog> {
-  List<String> items = ['1', '2', '3', '4', '5'];
+class _Arguments {
+  final FormController formController;
+  final SelectItemRender selectItemRender;
+  final SelectedChecker selectedChecker;
+  final List selected;
+  final List items;
+  final bool multi;
+  _Arguments(this.formController, this.selectItemRender, this.selectedChecker,
+      this.selected, this.items, this.multi);
+}
+
+class _SelectorDialog extends StatefulWidget {
+  final _Arguments arguments;
+
+  FormController get formController => arguments.formController;
+  List get selected => arguments.selected;
+  SelectedChecker get selectedChecker => arguments.selectedChecker;
+  SelectItemRender get selectItemRender => arguments.selectItemRender;
+  List get items => arguments.items;
+  bool get multi => arguments.multi;
+
+  const _SelectorDialog(this.arguments, {Key key}) : super(key: key);
+  @override
+  _SelectorDialogState createState() => _SelectorDialogState();
+}
+
+class _SelectorDialogState extends State<_SelectorDialog> {
+  List selected;
 
   @override
   void initState() {
     super.initState();
     widget.formController.addListener(update);
+    selected = List.from(widget.selected);
   }
 
   @override
@@ -254,6 +304,48 @@ class SelectorDialogState extends State<SelectorDialog> {
     WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
+  void toggle(dynamic value) {
+    setState(() {
+      if (widget.multi) {
+        int len = selected.length;
+        selected
+            .removeWhere((element) => widget.selectedChecker(value, element));
+        if (len == selected.length) {
+          selected.add(value);
+        }
+      } else {
+        selected = [value];
+      }
+    });
+  }
+
+  bool isSelected(dynamic value) {
+    return selected.any((element) => widget.selectedChecker(value, element));
+  }
+
+  Widget renderSelectItems(dynamic item, bool multiSelect, bool isSelected,
+      ThemeData themeData, FormThemeData formThemeData) {
+    Color color =
+        isSelected ? themeData.primaryColor : themeData.unselectedWidgetColor;
+    return Padding(
+        child: Row(
+          children: [
+            Expanded(child: Text(item.toString())),
+            Icon(
+              isSelected
+                  ? multiSelect
+                      ? Icons.check_box
+                      : Icons.radio_button_checked
+                  : multiSelect
+                      ? Icons.check_box_outline_blank
+                      : Icons.radio_button_off,
+              color: color,
+            ),
+          ],
+        ),
+        padding: EdgeInsets.all(4));
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData themeData =
@@ -264,30 +356,38 @@ class SelectorDialogState extends State<SelectorDialog> {
     columns.add(Expanded(
         child: ListView.builder(
             itemBuilder: (context, index) {
+              var item = widget.items[index];
+              bool selected = isSelected(item);
+              SelectItemRender render =
+                  widget.selectItemRender ?? renderSelectItems;
               return InkWell(
-                child: Padding(
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.check_box_outline_blank,
-                          color: themeData.unselectedWidgetColor,
-                        ),
-                        SizedBox(
-                          width: 8,
-                        ),
-                        Expanded(child: Text(items[index]))
-                      ],
-                    ),
-                    padding: EdgeInsets.all(4)),
-                onTap: () {},
+                child: render(item, widget.multi, selected, themeData,
+                    widget.formController.themeData),
+                onTap: () {
+                  toggle(item);
+                },
               );
             },
-            itemCount: items.length)));
+            itemCount: widget.items.length)));
 
     return Theme(
       data: themeData,
-      child: Material(
-          child: Padding(
+      child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            actions: <Widget>[
+              IconButton(
+                icon: Icon(Icons.check),
+                onPressed: () {
+                  Navigator.of(context).pop(selected);
+                },
+              )
+            ],
+          ),
+          body: Padding(
               padding: EdgeInsets.all(20),
               child: Column(
                 children: columns,

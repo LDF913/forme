@@ -400,15 +400,18 @@ class FormBuilder {
     bool readOnly = false,
     bool visible = true,
     bool clearable = true,
-    List<SelectorItem> items,
+    List items,
     FormFieldValidator validator,
     AutovalidateMode autovalidateMode,
     EdgeInsets padding,
-    TextStyle style,
     bool loading = false,
     bool multi = false,
     ValueChanged<List> onChanged,
     List initialValue,
+    SelectedChecker selectedChecker,
+    SelectItemRender selectItemRender,
+    SelectedItemRender selectedItemRender,
+    SelectedSorter selectedSorter,
   }) {
     SelectorController controller = formController._controllers
         .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
@@ -430,10 +433,13 @@ class FormBuilder {
                 autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
                 padding: map['padding'] ?? padding,
                 readOnly: map['readOnly'] ?? readOnly,
-                style: map['style'] ?? style,
                 loading: map['loading'] ?? loading,
                 multi: map['multi'] ?? multi,
                 initialValue: map['initialValue'] ?? initialValue,
+                selectedChecker: selectedChecker,
+                selectItemRender: selectItemRender,
+                selectedItemRender: selectedItemRender,
+                selectedSorter: selectedSorter,
               )),
     );
     return this;
@@ -630,10 +636,6 @@ class FormBuilder {
   Widget build() {
     nextLine();
     return _FormWidget(_builderss, formController);
-  }
-
-  static List<SelectorItem> toSelectorItems(List<String> items) {
-    return items.map((e) => SelectorItem(e, e)).toList();
   }
 
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {
