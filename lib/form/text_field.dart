@@ -53,20 +53,23 @@ class ClearableTextFormField extends FormBuilderField<String> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly && controller.text.length > 0) {
-              suffixes.add(_ClearIcon(controller, focusNode, () {
+              suffixes.add(ClearButton(controller, focusNode, () {
                 state.didChange('');
               }));
             }
+
             if (passwordVisible) {
-              suffixes.add(IconButton(
-                icon: Icon(state.obscureText
-                    ? Icons.visibility
-                    : Icons.visibility_off),
-                onPressed: readOnly
-                    ? null
-                    : () {
-                        state.toggleObsureText();
-                      },
+              suffixes.add(InkWell(
+                child: IconButton(
+                  icon: Icon(state.obscureText
+                      ? Icons.visibility
+                      : Icons.visibility_off),
+                  onPressed: readOnly
+                      ? null
+                      : () {
+                          state.toggleObsureText();
+                        },
+                ),
               ));
             }
 
@@ -185,61 +188,6 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   }
 }
 
-class _ClearIcon extends StatefulWidget {
-  final TextEditingController controller;
-  final VoidCallback clear;
-  final FocusNode focusNode;
-
-  const _ClearIcon(this.controller, this.focusNode, this.clear);
-  @override
-  State<StatefulWidget> createState() => _ClearIconState();
-}
-
-class _ClearIconState extends State<_ClearIcon> {
-  bool visible = false;
-
-  void changeListener() {
-    setState(() {
-      visible = widget.focusNode.hasFocus && widget.controller.text != '';
-    });
-  }
-
-  @override
-  void initState() {
-    widget.controller.addListener(changeListener);
-    visible = widget.controller.text != '';
-    widget.focusNode.addListener(changeListener);
-    super.initState();
-  }
-
-  @override
-  void dispose() {
-    widget.focusNode.removeListener(changeListener);
-    widget.controller.removeListener(changeListener);
-    super.dispose();
-  }
-
-  @override
-  void didUpdateWidget(_ClearIcon old) {
-    super.didUpdateWidget(old);
-    if (widget.controller != old.controller) {
-      visible = widget.controller.text != '';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Visibility(
-        visible: visible,
-        child: IconButton(
-          onPressed: () {
-            widget.clear();
-          },
-          icon: Icon(Icons.clear),
-        ));
-  }
-}
-
 class DateTimeController extends ValueNotifier<DateTime> {
   TextEditingController _controller = new TextEditingController();
 
@@ -247,6 +195,12 @@ class DateTimeController extends ValueNotifier<DateTime> {
 
   TimeOfDay get _timeOfDay =>
       value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
+  }
 }
 
 class DateTimeFormField extends FormBuilderField<DateTime> {
@@ -326,15 +280,16 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
             List<Widget> suffixes = [];
 
             if (!readOnly) {
-              suffixes.add(_ClearIcon(controller._controller, focusNode, () {
+              suffixes.add(ClearButton(controller._controller, focusNode, () {
                 state.didChange(null);
               }));
             }
 
-            suffixes.add(IconButton(
-              constraints: BoxConstraints(),
-              onPressed: readOnly ? null : pickTime,
-              icon: Icon(Icons.calendar_today),
+            suffixes.add(InkWell(
+              child: IconButton(
+                icon: Icon(Icons.calendar_today),
+                onPressed: readOnly ? null : pickTime,
+              ),
             ));
 
             Widget suffixIcon = suffixes.isEmpty
@@ -422,6 +377,12 @@ class NumberController extends ValueNotifier<num> with TextSelectionMixin {
   void setSelection(int start, int end) {
     TextSelectionMixin.setSelectionWithTextEditingController(
         start, end, _controller);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _controller.dispose();
   }
 }
 
@@ -515,7 +476,7 @@ class NumberFormField extends FormBuilderField<num> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
-              suffixes.add(_ClearIcon(controller._controller, focusNode, () {
+              suffixes.add(ClearButton(controller._controller, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -614,5 +575,52 @@ class _NumberFieldState extends FormBuilderFieldState<num> {
     super.reset();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
+  }
+}
+
+class ClearButton extends StatefulWidget {
+  final TextEditingController controller;
+  final VoidCallback clear;
+  final FocusNode focusNode;
+
+  const ClearButton(this.controller, this.focusNode, this.clear);
+  @override
+  State<StatefulWidget> createState() => __ClearButtonState();
+}
+
+class __ClearButtonState extends State<ClearButton> {
+  bool visible = false;
+
+  void changeListener() {
+    setState(() {
+      visible = widget.focusNode.hasFocus && widget.controller.text != '';
+    });
+  }
+
+  @override
+  void initState() {
+    widget.controller.addListener(changeListener);
+    visible = widget.controller.text != '';
+    widget.focusNode.addListener(changeListener);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    widget.focusNode.removeListener(changeListener);
+    widget.controller.removeListener(changeListener);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Visibility(
+        visible: visible,
+        child: InkWell(
+          child: IconButton(
+            icon: Icon(Icons.clear),
+            onPressed: widget.clear,
+          ),
+        ));
   }
 }

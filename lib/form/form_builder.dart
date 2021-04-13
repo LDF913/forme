@@ -656,7 +656,6 @@ class FormController extends ChangeNotifier {
   final Map<String, _FormItemWidgetState> _states = {};
   final Set<FormBuilderFieldState<dynamic>> _fields =
       <FormBuilderFieldState<dynamic>>{};
-  final ChangeNotifier _themeDataNotifier = ChangeNotifier();
   final Map<String, List<ValueChanged<bool>>> _focusChangeMap = {};
 
   FocusNode _newFocusNode(String controlKey) {
@@ -678,16 +677,16 @@ class FormController extends ChangeNotifier {
     return focusNode;
   }
 
-  get themeData => _themeData;
+  FormThemeData get themeData => _themeData;
 
   set themeData(FormThemeData theme) {
     if (theme != null) {
       _themeData = theme;
-      _themeDataNotifier.notifyListeners();
+      notifyListeners();
     }
   }
 
-  get visible => _visible;
+  bool get visible => _visible;
 
   set visible(bool visible) {
     if (_visible != visible) {
@@ -696,7 +695,7 @@ class FormController extends ChangeNotifier {
     }
   }
 
-  get readOnly => _readOnly;
+  bool get readOnly => _readOnly;
 
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
@@ -831,7 +830,6 @@ class FormController extends ChangeNotifier {
       element.dispose();
     });
     _states.clear();
-    _themeDataNotifier.dispose();
     _fields.clear();
   }
 
@@ -940,12 +938,12 @@ class _FormWidgetState extends State<_FormWidget> {
   @override
   void initState() {
     super.initState();
-    widget.formController._themeDataNotifier.addListener(handleThemeChange);
+    widget.formController.addListener(handleThemeChange);
   }
 
   void dispose() {
     super.dispose();
-    widget.formController._themeDataNotifier.removeListener(handleThemeChange);
+    widget.formController.removeListener(handleThemeChange);
   }
 
   void handleThemeChange() {
@@ -962,7 +960,7 @@ class _FormWidgetState extends State<_FormWidget> {
     }
 
     return Theme(
-        data: getThemeData(context),
+        data: widget.formController.themeData.themeData ?? Theme.of(context),
         child: ChangeNotifierProvider<FormController>(
           create: (context) => widget.formController,
           child: Consumer<FormController>(
@@ -977,16 +975,6 @@ class _FormWidgetState extends State<_FormWidget> {
             },
           ),
         ));
-  }
-
-  ThemeData getThemeData(BuildContext context) {
-    ThemeData themeData;
-    if (widget.formController.themeData.themeDataBuilder != null) {
-      themeData = widget.formController.themeData.themeDataBuilder(context);
-    } else {
-      themeData = Theme.of(context);
-    }
-    return themeData;
   }
 }
 

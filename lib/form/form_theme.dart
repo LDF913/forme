@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 
 import 'form_builder.dart';
 
-typedef ThemeDataBuilder = ThemeData Function(BuildContext context);
-
 class FormThemeData {
   final EdgeInsets padding;
-  final ThemeDataBuilder themeDataBuilder;
+  final ThemeData themeData;
   final EdgeInsets labelPadding;
   final CheckboxGroupTheme checkboxGroupTheme;
   final RadioGroupTheme radioGroupTheme;
 
   FormThemeData(
       {this.padding = EdgeInsets.zero,
-      this.themeDataBuilder,
+      this.themeData,
       this.labelPadding,
       this.checkboxGroupTheme = const CheckboxGroupTheme(),
       this.radioGroupTheme = const RadioGroupTheme()});
@@ -42,8 +40,6 @@ class FormThemeData {
                 : themeData.hintColor)
         .merge(inputDecorationTheme.labelStyle);
   }
-
-  static DefaultThemeData defaultThemeData = DefaultThemeData._();
 }
 
 class HexColor extends Color {
@@ -98,12 +94,12 @@ class RadioGroupTheme extends CheckboxGroupTheme {
 }
 
 class DefaultThemeData extends FormThemeData {
-  DefaultThemeData._()
+  DefaultThemeData(BuildContext context)
       : super(
+            themeData: _buildLightTheme(context),
             padding: EdgeInsets.all(5),
             checkboxGroupTheme: CheckboxGroupTheme(),
             radioGroupTheme: RadioGroupTheme(),
-            themeDataBuilder: (context) => _buildLightTheme(context),
             labelPadding: const EdgeInsets.symmetric(vertical: 10));
 
   static TextTheme _buildTextTheme(TextTheme base) {

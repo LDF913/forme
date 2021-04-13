@@ -57,9 +57,13 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     formController = FormController();
-    formController.themeData = FormThemeData.defaultThemeData;
     formController.onFocusChange('username', (value) {
       print('username focused: $value');
+    });
+
+    Future.delayed(Duration(seconds: 5), () {
+      formController.themeData = FormThemeData();
+      print('changed !');
     });
   }
 
@@ -87,7 +91,9 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Wrap(children: [
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: createForm(),
+              child: Builder(builder: (context) {
+                return createForm(context);
+              }),
             ),
             Builder(
               builder: (context) {
@@ -225,7 +231,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
   }
 
-  Widget createForm() {
+  Widget createForm(BuildContext context) {
+    formController.themeData = DefaultThemeData(context);
     FormBuilder builder = FormBuilder(formController)
         .textField('username',
             labelText: 'username',

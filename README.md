@@ -158,3 +158,4 @@ formController.themeData = FormThemeData.defaultThemeData;//a theme from  https:
 5. Selector(Dropdown like)
 6. SwitchGroup
 7. NumberField
+8. Slider
