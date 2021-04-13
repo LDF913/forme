@@ -66,9 +66,7 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
                         FormThemeData.getLabelStyle(themeData, state.hasError));
                 widgets.add(Padding(
                   padding: formThemeData.labelPadding ?? EdgeInsets.zero,
-                  child: Row(
-                    children: [Flexible(child: text)],
-                  ),
+                  child: text,
                 ));
               }
 

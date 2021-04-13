@@ -56,9 +56,7 @@ class SliderFormField extends FormBuilderField<double> {
                       FormThemeData.getLabelStyle(themeData, state.hasError));
               columns.add(Padding(
                 padding: formThemeData.labelPadding ?? EdgeInsets.zero,
-                child: Row(
-                  children: [Flexible(child: text)],
-                ),
+                child: text,
               ));
             }
 
