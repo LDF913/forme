@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,11 +8,13 @@ import 'form_theme.dart';
 class ClearableTextFormField extends FormBuilderField<String> {
   final bool obscureText;
   final EdgeInsets padding;
+  final bool selectAllOnFocus;
+  final FocusNode focusNode;
   ClearableTextFormField(String controlKey, TextEditingController controller,
       {String labelText,
       String hintText,
       Key key,
-      FocusNode focusNode,
+      this.focusNode,
       TextInputType keyboardType,
       bool autofocus = false,
       this.obscureText = false,
@@ -31,7 +34,9 @@ class ClearableTextFormField extends FormBuilderField<String> {
       this.padding,
       TextStyle style,
       bool readOnly = false,
-      String initialValue})
+      String initialValue,
+      ToolbarOptions toolbarOptions,
+      this.selectAllOnFocus = false})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -89,6 +94,7 @@ class ClearableTextFormField extends FormBuilderField<String> {
                 keyboardType: keyboardType,
                 autofocus: autofocus,
                 obscureText: state.obscureText,
+                toolbarOptions: toolbarOptions,
                 maxLines: maxLines,
                 minLines: minLines,
                 maxLength: maxLength,
@@ -116,11 +122,39 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
   TextEditingController get controller => super.controller;
+  FocusNode get focusNode => widget.focusNode;
+
+  void selectAll() {
+    if (focusNode.hasFocus) {
+      controller.selection =
+          TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     obscureText = widget.obscureText;
+    if (widget.selectAllOnFocus) {
+      focusNode.addListener(selectAll);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (widget.selectAllOnFocus) {
+      focusNode.removeListener(selectAll);
+    }
+  }
+
+  @override
+  void didUpdateWidget(ClearableTextFormField oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    focusNode.removeListener(selectAll);
+    if (widget.selectAllOnFocus) {
+      focusNode.addListener(selectAll);
+    }
   }
 
   void toggleObsureText() {
@@ -380,9 +414,15 @@ class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
   }
 }
 
-class NumberController extends ValueNotifier<num> {
+class NumberController extends ValueNotifier<num> with TextSelectionMixin {
   TextEditingController _controller = new TextEditingController();
   NumberController({num value}) : super(value);
+
+  @override
+  void setSelection(int start, int end) {
+    TextSelectionMixin.setSelectionWithTextEditingController(
+        start, end, _controller);
+  }
 }
 
 class NumberFormField extends FormBuilderField<num> {

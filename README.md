@@ -114,6 +114,14 @@ formController.rebuild('selector', {
 });
 ```
 
+### set form field's selection
+
+``` dart
+formController.setSelection(controlKey,start,end);
+```
+
+only works on textfield|numberfield
+
 ### set form field's value
  
 ``` dart

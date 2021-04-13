@@ -181,6 +181,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
                 child: Text('change username\'s label')),
             TextButton(
+                onPressed: () {
+                  formController.setSelection('age', 1, 1);
+                },
+                child: Text('set age\'s selection')),
+            TextButton(
               onPressed: () {
                 print(formController.getData());
               },
@@ -225,9 +230,10 @@ class _MyHomePageState extends State<MyHomePage> {
         .textField('username',
             labelText: 'username',
             clearable: true,
+            selectAllOnFocus: true,
             onChanged: (value) => print('username value changed $value'),
             validator: (value) {
-              return (value ?? '').isEmpty ? 'not empty' : null;
+              return value.isEmpty ? 'not empty' : null;
             })
         .checkboxInline(
           'rememberMe',
@@ -235,7 +241,6 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .switchInline(
           'switch1',
-          flex: 1,
           onChanged: (value) => print('switch1 value changed $value'),
         )
         .nextLine()
@@ -244,6 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
             obscureText: true,
             passwordVisible: true,
             clearable: true,
+            toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
         .button('button', () {
@@ -270,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
           split: 2,
           label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
-          validator: (value) => (value ?? []).isEmpty ? 'pls select sex' : null,
+          validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
         .divider('divider')
         .radioGroup(
@@ -290,12 +296,14 @@ class _MyHomePageState extends State<MyHomePage> {
           useTime: true,
           hintText: 'startTime',
           onChanged: (value) => print('startTime value changed $value'),
+          validator: (value) => value == null ? 'not empty' : null,
         )
         .datetimeField(
           'endTime',
           useTime: true,
           hintText: 'endTime',
           onChanged: (value) => print('endTime value changed $value'),
+          validator: (value) => value == null ? 'not empty' : null,
         )
         .nextLine()
         .textField('remark',
@@ -314,14 +322,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     .map((e) => e.toString())
                     .toList()),
             onChanged: (value) => print('selector value changed $value'),
-            validator: (value) =>
-                (value ?? []).isEmpty ? 'select something !' : null)
+            validator: (value) => value.isEmpty ? 'select something !' : null)
         .nextLine()
         .switchGroup('switchGroup',
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
-            validator: (value) =>
-                (value == null || value.isEmpty) ? 'select one pls !' : null,
+            validator: (value) => value.isEmpty ? 'select one pls !' : null,
             items: List<String>.generate(3, (index) => index.toString()))
         .slider(
           'slider',

@@ -107,9 +107,12 @@ class FormBuilder {
       List<TextInputFormatter> inputFormatters,
       EdgeInsets padding,
       TextStyle style,
-      String initialValue}) {
-    TextEditingController controller = formController._controllers.putIfAbsent(
-        controlKey, () => TextEditingController(text: initialValue));
+      String initialValue,
+      ToolbarOptions toolbarOptions,
+      bool selectAllOnFocus}) {
+    _CustomTextEditingController controller = formController._controllers
+        .putIfAbsent(
+            controlKey, () => _CustomTextEditingController(text: initialValue));
     FocusNode focusNode = formController._newFocusNode(controlKey);
     _builders.add(_FormItemWidget(
       visible,
@@ -125,30 +128,30 @@ class FormBuilder {
               FilteringTextInputFormatter.allow(RegExp(_regExp)),
             );
         }
-        return ClearableTextFormField(
-          controlKey,
-          controller,
-          key: key,
-          hintText: map['hintText'] ?? hintText,
-          labelText: map['labelText'] ?? labelText,
-          focusNode: focusNode,
-          maxLength: map['maxLength'] ?? maxLength,
-          maxLines: map['maxLines'] ?? maxLines,
-          obscureText: obscureText,
-          onTap: onTap,
-          keyboardType: keyboardType,
-          validator: validator,
-          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          clearable: map['clearable'] ?? clearable,
-          prefixIcon: map['prefixIcon'] ?? prefixIcon,
-          passwordVisible: map['passwordVisible'] ?? passwordVisible,
-          onChanged: onChanged,
-          inputFormatters: formatters,
-          padding: map['padding'] ?? padding,
-          readOnly: map['readOnly'] ?? readOnly,
-          style: map['style'] ?? style,
-          initialValue: map['initialValue'] ?? initialValue,
-        );
+        return ClearableTextFormField(controlKey, controller,
+            key: key,
+            hintText: map['hintText'] ?? hintText,
+            labelText: map['labelText'] ?? labelText,
+            focusNode: focusNode,
+            maxLength: map['maxLength'] ?? maxLength,
+            maxLines: map['maxLines'] ?? maxLines,
+            obscureText: obscureText,
+            onTap: onTap,
+            keyboardType: keyboardType,
+            validator: validator,
+            autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+            clearable: map['clearable'] ?? clearable,
+            prefixIcon: map['prefixIcon'] ?? prefixIcon,
+            passwordVisible: map['passwordVisible'] ?? passwordVisible,
+            onChanged: onChanged,
+            inputFormatters: formatters,
+            padding: map['padding'] ?? padding,
+            readOnly: map['readOnly'] ?? readOnly,
+            style: map['style'] ?? style,
+            initialValue: map['initialValue'] ?? initialValue,
+            toolbarOptions: map['toolbarOptions'] ?? toolbarOptions,
+            selectAllOnFocus:
+                map['selectAllOnFocus'] ?? selectAllOnFocus ?? false);
       },
     ));
     return this;
@@ -811,6 +814,13 @@ class FormController extends ChangeNotifier {
     return state == null ? true : state.validate();
   }
 
+  void setSelection(String controlKey, int start, int end) {
+    var controller = _controllers[controlKey];
+    if (controller != null && controller is TextSelectionMixin) {
+      controller.setSelection(start, end);
+    }
+  }
+
   @override
   void dispose() {
     super.dispose();
@@ -1067,4 +1077,27 @@ class FormBuilderField<T> extends FormField<T> {
 
   @override
   FormBuilderFieldState<T> createState() => FormBuilderFieldState<T>();
+}
+
+abstract class TextSelectionMixin {
+  void setSelection(int start, int end);
+
+  static void setSelectionWithTextEditingController(
+      int start, int end, TextEditingController controller) {
+    int extendsOffset =
+        end > controller.text.length ? controller.text.length : end;
+    int baseOffset = start < 0 ? 0 : start;
+    controller.selection =
+        TextSelection(baseOffset: baseOffset, extentOffset: extendsOffset);
+  }
+}
+
+class _CustomTextEditingController extends TextEditingController
+    with TextSelectionMixin {
+  _CustomTextEditingController({String text}) : super(text: text);
+
+  @override
+  void setSelection(int start, int end) {
+    TextSelectionMixin.setSelectionWithTextEditingController(start, end, this);
+  }
 }
