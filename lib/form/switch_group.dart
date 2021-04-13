@@ -134,18 +134,13 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
               ));
             }
             if (state.hasError) {
-              columns.add(Row(
-                children: [
-                  Flexible(
-                    child: Text(state.errorText,
-                        style: FormThemeData.getErrorStyle(themeData)),
-                  )
-                ],
-              ));
+              columns.add(Text(state.errorText,
+                  style: FormThemeData.getErrorStyle(themeData)));
             }
 
             return Padding(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: columns,
               ),
@@ -163,20 +158,18 @@ class SwitchController extends ValueNotifier<bool> {
   bool get value => super.value ?? false;
 }
 
-class SwitchFormField extends FormBuilderField<bool> {
+class SwitchInlineFormField extends FormBuilderField<bool> {
   final EdgeInsets padding;
 
-  SwitchFormField(
-    String controlKey,
-    SwitchController controller, {
-    Key key,
-    bool readOnly = false,
-    ValueChanged<bool> onChanged,
-    FormFieldValidator<bool> validator,
-    AutovalidateMode autovalidateMode,
-    this.padding,
-    bool initialValue,
-  })  : assert(controlKey != null),
+  SwitchInlineFormField(String controlKey, SwitchController controller,
+      {Key key,
+      bool readOnly = false,
+      ValueChanged<bool> onChanged,
+      FormFieldValidator<bool> validator,
+      AutovalidateMode autovalidateMode,
+      this.padding,
+      bool initialValue})
+      : assert(controlKey != null),
         super(
           controlKey,
           controller,
@@ -217,18 +210,14 @@ class SwitchFormField extends FormBuilderField<bool> {
             ));
 
             if (state.hasError) {
-              columns.add(Row(
-                children: [
-                  Flexible(
-                    child: Text(state.errorText,
-                        style: FormThemeData.getErrorStyle(themeData)),
-                  )
-                ],
-              ));
+              columns.add(Text(state.errorText,
+                  overflow: TextOverflow.ellipsis,
+                  style: FormThemeData.getErrorStyle(themeData)));
             }
 
             return Padding(
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: columns,
               ),

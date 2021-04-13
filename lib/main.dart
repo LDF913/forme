@@ -223,21 +223,24 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     FormBuilder builder = FormBuilder(formController)
         .textField('username',
-            labelText: '用户名',
+            labelText: 'username',
             clearable: true,
-            flex: 3,
             onChanged: (value) => print('username value changed $value'),
             validator: (value) {
-              return (value ?? '').isEmpty ? '不为空' : null;
+              return (value ?? '').isEmpty ? 'not empty' : null;
             })
-        .checkboxs('rememberMe', [CheckboxButton('记住')])
-        .switch1(
+        .checkboxInline(
+          'rememberMe',
+          [CheckboxButton('remember me')],
+        )
+        .switchInline(
           'switch1',
+          flex: 1,
           onChanged: (value) => print('switch1 value changed $value'),
         )
         .nextLine()
         .textField('password',
-            hintText: '密码',
+            hintText: 'password',
             obscureText: true,
             passwordVisible: true,
             clearable: true,
@@ -249,24 +252,25 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .numberField(
           'age',
-          hintText: '年龄',
+          hintText: 'age',
           clearable: true,
           flex: 3,
           min: 14,
           max: 99,
           onChanged: (value) => print('age value changed $value'),
-          validator: (value) => value == null ? '不为空' : null,
+          validator: (value) => value == null ? 'not empty' : null,
+        )
+        .radioInline(
+          'radioInline',
+          FormBuilder.toRadioButtons(['1', '2']),
         )
         .checkboxGroup(
           'checkbox',
-          [
-            CheckboxButton('男'),
-            CheckboxButton('女'),
-          ],
+          FormBuilder.toCheckboxButtons(['男', '女']),
           split: 2,
-          label: '性别',
+          label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
-          validator: (value) => (value ?? []).isEmpty ? '请选择性别' : null,
+          validator: (value) => (value ?? []).isEmpty ? 'pls select sex' : null,
         )
         .divider('divider')
         .radioGroup(
@@ -276,7 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
             RadioButton('2', '2'),
           ],
           onChanged: (value) => print('radio value changed $value'),
-          label: '单选框',
+          label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
         .divider('divider')
@@ -284,18 +288,18 @@ class _MyHomePageState extends State<MyHomePage> {
         .datetimeField(
           'startTime',
           useTime: true,
-          hintText: '开始日期',
+          hintText: 'startTime',
           onChanged: (value) => print('startTime value changed $value'),
         )
         .datetimeField(
           'endTime',
           useTime: true,
-          hintText: '结束日期',
+          hintText: 'endTime',
           onChanged: (value) => print('endTime value changed $value'),
         )
         .nextLine()
         .textField('remark',
-            hintText: '备注',
+            hintText: 'remark',
             maxLines: 5,
             flex: 1,
             clearable: true,
@@ -303,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
             maxLength: 500)
         .nextLine()
         .selector('selector',
-            labelText: '选择器',
+            labelText: 'selector',
             multi: true,
             items: FormBuilder.toSelectorItems(
                 new List<int>.generate(100, (i) => i + 1)
@@ -321,24 +325,29 @@ class _MyHomePageState extends State<MyHomePage> {
             items: List<String>.generate(3, (index) => index.toString()))
         .slider(
           'slider',
-          min: 1,
+          min: 0,
           max: 100,
+          label: 'age slider',
           initialValue: 1,
-          onChanged: (value) {
-            formController.setValue('sliderText', value.round(),
-                trigger: false);
-          },
+          validator: (value) =>
+              value < 50 ? 'age slider must bigger than 50' : null,
+          subLabelRender: (value) => Text(value.toStringAsFixed(0)),
+          onChanged: (value) =>
+              print('age slider value changed ' + value.toStringAsFixed(0)),
         )
-        .numberField(
-          'sliderText',
-          min: 1,
-          max: 100,
-          onChanged: (value) {
-            formController.setValue(
-                'slider', value == null ? 1.0 : value.toDouble(),
-                trigger: false);
-          },
-        );
+        .numberField('sliderInlineText',
+            min: 0,
+            max: 100,
+            labelText: 'inline slider',
+            flex: 2,
+            initialValue: 0,
+            onChanged: (v) => formController.setValue(
+                'sliderInline', v == null ? 0.0 : v.toDouble(), trigger: false))
+        .sliderInline('sliderInline',
+            min: 0,
+            max: 100,
+            onChanged: (v) => formController
+                .setValue('sliderInlineText', v.round(), trigger: false));
     return builder.build();
   }
 }

@@ -29,21 +29,21 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
   final String label;
   final int split;
   final EdgeInsets padding;
+  final bool inline;
 
   CheckboxGroup(
-    String controlKey,
-    this.buttons,
-    CheckboxGroupController controller, {
-    Key key,
-    this.label,
-    ValueChanged<List<int>> onChanged,
-    final bool readOnly,
-    this.padding,
-    this.split = 0,
-    FormFieldValidator<List<int>> validator,
-    AutovalidateMode autovalidateMode,
-    List<int> initialValue,
-  })  : assert(controlKey != null),
+      String controlKey, this.buttons, CheckboxGroupController controller,
+      {Key key,
+      this.label,
+      ValueChanged<List<int>> onChanged,
+      final bool readOnly,
+      this.padding,
+      this.split = 0,
+      FormFieldValidator<List<int>> validator,
+      AutovalidateMode autovalidateMode,
+      List<int> initialValue,
+      this.inline = false})
+      : assert(controlKey != null),
         super(controlKey, controller,
             key: key,
             onChanged: onChanged,
@@ -56,7 +56,7 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
               CheckboxGroupTheme checkboxGroupTheme =
                   formThemeData.checkboxGroupTheme;
               ThemeData themeData = Theme.of(field.context);
-              final FormBuilderFieldState state =
+              final FormBuilderFieldState<List<int>> state =
                   field as FormBuilderFieldState;
               List<Widget> widgets = [];
               if (label != null) {
@@ -157,23 +157,20 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
               widgets.add(Wrap(children: wrapWidgets));
 
               if (state.hasError) {
+                Text text = Text(state.errorText,
+                    overflow: inline ? TextOverflow.ellipsis : null,
+                    style: FormThemeData.getErrorStyle(themeData));
                 widgets.add(Padding(
                   padding:
                       checkboxGroupTheme.errorTextPadding ?? EdgeInsets.zero,
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(state.errorText,
-                            style: FormThemeData.getErrorStyle(themeData)),
-                      )
-                    ],
-                  ),
+                  child: text,
                 ));
               }
 
               return Padding(
                 padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: widgets,
                 ),

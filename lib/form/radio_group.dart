@@ -26,6 +26,7 @@ class RadioGroup extends FormBuilderField {
   final String label;
   final int split;
   final EdgeInsets padding;
+  final bool inline;
 
   RadioGroup(String controlKey, this.buttons, RadioGroupController controller,
       {Key key,
@@ -36,7 +37,8 @@ class RadioGroup extends FormBuilderField {
       this.split = 0,
       this.padding,
       bool readOnly = false,
-      dynamic initialValue})
+      dynamic initialValue,
+      this.inline = false})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -60,9 +62,7 @@ class RadioGroup extends FormBuilderField {
                       FormThemeData.getLabelStyle(themeData, state.hasError));
               widgets.add(Padding(
                 padding: formThemeData.labelPadding ?? EdgeInsets.zero,
-                child: Row(
-                  children: [Flexible(child: text)],
-                ),
+                child: text,
               ));
             }
 
@@ -145,22 +145,19 @@ class RadioGroup extends FormBuilderField {
             widgets.add(Wrap(children: wrapWidgets));
 
             if (state.hasError) {
+              Text text = Text(state.errorText,
+                  overflow: inline ? TextOverflow.ellipsis : null,
+                  style: FormThemeData.getErrorStyle(themeData));
               widgets.add(Padding(
                 padding: radioGroupTheme.errorTextPadding ?? EdgeInsets.zero,
-                child: Row(
-                  children: [
-                    Flexible(
-                      child: Text(state.errorText,
-                          style: FormThemeData.getErrorStyle(themeData)),
-                    )
-                  ],
-                ),
+                child: text,
               ));
             }
 
             return Padding(
               padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widgets,
               ),

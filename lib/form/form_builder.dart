@@ -49,7 +49,8 @@ class FormBuilder {
       bool visible = true,
       int decimal = 0,
       EdgeInsets padding,
-      TextStyle style}) {
+      TextStyle style,
+      num initialValue}) {
     NumberController controller = formController._controllers
         .putIfAbsent(controlKey, () => NumberController());
     FocusNode focusNode = formController._newFocusNode(controlKey);
@@ -77,6 +78,7 @@ class FormBuilder {
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
           style: map['style'] ?? style,
+          initialValue: map['initialValue'] ?? initialValue,
         );
       },
     ));
@@ -152,15 +154,20 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder radios(String controlKey, List<RadioButton> items,
-      {RadioGroupController controller,
-      Key key,
-      ValueChanged onChanged,
-      int flex = 0,
-      bool readOnly = false,
-      bool visible = true,
-      EdgeInsets padding,
-      dynamic initialValue}) {
+  FormBuilder radioInline(
+    String controlKey,
+    List<RadioButton> items, {
+    RadioGroupController controller,
+    Key key,
+    ValueChanged onChanged,
+    int flex = 0,
+    bool readOnly = false,
+    bool visible = true,
+    EdgeInsets padding,
+    dynamic initialValue,
+    FormFieldValidator validator,
+    AutovalidateMode autovalidateMode,
+  }) {
     RadioGroupController controller = formController._controllers.putIfAbsent(
         controlKey, () => RadioGroupController(value: initialValue));
     _builders.add(_FormItemWidget(
@@ -174,11 +181,13 @@ class FormBuilder {
         controller,
         key: key,
         onChanged: onChanged,
-        autovalidateMode: AutovalidateMode.disabled,
+        validator: validator,
+        autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
         padding: map['padding'] ?? padding,
         split: 0,
         readOnly: map['readOnly'] ?? readOnly,
         initialValue: map['initialValue'] ?? initialValue,
+        inline: true,
       ),
     ));
     return this;
@@ -190,10 +199,10 @@ class FormBuilder {
     Key key,
     String label,
     RadioGroupController controller,
-    FormFieldValidator validator,
     ValueChanged onChanged,
     bool readOnly = false,
     bool visible = true,
+    FormFieldValidator validator,
     AutovalidateMode autovalidateMode,
     int split = 2,
     EdgeInsets padding,
@@ -219,21 +228,27 @@ class FormBuilder {
         padding: map['padding'] ?? padding,
         readOnly: map['readOnly'] ?? readOnly,
         initialValue: map['initialValue'] ?? initialValue,
+        inline: false,
       ),
     ));
     nextLine();
     return this;
   }
 
-  FormBuilder checkboxs(String controlKey, List<CheckboxButton> items,
-      {CheckboxGroupController controller,
-      Key key,
-      ValueChanged<List<int>> onChanged,
-      bool readOnly = false,
-      bool visible = true,
-      int flex = 0,
-      EdgeInsets padding,
-      List<int> initialValue}) {
+  FormBuilder checkboxInline(
+    String controlKey,
+    List<CheckboxButton> items, {
+    CheckboxGroupController controller,
+    Key key,
+    ValueChanged<List<int>> onChanged,
+    bool readOnly = false,
+    bool visible = true,
+    int flex = 0,
+    EdgeInsets padding,
+    List<int> initialValue,
+    FormFieldValidator<List<int>> validator,
+    AutovalidateMode autovalidateMode,
+  }) {
     CheckboxGroupController controller = formController._controllers
         .putIfAbsent(
             controlKey, () => CheckboxGroupController(value: initialValue));
@@ -248,11 +263,13 @@ class FormBuilder {
           controller,
           key: key,
           onChanged: onChanged,
-          autovalidateMode: AutovalidateMode.disabled,
+          validator: validator,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           split: 0,
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
           initialValue: map['initialValue'] ?? initialValue,
+          inline: true,
         );
       },
       flex: flex,
@@ -265,9 +282,9 @@ class FormBuilder {
       String label,
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
+      AutovalidateMode autovalidateMode,
       bool readOnly = false,
       bool visible = true,
-      AutovalidateMode autovalidateMode,
       int split = 2,
       EdgeInsets padding,
       List<int> initialValue}) {
@@ -278,6 +295,7 @@ class FormBuilder {
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
+      flex: 1,
       controlKey: controlKey,
       builder: (context, map) {
         return CheckboxGroup(
@@ -293,6 +311,7 @@ class FormBuilder {
           padding: map['padding'] ?? padding,
           readOnly: map['readOnly'] ?? readOnly,
           initialValue: map['initialValue'] ?? initialValue,
+          inline: false,
         );
       },
     ));
@@ -485,12 +504,14 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder switch1(String controlKey,
+  FormBuilder switchInline(String controlKey,
       {bool visible = true,
       bool readOnly = false,
       EdgeInsets padding,
       int flex = 0,
       ValueChanged<bool> onChanged,
+      FormFieldValidator<bool> validator,
+      AutovalidateMode autovalidateMode,
       bool initialValue}) {
     SwitchController controller = formController._controllers
         .putIfAbsent(controlKey, () => SwitchController(value: initialValue));
@@ -500,11 +521,12 @@ class FormBuilder {
       controlKey: controlKey,
       flex: flex,
       builder: (context, map) {
-        return SwitchFormField(
+        return SwitchInlineFormField(
           controlKey,
           controller,
+          validator: validator,
           readOnly: map['readOnly'] ?? readOnly,
-          autovalidateMode: AutovalidateMode.disabled,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           initialValue: map['initialValue'] ?? initialValue ?? false,
         );
@@ -517,13 +539,62 @@ class FormBuilder {
       {bool visible = true,
       bool readOnly = false,
       EdgeInsets padding,
-      int flex = 0,
       ValueChanged<double> onChanged,
       FormFieldValidator<double> validator,
+      AutovalidateMode autovalidateMode,
       double initialValue,
       double min = 0,
       double max = 100,
-      int divisions}) {
+      int divisions,
+      String label,
+      SubLabelRender subLabelRender}) {
+    SliderController controller = formController._controllers.putIfAbsent(
+        controlKey, () => SliderController(value: initialValue ?? min));
+    FocusNode focusNode = formController._newFocusNode(controlKey);
+    nextLine();
+    _builders.add(_FormItemWidget(
+      visible,
+      readOnly,
+      controlKey: controlKey,
+      flex: 1,
+      builder: (context, map) {
+        return SliderFormField(
+          controlKey,
+          controller,
+          readOnly: map['readOnly'] ?? readOnly,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          onChanged: onChanged,
+          validator: validator,
+          min: map['min'] ?? min,
+          max: map['max'] ?? max,
+          label: map['label'] ?? label,
+          divisions: map['divisions'] ?? divisions,
+          initialValue: map['initialValue'] ?? initialValue ?? min,
+          focusNode: focusNode,
+          subLabelRender: subLabelRender,
+          inline: false,
+        );
+      },
+    ));
+    nextLine();
+    return this;
+  }
+
+  FormBuilder sliderInline(
+    String controlKey, {
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets padding,
+    int flex = 1,
+    ValueChanged<double> onChanged,
+    FormFieldValidator<double> validator,
+    AutovalidateMode autovalidateMode,
+    double initialValue,
+    double min = 0,
+    double max = 100,
+    int divisions,
+    SubLabelRender subLabelRender,
+  }) {
     SliderController controller = formController._controllers.putIfAbsent(
         controlKey, () => SliderController(value: initialValue ?? min));
     FocusNode focusNode = formController._newFocusNode(controlKey);
@@ -537,7 +608,7 @@ class FormBuilder {
           controlKey,
           controller,
           readOnly: map['readOnly'] ?? readOnly,
-          autovalidateMode: AutovalidateMode.disabled,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           validator: validator,
           min: map['min'] ?? min,
@@ -545,6 +616,8 @@ class FormBuilder {
           divisions: map['divisions'] ?? divisions,
           initialValue: map['initialValue'] ?? initialValue ?? min,
           focusNode: focusNode,
+          subLabelRender: subLabelRender,
+          inline: true,
         );
       },
     ));
@@ -562,6 +635,10 @@ class FormBuilder {
 
   static List<CheckboxButton> toCheckboxButtons(List<String> items) {
     return items.map((e) => CheckboxButton(e)).toList();
+  }
+
+  static List<RadioButton> toRadioButtons(List<String> items) {
+    return items.map((e) => RadioButton(e, e)).toList();
   }
 }
 
