@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/form/slider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'form/checkbox_group.dart';
@@ -327,6 +328,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     )
                   ]).build();
             },
+            onSelectDialogShow: (formController) {
+              //use this formController to control query form on search dialog
+              formController.setValue('filter', 10);
+            },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
@@ -359,7 +364,20 @@ class _MyHomePageState extends State<MyHomePage> {
             min: 0,
             max: 100,
             onChanged: (v) => formController
-                .setValue('sliderInlineText', v.round(), trigger: false));
+                .setValue('sliderInlineText', v.round(), trigger: false))
+        .rangeSlider(
+          'rangeSlider',
+          min: 0,
+          max: 100,
+          label: 'range slider',
+          rangeSubLabelRender: RangeSubLabelRender((start) {
+            return Text(start.toStringAsFixed(0));
+          }, (end) {
+            return Text(end.toStringAsFixed(0));
+          }),
+          onChanged: (value) =>
+              print('range slider value changed ' + value.toString()),
+        );
     return builder.build();
   }
 }

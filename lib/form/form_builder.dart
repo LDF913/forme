@@ -426,6 +426,7 @@ class FormBuilder {
     SelectItemProvider selectItemProvider,
     SelectedItemLayoutType selectedItemLayoutType,
     QueryFormBuilder queryFormBuilder,
+    OnSelectDialogShow onSelectDialogShow,
     VoidCallback onTap,
   }) {
     SelectorController controller = _formController._controllers
@@ -458,6 +459,7 @@ class FormBuilder {
                 onTap: onTap,
                 selectedItemLayoutType: selectedItemLayoutType,
                 queryFormBuilder: queryFormBuilder,
+                onSelectDialogShow: onSelectDialogShow,
               )),
     );
     nextLine();
@@ -654,6 +656,53 @@ class FormBuilder {
         );
       },
     ));
+    return this;
+  }
+
+  FormBuilder rangeSlider(String controlKey,
+      {bool visible = true,
+      bool readOnly = false,
+      EdgeInsets padding,
+      ValueChanged<RangeValues> onChanged,
+      FormFieldValidator<RangeValues> validator,
+      AutovalidateMode autovalidateMode,
+      RangeValues initialValue,
+      double min = 0,
+      double max = 100,
+      int divisions,
+      String label,
+      RangeSubLabelRender rangeSubLabelRender}) {
+    RangeSliderController controller = _formController.newController(
+        controlKey,
+        () => RangeSliderController(
+            value: initialValue ?? RangeValues(min, max)));
+    nextLine();
+    _builders.add(_FormItemWidget(
+      visible,
+      readOnly,
+      controlKey,
+      _formController,
+      flex: 1,
+      builder: (context, map) {
+        return RangeSliderFormField(
+          controlKey,
+          controller,
+          readOnly: map['readOnly'] ?? readOnly,
+          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+          onChanged: onChanged,
+          validator: validator,
+          min: map['min'] ?? min,
+          max: map['max'] ?? max,
+          label: map['label'] ?? label,
+          divisions: map['divisions'] ?? divisions,
+          initialValue:
+              map['initialValue'] ?? initialValue ?? RangeValues(min, max),
+          inline: false,
+          rangeSubLabelRender: rangeSubLabelRender,
+        );
+      },
+    ));
+    nextLine();
     return this;
   }
 

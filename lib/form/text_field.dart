@@ -536,7 +536,7 @@ class NumberFormField extends FormBuilderField<num> {
                 }
               },
               onTap: null,
-              readOnly: false,
+              readOnly: readOnly,
               style: style,
               inputFormatters: formatters,
             );

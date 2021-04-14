@@ -14,6 +14,8 @@ typedef SelectItemProvider = Future<SelectItemPage> Function(
     int page, Map<String, dynamic> params);
 typedef QueryFormBuilder = Widget Function(
     FormBuilder builder, VoidCallback submit);
+typedef OnSelectDialogShow = void Function(
+    FormControllerDelegate formController);
 
 class SelectorController extends ValueNotifier<List> {
   SelectorController({List value}) : super(value);
@@ -38,6 +40,7 @@ class SelectorFormField extends FormBuilderField<List> {
   final SelectItemProvider selectItemProvider;
   final SelectedItemLayoutType selectedItemLayoutType;
   final QueryFormBuilder queryFormBuilder;
+  final OnSelectDialogShow onSelectDialogShow;
   final VoidCallback onTap;
 
   static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
@@ -100,6 +103,7 @@ class SelectorFormField extends FormBuilderField<List> {
       this.selectedSorter,
       this.selectedItemLayoutType,
       this.queryFormBuilder,
+      this.onSelectDialogShow,
       this.onTap})
       : super(
           controlKey,
@@ -234,7 +238,8 @@ class SelectorFormField extends FormBuilderField<List> {
                                                 controller.value,
                                                 selectItemProvider,
                                                 multi,
-                                                queryFormBuilder);
+                                                queryFormBuilder,
+                                                onSelectDialogShow);
                                           },
                                           fullscreenDialog: true));
                                   if (selected != null) {
@@ -291,6 +296,7 @@ class _SelectorDialog extends StatefulWidget {
   final SelectItemProvider selectItemProvider;
   final bool multi;
   final QueryFormBuilder queryFormBuilder;
+  final OnSelectDialogShow onSelectDialogShow;
   _SelectorDialog(
       this.formController,
       this.selectItemRender,
@@ -299,6 +305,7 @@ class _SelectorDialog extends StatefulWidget {
       this.selectItemProvider,
       this.multi,
       this.queryFormBuilder,
+      this.onSelectDialogShow,
       {Key key})
       : super(key: key);
   @override
@@ -322,6 +329,13 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     super.initState();
     selected = List.from(widget.selected);
     queryFormController = widget.formController.copyTheme();
+
+    if (widget.onSelectDialogShow != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onSelectDialogShow(
+            widget.queryFormBuilder == null ? null : queryFormController);
+      });
+    }
   }
 
   void toggle(dynamic value) {
