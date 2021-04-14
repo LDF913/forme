@@ -23,7 +23,6 @@ class ClearableTextFormField extends FormBuilderField<String> {
       int maxLength,
       ValueChanged<String> onChanged,
       GestureTapCallback onTap,
-      ValueChanged<String> onSubmitted,
       FormFieldValidator<String> validator,
       AutovalidateMode autovalidateMode,
       ValueChanged<String> onFieldSubmitted,
@@ -37,7 +36,9 @@ class ClearableTextFormField extends FormBuilderField<String> {
       String initialValue,
       ToolbarOptions toolbarOptions,
       this.selectAllOnFocus = false,
-      List<Widget> suffixIcons})
+      List<Widget> suffixIcons,
+      VoidCallback onEditingComplete,
+      TextInputAction textInputAction})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -94,25 +95,27 @@ class ClearableTextFormField extends FormBuilderField<String> {
                 .applyDefaults(themeData.inputDecorationTheme);
 
             TextField textField = TextField(
-                style: style,
-                textAlignVertical: TextAlignVertical.center,
-                controller: controller,
-                focusNode: focusNode,
-                decoration:
-                    effectiveDecoration.copyWith(errorText: field.errorText),
-                keyboardType: keyboardType,
-                autofocus: autofocus,
-                obscureText: state.obscureText,
-                toolbarOptions: toolbarOptions,
-                maxLines: maxLines,
-                minLines: minLines,
-                maxLength: maxLength,
-                onChanged: (value) => field.didChange(value),
-                onTap: onTap,
-                onSubmitted: onSubmitted,
-                enabled: true,
-                readOnly: readOnly,
-                inputFormatters: inputFormatters);
+              style: style,
+              textAlignVertical: TextAlignVertical.center,
+              controller: controller,
+              focusNode: focusNode,
+              textInputAction: textInputAction,
+              decoration:
+                  effectiveDecoration.copyWith(errorText: field.errorText),
+              keyboardType: keyboardType,
+              autofocus: autofocus,
+              obscureText: state.obscureText,
+              toolbarOptions: toolbarOptions,
+              maxLines: maxLines,
+              minLines: minLines,
+              maxLength: maxLength,
+              onChanged: (value) => field.didChange(value),
+              onTap: onTap,
+              onEditingComplete: onEditingComplete,
+              enabled: true,
+              readOnly: readOnly,
+              inputFormatters: inputFormatters,
+            );
 
             return Padding(
               child: textField,
@@ -418,7 +421,9 @@ class NumberFormField extends FormBuilderField<num> {
       this.min,
       this.clearable = true,
       Widget prefixIcon,
-      this.suffixIcons})
+      this.suffixIcons,
+      VoidCallback onEditingComplete,
+      TextInputAction textInputAction})
       : assert(controlKey != null, decimal != null),
         super(
           controlKey,
@@ -513,11 +518,13 @@ class NumberFormField extends FormBuilderField<num> {
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
               controller: controller._controller,
+              textInputAction: textInputAction,
               decoration:
                   effectiveDecoration.copyWith(errorText: field.errorText),
               keyboardType: TextInputType.number,
               obscureText: false,
               maxLines: 1,
+              onEditingComplete: onEditingComplete,
               onChanged: (value) {
                 num parsed = num.tryParse(value);
                 if (parsed != null) {

@@ -52,7 +52,9 @@ class FormBuilder {
       EdgeInsets padding,
       TextStyle style,
       num initialValue,
-      List<Widget> suffixIcons}) {
+      List<Widget> suffixIcons,
+      VoidCallback onEditingComplete,
+      TextInputAction textInputAction}) {
     NumberController controller = _formController.newController(
         controlKey, () => NumberController(value: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -80,7 +82,9 @@ class FormBuilder {
             readOnly: map['readOnly'] ?? readOnly,
             style: map['style'] ?? style,
             initialValue: map['initialValue'] ?? initialValue,
-            suffixIcons: map['suffixIcons'] ?? suffixIcons);
+            suffixIcons: map['suffixIcons'] ?? suffixIcons,
+            onEditingComplete: onEditingComplete,
+            textInputAction: map['textInputAction'] ?? textInputAction);
       },
     ));
     return this;
@@ -111,7 +115,9 @@ class FormBuilder {
       String initialValue,
       ToolbarOptions toolbarOptions,
       bool selectAllOnFocus,
-      List<Widget> suffixIcons}) {
+      List<Widget> suffixIcons,
+      VoidCallback onEditingComplete,
+      TextInputAction textInputAction}) {
     _CustomTextEditingController controller = _formController.newController(
         controlKey, () => _CustomTextEditingController(text: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -154,7 +160,8 @@ class FormBuilder {
             toolbarOptions: map['toolbarOptions'] ?? toolbarOptions,
             selectAllOnFocus:
                 map['selectAllOnFocus'] ?? selectAllOnFocus ?? false,
-            suffixIcons: map['suffixIcons'] ?? suffixIcons);
+            suffixIcons: map['suffixIcons'] ?? suffixIcons,
+            textInputAction: map['textInputAction'] ?? textInputAction);
       },
     ));
     return this;

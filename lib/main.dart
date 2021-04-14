@@ -320,14 +320,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   hintText: 'input number to query',
                   min: 1,
                   max: 100,
+                  textInputAction: TextInputAction.search,
+                  onEditingComplete: query,
                   validator: (value) =>
                       value == null ? 'pls input something to query !' : null,
                   clearable: true,
                   suffixIcons: [
                     InkWell(
-                      onTap: () {
-                        query();
-                      },
+                      onTap: query,
                       child: Icon(Icons.search),
                     )
                   ]).build();
