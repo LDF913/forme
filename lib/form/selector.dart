@@ -312,6 +312,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   int page = 1;
   int count = 0;
   bool error = false;
+  bool empty = false;
 
   FormControllerDelegate queryFormController;
   Map<String, dynamic> params = {};
@@ -343,6 +344,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       return;
     }
     update(() {
+      empty = false;
       loading = false;
       page = 1;
       items = [];
@@ -405,6 +407,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       items.addAll(value.items);
       count = value.count;
       loading = false;
+      empty = page == 1 && items.isEmpty;
     }).onError((err, stackTrace) {
       print(stackTrace);
       loading = false;
@@ -454,7 +457,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
 
     if (page == 1 && items.isEmpty) {
-      if (!error) {
+      if (!error && !empty) {
         loadData();
       }
       columns.add(Expanded(
@@ -469,7 +472,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
                       color: themeData.errorColor,
                       size: 50,
                     )
-                  : CircularProgressIndicator())
+                  : empty
+                      ? SizedBox()
+                      : CircularProgressIndicator())
         ],
       )));
     } else {

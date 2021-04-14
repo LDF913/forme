@@ -302,10 +302,11 @@ class _MyHomePageState extends State<MyHomePage> {
             labelText: 'selector',
             multi: true,
             selectItemProvider: (page, params) {
-              String filter = params['filter'] ?? '';
-              print(filter);
-              List items = List<String>.generate(100, (i) => (i + 1).toString())
-                  .where((element) => element.contains(filter))
+              int filter = params['filter'];
+              List items = List<int>.generate(100, (i) => i + 1)
+                  .where((element) =>
+                      filter == null ||
+                      element.toString().contains(filter.toString()))
                   .toList();
               return Future.delayed(Duration(seconds: 1), () {
                 return SelectItemPage(
@@ -315,9 +316,12 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             queryFormBuilder: (builder, query) {
-              return builder.textField('filter',
+              return builder.numberField('filter',
+                  hintText: 'input number to query',
+                  min: 1,
+                  max: 100,
                   validator: (value) =>
-                      value.isEmpty ? 'pls input something to query !' : null,
+                      value == null ? 'pls input something to query !' : null,
                   clearable: true,
                   suffixIcons: [
                     InkWell(

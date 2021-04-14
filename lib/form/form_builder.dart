@@ -51,7 +51,8 @@ class FormBuilder {
       int decimal = 0,
       EdgeInsets padding,
       TextStyle style,
-      num initialValue}) {
+      num initialValue,
+      List<Widget> suffixIcons}) {
     NumberController controller = _formController.newController(
         controlKey, () => NumberController(value: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -62,26 +63,24 @@ class FormBuilder {
       _formController,
       flex: flex,
       builder: (context, map) {
-        return NumberFormField(
-          controlKey,
-          controller,
-          onChanged: onChanged,
-          key: key,
-          decimal: decimal,
-          min: min,
-          max: max,
-          hintText: map['hintText'] ?? hintText,
-          labelText: map['labelText'] ?? labelText,
-          focusNode: focusNode,
-          validator: validator,
-          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          clearable: map['clearable'] ?? clearable,
-          prefixIcon: map['prefixIcon'] ?? prefixIcon,
-          padding: map['padding'] ?? padding,
-          readOnly: map['readOnly'] ?? readOnly,
-          style: map['style'] ?? style,
-          initialValue: map['initialValue'] ?? initialValue,
-        );
+        return NumberFormField(controlKey, controller,
+            onChanged: onChanged,
+            key: key,
+            decimal: decimal,
+            min: min,
+            max: max,
+            hintText: map['hintText'] ?? hintText,
+            labelText: map['labelText'] ?? labelText,
+            focusNode: focusNode,
+            validator: validator,
+            autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
+            clearable: map['clearable'] ?? clearable,
+            prefixIcon: map['prefixIcon'] ?? prefixIcon,
+            padding: map['padding'] ?? padding,
+            readOnly: map['readOnly'] ?? readOnly,
+            style: map['style'] ?? style,
+            initialValue: map['initialValue'] ?? initialValue,
+            suffixIcons: map['suffixIcons'] ?? suffixIcons);
       },
     ));
     return this;

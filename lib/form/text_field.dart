@@ -301,6 +301,7 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
             Widget suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: suffixes,
                   );
@@ -398,6 +399,7 @@ class NumberFormField extends FormBuilderField<num> {
   final num max;
   final num min;
   final bool clearable;
+  final List<Widget> suffixIcons;
 
   NumberFormField(String controlKey, NumberController controller,
       {Key key,
@@ -415,7 +417,8 @@ class NumberFormField extends FormBuilderField<num> {
       this.max,
       this.min,
       this.clearable = true,
-      Widget prefixIcon})
+      Widget prefixIcon,
+      this.suffixIcons})
       : assert(controlKey != null, decimal != null),
         super(
           controlKey,
@@ -487,9 +490,14 @@ class NumberFormField extends FormBuilderField<num> {
               }));
             }
 
+            if (suffixIcons != null && suffixIcons.isNotEmpty) {
+              suffixes.addAll(suffixIcons);
+            }
+
             Widget suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: suffixes,
                   );
