@@ -52,6 +52,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   FormControllerDelegate formController;
 
+  int i = 1;
+
   @override
   void initState() {
     super.initState();
@@ -192,18 +194,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.setValue('checkbox', null);
-                formController.update('checkbox', {
-                  'items': [CheckboxButton('I\'m readonly', readOnly: true)],
-                });
+                formController.themeData = (++i) % 2 == 0
+                    ? FormThemeData()
+                    : DefaultThemeData(context);
               },
-              child: Text('reload sex checkboxs'),
-            ),
-            TextButton(
-              onPressed: () {
-                formController.themeData = FormThemeData();
-              },
-              child: Text('set new form theme'),
+              child: Text('change theme'),
             )
           ]),
         ));
