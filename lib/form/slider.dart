@@ -233,9 +233,11 @@ class RangeSliderFormField extends FormBuilderField<RangeValues> {
                   min: min,
                   max: max,
                   divisions: divisions ?? (max - min).toInt(),
-                  onChanged: (RangeValues values) {
-                    field.didChange(values);
-                  },
+                  onChanged: readOnly
+                      ? null
+                      : (RangeValues values) {
+                          field.didChange(values);
+                        },
                   activeColor: themeData.primaryColor,
                   inactiveColor:
                       themeData.unselectedWidgetColor.withOpacity(0.4),
