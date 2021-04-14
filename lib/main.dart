@@ -50,12 +50,12 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  FormController formController;
+  FormControllerDelegate formController;
 
   @override
   void initState() {
     super.initState();
-    formController = FormController();
+    formController = FormControllerDelegate();
     formController.onFocusChange('username', (value) {
       print('username focused: $value');
     });
@@ -64,7 +64,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     super.dispose();
-    formController.dispose();
   }
 
   @override
@@ -302,12 +301,32 @@ class _MyHomePageState extends State<MyHomePage> {
         .selector('selector',
             labelText: 'selector',
             multi: true,
-            selectItemProvider: (page) {
-              List items = List<int>.generate(100, (i) => i + 1).toList();
+            selectItemProvider: (page, params) {
+              String filter = params['filter'] ?? '';
+              print(filter);
+              List items = List<String>.generate(100, (i) => (i + 1).toString())
+                  .where((element) => element.contains(filter))
+                  .toList();
               return Future.delayed(Duration(seconds: 1), () {
                 return SelectItemPage(
-                    items.sublist((page - 1) * 20, page * 20), items.length);
+                    items.sublist((page - 1) * 20,
+                        page * 20 > items.length ? items.length : page * 20),
+                    items.length);
               });
+            },
+            queryFormBuilder: (builder, query) {
+              return builder.textField('filter',
+                  validator: (value) =>
+                      value.isEmpty ? 'pls input something to query !' : null,
+                  clearable: true,
+                  suffixIcons: [
+                    InkWell(
+                      onTap: () {
+                        query();
+                      },
+                      child: Icon(Icons.search),
+                    )
+                  ]).build();
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),

@@ -17,7 +17,7 @@ class FormThemeData {
       this.radioGroupTheme = const RadioGroupTheme()});
 
   static FormThemeData of(BuildContext context) {
-    return FormController.of(context).themeData;
+    return FormControllerDelegate.of(context).themeData;
   }
 
   static TextStyle getErrorStyle(ThemeData themeData) {

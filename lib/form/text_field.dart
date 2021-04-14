@@ -36,7 +36,8 @@ class ClearableTextFormField extends FormBuilderField<String> {
       bool readOnly = false,
       String initialValue,
       ToolbarOptions toolbarOptions,
-      this.selectAllOnFocus = false})
+      this.selectAllOnFocus = false,
+      List<Widget> suffixIcons})
       : assert(controlKey != null),
         super(
           controlKey,
@@ -73,9 +74,14 @@ class ClearableTextFormField extends FormBuilderField<String> {
               ));
             }
 
+            if (suffixIcons != null && suffixIcons.isNotEmpty) {
+              suffixes.addAll(suffixIcons);
+            }
+
             Widget suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min, // added line
                     children: suffixes,
                   );
