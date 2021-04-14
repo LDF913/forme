@@ -10,6 +10,7 @@ typedef SelectItemRender = Widget Function(dynamic item, bool multiSelect,
 typedef SelectedItemRender = Widget Function(dynamic item, bool multiSelect,
     bool readOnly, ThemeData themeData, FormThemeData formThemeData);
 typedef SelectedSorter = void Function(List selected);
+typedef SelectItemProvider = Future<SelectItemPage> Function(int page);
 
 class SelectorController extends ValueNotifier<List> {
   SelectorController({List value}) : super(value);
@@ -27,11 +28,11 @@ class SelectorFormField extends FormBuilderField<List> {
   final double iconSize;
   final bool loading;
   final bool multi;
-  final List items;
   final SelectedChecker selectedChecker;
   final SelectItemRender selectItemRender;
   final SelectedItemRender selectedItemRender;
   final SelectedSorter selectedSorter;
+  final SelectItemProvider selectItemProvider;
   final VoidCallback onTap;
 
   static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
@@ -73,8 +74,8 @@ class SelectorFormField extends FormBuilderField<List> {
     return v1 == v2;
   }
 
-  SelectorFormField(String controlKey, this.focusNode, this.items,
-      SelectorController controller,
+  SelectorFormField(String controlKey, this.focusNode,
+      SelectorController controller, this.selectItemProvider,
       {Key key,
       bool readOnly = false,
       ValueChanged<List> onChanged,
@@ -195,8 +196,7 @@ class SelectorFormField extends FormBuilderField<List> {
                     builder: (context) => InkWell(
                           onTap: (readOnly ||
                                   loading ||
-                                  items == null ||
-                                  items.isEmpty)
+                                  selectItemProvider == null)
                               ? null
                               : () async {
                                   List selected = await Navigator.of(
@@ -211,7 +211,7 @@ class SelectorFormField extends FormBuilderField<List> {
                                                 selectItemRender,
                                                 checker,
                                                 controller.value,
-                                                items,
+                                                selectItemProvider,
                                                 multi));
                                           },
                                           fullscreenDialog: true));
@@ -266,10 +266,10 @@ class _Arguments {
   final SelectItemRender selectItemRender;
   final SelectedChecker selectedChecker;
   final List selected;
-  final List items;
+  final SelectItemProvider provider;
   final bool multi;
   _Arguments(this.formController, this.selectItemRender, this.selectedChecker,
-      this.selected, this.items, this.multi);
+      this.selected, this.provider, this.multi);
 }
 
 class _SelectorDialog extends StatefulWidget {
@@ -279,7 +279,7 @@ class _SelectorDialog extends StatefulWidget {
   List get selected => arguments.selected;
   SelectedChecker get selectedChecker => arguments.selectedChecker;
   SelectItemRender get selectItemRender => arguments.selectItemRender;
-  List get items => arguments.items;
+  SelectItemProvider get selectItemProvider => arguments.provider;
   bool get multi => arguments.multi;
 
   const _SelectorDialog(this.arguments, {Key key}) : super(key: key);
@@ -289,6 +289,11 @@ class _SelectorDialog extends StatefulWidget {
 
 class _SelectorDialogState extends State<_SelectorDialog> {
   List selected;
+  bool loading = false;
+  List items = [];
+  int page = 1;
+  int count = 0;
+  bool error = false;
 
   @override
   void initState() {
@@ -296,13 +301,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     selected = List.from(widget.selected);
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
   void toggle(dynamic value) {
-    setState(() {
+    update(() {
       if (widget.multi) {
         int len = selected.length;
         selected
@@ -318,6 +318,12 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   bool isSelected(dynamic value) {
     return selected.any((element) => widget.selectedChecker(value, element));
+  }
+
+  void update(VoidCallback callback) {
+    if (mounted) {
+      setState(callback);
+    }
   }
 
   Widget renderSelectItems(dynamic item, bool multiSelect, bool isSelected,
@@ -343,29 +349,99 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         padding: EdgeInsets.all(4));
   }
 
+  Widget buildView(ThemeData themeData) {
+    return NotificationListener<ScrollNotification>(
+      onNotification: (scrollInfo) {
+        if (items.length < count &&
+            !loading &&
+            scrollInfo.metrics.pixels == scrollInfo.metrics.maxScrollExtent) {
+          page++;
+          update(() {
+            loading = true;
+          });
+          widget.selectItemProvider(page).then((value) {
+            items.addAll(value.items);
+            count = value.count;
+            loading = false;
+          }).onError((err, stackTrace) {
+            page--;
+            loading = false;
+            error = true;
+          }).whenComplete(() {
+            update(() {});
+          });
+        }
+        return true;
+      },
+      child: ListView.builder(
+          itemBuilder: (context, index) {
+            var item = items[index];
+            bool selected = isSelected(item);
+            SelectItemRender render =
+                widget.selectItemRender ?? renderSelectItems;
+            return InkWell(
+              child: render(item, widget.multi, selected, themeData,
+                  widget.formController.themeData),
+              onTap: () {
+                toggle(item);
+              },
+            );
+          },
+          itemCount: items.length),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ThemeData themeData =
         widget.formController.themeData.themeData ?? Theme.of(context);
-
     List<Widget> columns = [];
 
-    columns.add(Expanded(
-        child: ListView.builder(
-            itemBuilder: (context, index) {
-              var item = widget.items[index];
-              bool selected = isSelected(item);
-              SelectItemRender render =
-                  widget.selectItemRender ?? renderSelectItems;
-              return InkWell(
-                child: render(item, widget.multi, selected, themeData,
-                    widget.formController.themeData),
-                onTap: () {
-                  toggle(item);
-                },
-              );
-            },
-            itemCount: widget.items.length)));
+    if (page == 1 && items.isEmpty) {
+      columns.add(FutureBuilder(
+          future: widget.selectItemProvider(1),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              SelectItemPage page = snapshot.data;
+              count = page.count;
+              items.addAll(page.items);
+              return Expanded(child: buildView(themeData));
+            }
+            return Expanded(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Center(
+                    child: snapshot.hasError
+                        ? Icon(
+                            Icons.error,
+                            color: themeData.errorColor,
+                            size: 50,
+                          )
+                        : CircularProgressIndicator())
+              ],
+            ));
+          }));
+    } else {
+      columns.add(Expanded(child: buildView(themeData)));
+    }
+
+    if (loading || error) {
+      columns.add(Container(
+        height: 50,
+        color: Colors.transparent,
+        child: Center(
+          child: loading
+              ? CircularProgressIndicator()
+              : Icon(
+                  Icons.error,
+                  color: themeData.errorColor,
+                  size: 50,
+                ),
+        ),
+      ));
+    }
 
     return Theme(
       data: themeData,
@@ -391,4 +467,11 @@ class _SelectorDialogState extends State<_SelectorDialog> {
               ))),
     );
   }
+}
+
+class SelectItemPage {
+  final List items; //current page items loaded from storage
+  final int count;
+
+  SelectItemPage(this.items, this.count); //total record counts;
 }

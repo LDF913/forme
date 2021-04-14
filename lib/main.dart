@@ -5,6 +5,7 @@ import 'form/checkbox_group.dart';
 import 'form/form_builder.dart';
 import 'form/form_theme.dart';
 import 'form/radio_group.dart';
+import 'form/selector.dart';
 
 void main() => runApp(MyApp());
 
@@ -192,22 +193,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                FocusScope.of(context).requestFocus(FocusNode());
-                formController.update('selector', {'loading': true});
-
-                Future.delayed(Duration(seconds: 2), () {
-                  formController.setValue('selector', null);
-                  formController.update('selector', {
-                    'loading': false,
-                    'multi': false,
-                    'items': ['1', '2']
-                  });
-                });
-              },
-              child: Text('load selectoritems'),
-            ),
-            TextButton(
-              onPressed: () {
                 formController.setValue('checkbox', null);
                 formController.update('checkbox', {
                   'items': [CheckboxButton('I\'m readonly', readOnly: true)],
@@ -318,7 +303,13 @@ class _MyHomePageState extends State<MyHomePage> {
         .selector('selector',
             labelText: 'selector',
             multi: true,
-            items: List<int>.generate(100, (i) => i + 1).toList(),
+            selectItemProvider: (page) {
+              List items = List<int>.generate(100, (i) => i + 1).toList();
+              return Future.delayed(Duration(seconds: 1), () {
+                return SelectItemPage(
+                    items.sublist((page - 1) * 20, page * 20), items.length);
+              });
+            },
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
         .nextLine()

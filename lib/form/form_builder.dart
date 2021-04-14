@@ -400,7 +400,6 @@ class FormBuilder {
     bool readOnly = false,
     bool visible = true,
     bool clearable = true,
-    List items,
     FormFieldValidator validator,
     AutovalidateMode autovalidateMode,
     EdgeInsets padding,
@@ -412,6 +411,7 @@ class FormBuilder {
     SelectItemRender selectItemRender,
     SelectedItemRender selectedItemRender,
     SelectedSorter selectedSorter,
+    SelectItemProvider selectItemProvider,
     VoidCallback onTap,
   }) {
     SelectorController controller = formController._controllers
@@ -424,8 +424,8 @@ class FormBuilder {
           builder: (context, map) => SelectorFormField(
                 controlKey,
                 focusNode,
-                map['items'] ?? items ?? [],
                 controller,
+                selectItemProvider,
                 onChanged: onChanged,
                 labelText: map['labelText'] ?? labelText,
                 hintText: map['hintText'] ?? hintText,
@@ -646,6 +646,14 @@ class FormBuilder {
 
   static List<RadioButton> toRadioButtons(List<String> items) {
     return items.map((e) => RadioButton(e, e)).toList();
+  }
+
+  static SelectItemProvider toSelectItemProvider(List items) {
+    return (page) {
+      return Future.delayed(Duration.zero, () {
+        return SelectItemPage(items, items.length);
+      });
+    };
   }
 }
 
