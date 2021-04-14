@@ -412,6 +412,7 @@ class FormBuilder {
     SelectItemRender selectItemRender,
     SelectedItemRender selectedItemRender,
     SelectedSorter selectedSorter,
+    VoidCallback onTap,
   }) {
     SelectorController controller = formController._controllers
         .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
@@ -440,6 +441,7 @@ class FormBuilder {
                 selectItemRender: selectItemRender,
                 selectedItemRender: selectedItemRender,
                 selectedSorter: selectedSorter,
+                onTap: onTap,
               )),
     );
     return this;

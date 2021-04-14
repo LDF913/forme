@@ -32,6 +32,7 @@ class SelectorFormField extends FormBuilderField<List> {
   final SelectItemRender selectItemRender;
   final SelectedItemRender selectedItemRender;
   final SelectedSorter selectedSorter;
+  final VoidCallback onTap;
 
   static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
       bool readOnly, ThemeData themeData, FormThemeData formThemeData) {
@@ -90,7 +91,8 @@ class SelectorFormField extends FormBuilderField<List> {
       this.selectedChecker,
       this.selectItemRender,
       this.selectedItemRender,
-      this.selectedSorter})
+      this.selectedSorter,
+      this.onTap})
       : super(
           controlKey,
           controller,
@@ -158,12 +160,13 @@ class SelectorFormField extends FormBuilderField<List> {
                   return InkWell(
                     onTap: readOnly
                         ? null
-                        : () {
-                            state.didChange(controller.value
-                                .where((element) => !checker(item, element))
-                                .toList());
-                            focusNode.requestFocus();
-                          },
+                        : onTap ??
+                            () {
+                              state.didChange(controller.value
+                                  .where((element) => !checker(item, element))
+                                  .toList());
+                              focusNode.requestFocus();
+                            },
                     child: render(item, multi, readOnly || loading, themeData,
                         formThemeData),
                   );
@@ -290,18 +293,12 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   @override
   void initState() {
     super.initState();
-    widget.formController.addListener(update);
     selected = List.from(widget.selected);
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.formController.removeListener(update);
-  }
-
-  void update() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => setState(() {}));
   }
 
   void toggle(dynamic value) {
