@@ -33,6 +33,7 @@ class SelectorFormField extends FormBuilderField<List> {
   final SelectedItemRender selectedItemRender;
   final SelectedSorter selectedSorter;
   final SelectItemProvider selectItemProvider;
+  final SelectedItemLayoutType selectedItemLayoutType;
   final VoidCallback onTap;
 
   static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
@@ -93,6 +94,7 @@ class SelectorFormField extends FormBuilderField<List> {
       this.selectItemRender,
       this.selectedItemRender,
       this.selectedSorter,
+      this.selectedItemLayoutType,
       this.onTap})
       : super(
           controlKey,
@@ -156,8 +158,10 @@ class SelectorFormField extends FormBuilderField<List> {
               } else {
                 List value = List.from(controller.value);
                 if (selectedSorter != null) selectedSorter(value);
-                widget = Wrap(
-                    children: value.map((item) {
+                SelectedItemLayoutType layoutType =
+                    selectedItemLayoutType ?? SelectedItemLayoutType.wrap;
+
+                List<Widget> itemWidgets = value.map((item) {
                   return InkWell(
                     onTap: readOnly
                         ? null
@@ -171,7 +175,17 @@ class SelectorFormField extends FormBuilderField<List> {
                     child: render(item, multi, readOnly || loading, themeData,
                         formThemeData),
                   );
-                }).toList());
+                }).toList();
+
+                switch (layoutType) {
+                  case SelectedItemLayoutType.scroll:
+                    widget = SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(children: itemWidgets));
+                    break;
+                  default:
+                    widget = Wrap(children: itemWidgets);
+                }
               }
             }
             FormController formController = FormController.of(field.context);
@@ -443,24 +457,24 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       ));
     }
 
-    return Theme(
-      data: themeData,
-      child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: Icon(Icons.close),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: <Widget>[
-              IconButton(
-                icon: Icon(Icons.check),
-                onPressed: () {
-                  Navigator.of(context).pop(selected);
-                },
-              )
-            ],
-          ),
-          body: Padding(
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.close),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.check),
+            onPressed: () {
+              Navigator.of(context).pop(selected);
+            },
+          )
+        ],
+      ),
+      body: Theme(
+          data: themeData,
+          child: Padding(
               padding: EdgeInsets.all(20),
               child: Column(
                 children: columns,
@@ -475,3 +489,5 @@ class SelectItemPage {
 
   SelectItemPage(this.items, this.count); //total record counts;
 }
+
+enum SelectedItemLayoutType { wrap, scroll }

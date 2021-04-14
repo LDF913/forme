@@ -412,11 +412,13 @@ class FormBuilder {
     SelectedItemRender selectedItemRender,
     SelectedSorter selectedSorter,
     SelectItemProvider selectItemProvider,
+    SelectedItemLayoutType selectedItemLayoutType,
     VoidCallback onTap,
   }) {
     SelectorController controller = formController._controllers
         .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
     FocusNode focusNode = formController._newFocusNode(controlKey);
+    nextLine();
     _builders.add(
       _FormItemWidget(visible, readOnly,
           controlKey: controlKey,
@@ -442,8 +444,10 @@ class FormBuilder {
                 selectedItemRender: selectedItemRender,
                 selectedSorter: selectedSorter,
                 onTap: onTap,
+                selectedItemLayoutType: selectedItemLayoutType,
               )),
     );
+    nextLine();
     return this;
   }
 

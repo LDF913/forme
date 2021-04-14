@@ -299,7 +299,6 @@ class _MyHomePageState extends State<MyHomePage> {
             clearable: true,
             onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
-        .nextLine()
         .selector('selector',
             labelText: 'selector',
             multi: true,
@@ -310,9 +309,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     items.sublist((page - 1) * 20, page * 20), items.length);
               });
             },
+            selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
-        .nextLine()
         .switchGroup('switchGroup',
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
