@@ -95,9 +95,9 @@ class RadioGroupTheme extends CheckboxGroupTheme {
 
 //copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
 class DefaultThemeData extends FormThemeData {
-  DefaultThemeData(BuildContext context)
+  DefaultThemeData()
       : super(
-            themeData: _buildLightTheme(context),
+            themeData: _buildLightTheme(),
             padding: EdgeInsets.all(5),
             checkboxGroupTheme: CheckboxGroupTheme(),
             radioGroupTheme: RadioGroupTheme(),
@@ -122,7 +122,7 @@ class DefaultThemeData extends FormThemeData {
     );
   }
 
-  static ThemeData _buildLightTheme(context) {
+  static ThemeData _buildLightTheme() {
     final Color primaryColor = HexColor('#54D3C2');
     final Color secondaryColor = HexColor('#54D3C2');
     final ColorScheme colorScheme = const ColorScheme.light().copyWith(
@@ -143,17 +143,15 @@ class DefaultThemeData extends FormThemeData {
           fontSize: 18,
         ),
         focusedErrorBorder: UnderlineInputBorder(
-            borderSide:
-                Divider.createBorderSide(context, color: base.errorColor)),
+            borderSide: Divider.createBorderSide(null, color: base.errorColor)),
         errorBorder: UnderlineInputBorder(
-            borderSide:
-                Divider.createBorderSide(context, color: base.errorColor)),
+            borderSide: Divider.createBorderSide(null, color: base.errorColor)),
         enabledBorder:
-            UnderlineInputBorder(borderSide: Divider.createBorderSide(context)),
-        border:
-            UnderlineInputBorder(borderSide: Divider.createBorderSide(context)),
+            UnderlineInputBorder(borderSide: Divider.createBorderSide(null)),
+        border: UnderlineInputBorder(
+            borderSide: Divider.createBorderSide(null, width: 0)),
         focusedBorder: UnderlineInputBorder(
-          borderSide: Divider.createBorderSide(context, color: primaryColor),
+          borderSide: Divider.createBorderSide(null, color: primaryColor),
         ),
       ),
       sliderTheme: SliderThemeData(

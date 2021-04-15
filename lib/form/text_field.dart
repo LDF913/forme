@@ -10,11 +10,10 @@ class ClearableTextFormField extends FormBuilderField<String> {
   final EdgeInsets padding;
   final bool selectAllOnFocus;
   final FocusNode focusNode;
-  ClearableTextFormField(String controlKey, TextEditingController controller,
+  ClearableTextFormField(TextEditingController controller, this.focusNode,
       {String labelText,
       String hintText,
       Key key,
-      this.focusNode,
       TextInputType keyboardType,
       bool autofocus = false,
       this.obscureText = false,
@@ -39,21 +38,21 @@ class ClearableTextFormField extends FormBuilderField<String> {
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
       TextInputAction textInputAction})
-      : assert(controlKey != null),
-        super(
-          controlKey,
+      : super(
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (field) {
             final _TextFormFieldState state = field as _TextFormFieldState;
+            labelText = state.getState('labelText') ?? labelText;
+
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
             List<Widget> suffixes = [];
-
             if (clearable && !readOnly && controller.text.length > 0) {
               suffixes.add(ClearButton(controller, focusNode, () {
                 state.didChange('');
@@ -219,7 +218,7 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
   final EdgeInsets padding;
   final int maxLines;
 
-  DateTimeFormField(String controlKey, DateTimeController controller,
+  DateTimeFormField(DateTimeController controller, FocusNode focusNode,
       {Key key,
       String labelText,
       String hintText,
@@ -227,7 +226,6 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
       bool readOnly,
       this.formatter,
       this.locale,
-      FocusNode focusNode,
       this.useTime = false,
       ValueChanged<DateTime> onChanged,
       FormFieldValidator<DateTime> validator,
@@ -235,9 +233,7 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
       this.padding,
       this.maxLines = 1,
       DateTime initialValue})
-      : assert(controlKey != null),
-        super(
-          controlKey,
+      : super(
           controller,
           onChanged: onChanged,
           validator: validator,
@@ -245,9 +241,9 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
           autovalidateMode: autovalidateMode,
           key: key,
           builder: (field) {
+            _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
-            _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             void pickTime() {
               DateTime value = controller.value ?? DateTime.now();
               showDatePicker(
@@ -404,13 +400,12 @@ class NumberFormField extends FormBuilderField<num> {
   final bool clearable;
   final List<Widget> suffixIcons;
 
-  NumberFormField(String controlKey, NumberController controller,
+  NumberFormField(NumberController controller, FocusNode focusNode,
       {Key key,
       String labelText,
       String hintText,
       TextStyle style,
       bool readOnly,
-      FocusNode focusNode,
       ValueChanged<num> onChanged,
       FormFieldValidator<num> validator,
       AutovalidateMode autovalidateMode,
@@ -424,9 +419,7 @@ class NumberFormField extends FormBuilderField<num> {
       this.suffixIcons,
       VoidCallback onEditingComplete,
       TextInputAction textInputAction})
-      : assert(controlKey != null, decimal != null),
-        super(
-          controlKey,
+      : super(
           controller,
           key: key,
           onChanged: onChanged,

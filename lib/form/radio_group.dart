@@ -39,7 +39,7 @@ class RadioGroup extends FormBuilderField {
   final EdgeInsets padding;
   final bool inline;
 
-  RadioGroup(String controlKey, this.items, RadioGroupController controller,
+  RadioGroup(this.items, RadioGroupController controller,
       {Key key,
       this.label,
       ValueChanged onChanged,
@@ -50,11 +50,10 @@ class RadioGroup extends FormBuilderField {
       bool readOnly = false,
       dynamic initialValue,
       this.inline = false})
-      : assert(controlKey != null),
-        super(
-          controlKey,
+      : super(
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,

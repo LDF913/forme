@@ -40,7 +40,6 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
   final bool hasSelectAllSwitch;
 
   SwitchGroupFormField(
-    String controlKey,
     SwitchGroupController controller, {
     Key key,
     this.label,
@@ -52,11 +51,10 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
     this.padding,
     this.hasSelectAllSwitch = true,
     List<int> initialValue,
-  })  : assert(controlKey != null, items != null),
-        super(
-          controlKey,
+  }) : super(
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           replace: () => [],
           autovalidateMode: autovalidateMode,
@@ -218,7 +216,7 @@ class SwitchController extends ValueNotifier<bool> {
 class SwitchInlineFormField extends FormBuilderField<bool> {
   final EdgeInsets padding;
 
-  SwitchInlineFormField(String controlKey, SwitchController controller,
+  SwitchInlineFormField(SwitchController controller,
       {Key key,
       bool readOnly = false,
       ValueChanged<bool> onChanged,
@@ -226,11 +224,10 @@ class SwitchInlineFormField extends FormBuilderField<bool> {
       AutovalidateMode autovalidateMode,
       this.padding,
       bool initialValue})
-      : assert(controlKey != null),
-        super(
-          controlKey,
+      : super(
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           replace: () => false,
           autovalidateMode: autovalidateMode,

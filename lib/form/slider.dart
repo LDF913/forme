@@ -18,7 +18,7 @@ class SliderFormField extends FormBuilderField<double> {
   final SubLabelRender subLabelRender;
   final bool inline;
 
-  SliderFormField(String controlKey, SliderController controller,
+  SliderFormField(SliderController controller, FocusNode focusNode,
       {Key key,
       bool readOnly,
       ValueChanged<double> onChanged,
@@ -30,14 +30,12 @@ class SliderFormField extends FormBuilderField<double> {
       this.max,
       this.min,
       this.subLabelRender,
-      FocusNode focusNode,
       this.label,
       this.inline = false})
-      : assert(controlKey != null, divisions != null),
-        super(
-          controlKey,
+      : super(
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           replace: () => min,
           validator: validator,
@@ -147,7 +145,7 @@ class RangeSliderFormField extends FormBuilderField<RangeValues> {
   final int divisions;
   final RangeSubLabelRender rangeSubLabelRender;
 
-  RangeSliderFormField(String controlKey, RangeSliderController controller,
+  RangeSliderFormField(RangeSliderController controller,
       {ValueChanged<RangeValues> onChanged,
       FormFieldValidator<RangeValues> validator,
       AutovalidateMode autovalidateMode,
@@ -160,7 +158,8 @@ class RangeSliderFormField extends FormBuilderField<RangeValues> {
       this.divisions,
       RangeValues initialValue,
       this.rangeSubLabelRender})
-      : super(controlKey, controller,
+      : super(controller,
+            readOnly: readOnly,
             onChanged: onChanged,
             validator: validator,
             initialValue: initialValue,

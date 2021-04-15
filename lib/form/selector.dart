@@ -81,8 +81,8 @@ class SelectorFormField extends FormBuilderField<List> {
     return v1 == v2;
   }
 
-  SelectorFormField(String controlKey, this.focusNode,
-      SelectorController controller, this.selectItemProvider,
+  SelectorFormField(
+      this.focusNode, SelectorController controller, this.selectItemProvider,
       {Key key,
       bool readOnly = false,
       ValueChanged<List> onChanged,
@@ -104,9 +104,9 @@ class SelectorFormField extends FormBuilderField<List> {
       this.onSelectDialogShow,
       this.onTap})
       : super(
-          controlKey,
           controller,
           key: key,
+          readOnly: readOnly,
           onChanged: onChanged,
           replace: () => [],
           validator: validator,

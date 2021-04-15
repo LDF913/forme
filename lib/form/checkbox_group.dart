@@ -42,8 +42,7 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
   final EdgeInsets padding;
   final bool inline;
 
-  CheckboxGroup(
-      String controlKey, this.items, CheckboxGroupController controller,
+  CheckboxGroup(this.items, CheckboxGroupController controller,
       {Key key,
       this.label,
       ValueChanged<List<int>> onChanged,
@@ -54,9 +53,9 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
       AutovalidateMode autovalidateMode,
       List<int> initialValue,
       this.inline = false})
-      : assert(controlKey != null),
-        super(controlKey, controller,
+      : super(controller,
             key: key,
+            readOnly: readOnly,
             onChanged: onChanged,
             replace: () => [],
             autovalidateMode: autovalidateMode,

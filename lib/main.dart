@@ -238,9 +238,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.themeData = (++i) % 2 == 0
-                    ? FormThemeData()
-                    : DefaultThemeData(context);
+                formController.themeData =
+                    (++i) % 2 == 0 ? FormThemeData() : DefaultThemeData();
               },
               child: Text('change theme'),
             )
@@ -249,7 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    formController.themeData = DefaultThemeData(context);
+    formController.themeData = DefaultThemeData();
     FormBuilder builder = FormBuilder(formController)
         .textField('username',
             labelText: 'username',
