@@ -369,7 +369,8 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             onSelectDialogShow: (formController) {
               //use this formController to control query form on search dialog
-              formController.setValue('filter', 10);
+              //  formController.setValue('filter', 10);
+              return true;
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
@@ -381,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage> {
             items: List<SwitchGroupItem>.generate(
                 3,
                 (index) => SwitchGroupItem(index.toString(),
-                    controlKey: 'switch$index', readOnly: true)))
+                    controlKey: 'switch$index')))
         .slider(
           'slider',
           min: 0,

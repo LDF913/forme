@@ -44,6 +44,24 @@ bool isReadOnly = formController.isReadOnly('form field\'s controlKey');
 formController.setReadOnly('form field\'s controlKey',!isReadOnly)
 ```
 
+### sub controller
+
+if you want to control sub item's state (like radiogroup's radio item) ,you can use this method
+
+``` dart
+SubControllerDelegate subController = formController.getSubController(controlKey);
+subController.update1(String itemControlKey, Map<String, dynamic> state); //update sub item's state
+subController.update(Map<String, Map<String, dynamic>> states);//udpate multi sub items's state
+subController.getState(String itemControlKey, String key);//get sub item's state value
+subController.setVisible(String itemControlKey, bool visible);//equals to update(itemControlKey,{'visible':visible})
+subController.setReadOnly(String itemControlKey, bool readOnly);//equals to update(itemControlKey,{'readOnly':readOnly})
+bool subController.isVisible(String itemControlKey);//equals to getState(itemControlKey,'visible')
+bool subController.isReadOnly(String itemControlKey);//equals to getState(itemControlKey,'readOnly')
+bool subController.hasState(String itemControlKey);//check itemControlKey exists
+```
+
+**only SwitchGroup|RadioGroup|CheckboxGroup support these method **
+
 ### validate form
 
 ``` dart
@@ -157,3 +175,4 @@ formController.themeData = FormThemeData.defaultThemeData;//a theme from  https:
 6. SwitchGroup
 7. NumberField
 8. Slider
+9. RangeSlider

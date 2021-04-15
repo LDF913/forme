@@ -14,7 +14,7 @@ typedef SelectItemProvider = Future<SelectItemPage> Function(
     int page, Map<String, dynamic> params);
 typedef QueryFormBuilder = Widget Function(
     FormBuilder builder, VoidCallback submit);
-typedef OnSelectDialogShow = void Function(
+typedef OnSelectDialogShow = bool Function(
     FormControllerDelegate formController);
 
 class SelectorController extends ValueNotifier<List> {
@@ -321,6 +321,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   bool error = false;
   bool empty = false;
 
+  int gen = 0;
+
   FormControllerDelegate queryFormController;
   Map<String, dynamic> params = {};
 
@@ -332,8 +334,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
     if (widget.onSelectDialogShow != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onSelectDialogShow(
+        bool performQuery = widget.onSelectDialogShow(
             widget.queryFormBuilder == null ? null : queryFormController);
+        if (performQuery) query();
       });
     }
   }
@@ -358,6 +361,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       return;
     }
     update(() {
+      gen++;
       empty = false;
       loading = false;
       page = 1;
@@ -410,23 +414,27 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   void nextPage() {
     update(() {
+      gen++;
       page++;
       loading = true;
     });
-    loadData();
+    loadData(gen);
   }
 
-  void loadData() {
+  void loadData(int gen) {
     widget.selectItemProvider(page, params).then((value) {
+      if (this.gen > gen) return;
       items.addAll(value.items);
       count = value.count;
       loading = false;
       empty = page == 1 && items.isEmpty;
     }).onError((err, stackTrace) {
       print(stackTrace);
+      if (this.gen > gen) return;
       loading = false;
       error = true;
     }).whenComplete(() {
+      if (this.gen > gen) return;
       update(() {});
     });
   }
@@ -472,7 +480,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
     if (page == 1 && items.isEmpty) {
       if (!error && !empty) {
-        loadData();
+        loadData(gen);
       }
       columns.add(Expanded(
           child: Column(
