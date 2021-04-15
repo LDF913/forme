@@ -453,6 +453,7 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           initialValue: map['initialValue'] ?? initialValue,
           onChanged: onChanged,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
@@ -486,6 +487,7 @@ class FormBuilder {
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           initialValue: map['initialValue'] ?? initialValue ?? false,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
@@ -533,6 +535,7 @@ class FormBuilder {
           focusNode: focusNode,
           subLabelRender: subLabelRender,
           inline: inline,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
@@ -581,6 +584,7 @@ class FormBuilder {
               map['initialValue'] ?? initialValue ?? RangeValues(min, max),
           inline: inline ?? false,
           rangeSubLabelRender: rangeSubLabelRender,
+          padding: map['padding'] ?? padding,
         );
       },
     ));
