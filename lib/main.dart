@@ -337,11 +337,12 @@ class _MyHomePageState extends State<MyHomePage> {
             labelText: 'selector',
             multi: true,
             selectItemProvider: (page, params) {
-              int filter = params['filter'];
+              RangeValues filter = params['filter'];
+              print(filter);
               List items = List<int>.generate(100, (i) => i + 1)
                   .where((element) =>
-                      filter == null ||
-                      element.toString().contains(filter.toString()))
+                      element >= filter.start.round() &&
+                      element <= filter.end.round())
                   .toList();
               return Future.delayed(Duration(seconds: 1), () {
                 return SelectItemPage(
@@ -351,26 +352,21 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             queryFormBuilder: (builder, query) {
-              return builder.numberField('filter',
-                  hintText: 'input number to query',
-                  min: 1,
-                  max: 100,
-                  textInputAction: TextInputAction.search,
-                  onEditingComplete: query,
-                  validator: (value) =>
-                      value == null ? 'pls input something to query !' : null,
-                  clearable: true,
-                  suffixIcons: [
-                    InkWell(
-                      onTap: query,
-                      child: Icon(Icons.search),
-                    )
-                  ]).build();
+              return builder
+                  .rangeSlider('filter',
+                      min: 1,
+                      max: 100,
+                      inline: true,
+                      rangeSubLabelRender: RangeSubLabelRender(
+                          (start) => Text(start.round().toString()),
+                          (end) => Text(end.round().toString())))
+                  .button('query', query, label: 'query')
+                  .build();
             },
             onSelectDialogShow: (formController) {
               //use this formController to control query form on search dialog
-              //  formController.setValue('filter', 10);
-              return true;
+              formController.setValue('filter', RangeValues(20, 50));
+              return true; //return true will set params before query
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),

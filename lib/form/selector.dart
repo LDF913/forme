@@ -31,7 +31,6 @@ class SelectorFormField extends FormBuilderField<List> {
   final String labelText;
   final String hintText;
   final double iconSize;
-  final bool loading;
   final bool multi;
   final SelectedChecker selectedChecker;
   final SelectItemRender selectItemRender;
@@ -94,7 +93,6 @@ class SelectorFormField extends FormBuilderField<List> {
       AutovalidateMode autovalidateMode,
       this.padding,
       this.iconSize = 24,
-      this.loading = false,
       this.multi = false,
       List initialValue,
       this.selectedChecker,
@@ -124,10 +122,7 @@ class SelectorFormField extends FormBuilderField<List> {
                 selectedChecker ?? _defaultSelectedChecker;
 
             List<Widget> icons = [];
-            if (clearable &&
-                !readOnly &&
-                controller.value.isNotEmpty &&
-                !loading) {
+            if (clearable && !readOnly && controller.value.isNotEmpty) {
               icons.add(Padding(
                 padding: EdgeInsets.only(right: 10),
                 child: GestureDetector(
@@ -139,22 +134,10 @@ class SelectorFormField extends FormBuilderField<List> {
                 ),
               ));
             }
-            if (loading)
-              icons.add(Padding(
-                  child: SizedBox(
-                    width: iconSize,
-                    height: iconSize,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  ),
-                  padding: EdgeInsets.only(right: 10)));
 
-            if (!loading) {
-              icons.add(Icon(
-                Icons.arrow_drop_down,
-              ));
-            }
+            icons.add(Icon(
+              Icons.arrow_drop_down,
+            ));
 
             Widget widget;
 
@@ -162,8 +145,8 @@ class SelectorFormField extends FormBuilderField<List> {
               SelectedItemRender render =
                   selectedItemRender ?? _defaultSelectedItemRender;
               if (!multi) {
-                widget = render(controller.value[0], multi, readOnly || loading,
-                    themeData, formThemeData);
+                widget = render(controller.value[0], multi, readOnly, themeData,
+                    formThemeData);
               } else {
                 List value = List.from(controller.value);
                 if (selectedSorter != null) selectedSorter(value);
@@ -181,8 +164,8 @@ class SelectorFormField extends FormBuilderField<List> {
                                   .toList());
                               focusNode.requestFocus();
                             },
-                    child: render(item, multi, readOnly || loading, themeData,
-                        formThemeData),
+                    child:
+                        render(item, multi, readOnly, themeData, formThemeData),
                   );
                 }).toList();
 
@@ -218,9 +201,7 @@ class SelectorFormField extends FormBuilderField<List> {
                 skipTraversal: true,
                 child: Builder(
                     builder: (context) => InkWell(
-                          onTap: (readOnly ||
-                                  loading ||
-                                  selectItemProvider == null)
+                          onTap: (readOnly || selectItemProvider == null)
                               ? null
                               : () async {
                                   focusNode.requestFocus();
@@ -332,12 +313,17 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     selected = List.from(widget.selected);
     queryFormController = widget.formController.copyTheme();
 
-    if (widget.onSelectDialogShow != null) {
+    if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        bool performQuery = widget.onSelectDialogShow(
-            widget.queryFormBuilder == null ? null : queryFormController);
-        if (performQuery) query();
+        bool queryAfterLoadParams =
+            widget.onSelectDialogShow(queryFormController);
+        if (queryAfterLoadParams && queryFormController.validate()) {
+          params = queryFormController.getData();
+        }
+        loadData(gen);
       });
+    } else {
+      loadData(gen);
     }
   }
 
@@ -363,13 +349,14 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     update(() {
       gen++;
       empty = false;
-      loading = false;
+      loading = true;
       page = 1;
       items = [];
       error = false;
       count = 0;
       params = queryFormController.getData();
     });
+    loadData(gen);
   }
 
   bool isSelected(dynamic value) {
@@ -412,16 +399,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     return widget.queryFormBuilder(FormBuilder(queryFormController), query);
   }
 
-  void nextPage() {
-    update(() {
-      gen++;
-      page++;
-      loading = true;
-    });
-    loadData(gen);
-  }
-
-  void loadData(int gen) {
+  void loadData(int gen, {bool decreasePageWhenError = false}) {
     widget.selectItemProvider(page, params).then((value) {
       if (this.gen > gen) return;
       items.addAll(value.items);
@@ -429,6 +407,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       loading = false;
       empty = page == 1 && items.isEmpty;
     }).onError((err, stackTrace) {
+      if (decreasePageWhenError) page--;
       print(stackTrace);
       if (this.gen > gen) return;
       loading = false;
@@ -437,6 +416,15 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       if (this.gen > gen) return;
       update(() {});
     });
+  }
+
+  void nextPage() {
+    update(() {
+      gen++;
+      page++;
+      loading = true;
+    });
+    loadData(gen, decreasePageWhenError: true);
   }
 
   Widget buildView(ThemeData themeData) {
@@ -479,9 +467,6 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
 
     if (page == 1 && items.isEmpty) {
-      if (!error && !empty) {
-        loadData(gen);
-      }
       columns.add(Expanded(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
