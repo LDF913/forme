@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/form/slider.dart';
+import 'package:flutter_application_1/form/switch_group.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'form/checkbox_group.dart';
@@ -160,16 +161,58 @@ class _MyHomePageState extends State<MyHomePage> {
                   formController.reset();
                 },
                 child: Text('reset')),
+            Builder(
+              builder: (context) {
+                SubControllerDelegate subController =
+                    formController.getSubController('checkbox');
+                return TextButton(
+                    onPressed: () {
+                      bool readOnly = subController.isReadOnly('male');
+                      subController.setReadOnly('male', !readOnly);
+                      (context as Element).markNeedsBuild();
+                    },
+                    child: Text(subController.isReadOnly('male')
+                        ? 'set male editable'
+                        : 'set male readonly'));
+              },
+            ),
+            Builder(
+              builder: (context) {
+                SubControllerDelegate subController =
+                    formController.getSubController('switchGroup');
+                return TextButton(
+                    onPressed: () {
+                      bool visible =
+                          subController.getState('switch1', 'visible');
+                      bool readOnly =
+                          subController.getState('switch0', 'readOnly');
+                      subController.update({
+                        'switch0': {'readOnly': !readOnly},
+                        'switch1': {'visible': !visible}
+                      });
+                      (context as Element).markNeedsBuild();
+                    },
+                    child: Text((subController.getState('switch1', 'visible')
+                            ? 'hide'
+                            : 'show') +
+                        ' switch 2 & set switch 1 ' +
+                        (subController.getState('switch0', 'readOnly')
+                            ? 'editable'
+                            : 'readOnly')));
+              },
+            ),
             TextButton(
                 onPressed: () {
-                  formController.update('checkbox', {
-                    'items': [
-                      CheckboxButton('男', readOnly: true),
-                      CheckboxButton('女')
-                    ]
+                  formController.update('switchGroup', {
+                    'items': List<SwitchGroupItem>.generate(
+                        5,
+                        (index) => SwitchGroupItem((index + 5).toString(),
+                            controlKey: 'switch$index',
+                            textStyle: TextStyle(
+                                color: Theme.of(context).primaryColor)))
                   });
                 },
-                child: Text('set man readonly')),
+                child: Text('set switch items')),
             TextButton(
                 onPressed: () {
                   formController.requestFocus('age');
@@ -216,10 +259,8 @@ class _MyHomePageState extends State<MyHomePage> {
             validator: (value) {
               return value.isEmpty ? 'not empty' : null;
             })
-        .checkboxInline(
-          'rememberMe',
-          [CheckboxButton('remember me')],
-        )
+        .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
+            inline: true)
         .switchInline(
           'switch1',
           onChanged: (value) => print('switch1 value changed $value'),
@@ -235,7 +276,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 1)
         .button('button', () {
           print('x');
-        }, flex: 0, label: '登录')
+        }, flex: 0, label: 'sign in')
         .nextLine()
         .numberField(
           'age',
@@ -247,13 +288,11 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
-        .radioInline(
-          'radioInline',
-          FormBuilder.toRadioButtons(['1', '2']),
-        )
+        .radioGroup('radioInline', FormBuilder.toRadioItems(['1', '2']),
+            inline: true)
         .checkboxGroup(
           'checkbox',
-          FormBuilder.toCheckboxButtons(['男', '女']),
+          [CheckboxItem('male', controlKey: 'male'), CheckboxItem('female')],
           split: 2,
           label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
@@ -263,8 +302,8 @@ class _MyHomePageState extends State<MyHomePage> {
         .radioGroup(
           'radio',
           [
-            RadioButton('1', '1', controlKey: 'radio 1'),
-            RadioButton('2', '2'),
+            RadioItem('1', '1', controlKey: 'radio 1'),
+            RadioItem('2', '2', controlKey: 'radio 2'),
           ],
           onChanged: (value) => print('radio value changed $value'),
           label: 'single choice',
@@ -339,7 +378,10 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) => value.isEmpty ? 'select one pls !' : null,
-            items: List<String>.generate(3, (index) => index.toString()))
+            items: List<SwitchGroupItem>.generate(
+                3,
+                (index) => SwitchGroupItem(index.toString(),
+                    controlKey: 'switch$index', readOnly: true)))
         .slider(
           'slider',
           min: 0,
@@ -360,9 +402,10 @@ class _MyHomePageState extends State<MyHomePage> {
             initialValue: 0,
             onChanged: (v) => formController.setValue(
                 'sliderInline', v == null ? 0.0 : v.toDouble(), trigger: false))
-        .sliderInline('sliderInline',
+        .slider('sliderInline',
             min: 0,
             max: 100,
+            inline: true,
             onChanged: (v) => formController
                 .setValue('sliderInlineText', v.round(), trigger: false))
         .rangeSlider(

@@ -2,33 +2,44 @@ import 'package:flutter/material.dart';
 import 'form_builder.dart';
 import 'form_theme.dart';
 
-class RadioButton {
+class RadioItem extends SubControllableItem {
   final dynamic value;
   final String label;
-  final String controlKey;
   final bool ignoreSplit;
   final bool readOnly;
   final bool visible;
+  final TextStyle textStyle;
 
-  RadioButton(this.value, this.label,
-      {this.controlKey,
+  RadioItem(this.value, this.label,
+      {String controlKey,
       this.ignoreSplit = false,
       this.readOnly = false,
-      this.visible = true});
+      this.visible = true,
+      this.textStyle})
+      : super(controlKey);
+  Map<String, dynamic> toMap() {
+    return {
+      'readOnly': readOnly ?? false,
+      'visible': visible ?? true,
+      'ignoreSplit': ignoreSplit ?? false,
+      'label': label,
+      'textStyle': textStyle
+    };
+  }
 }
 
-class RadioGroupController extends ValueNotifier {
+class RadioGroupController extends SubController {
   RadioGroupController({value}) : super(value);
 }
 
 class RadioGroup extends FormBuilderField {
-  final List<RadioButton> buttons;
+  final List<RadioItem> items;
   final String label;
   final int split;
   final EdgeInsets padding;
   final bool inline;
 
-  RadioGroup(String controlKey, this.buttons, RadioGroupController controller,
+  RadioGroup(String controlKey, this.items, RadioGroupController controller,
       {Key key,
       this.label,
       ValueChanged onChanged,
@@ -68,10 +79,15 @@ class RadioGroup extends FormBuilderField {
 
             List<Widget> wrapWidgets = [];
 
-            TextStyle labelStyle = radioGroupTheme.labelStyle ?? TextStyle();
-            for (int i = 0; i < buttons.length; i++) {
-              RadioButton button = buttons[i];
-              bool isReadOnly = readOnly || button.readOnly;
+            controller.init(items);
+
+            for (int i = 0; i < items.length; i++) {
+              RadioItem button = items[i];
+              var stateMap = controller.getUpdatedMap(button);
+              TextStyle labelStyle = stateMap['labelStyle'] ??
+                  radioGroupTheme.labelStyle ??
+                  TextStyle();
+              bool isReadOnly = readOnly || stateMap['readOnly'];
               bool isSelected = button.value == controller.value;
               Color color = isReadOnly
                   ? themeData.disabledColor
@@ -108,12 +124,12 @@ class RadioGroup extends FormBuilderField {
                           ),
                           split == 0
                               ? Text(
-                                  button.label,
+                                  stateMap['label'],
                                   style: labelStyle,
                                 )
                               : Flexible(
                                   child: Text(
-                                    button.label,
+                                    stateMap['label'],
                                     style: labelStyle,
                                   ),
                                 )
@@ -125,9 +141,9 @@ class RadioGroup extends FormBuilderField {
               if (split <= 0) {
                 wrapWidgets.add(Visibility(
                   child: radio,
-                  visible: button.visible,
+                  visible: stateMap['visible'],
                 ));
-                if (button.visible && i < buttons.length - 1)
+                if (button.visible && i < items.length - 1)
                   wrapWidgets.add(SizedBox(
                     width: 8.0,
                   ));
@@ -137,7 +153,7 @@ class RadioGroup extends FormBuilderField {
                     widthFactor: button.ignoreSplit ? 1 : 1 / split,
                     child: radio,
                   ),
-                  visible: button.visible,
+                  visible: stateMap['visible'],
                 ));
               }
             }

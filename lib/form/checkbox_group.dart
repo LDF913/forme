@@ -3,36 +3,47 @@ import 'package:flutter/material.dart';
 import 'form_builder.dart';
 import 'form_theme.dart';
 
-class CheckboxButton {
+class CheckboxItem extends SubControllableItem {
   final String label;
   final bool ignoreSplit;
   final bool readOnly;
   final bool visible;
   final TextStyle textStyle;
-  CheckboxButton(this.label,
+  CheckboxItem(this.label,
       {this.ignoreSplit = false,
       this.readOnly = false,
       this.visible = true,
-      this.textStyle});
+      this.textStyle,
+      String controlKey})
+      : super(controlKey);
+
+  Map<String, dynamic> toMap() {
+    return {
+      'readOnly': readOnly ?? false,
+      'visible': visible ?? true,
+      'ignoreSplit': ignoreSplit ?? false,
+      'label': label,
+      'textStyle': textStyle
+    };
+  }
 }
 
-class CheckboxGroupController extends ValueNotifier<List<int>> {
+class CheckboxGroupController extends SubController<List<int>> {
   CheckboxGroupController({List<int> value}) : super(value);
-
   List<int> get value => super.value == null ? [] : super.value;
   void set(List<int> value) =>
       super.value = value == null ? [] : List.of(value);
 }
 
 class CheckboxGroup extends FormBuilderField<List<int>> {
-  final List<CheckboxButton> buttons;
+  final List<CheckboxItem> items;
   final String label;
   final int split;
   final EdgeInsets padding;
   final bool inline;
 
   CheckboxGroup(
-      String controlKey, this.buttons, CheckboxGroupController controller,
+      String controlKey, this.items, CheckboxGroupController controller,
       {Key key,
       this.label,
       ValueChanged<List<int>> onChanged,
@@ -74,12 +85,15 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
 
               List<Widget> wrapWidgets = [];
 
-              for (int i = 0; i < buttons.length; i++) {
-                CheckboxButton button = buttons[i];
-                TextStyle labelStyle = button.textStyle ??
+              controller.init(items);
+
+              for (int i = 0; i < items.length; i++) {
+                CheckboxItem button = items[i];
+                var stateMap = controller.getUpdatedMap(button);
+                TextStyle labelStyle = stateMap['textStyle'] ??
                     checkboxGroupTheme.labelStyle ??
                     TextStyle();
-                bool isReadOnly = readOnly || button.readOnly;
+                bool isReadOnly = readOnly || stateMap['readOnly'];
 
                 Color color = isReadOnly
                     ? themeData.disabledColor
@@ -118,12 +132,12 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
                             ),
                             split == 0
                                 ? Text(
-                                    button.label,
+                                    stateMap['label'],
                                     style: labelStyle,
                                   )
                                 : Flexible(
                                     child: Text(
-                                      button.label,
+                                      stateMap['label'],
                                       style: labelStyle,
                                     ),
                                   )
@@ -132,22 +146,23 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
                   ),
                 );
 
+                bool visible = stateMap['visible'];
                 if (split <= 0) {
                   wrapWidgets.add(Visibility(
                     child: checkbox,
-                    visible: button.visible,
+                    visible: visible,
                   ));
-                  if (button.visible && i < buttons.length - 1)
+                  if (visible && i < items.length - 1)
                     wrapWidgets.add(SizedBox(
                       width: 8.0,
                     ));
                 } else {
                   wrapWidgets.add(Visibility(
                     child: FractionallySizedBox(
-                      widthFactor: button.ignoreSplit ? 1 : 1 / split,
+                      widthFactor: stateMap['ignoreSplit'] ? 1 : 1 / split,
                       child: checkbox,
                     ),
-                    visible: button.visible,
+                    visible: visible,
                   ));
                 }
               }

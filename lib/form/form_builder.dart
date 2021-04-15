@@ -13,6 +13,8 @@ typedef FormWidgetBuilder = Widget Function(
     BuildContext context, Map<String, dynamic> map);
 
 class FormBuilder {
+  static final String readOnlyKey = 'readOnly';
+  static final String visibleKey = 'visible';
   List<_FormItemWidget> _builders = [];
   List<List<_FormItemWidget>> _builderss = [];
   final FormControllerDelegate formControllerDelegate;
@@ -79,7 +81,7 @@ class FormBuilder {
             clearable: map['clearable'] ?? clearable,
             prefixIcon: map['prefixIcon'] ?? prefixIcon,
             padding: map['padding'] ?? padding,
-            readOnly: map['readOnly'] ?? readOnly,
+            readOnly: map[readOnlyKey] ?? readOnly,
             style: map['style'] ?? style,
             initialValue: map['initialValue'] ?? initialValue,
             suffixIcons: map['suffixIcons'] ?? suffixIcons,
@@ -154,7 +156,7 @@ class FormBuilder {
             onChanged: onChanged,
             inputFormatters: formatters,
             padding: map['padding'] ?? padding,
-            readOnly: map['readOnly'] ?? readOnly,
+            readOnly: map[readOnlyKey] ?? readOnly,
             style: map['style'] ?? style,
             initialValue: map['initialValue'] ?? initialValue,
             toolbarOptions: map['toolbarOptions'] ?? toolbarOptions,
@@ -167,49 +169,9 @@ class FormBuilder {
     return this;
   }
 
-  FormBuilder radioInline(
-    String controlKey,
-    List<RadioButton> items, {
-    RadioGroupController controller,
-    Key key,
-    ValueChanged onChanged,
-    int flex = 0,
-    bool readOnly = false,
-    bool visible = true,
-    EdgeInsets padding,
-    dynamic initialValue,
-    FormFieldValidator validator,
-    AutovalidateMode autovalidateMode,
-  }) {
-    RadioGroupController controller = _formController.newController(
-        controlKey, () => RadioGroupController(value: initialValue));
-    _builders.add(_FormItemWidget(
-      visible,
-      readOnly,
-      controlKey,
-      _formController,
-      flex: flex,
-      builder: (context, map) => RadioGroup(
-        controlKey,
-        List.of(map['items'] ?? items),
-        controller,
-        key: key,
-        onChanged: onChanged,
-        validator: validator,
-        autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-        padding: map['padding'] ?? padding,
-        split: 0,
-        readOnly: map['readOnly'] ?? readOnly,
-        initialValue: map['initialValue'] ?? initialValue,
-        inline: true,
-      ),
-    ));
-    return this;
-  }
-
   FormBuilder radioGroup(
     String controlKey,
-    List<RadioButton> items, {
+    List<RadioItem> items, {
     Key key,
     String label,
     RadioGroupController controller,
@@ -221,15 +183,19 @@ class FormBuilder {
     int split = 2,
     EdgeInsets padding,
     dynamic initialValue,
+    bool inline,
+    int flex = 0,
   }) {
     RadioGroupController controller = _formController.newController(
         controlKey, () => RadioGroupController(value: initialValue));
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
       controlKey,
       _formController,
+      flex: inline ? flex : 1,
       builder: (context, map) => RadioGroup(
         controlKey,
         List.of(map['items'] ?? items),
@@ -239,61 +205,18 @@ class FormBuilder {
         validator: validator,
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
-        split: split,
+        split: inline ? 0 : map['split'] ?? split,
         padding: map['padding'] ?? padding,
-        readOnly: map['readOnly'] ?? readOnly,
+        readOnly: map[readOnlyKey] ?? readOnly,
         initialValue: map['initialValue'] ?? initialValue,
-        inline: false,
+        inline: inline,
       ),
     ));
-    nextLine();
+    if (!inline) nextLine();
     return this;
   }
 
-  FormBuilder checkboxInline(
-    String controlKey,
-    List<CheckboxButton> items, {
-    CheckboxGroupController controller,
-    Key key,
-    ValueChanged<List<int>> onChanged,
-    bool readOnly = false,
-    bool visible = true,
-    int flex = 0,
-    EdgeInsets padding,
-    List<int> initialValue,
-    FormFieldValidator<List<int>> validator,
-    AutovalidateMode autovalidateMode,
-  }) {
-    CheckboxGroupController controller = _formController._controllers
-        .putIfAbsent(
-            controlKey, () => CheckboxGroupController(value: initialValue));
-    _builders.add(_FormItemWidget(
-      visible,
-      readOnly,
-      controlKey,
-      _formController,
-      builder: (context, map) {
-        return CheckboxGroup(
-          controlKey,
-          List.of(map['items'] ?? items),
-          controller,
-          key: key,
-          onChanged: onChanged,
-          validator: validator,
-          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          split: 0,
-          padding: map['padding'] ?? padding,
-          readOnly: map['readOnly'] ?? readOnly,
-          initialValue: map['initialValue'] ?? initialValue,
-          inline: true,
-        );
-      },
-      flex: flex,
-    ));
-    return this;
-  }
-
-  FormBuilder checkboxGroup(String controlKey, List<CheckboxButton> items,
+  FormBuilder checkboxGroup(String controlKey, List<CheckboxItem> items,
       {Key key,
       String label,
       ValueChanged<List<int>> onChanged,
@@ -302,37 +225,40 @@ class FormBuilder {
       bool readOnly = false,
       bool visible = true,
       int split = 2,
+      int flex = 0,
       EdgeInsets padding,
-      List<int> initialValue}) {
+      List<int> initialValue,
+      bool inline = false}) {
     CheckboxGroupController controller = _formController._controllers
         .putIfAbsent(
             controlKey, () => CheckboxGroupController(value: initialValue));
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
       controlKey,
       _formController,
-      flex: 1,
+      flex: inline ? flex : 1,
       builder: (context, map) {
         return CheckboxGroup(
           controlKey,
           List.of(map['items'] ?? items),
           controller,
           key: key,
-          label: map['label'] ?? label,
+          label: inline ? null : map['label'] ?? label,
           validator: validator,
           onChanged: onChanged,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          split: map['split'] ?? split,
+          split: inline ? 0 : map['split'] ?? split,
           padding: map['padding'] ?? padding,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: map[readOnlyKey] ?? readOnly,
           initialValue: map['initialValue'] ?? initialValue,
-          inline: false,
+          inline: inline,
         );
       },
     ));
-    nextLine();
+    if (!inline) nextLine();
     return this;
   }
 
@@ -359,7 +285,7 @@ class FormBuilder {
                   child: map['child'] ?? child,
                   onLongPress: onLongPress,
                   padding: map['padding'] ?? padding,
-                  readOnly: map['readOnly'] ?? readOnly,
+                  readOnly: map[readOnlyKey] ?? readOnly,
                 ),
               )),
     );
@@ -396,7 +322,7 @@ class FormBuilder {
               validator: validator,
               useTime: map['useTime'] ?? useTime,
               padding: map['padding'] ?? padding,
-              readOnly: map['readOnly'] ?? readOnly,
+              readOnly: map[readOnlyKey] ?? readOnly,
               style: map['style'] ?? style,
               maxLines: map['maxLines'] ?? maxLines,
               initialValue: map['initialValue'] ?? initialValue,
@@ -448,7 +374,7 @@ class FormBuilder {
                 validator: validator,
                 autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
                 padding: map['padding'] ?? padding,
-                readOnly: map['readOnly'] ?? readOnly,
+                readOnly: map[readOnlyKey] ?? readOnly,
                 loading: map['loading'] ?? loading,
                 multi: map['multi'] ?? multi,
                 initialValue: map['initialValue'] ?? initialValue,
@@ -500,7 +426,7 @@ class FormBuilder {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets padding,
-    List<String> items,
+    List<SwitchGroupItem> items,
     bool hasSelectAllSwitch,
     ValueChanged<List<int>> onChanged,
     FormFieldValidator<List<int>> validator,
@@ -521,7 +447,7 @@ class FormBuilder {
           controlKey,
           controller,
           label: map['label'] ?? label,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: map[readOnlyKey] ?? readOnly,
           items: map['items'] ?? items ?? [],
           hasSelectAllSwitch:
               map['hasSelectAllSwitch'] ?? hasSelectAllSwitch ?? true,
@@ -558,7 +484,7 @@ class FormBuilder {
           controlKey,
           controller,
           validator: validator,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: map[readOnlyKey] ?? readOnly,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           initialValue: map['initialValue'] ?? initialValue ?? false,
@@ -580,11 +506,13 @@ class FormBuilder {
       double max = 100,
       int divisions,
       String label,
-      SubLabelRender subLabelRender}) {
+      SubLabelRender subLabelRender,
+      bool inline = false}) {
     SliderController controller = _formController.newController(
         controlKey, () => SliderController(value: initialValue ?? min));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -595,67 +523,22 @@ class FormBuilder {
         return SliderFormField(
           controlKey,
           controller,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: map[readOnlyKey] ?? readOnly,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           validator: validator,
           min: map['min'] ?? min,
           max: map['max'] ?? max,
-          label: map['label'] ?? label,
+          label: inline ? null : map['label'] ?? label,
           divisions: map['divisions'] ?? divisions,
           initialValue: map['initialValue'] ?? initialValue ?? min,
           focusNode: focusNode,
           subLabelRender: subLabelRender,
-          inline: false,
+          inline: inline,
         );
       },
     ));
-    nextLine();
-    return this;
-  }
-
-  FormBuilder sliderInline(
-    String controlKey, {
-    bool visible = true,
-    bool readOnly = false,
-    EdgeInsets padding,
-    int flex = 1,
-    ValueChanged<double> onChanged,
-    FormFieldValidator<double> validator,
-    AutovalidateMode autovalidateMode,
-    double initialValue,
-    double min = 0,
-    double max = 100,
-    int divisions,
-    SubLabelRender subLabelRender,
-  }) {
-    SliderController controller = _formController.newController(
-        controlKey, () => SliderController(value: initialValue ?? min));
-    FocusNode focusNode = _formController.newFocusNode(controlKey);
-    _builders.add(_FormItemWidget(
-      visible,
-      readOnly,
-      controlKey,
-      _formController,
-      flex: flex,
-      builder: (context, map) {
-        return SliderFormField(
-          controlKey,
-          controller,
-          readOnly: map['readOnly'] ?? readOnly,
-          autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
-          onChanged: onChanged,
-          validator: validator,
-          min: map['min'] ?? min,
-          max: map['max'] ?? max,
-          divisions: map['divisions'] ?? divisions,
-          initialValue: map['initialValue'] ?? initialValue ?? min,
-          focusNode: focusNode,
-          subLabelRender: subLabelRender,
-          inline: true,
-        );
-      },
-    ));
+    if (!inline) nextLine();
     return this;
   }
 
@@ -671,12 +554,13 @@ class FormBuilder {
       double max = 100,
       int divisions,
       String label,
-      RangeSubLabelRender rangeSubLabelRender}) {
+      RangeSubLabelRender rangeSubLabelRender,
+      bool inline = false}) {
     RangeSliderController controller = _formController.newController(
         controlKey,
         () => RangeSliderController(
             value: initialValue ?? RangeValues(min, max)));
-    nextLine();
+    if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       readOnly,
@@ -687,22 +571,22 @@ class FormBuilder {
         return RangeSliderFormField(
           controlKey,
           controller,
-          readOnly: map['readOnly'] ?? readOnly,
+          readOnly: map[readOnlyKey] ?? readOnly,
           autovalidateMode: map['autovalidateMode'] ?? autovalidateMode,
           onChanged: onChanged,
           validator: validator,
           min: map['min'] ?? min,
           max: map['max'] ?? max,
-          label: map['label'] ?? label,
+          label: inline ? null : map['label'] ?? label,
           divisions: map['divisions'] ?? divisions,
           initialValue:
               map['initialValue'] ?? initialValue ?? RangeValues(min, max),
-          inline: false,
+          inline: inline ?? false,
           rangeSubLabelRender: rangeSubLabelRender,
         );
       },
     ));
-    nextLine();
+    if (!inline) nextLine();
     return this;
   }
 
@@ -711,12 +595,12 @@ class FormBuilder {
     return _FormWidget(_builderss, _formController);
   }
 
-  static List<CheckboxButton> toCheckboxButtons(List<String> items) {
-    return items.map((e) => CheckboxButton(e)).toList();
+  static List<CheckboxItem> toCheckboxItems(List<String> items) {
+    return items.map((e) => CheckboxItem(e)).toList();
   }
 
-  static List<RadioButton> toRadioButtons(List<String> items) {
-    return items.map((e) => RadioButton(e, e)).toList();
+  static List<RadioItem> toRadioItems(List<String> items) {
+    return items.map((e) => RadioItem(e, e)).toList();
   }
 
   static SelectItemProvider toSelectItemProvider(List items) {
@@ -725,6 +609,10 @@ class FormBuilder {
         return SelectItemPage(items, items.length);
       });
     };
+  }
+
+  static List<SwitchGroupItem> toSwitchGroupItems(List<String> items) {
+    return items.map((e) => SwitchGroupItem(e)).toList();
   }
 }
 
@@ -789,6 +677,9 @@ class FormControllerDelegate {
 
   void setSelection(String controlKey, int start, int end) =>
       _formController.setSelection(controlKey, start, end);
+
+  SubControllerDelegate getSubController(String controlKey) =>
+      _formController.getSubController(controlKey);
 }
 
 typedef _ControllerProvider<T> = T Function();
@@ -971,8 +862,16 @@ class _FormController extends ChangeNotifier {
   void setSelection(String controlKey, int start, int end) {
     var controller = _controllers[controlKey];
     if (controller != null && controller is TextSelectionMixin) {
-      (controller).setSelection(start, end);
+      controller.setSelection(start, end);
     }
+  }
+
+  SubControllerDelegate getSubController(String controlKey) {
+    var controller = _controllers[controlKey];
+    if (controller != null && controller is SubController) {
+      return SubControllerDelegate._(controller);
+    }
+    return null;
   }
 
   @override
@@ -1008,14 +907,14 @@ class _FormItemWidget extends StatefulWidget {
 
 class _FormItemWidgetState extends State<_FormItemWidget> {
   Map<String, dynamic> map = {};
-  get visible => map['visible'] ?? widget.visible ?? true;
-  get readOnly => map['readOnly'] ?? widget.readOnly ?? false;
+  get visible => map[FormBuilder.visibleKey] ?? widget.visible ?? true;
+  get readOnly => map[FormBuilder.readOnlyKey] ?? widget.readOnly ?? false;
   get flex => map['flex'] ?? widget.flex ?? 1;
 
   set readOnly(bool readOnly) {
     if (readOnly != this.readOnly) {
       setState(() {
-        map['readOnly'] = readOnly;
+        map[FormBuilder.readOnlyKey] = readOnly;
       });
     }
   }
@@ -1023,7 +922,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   set visible(bool visible) {
     if (visible != this.visible) {
       setState(() {
-        map['visible'] = visible;
+        map[FormBuilder.visibleKey] = visible;
       });
     }
   }
@@ -1037,11 +936,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   void deactivate() {
     widget.formController._states.remove(widget.controlKey);
     super.deactivate();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   @override
@@ -1135,6 +1029,22 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
       _InheritedFromController.of(context).formController;
 
   @override
+  void initState() {
+    super.initState();
+    if (controller is SubController) {
+      controller.addListener(handleSubControllerChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    if (controller is SubController) {
+      controller.removeListener(handleSubControllerChange);
+    }
+    super.dispose();
+  }
+
+  @override
   void deactivate() {
     formController._fields.remove(this);
     super.deactivate();
@@ -1188,6 +1098,10 @@ class FormBuilderFieldState<T> extends FormFieldState<T> {
     }
     return value;
   }
+
+  void handleSubControllerChange() {
+    setState(() {});
+  }
 }
 
 typedef NullValueReplace<T> = T Function();
@@ -1217,7 +1131,7 @@ class FormBuilderField<T> extends FormField<T> {
   FormBuilderFieldState<T> createState() => FormBuilderFieldState<T>();
 }
 
-abstract class TextSelectionMixin {
+mixin TextSelectionMixin {
   void setSelection(int start, int end);
 
   static void setSelectionWithTextEditingController(
@@ -1255,5 +1169,127 @@ class _InheritedFromController extends InheritedWidget {
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) {
     return false;
+  }
+}
+
+abstract class SubControllableItem {
+  final String controlKey;
+  SubControllableItem(this.controlKey);
+  Map<String, dynamic> toMap();
+}
+
+//used to control form field's item's state
+class SubController<T> extends ValueNotifier<T> {
+  final Map<String, Map<String, dynamic>> _states = {};
+  final Map<String, Map<String, dynamic>> _initStates = {};
+
+  SubController(value) : super(value);
+
+  void update1(String controlKey, Map<String, dynamic> state) {
+    _doUpdate(controlKey, state);
+    notifyListeners();
+  }
+
+  void update(Map<String, Map<String, dynamic>> states) {
+    if (states == null) return;
+    states.forEach((key, value) {
+      _doUpdate(key, value);
+    });
+    notifyListeners();
+  }
+
+  dynamic getState(String controlKey, String key) {
+    var state = _states[controlKey];
+    return state == null ? null : state[key] ?? _initStates[controlKey][key];
+  }
+
+  Map<String, dynamic> getUpdatedMap(SubControllableItem item) {
+    if (item == null) {
+      return null;
+    }
+    if (item.controlKey == null) return item.toMap();
+    var currentStateMap = _states[item.controlKey];
+    if (currentStateMap == null) return _initStates[item.controlKey];
+    Map<String, dynamic> updated = {};
+    _initStates[item.controlKey].forEach((key, value) {
+      updated[key] = currentStateMap[key] ?? value;
+    });
+    return updated;
+  }
+
+  void init(List<SubControllableItem> items) {
+    _initStates.clear();
+    items.forEach((element) {
+      if (element.controlKey != null) {
+        _initStates[element.controlKey] = element.toMap();
+        _states.putIfAbsent(element.controlKey, () => {});
+      }
+    });
+    _states.removeWhere(
+        (key, value) => !items.any((element) => element.controlKey == key));
+  }
+
+  void _doUpdate(String controlKey, Map<String, dynamic> state) {
+    if (state == null) return;
+    var oldState = _states[controlKey];
+    if (oldState == null) return;
+    var initState = _initStates[controlKey];
+    state.forEach((key, value) {
+      if (!initState.containsKey(key)) return;
+      if (value == null) {
+        oldState.remove(key);
+      } else {
+        oldState[key] = value;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _initStates.clear();
+    _states.clear();
+    super.dispose();
+  }
+}
+
+class SubControllerDelegate {
+  final SubController _controller;
+
+  SubControllerDelegate._(this._controller);
+
+  void update1(String controlKey, Map<String, dynamic> state) {
+    _controller.update1(controlKey, state);
+  }
+
+  void update(Map<String, Map<String, dynamic>> states) {
+    _controller.update(states);
+  }
+
+  dynamic getState(String controlKey, String key) {
+    return _controller.getState(controlKey, key);
+  }
+
+  void setVisible(String controlKey, bool visible) {
+    _controller.update1(controlKey, {
+      'visible': visible,
+    });
+  }
+
+  void setReadOnly(String controlKey, bool readOnly) {
+    _controller.update1(controlKey, {
+      'readOnly': readOnly,
+    });
+  }
+
+  bool isVisible(String controlKey) {
+    return _controller.getState(controlKey, 'visible');
+  }
+
+  bool isReadOnly(String controlKey) {
+    return _controller.getState(controlKey, 'readOnly');
+  }
+
+  bool hasState(String controlKey) {
+    return _controller._initStates.containsKey(controlKey);
   }
 }

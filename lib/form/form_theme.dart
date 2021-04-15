@@ -191,7 +191,7 @@ class _CustomRangeTrackShape extends RoundedRectRangeSliderTrackShape
     with _TrackShapeMixin {}
 
 //copied from https://github.com/flutter/flutter/issues/37057
-class _TrackShapeMixin {
+mixin _TrackShapeMixin {
   Rect getPreferredRect({
     @required RenderBox parentBox,
     Offset offset = Offset.zero,

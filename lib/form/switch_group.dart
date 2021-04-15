@@ -4,15 +4,37 @@ import 'package:flutter/material.dart';
 import 'form_builder.dart';
 import 'form_theme.dart';
 
-class SwitchGroupController extends ValueNotifier<List<int>> {
+class SwitchGroupController extends SubController<List<int>> {
   SwitchGroupController({value}) : super(value);
   List<int> get value => super.value == null ? [] : super.value;
   void set(List<int> value) =>
       super.value = value == null ? [] : List.of(value);
 }
 
+class SwitchGroupItem extends SubControllableItem {
+  final String label;
+  final bool readOnly;
+  final bool visible;
+  final TextStyle textStyle;
+  SwitchGroupItem(this.label,
+      {this.readOnly = false,
+      this.visible = true,
+      String controlKey,
+      this.textStyle})
+      : super(controlKey);
+  @override
+  Map<String, dynamic> toMap() {
+    return {
+      'readOnly': readOnly ?? false,
+      'visible': visible ?? true,
+      'label': label,
+      'textStyle': textStyle
+    };
+  }
+}
+
 class SwitchGroupFormField extends FormBuilderField<List<int>> {
-  final List<String> items;
+  final List<SwitchGroupItem> items;
   final String label;
   final EdgeInsets padding;
   final bool hasSelectAllSwitch;
@@ -45,10 +67,33 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
                 field as FormBuilderFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
-            List<int> indexs =
-                List<int>.generate(items.length, (index) => index);
-            bool selectAll =
-                indexs.every((element) => controller.value.contains(element));
+
+            controller.init(items);
+            Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
+
+            bool isAllReadOnly = true;
+            bool isAllInvisible = true;
+            List<int> controllableItems = [];
+
+            items.asMap().forEach((index, element) {
+              Map<String, dynamic> stateMap = controller.getUpdatedMap(element);
+              bool readOnly = stateMap['readOnly'];
+              bool visible = stateMap['visible'];
+              if (!readOnly) {
+                isAllReadOnly = false;
+              }
+              if (visible) {
+                isAllInvisible = false;
+              }
+              if (!readOnly && visible) {
+                controllableItems.add(index);
+              }
+              statesMap[element] = stateMap;
+            });
+
+            bool selectAll = controllableItems.isNotEmpty &&
+                controllableItems
+                    .every((element) => controller.value.contains(element));
 
             void changeValue(int index) {
               List<int> value = controller.value;
@@ -62,9 +107,14 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
 
             void toggleValues() {
               if (selectAll) {
-                state.didChange([]);
+                state.didChange(controller.value
+                    .where((element) => !controllableItems.contains(element))
+                    .toList());
               } else {
-                state.didChange(indexs);
+                state.didChange(state.value
+                  ..addAll(controllableItems)
+                  ..toSet()
+                  ..toList());
               }
             }
 
@@ -80,7 +130,7 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
               ));
             }
 
-            if (items.length > 1 && hasSelectAllSwitch) {
+            if (items.length > 1 && hasSelectAllSwitch && !isAllInvisible) {
               columns.add(InkWell(
                 child: Padding(
                   child: Row(
@@ -88,7 +138,7 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
                       Expanded(child: Text('全选')),
                       CupertinoSwitch(
                         value: selectAll,
-                        onChanged: readOnly
+                        onChanged: readOnly || isAllReadOnly
                             ? null
                             : (value) {
                                 toggleValues();
@@ -99,36 +149,45 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
                   ),
                   padding: EdgeInsets.symmetric(horizontal: 8),
                 ),
-                onTap: readOnly ? null : toggleValues,
+                onTap: readOnly || isAllReadOnly ? null : toggleValues,
               ));
               columns.add(Divider());
             }
 
             for (int i = 0; i < items.length; i++) {
-              String item = items[i];
+              SwitchGroupItem item = items[i];
+              var stateMap = statesMap[item];
               List<Widget> children = [];
-              children.add(Expanded(child: Text(item)));
+              children.add(Expanded(
+                  child: Text(
+                stateMap['label'],
+                style: stateMap['textStyle'],
+              )));
+              bool isReadOnly = readOnly || stateMap['readOnly'];
               children.add(CupertinoSwitch(
                 value: controller.value.contains(i),
-                onChanged: readOnly
+                onChanged: isReadOnly
                     ? null
                     : (value) {
                         changeValue(i);
                       },
                 activeColor: themeData.primaryColor,
               ));
-              columns.add(InkWell(
-                child: Padding(
-                  child: Row(
-                    children: children,
+              columns.add(Visibility(
+                child: InkWell(
+                  child: Padding(
+                    child: Row(
+                      children: children,
+                    ),
+                    padding: EdgeInsets.all(8),
                   ),
-                  padding: EdgeInsets.all(8),
+                  onTap: isReadOnly
+                      ? null
+                      : () {
+                          changeValue(i);
+                        },
                 ),
-                onTap: readOnly
-                    ? null
-                    : () {
-                        changeValue(i);
-                      },
+                visible: stateMap['visible'],
               ));
             }
             if (state.hasError) {
