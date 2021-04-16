@@ -32,28 +32,28 @@ class RadioGroupController extends SubController {
   RadioGroupController({value}) : super(value);
 }
 
-class RadioGroup extends FormBuilderField {
-  final List<RadioItem> items;
-  final String label;
-  final int split;
-  final EdgeInsets padding;
-  final bool inline;
-
-  RadioGroup(this.items, RadioGroupController controller,
+class RadioGroup extends ValueField {
+  RadioGroup(List<RadioItem> items, RadioGroupController controller,
       {Key key,
-      this.label,
+      String label,
       ValueChanged onChanged,
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode,
-      this.split = 0,
-      this.padding,
+      int split = 0,
+      EdgeInsets padding,
       bool readOnly = false,
       dynamic initialValue,
-      this.inline = false})
+      @required bool inline})
       : super(
           controller,
+          {
+            'label': label,
+            'split': split ?? 2,
+            'items': items,
+          },
           key: key,
           readOnly: readOnly,
+          padding: padding,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
@@ -62,8 +62,14 @@ class RadioGroup extends FormBuilderField {
             FormThemeData formThemeData = FormThemeData.of(field.context);
             RadioGroupTheme radioGroupTheme = formThemeData.radioGroupTheme;
             ThemeData themeData = Theme.of(field.context);
+            ValueFieldState state = field as ValueFieldState;
 
-            final FormBuilderFieldState state = field as FormBuilderFieldState;
+            String label = inline ? null : state.getState('label');
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
+            int split = inline ? 0 : state.getState('split');
+            List<RadioItem> items = state.getState('items');
+
             List<Widget> widgets = [];
             if (label != null) {
               Text text = Text(label,
@@ -181,5 +187,5 @@ class RadioGroup extends FormBuilderField {
         );
 
   @override
-  FormBuilderFieldState createState() => FormBuilderFieldState();
+  ValueFieldState createState() => ValueFieldState();
 }

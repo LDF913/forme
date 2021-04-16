@@ -66,6 +66,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+  }
+
+  @override
   void dispose() {
     super.dispose();
   }
@@ -238,8 +243,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
-                formController.themeData =
-                    (++i) % 2 == 0 ? FormThemeData() : DefaultThemeData();
+                formController.themeData = (++i) % 2 == 0
+                    ? FormThemeData(themeData: Theme.of(context))
+                    : DefaultFormThemeData(context);
               },
               child: Text('change theme'),
             )
@@ -248,8 +254,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    formController.themeData = DefaultThemeData();
-    FormBuilder builder = FormBuilder(formController)
+    return FormBuilder(formController)
+        .readOnly(true)
         .textField('username',
             labelText: 'username',
             clearable: true,
@@ -351,7 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
               });
             },
             queryFormBuilder: (builder, query) {
-              return builder
+              builder
                   .rangeSlider('filter',
                       min: 1,
                       max: 100,
@@ -359,8 +365,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       rangeSubLabelRender: RangeSubLabelRender(
                           (start) => Text(start.round().toString()),
                           (end) => Text(end.round().toString())))
-                  .button('query', query, label: 'query')
-                  .build();
+                  .button('query', query, label: 'query');
             },
             onSelectDialogShow: (formController) {
               //use this formController to control query form on search dialog
@@ -417,6 +422,5 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
         );
-    return builder.build();
   }
 }

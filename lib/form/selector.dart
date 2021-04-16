@@ -12,7 +12,7 @@ typedef SelectedItemRender = Widget Function(dynamic item, bool multiSelect,
 typedef SelectedSorter = void Function(List selected);
 typedef SelectItemProvider = Future<SelectItemPage> Function(
     int page, Map<String, dynamic> params);
-typedef QueryFormBuilder = Widget Function(
+typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(
     FormControllerDelegate formController);
@@ -24,10 +24,9 @@ class SelectorController extends ValueNotifier<List> {
   void set(List value) => super.value == null ? [] : List.from(value);
 }
 
-class SelectorFormField extends FormBuilderField<List> {
+class SelectorFormField extends ValueField<List> {
   final FocusNode focusNode;
   final bool clearable;
-  final EdgeInsets padding;
   final String labelText;
   final String hintText;
   final double iconSize;
@@ -91,7 +90,7 @@ class SelectorFormField extends FormBuilderField<List> {
       this.hintText,
       FormFieldValidator<List> validator,
       AutovalidateMode autovalidateMode,
-      this.padding,
+      EdgeInsets padding,
       this.iconSize = 24,
       this.multi = false,
       List initialValue,
@@ -105,18 +104,31 @@ class SelectorFormField extends FormBuilderField<List> {
       this.onTap})
       : super(
           controller,
+          {
+            'labelText': labelText,
+            'hintText': hintText,
+            'multi': multi,
+            'clearable': clearable,
+          },
           key: key,
           readOnly: readOnly,
+          padding: padding,
           onChanged: onChanged,
           replace: () => [],
           validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
           builder: (field) {
-            final FormBuilderFieldState state = field as FormBuilderFieldState;
-
+            final ValueFieldState state = field as ValueFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
+
+            String labelText = state.getState('labelText');
+            String hintText = state.getState('hintText');
+            bool multi = state.getState('multi');
+            bool clearable = state.getState('clearable');
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
 
             SelectedChecker checker =
                 selectedChecker ?? _defaultSelectedChecker;
@@ -247,7 +259,7 @@ class SelectorFormField extends FormBuilderField<List> {
   _SelectorFormFieldState createState() => _SelectorFormFieldState();
 }
 
-class _SelectorFormFieldState extends FormBuilderFieldState<List> {
+class _SelectorFormFieldState extends ValueFieldState<List> {
   UniqueKey get dialogKey => (widget.controller as SelectorController)._key;
 
   @override
@@ -396,7 +408,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     if (widget.queryFormBuilder == null) {
       return null;
     }
-    return widget.queryFormBuilder(FormBuilder(queryFormController), query);
+    FormBuilder form = FormBuilder(queryFormController);
+    widget.queryFormBuilder(form, query);
+    return form;
   }
 
   void loadData(int gen, {bool decreasePageWhenError = false}) {

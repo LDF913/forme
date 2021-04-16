@@ -5,10 +5,8 @@ import 'package:flutter/services.dart';
 import 'form_builder.dart';
 import 'form_theme.dart';
 
-class ClearableTextFormField extends FormBuilderField<String> {
+class ClearableTextFormField extends ValueField<String> {
   final bool obscureText;
-  final EdgeInsets padding;
-  final bool selectAllOnFocus;
   final FocusNode focusNode;
   ClearableTextFormField(TextEditingController controller, this.focusNode,
       {String labelText,
@@ -29,29 +27,62 @@ class ClearableTextFormField extends FormBuilderField<String> {
       bool passwordVisible,
       Widget prefixIcon,
       List<TextInputFormatter> inputFormatters,
-      this.padding,
+      EdgeInsets padding,
       TextStyle style,
       bool readOnly = false,
       String initialValue,
       ToolbarOptions toolbarOptions,
-      this.selectAllOnFocus = false,
+      bool selectAllOnFocus = false,
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
       TextInputAction textInputAction})
       : super(
           controller,
+          {
+            'labelText': labelText,
+            'hintText': hintText,
+            'keyboardType': keyboardType,
+            'autofocus': autofocus,
+            'maxLines': maxLines,
+            'maxLength': maxLength,
+            'clearable': clearable ?? true,
+            'prefixIcon': prefixIcon,
+            'inputFormatters': inputFormatters,
+            'style': style,
+            'toolbarOptions': toolbarOptions,
+            'selectAllOnFocus': selectAllOnFocus ?? false,
+            'suffixIcons': suffixIcons,
+            'textInputAction': textInputAction,
+          },
           key: key,
-          readOnly: readOnly,
           onChanged: onChanged,
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
+          readOnly: readOnly,
+          padding: padding,
           builder: (field) {
             final _TextFormFieldState state = field as _TextFormFieldState;
-            labelText = state.getState('labelText') ?? labelText;
-
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
+
+            String labelText = state.getState('labelText');
+            String hintText = state.getState('hintText');
+            TextInputType keyboardType = state.getState('keyboardType');
+            bool autofocus = state.getState('autofocus');
+            int maxLines = state.getState('maxLines');
+            int maxLength = state.getState('maxLength');
+            bool clearable = state.getState('clearable');
+            Widget prefixIcon = state.getState('prefixIcon');
+            List<TextInputFormatter> inputFormatters =
+                state.getState('inputFormatters');
+            TextStyle style = state.getState('style');
+            ToolbarOptions toolbarOptions = state.getState('toolbarOptions');
+            List<Widget> suffixIcons = state.getState('suffixIcons');
+            TextInputAction textInputAction = state.getState('textInputAction');
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
+
             List<Widget> suffixes = [];
             if (clearable && !readOnly && controller.text.length > 0) {
               suffixes.add(ClearButton(controller, focusNode, () {
@@ -127,13 +158,15 @@ class ClearableTextFormField extends FormBuilderField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextFormFieldState extends FormBuilderFieldState<String> {
+class _TextFormFieldState extends ValueFieldState<String> {
   bool obscureText = false;
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
   TextEditingController get controller => super.controller;
   FocusNode get focusNode => widget.focusNode;
+
+  bool get selectAllOnFocus => getState('selectAllOnFocus');
 
   void selectAll() {
     if (focusNode.hasFocus) {
@@ -146,7 +179,7 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   void initState() {
     super.initState();
     obscureText = widget.obscureText;
-    if (widget.selectAllOnFocus) {
+    if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
     }
   }
@@ -154,7 +187,7 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   @override
   void dispose() {
     super.dispose();
-    if (widget.selectAllOnFocus) {
+    if (selectAllOnFocus) {
       focusNode.removeListener(selectAll);
     }
   }
@@ -163,7 +196,7 @@ class _TextFormFieldState extends FormBuilderFieldState<String> {
   void didUpdateWidget(ClearableTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
     focusNode.removeListener(selectAll);
-    if (widget.selectAllOnFocus) {
+    if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
     }
   }
@@ -211,39 +244,52 @@ class DateTimeController extends ValueNotifier<DateTime> {
   }
 }
 
-class DateTimeFormField extends FormBuilderField<DateTime> {
-  final DateTimeFormatter formatter;
-  final bool useTime;
-  final Locale locale;
-  final EdgeInsets padding;
-  final int maxLines;
-
+class DateTimeFormField extends ValueField<DateTime> {
   DateTimeFormField(DateTimeController controller, FocusNode focusNode,
       {Key key,
       String labelText,
       String hintText,
       TextStyle style,
       bool readOnly,
-      this.formatter,
-      this.locale,
-      this.useTime = false,
+      DateTimeFormatter formatter,
+      Locale locale,
+      bool useTime = false,
       ValueChanged<DateTime> onChanged,
       FormFieldValidator<DateTime> validator,
       AutovalidateMode autovalidateMode,
-      this.padding,
-      this.maxLines = 1,
+      EdgeInsets padding,
+      int maxLines,
       DateTime initialValue})
       : super(
           controller,
+          {
+            'labelText': labelText,
+            'hintText': hintText,
+            'style': style,
+            'formatter': formatter,
+            'useTime': useTime ?? false,
+            'maxLines': maxLines ?? 1,
+          },
           onChanged: onChanged,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
+          readOnly: readOnly,
+          padding: padding,
           key: key,
           builder: (field) {
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
+
+            String labelText = state.getState('labelText');
+            String hintText = state.getState('hintText');
+            TextStyle style = state.getState('style');
+            bool useTime = state.getState("useTime");
+            int maxLines = state.getState("maxLines");
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
+
             void pickTime() {
               DateTime value = controller.value ?? DateTime.now();
               showDatePicker(
@@ -343,10 +389,11 @@ class DateTimeFormField extends FormBuilderField<DateTime> {
 
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
-class _DateTimeFormFieldState extends FormBuilderFieldState<DateTime> {
-  DateTimeFormatter get _formatter => widget.formatter ?? widget.useTime
-      ? DateTimeFormField.defaultDateTimeFormatter
-      : DateTimeFormField.defaultDateFormatter;
+class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
+  DateTimeFormatter get _formatter =>
+      getState('formatter') ?? getState('useTime')
+          ? DateTimeFormField.defaultDateTimeFormatter
+          : DateTimeFormField.defaultDateFormatter;
 
   TextEditingController get textEditingController =>
       (super.controller as DateTimeController)._controller;
@@ -392,14 +439,7 @@ class NumberController extends ValueNotifier<num> with TextSelectionMixin {
   }
 }
 
-class NumberFormField extends FormBuilderField<num> {
-  final EdgeInsets padding;
-  final int decimal;
-  final num max;
-  final num min;
-  final bool clearable;
-  final List<Widget> suffixIcons;
-
+class NumberFormField extends ValueField<num> {
   NumberFormField(NumberController controller, FocusNode focusNode,
       {Key key,
       String labelText,
@@ -409,18 +449,30 @@ class NumberFormField extends FormBuilderField<num> {
       ValueChanged<num> onChanged,
       FormFieldValidator<num> validator,
       AutovalidateMode autovalidateMode,
-      this.padding,
+      EdgeInsets padding,
       num initialValue,
-      this.decimal = 0,
-      this.max,
-      this.min,
-      this.clearable = true,
+      int decimal,
+      double max,
+      double min,
+      bool clearable,
       Widget prefixIcon,
-      this.suffixIcons,
+      List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
       TextInputAction textInputAction})
       : super(
           controller,
+          {
+            'labelText': labelText,
+            'hintText': hintText,
+            'style': style,
+            'decimal': decimal ?? 0,
+            'max': max,
+            'min': min,
+            'clearable': clearable ?? true,
+            'prefixIcon': prefixIcon,
+            'suffixIcons': suffixIcons,
+            'textInputAction': textInputAction,
+          },
           key: key,
           onChanged: onChanged,
           validator: (value) {
@@ -444,10 +496,25 @@ class NumberFormField extends FormBuilderField<num> {
           },
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
+          readOnly: readOnly,
+          padding: padding,
           builder: (field) {
             final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
             _NumberFieldState state = field as _NumberFieldState;
+
+            String labelText = state.getState('labelText');
+            String hintText = state.getState('hintText');
+            bool clearable = state.getState('clearable');
+            Widget prefixIcon = state.getState('prefixIcon');
+            TextStyle style = state.getState('style');
+            List<Widget> suffixIcons = state.getState('suffixIcons');
+            TextInputAction textInputAction = state.getState('textInputAction');
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
+            int decimal = state.getState('decimal');
+            double max = state.getState('max');
+            double min = state.getState('min');
 
             String regex = r'[0-9' +
                 (decimal > 0 ? '.' : '') +
@@ -544,7 +611,7 @@ class NumberFormField extends FormBuilderField<num> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends FormBuilderFieldState<num> {
+class _NumberFieldState extends ValueFieldState<num> {
   TextEditingController get textEditingController =>
       (super.controller as NumberController)._controller;
 
@@ -554,7 +621,7 @@ class _NumberFieldState extends FormBuilderFieldState<num> {
   @override
   num get value => super.value == null
       ? null
-      : widget.decimal == 0
+      : getState('decimal') == 0
           ? super.value.toInt()
           : super.value.toDouble();
 
@@ -599,10 +666,10 @@ class ClearButton extends StatefulWidget {
 
   const ClearButton(this.controller, this.focusNode, this.clear);
   @override
-  State<StatefulWidget> createState() => __ClearButtonState();
+  State<StatefulWidget> createState() => _ClearButtonState();
 }
 
-class __ClearButtonState extends State<ClearButton> {
+class _ClearButtonState extends State<ClearButton> {
   bool visible = false;
 
   void changeListener() {
@@ -614,7 +681,7 @@ class __ClearButtonState extends State<ClearButton> {
   @override
   void initState() {
     widget.controller.addListener(changeListener);
-    visible = widget.controller.text != '';
+    visible = widget.controller.text != '' && widget.focusNode.hasFocus;
     widget.focusNode.addListener(changeListener);
     super.initState();
   }

@@ -35,39 +35,46 @@ class CheckboxGroupController extends SubController<List<int>> {
       super.value = value == null ? [] : List.of(value);
 }
 
-class CheckboxGroup extends FormBuilderField<List<int>> {
-  final List<CheckboxItem> items;
-  final String label;
-  final int split;
-  final EdgeInsets padding;
-  final bool inline;
-
-  CheckboxGroup(this.items, CheckboxGroupController controller,
+class CheckboxGroup extends ValueField<List<int>> {
+  CheckboxGroup(List<CheckboxItem> items, CheckboxGroupController controller,
       {Key key,
-      this.label,
+      String label,
       ValueChanged<List<int>> onChanged,
       final bool readOnly,
-      this.padding,
-      this.split = 0,
+      EdgeInsets padding,
+      int split,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
       List<int> initialValue,
-      this.inline = false})
-      : super(controller,
+      @required bool inline})
+      : super(
+            controller,
+            {
+              'label': label,
+              'split': split ?? 2,
+              'items': items,
+            },
             key: key,
-            readOnly: readOnly,
             onChanged: onChanged,
             replace: () => [],
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
             validator: validator,
+            readOnly: readOnly,
+            padding: padding,
             builder: (field) {
               FormThemeData formThemeData = FormThemeData.of(field.context);
               CheckboxGroupTheme checkboxGroupTheme =
                   formThemeData.checkboxGroupTheme;
               ThemeData themeData = Theme.of(field.context);
-              final FormBuilderFieldState<List<int>> state =
-                  field as FormBuilderFieldState;
+              final ValueFieldState<List<int>> state = field as ValueFieldState;
+
+              String label = inline ? null : state.getState('label');
+              bool readOnly = state.readOnly;
+              EdgeInsets padding = state.padding;
+              int split = inline ? 0 : state.getState('split');
+              List<CheckboxItem> items = state.getState('items');
+
               List<Widget> widgets = [];
               if (label != null) {
                 Text text = Text(label,
@@ -190,5 +197,5 @@ class CheckboxGroup extends FormBuilderField<List<int>> {
             });
 
   @override
-  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
+  ValueFieldState<List<int>> createState() => ValueFieldState();
 }

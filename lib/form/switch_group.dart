@@ -33,38 +33,44 @@ class SwitchGroupItem extends SubControllableItem {
   }
 }
 
-class SwitchGroupFormField extends FormBuilderField<List<int>> {
-  final List<SwitchGroupItem> items;
-  final String label;
-  final EdgeInsets padding;
-  final bool hasSelectAllSwitch;
-
+class SwitchGroupFormField extends ValueField<List<int>> {
   SwitchGroupFormField(
     SwitchGroupController controller, {
     Key key,
-    this.label,
-    this.items,
+    String label,
+    List<SwitchGroupItem> items,
     bool readOnly = false,
     ValueChanged<List<int>> onChanged,
     FormFieldValidator<List<int>> validator,
     AutovalidateMode autovalidateMode,
-    this.padding,
-    this.hasSelectAllSwitch = true,
+    EdgeInsets padding,
+    bool hasSelectAllSwitch = true,
     List<int> initialValue,
   }) : super(
           controller,
+          {
+            'label': label,
+            'items': items,
+            'hasSelectAllSwitch': hasSelectAllSwitch,
+          },
           key: key,
           readOnly: readOnly,
+          padding: padding,
           onChanged: onChanged,
           replace: () => [],
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
           validator: validator,
           builder: (field) {
-            final FormBuilderFieldState<List<int>> state =
-                field as FormBuilderFieldState;
+            final ValueFieldState<List<int>> state = field as ValueFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
+
+            String label = state.getState('label');
+            List<SwitchGroupItem> items = state.getState('items');
+            bool hasSelectAllSwitch = state.getState('hasSelectAllSwitch');
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
 
             controller.init(items);
             Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
@@ -205,7 +211,7 @@ class SwitchGroupFormField extends FormBuilderField<List<int>> {
         );
 
   @override
-  FormBuilderFieldState<List<int>> createState() => FormBuilderFieldState();
+  ValueFieldState<List<int>> createState() => ValueFieldState();
 }
 
 class SwitchController extends ValueNotifier<bool> {
@@ -213,30 +219,33 @@ class SwitchController extends ValueNotifier<bool> {
   bool get value => super.value ?? false;
 }
 
-class SwitchInlineFormField extends FormBuilderField<bool> {
-  final EdgeInsets padding;
-
+class SwitchInlineFormField extends ValueField<bool> {
   SwitchInlineFormField(SwitchController controller,
       {Key key,
       bool readOnly = false,
       ValueChanged<bool> onChanged,
       FormFieldValidator<bool> validator,
       AutovalidateMode autovalidateMode,
-      this.padding,
+      EdgeInsets padding,
       bool initialValue})
       : super(
           controller,
+          {},
           key: key,
           readOnly: readOnly,
+          padding: padding,
           onChanged: onChanged,
           replace: () => false,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? false,
           validator: validator,
           builder: (field) {
-            final FormBuilderFieldState state = field as FormBuilderFieldState;
+            final ValueFieldState state = field as ValueFieldState;
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
+
+            bool readOnly = state.readOnly;
+            EdgeInsets padding = state.padding;
 
             List<Widget> columns = [];
             columns.add(InkWell(
@@ -281,5 +290,5 @@ class SwitchInlineFormField extends FormBuilderField<bool> {
         );
 
   @override
-  FormBuilderFieldState<bool> createState() => FormBuilderFieldState();
+  ValueFieldState<bool> createState() => ValueFieldState();
 }
