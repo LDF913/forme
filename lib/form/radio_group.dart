@@ -16,16 +16,13 @@ class RadioItem extends SubControllableItem {
       this.readOnly = false,
       this.visible = true,
       this.textStyle})
-      : super(controlKey);
-  Map<String, dynamic> toMap() {
-    return {
-      'readOnly': readOnly ?? false,
-      'visible': visible ?? true,
-      'ignoreSplit': ignoreSplit ?? false,
-      'label': label,
-      'textStyle': textStyle
-    };
-  }
+      : super(controlKey, {
+          'readOnly': readOnly ?? false,
+          'visible': visible ?? true,
+          'ignoreSplit': ignoreSplit ?? false,
+          'label': label,
+          'textStyle': textStyle
+        });
 }
 
 class RadioGroupController extends SubController {

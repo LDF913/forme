@@ -33,7 +33,7 @@ class FormBuilder extends StatefulWidget {
   }
 
   FormBuilder readOnly(bool readOnly) {
-    _formController._readOnly = readOnly; //TODO not work!!
+    _formController._readOnly = readOnly;
     return this;
   }
 
@@ -954,7 +954,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
         visible: visible,
         child: Expanded(
           child: widget.child,
-          flex: visible ? flex : 0,
+          flex: flex,
         ),
       ),
     );
@@ -998,20 +998,17 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
   _FormController get formController => _FormController.of(context);
   String get controlKey => _InheritedControlKey.of(context).controlKey;
   bool get readOnly =>
-      _state[FormBuilder.readOnlyKey] ??
-      widget.initStateMap[FormBuilder.readOnlyKey] ??
-      false;
+      formController._readOnly ||
+      (_state[FormBuilder.readOnlyKey] ??
+          widget.initStateMap[FormBuilder.readOnlyKey] ??
+          false);
   EdgeInsets get padding => _state['padding'] ?? widget.initStateMap['padding'];
   set readOnly(bool readOnly) {
-    if (this.readOnly != readOnly) {
-      update({FormBuilder.readOnlyKey: readOnly});
-    }
+    update({FormBuilder.readOnlyKey: readOnly});
   }
 
   set padding(EdgeInsets padding) {
-    if (this.padding != padding) {
-      update({'padding': padding});
-    }
+    update({'padding': padding});
   }
 
   Map<String, dynamic> _state = {};
@@ -1032,7 +1029,7 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
     if (state == null) return;
     setState(() {
       state.forEach((key, value) {
-        this._state[key] = value;
+        _state[key] = value;
       });
     });
   }
@@ -1063,16 +1060,12 @@ class ValueFieldState<T> extends BaseFieldState<T> {
   @override
   void initState() {
     super.initState();
-    if (controller is SubController) {
-      controller.addListener(handleSubControllerChange);
-    }
+    controller.addListener(handleUpdate);
   }
 
   @override
   void dispose() {
-    if (controller is SubController) {
-      controller.removeListener(handleSubControllerChange);
-    }
+    controller.removeListener(handleUpdate);
     super.dispose();
   }
 
@@ -1131,7 +1124,7 @@ class ValueFieldState<T> extends BaseFieldState<T> {
     return value;
   }
 
-  void handleSubControllerChange() {
+  void handleUpdate() {
     setState(() {});
   }
 }
@@ -1223,8 +1216,8 @@ class _InheritedControlKey extends InheritedWidget {
 
 abstract class SubControllableItem {
   final String controlKey;
-  SubControllableItem(this.controlKey);
-  Map<String, dynamic> toMap();
+  final Map<String, dynamic> initStateMap;
+  SubControllableItem(this.controlKey, this.initStateMap);
 }
 
 //used to control form field's item's state
@@ -1233,6 +1226,12 @@ class SubController<T> extends ValueNotifier<T> {
   final Map<String, Map<String, dynamic>> _initStates = {};
 
   SubController(value) : super(value);
+
+  void remove(String controlKey, String stateKey) {
+    var state = _states[controlKey];
+    if (state == null) return;
+    state.remove(stateKey);
+  }
 
   void update1(String controlKey, Map<String, dynamic> state) {
     _doUpdate(controlKey, state);
@@ -1249,19 +1248,24 @@ class SubController<T> extends ValueNotifier<T> {
 
   dynamic getState(String controlKey, String key) {
     var state = _states[controlKey];
-    return state == null ? null : state[key] ?? _initStates[controlKey][key];
+    return state == null
+        ? null
+        : state.containsKey(key)
+            ? state[key]
+            : _initStates[controlKey][key];
   }
 
   Map<String, dynamic> getUpdatedMap(SubControllableItem item) {
     if (item == null) {
       return null;
     }
-    if (item.controlKey == null) return item.toMap();
+    if (item.controlKey == null) return item.initStateMap;
     var currentStateMap = _states[item.controlKey];
     if (currentStateMap == null) return _initStates[item.controlKey];
     Map<String, dynamic> updated = {};
     _initStates[item.controlKey].forEach((key, value) {
-      updated[key] = currentStateMap[key] ?? value;
+      updated[key] =
+          currentStateMap.containsKey(key) ? currentStateMap[key] : value;
     });
     return updated;
   }
@@ -1270,7 +1274,7 @@ class SubController<T> extends ValueNotifier<T> {
     _initStates.clear();
     items.forEach((element) {
       if (element.controlKey != null) {
-        _initStates[element.controlKey] = element.toMap();
+        _initStates[element.controlKey] = element.initStateMap;
         _states.putIfAbsent(element.controlKey, () => {});
       }
     });
@@ -1285,11 +1289,7 @@ class SubController<T> extends ValueNotifier<T> {
     var initState = _initStates[controlKey];
     state.forEach((key, value) {
       if (!initState.containsKey(key)) return;
-      if (value == null) {
-        oldState.remove(key);
-      } else {
-        oldState[key] = value;
-      }
+      oldState[key] = value;
     });
   }
 

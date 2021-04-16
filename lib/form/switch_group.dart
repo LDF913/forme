@@ -21,16 +21,12 @@ class SwitchGroupItem extends SubControllableItem {
       this.visible = true,
       String controlKey,
       this.textStyle})
-      : super(controlKey);
-  @override
-  Map<String, dynamic> toMap() {
-    return {
-      'readOnly': readOnly ?? false,
-      'visible': visible ?? true,
-      'label': label,
-      'textStyle': textStyle
-    };
-  }
+      : super(controlKey, {
+          'readOnly': readOnly ?? false,
+          'visible': visible ?? true,
+          'label': label,
+          'textStyle': textStyle
+        });
 }
 
 class SwitchGroupFormField extends ValueField<List<int>> {

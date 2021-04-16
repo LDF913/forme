@@ -15,17 +15,13 @@ class CheckboxItem extends SubControllableItem {
       this.visible = true,
       this.textStyle,
       String controlKey})
-      : super(controlKey);
-
-  Map<String, dynamic> toMap() {
-    return {
-      'readOnly': readOnly ?? false,
-      'visible': visible ?? true,
-      'ignoreSplit': ignoreSplit ?? false,
-      'label': label,
-      'textStyle': textStyle
-    };
-  }
+      : super(controlKey, {
+          'readOnly': readOnly ?? false,
+          'visible': visible ?? true,
+          'ignoreSplit': ignoreSplit ?? false,
+          'label': label,
+          'textStyle': textStyle
+        });
 }
 
 class CheckboxGroupController extends SubController<List<int>> {
