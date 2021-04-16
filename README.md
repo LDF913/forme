@@ -158,7 +158,7 @@ formController.getValue('controlKey');
 ### get form data
 
 ``` dart
-formController.getData(); //return a map
+formController.getData(removeNull:false); //return a map if removeNull is true ,map will not contain null value items
 ```
 
 ### set form theme
@@ -170,15 +170,18 @@ formController.themeData = DefaultFormTheme(context);//default theme from  https
 
 ## currently support field
 
-1. TextField
-2. CheckboxGroup
-3. RadioGroup
-4. DateTimeField
-5. Selector(Dropdown like)
-6. SwitchGroup
-7. NumberField
-8. Slider
-9. RangeSlider
+| field | return value |
+| ---| ---|
+| TextField|  string |
+| CheckboxGroup|  List&lt;int&gt; |
+| RadioGroup|  dynamic |
+| DateTimeField|  DateTime |
+| Selector|  List |
+| SwitchGroup|  List&lt;int&gt; |
+| SwitchInline|  bool |
+| NumberField|  num |
+| Slider|  double |
+| RangeSlider|  RangeValues |
 
 ## project status
 
