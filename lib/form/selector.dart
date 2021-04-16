@@ -101,7 +101,8 @@ class SelectorFormField extends ValueField<List> {
       this.selectedItemLayoutType,
       this.queryFormBuilder,
       this.onSelectDialogShow,
-      this.onTap})
+      this.onTap,
+      InputDecorationTheme inputDecorationTheme})
       : super(
           controller,
           {
@@ -109,6 +110,7 @@ class SelectorFormField extends ValueField<List> {
             'hintText': hintText,
             'multi': multi,
             'clearable': clearable,
+            'inputDecorationTheme': inputDecorationTheme,
           },
           key: key,
           readOnly: readOnly,
@@ -129,6 +131,9 @@ class SelectorFormField extends ValueField<List> {
             bool clearable = state.getState('clearable');
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
+            InputDecorationTheme inputDecorationTheme =
+                state.getState('inputDecorationTheme') ??
+                    themeData.inputDecorationTheme;
 
             SelectedChecker checker =
                 selectedChecker ?? _defaultSelectedChecker;
@@ -203,9 +208,7 @@ class SelectorFormField extends ValueField<List> {
                   children: icons,
                   mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
-                )).applyDefaults(
-              themeData.inputDecorationTheme,
-            );
+                )).applyDefaults(inputDecorationTheme);
 
             Widget child = Focus(
                 focusNode: focusNode,

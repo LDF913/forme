@@ -35,7 +35,8 @@ class ClearableTextFormField extends ValueField<String> {
       bool selectAllOnFocus = false,
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
-      TextInputAction textInputAction})
+      TextInputAction textInputAction,
+      InputDecorationTheme inputDecorationTheme})
       : super(
           controller,
           {
@@ -53,6 +54,7 @@ class ClearableTextFormField extends ValueField<String> {
             'selectAllOnFocus': selectAllOnFocus ?? false,
             'suffixIcons': suffixIcons,
             'textInputAction': textInputAction,
+            'inputDecorationTheme': inputDecorationTheme,
           },
           key: key,
           onChanged: onChanged,
@@ -82,6 +84,9 @@ class ClearableTextFormField extends ValueField<String> {
             TextInputAction textInputAction = state.getState('textInputAction');
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
+            InputDecorationTheme inputDecorationTheme =
+                state.getState('inputDecorationTheme') ??
+                    themeData.inputDecorationTheme;
 
             List<Widget> suffixes = [];
             if (clearable && !readOnly && controller.text.length > 0) {
@@ -122,7 +127,7 @@ class ClearableTextFormField extends ValueField<String> {
                     suffixIcon: suffixIcon,
                     labelText: labelText,
                     hintText: hintText)
-                .applyDefaults(themeData.inputDecorationTheme);
+                .applyDefaults(inputDecorationTheme);
 
             TextField textField = TextField(
               style: style,
@@ -259,7 +264,8 @@ class DateTimeFormField extends ValueField<DateTime> {
       AutovalidateMode autovalidateMode,
       EdgeInsets padding,
       int maxLines,
-      DateTime initialValue})
+      DateTime initialValue,
+      InputDecorationTheme inputDecorationTheme})
       : super(
           controller,
           {
@@ -269,6 +275,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             'formatter': formatter,
             'useTime': useTime ?? false,
             'maxLines': maxLines ?? 1,
+            'inputDecorationTheme': inputDecorationTheme,
           },
           onChanged: onChanged,
           validator: validator,
@@ -289,6 +296,9 @@ class DateTimeFormField extends ValueField<DateTime> {
             int maxLines = state.getState("maxLines");
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
+            InputDecorationTheme inputDecorationTheme =
+                state.getState('inputDecorationTheme') ??
+                    themeData.inputDecorationTheme;
 
             void pickTime() {
               DateTime value = controller.value ?? DateTime.now();
@@ -355,7 +365,7 @@ class DateTimeFormField extends ValueField<DateTime> {
                     hintText: hintText,
                     suffixIcon: suffixIcon,
                     labelText: labelText)
-                .applyDefaults(themeData.inputDecorationTheme);
+                .applyDefaults(inputDecorationTheme);
 
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
@@ -458,7 +468,8 @@ class NumberFormField extends ValueField<num> {
       Widget prefixIcon,
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
-      TextInputAction textInputAction})
+      TextInputAction textInputAction,
+      InputDecorationTheme inputDecorationTheme})
       : super(
           controller,
           {
@@ -472,6 +483,7 @@ class NumberFormField extends ValueField<num> {
             'prefixIcon': prefixIcon,
             'suffixIcons': suffixIcons,
             'textInputAction': textInputAction,
+            'inputDecorationTheme': inputDecorationTheme,
           },
           key: key,
           onChanged: onChanged,
@@ -515,6 +527,9 @@ class NumberFormField extends ValueField<num> {
             int decimal = state.getState('decimal');
             double max = state.getState('max');
             double min = state.getState('min');
+            InputDecorationTheme inputDecorationTheme =
+                state.getState('inputDecorationTheme') ??
+                    themeData.inputDecorationTheme;
 
             String regex = r'[0-9' +
                 (decimal > 0 ? '.' : '') +
@@ -572,7 +587,7 @@ class NumberFormField extends ValueField<num> {
                     suffixIcon: suffixIcon,
                     labelText: labelText,
                     prefixIcon: prefixIcon)
-                .applyDefaults(themeData.inputDecorationTheme);
+                .applyDefaults(inputDecorationTheme);
 
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,

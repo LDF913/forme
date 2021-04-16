@@ -63,7 +63,8 @@ class FormBuilder extends StatefulWidget {
       num initialValue,
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
-      TextInputAction textInputAction}) {
+      TextInputAction textInputAction,
+      InputDecorationTheme inputDecorationTheme}) {
     NumberController controller = _formController.newController(
         controlKey, () => NumberController(value: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -87,7 +88,8 @@ class FormBuilder extends StatefulWidget {
             initialValue: initialValue,
             suffixIcons: suffixIcons,
             onEditingComplete: onEditingComplete,
-            textInputAction: textInputAction)));
+            textInputAction: textInputAction,
+            inputDecorationTheme: inputDecorationTheme)));
     return this;
   }
 
@@ -118,7 +120,8 @@ class FormBuilder extends StatefulWidget {
       List<Widget> suffixIcons,
       VoidCallback onEditingComplete,
       TextInputAction textInputAction,
-      List<TextInputFormatter> textInputFormatters}) {
+      List<TextInputFormatter> textInputFormatters,
+      InputDecorationTheme inputDecorationTheme}) {
     _CustomTextEditingController controller = _formController.newController(
         controlKey, () => _CustomTextEditingController(text: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -147,7 +150,8 @@ class FormBuilder extends StatefulWidget {
             toolbarOptions: toolbarOptions,
             selectAllOnFocus: selectAllOnFocus ?? false,
             suffixIcons: suffixIcons,
-            textInputAction: textInputAction)));
+            textInputAction: textInputAction,
+            inputDecorationTheme: inputDecorationTheme)));
     return this;
   }
 
@@ -284,7 +288,8 @@ class FormBuilder extends StatefulWidget {
       TextStyle style,
       int maxLines = 1,
       ValueChanged<DateTime> onChanged,
-      DateTime initialValue}) {
+      DateTime initialValue,
+      InputDecorationTheme inputDecorationTheme}) {
     DateTimeController controller = _formController._controllers
         .putIfAbsent(controlKey, () => DateTimeController(value: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
@@ -303,6 +308,7 @@ class FormBuilder extends StatefulWidget {
               style: style,
               maxLines: maxLines,
               initialValue: initialValue,
+              inputDecorationTheme: inputDecorationTheme,
               onChanged: onChanged)),
     );
     return this;
@@ -330,6 +336,7 @@ class FormBuilder extends StatefulWidget {
     QueryFormBuilder queryFormBuilder,
     OnSelectDialogShow onSelectDialogShow,
     VoidCallback onTap,
+    InputDecorationTheme inputDecorationTheme,
   }) {
     SelectorController controller = _formController._controllers
         .putIfAbsent(controlKey, () => SelectorController(value: initialValue));
@@ -338,29 +345,26 @@ class FormBuilder extends StatefulWidget {
     _builders.add(
       _FormItemWidget(visible, controlKey,
           flex: 1,
-          child: SelectorFormField(
-            focusNode,
-            controller,
-            selectItemProvider,
-            onChanged: onChanged,
-            labelText: labelText,
-            hintText: hintText,
-            clearable: clearable,
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            padding: padding,
-            readOnly: readOnly,
-            multi: multi,
-            initialValue: initialValue,
-            selectedChecker: selectedChecker,
-            selectItemRender: selectItemRender,
-            selectedItemRender: selectedItemRender,
-            selectedSorter: selectedSorter,
-            onTap: onTap,
-            selectedItemLayoutType: selectedItemLayoutType,
-            queryFormBuilder: queryFormBuilder,
-            onSelectDialogShow: onSelectDialogShow,
-          )),
+          child: SelectorFormField(focusNode, controller, selectItemProvider,
+              onChanged: onChanged,
+              labelText: labelText,
+              hintText: hintText,
+              clearable: clearable,
+              validator: validator,
+              autovalidateMode: autovalidateMode,
+              padding: padding,
+              readOnly: readOnly,
+              multi: multi,
+              initialValue: initialValue,
+              selectedChecker: selectedChecker,
+              selectItemRender: selectItemRender,
+              selectedItemRender: selectedItemRender,
+              selectedSorter: selectedSorter,
+              onTap: onTap,
+              selectedItemLayoutType: selectedItemLayoutType,
+              queryFormBuilder: queryFormBuilder,
+              onSelectDialogShow: onSelectDialogShow,
+              inputDecorationTheme: inputDecorationTheme)),
     );
     nextLine();
     return this;

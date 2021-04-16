@@ -13,7 +13,7 @@ Widget form = FormBuilder(formController)
 	  clearable: true,
 	  flex: 3,
 	  validator: (value) => (value ?? '').isEmpty ? 'can not be empty !' : null,
-	).build();
+	);
 ```
 
 ## form method
@@ -161,8 +161,8 @@ formController.getData(); //return a map
 ### set form theme
 
 ``` dart
-formController.themeData = FormThemeData();//set original theme
-formController.themeData = FormThemeData.defaultThemeData;//a theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+formController.themeData = FormThemeData(themeData);// system theme
+formController.themeData = DefaultFormTheme(context);//default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
 ```
 
 ## currently support field
