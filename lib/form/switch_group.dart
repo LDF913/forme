@@ -42,12 +42,14 @@ class SwitchGroupFormField extends ValueField<List<int>> {
     EdgeInsets padding,
     bool hasSelectAllSwitch = true,
     List<int> initialValue,
+    EdgeInsets contentPadding,
   }) : super(
           controller,
           {
             'label': label,
             'items': items,
             'hasSelectAllSwitch': hasSelectAllSwitch,
+            'contentPadding': contentPadding ?? EdgeInsets.zero
           },
           key: key,
           readOnly: readOnly,
@@ -62,11 +64,15 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
 
+            SwitchGroupTheme switchGroupTheme = formThemeData.switchGroupTheme;
+
             String label = state.getState('label');
             List<SwitchGroupItem> items = state.getState('items');
             bool hasSelectAllSwitch = state.getState('hasSelectAllSwitch');
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
+            EdgeInsets itemPadding =
+                switchGroupTheme.itemsPadding ?? EdgeInsets.zero;
 
             controller.init(items);
             Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
@@ -147,11 +153,10 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                       )
                     ],
                   ),
-                  padding: EdgeInsets.symmetric(horizontal: 8),
+                  padding: itemPadding,
                 ),
                 onTap: readOnly || isAllReadOnly ? null : toggleValues,
               ));
-              columns.add(Divider());
             }
 
             for (int i = 0; i < items.length; i++) {
@@ -161,7 +166,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               children.add(Expanded(
                   child: Text(
                 stateMap['label'],
-                style: stateMap['textStyle'],
+                style: stateMap['textStyle'] ?? switchGroupTheme.labelStyle,
               )));
               bool isReadOnly = readOnly || stateMap['readOnly'];
               children.add(CupertinoSwitch(
@@ -179,7 +184,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                     child: Row(
                       children: children,
                     ),
-                    padding: EdgeInsets.all(8),
+                    padding: itemPadding ?? EdgeInsets.zero,
                   ),
                   onTap: isReadOnly
                       ? null

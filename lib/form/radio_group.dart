@@ -66,6 +66,8 @@ class RadioGroup extends ValueField {
             EdgeInsets padding = state.padding;
             int split = inline ? 0 : state.getState('split');
             List<RadioItem> items = state.getState('items');
+            EdgeInsets itemsPadding =
+                radioGroupTheme.itemsPadding ?? EdgeInsets.all(8);
 
             List<Widget> widgets = [];
             if (label != null) {
@@ -98,7 +100,7 @@ class RadioGroup extends ValueField {
                       : themeData.unselectedWidgetColor;
 
               Widget radio = Padding(
-                padding: radioGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
+                padding: itemsPadding,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(

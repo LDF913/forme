@@ -998,11 +998,9 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
   _FormController get formController => _FormController.of(context);
   String get controlKey => _InheritedControlKey.of(context).controlKey;
   bool get readOnly =>
-      formController._readOnly ||
-      (_state[FormBuilder.readOnlyKey] ??
-          widget.initStateMap[FormBuilder.readOnlyKey] ??
-          false);
-  EdgeInsets get padding => _state['padding'] ?? widget.initStateMap['padding'];
+      formController._readOnly || (getState(FormBuilder.readOnlyKey) ?? false);
+  EdgeInsets get padding => getState('padding');
+
   set readOnly(bool readOnly) {
     update({FormBuilder.readOnlyKey: readOnly});
   }

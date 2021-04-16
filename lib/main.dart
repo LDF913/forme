@@ -255,7 +255,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm(BuildContext context) {
     return FormBuilder(formController)
-        .readOnly(true)
         .textField('username',
             labelText: 'username',
             clearable: true,

@@ -70,6 +70,8 @@ class CheckboxGroup extends ValueField<List<int>> {
               EdgeInsets padding = state.padding;
               int split = inline ? 0 : state.getState('split');
               List<CheckboxItem> items = state.getState('items');
+              EdgeInsets itemsPadding =
+                  checkboxGroupTheme.itemsPadding ?? EdgeInsets.all(8);
 
               List<Widget> widgets = [];
               if (label != null) {
@@ -104,8 +106,7 @@ class CheckboxGroup extends ValueField<List<int>> {
                         : themeData.unselectedWidgetColor;
 
                 Widget checkbox = Padding(
-                  padding:
-                      checkboxGroupTheme.widgetsPadding ?? EdgeInsets.all(8),
+                  padding: itemsPadding,
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(

@@ -23,7 +23,8 @@ class SliderFormField extends ValueField<double> {
       double min,
       SubLabelRender subLabelRender,
       String label,
-      bool inline = false})
+      bool inline = false,
+      EdgeInsets contentPadding})
       : super(
           controller,
           {
@@ -31,6 +32,7 @@ class SliderFormField extends ValueField<double> {
             'max': max,
             'min': min,
             'label': label,
+            'contentPadding': contentPadding ?? EdgeInsets.zero
           },
           key: key,
           readOnly: readOnly,
@@ -51,6 +53,7 @@ class SliderFormField extends ValueField<double> {
             String label = state.getState('label');
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
+            EdgeInsets contentPadding = state.getState('contentPadding');
 
             List<Widget> columns = [];
             if (label != null) {
@@ -64,8 +67,10 @@ class SliderFormField extends ValueField<double> {
               ));
             }
 
+            List<Widget> contentColumns = [];
+
             if (subLabelRender != null) {
-              columns.add(Row(
+              contentColumns.add(Row(
                 children: [
                   Expanded(
                     flex:
@@ -103,21 +108,23 @@ class SliderFormField extends ValueField<double> {
               ),
             );
 
-            columns.add(inline
-                ? slider
-                : Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: slider,
-                  ));
+            contentColumns.add(slider);
 
             if (state.hasError) {
               TextOverflow overflow = inline ? TextOverflow.ellipsis : null;
               Text error = Text(state.errorText,
                   overflow: overflow,
                   style: FormThemeData.getErrorStyle(themeData));
-              columns.add(error);
+              contentColumns.add(error);
             }
 
+            columns.add(Padding(
+              padding: contentPadding,
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: contentColumns),
+            ));
             return Padding(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -156,7 +163,8 @@ class RangeSliderFormField extends ValueField<RangeValues> {
       bool inline,
       int divisions,
       RangeValues initialValue,
-      RangeSubLabelRender rangeSubLabelRender})
+      RangeSubLabelRender rangeSubLabelRender,
+      EdgeInsets contentPadding})
       : super(
             controller,
             {
@@ -164,6 +172,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               'max': max,
               'min': min,
               'label': label,
+              'contentPadding': contentPadding ?? EdgeInsets.zero
             },
             readOnly: readOnly,
             padding: padding,
@@ -184,6 +193,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               String label = state.getState('label');
               bool readOnly = state.readOnly;
               EdgeInsets padding = state.padding;
+              EdgeInsets contentPadding = state.getState('contentPadding');
 
               List<Widget> columns = [];
               if (label != null) {
@@ -197,8 +207,10 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                 ));
               }
 
+              List<Widget> contentColumns = [];
+
               if (rangeSubLabelRender != null) {
-                columns.add(Stack(
+                contentColumns.add(Stack(
                   children: [
                     Row(
                       children: [
@@ -258,20 +270,24 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                 ),
               );
 
-              columns.add(inline
-                  ? slider
-                  : Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: slider,
-                    ));
+              contentColumns.add(slider);
 
               if (state.hasError) {
                 TextOverflow overflow = inline ? TextOverflow.ellipsis : null;
                 Text error = Text(state.errorText,
                     overflow: overflow,
                     style: FormThemeData.getErrorStyle(themeData));
-                columns.add(error);
+                contentColumns.add(error);
               }
+
+              columns.add(Padding(
+                padding: contentPadding,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: contentColumns,
+                ),
+              ));
 
               return Padding(
                   child: Column(

@@ -8,11 +8,13 @@ class FormThemeData {
   final EdgeInsets labelPadding;
   final CheckboxGroupTheme checkboxGroupTheme;
   final RadioGroupTheme radioGroupTheme;
+  final SwitchGroupTheme switchGroupTheme;
 
   FormThemeData(
       {this.padding = EdgeInsets.zero,
       @required this.themeData,
       this.labelPadding,
+      this.switchGroupTheme = const SwitchGroupTheme(),
       this.checkboxGroupTheme = const CheckboxGroupTheme(),
       this.radioGroupTheme = const RadioGroupTheme()});
 
@@ -56,18 +58,18 @@ class HexColor extends Color {
 
 class CheckboxGroupTheme {
   final TextStyle labelStyle;
-  final EdgeInsets widgetsPadding;
+  final EdgeInsets itemsPadding;
   final EdgeInsets errorTextPadding;
 
   const CheckboxGroupTheme({
     this.labelStyle,
-    this.widgetsPadding,
+    this.itemsPadding,
     this.errorTextPadding,
   });
 
   CheckboxGroupTheme copyWith({
     TextStyle labelStyle,
-    EdgeInsets widgetsPadding,
+    EdgeInsets itemsPadding,
     EdgeInsets errorTextPadding,
     Color selectedColor,
     Color unselectedColor,
@@ -75,7 +77,7 @@ class CheckboxGroupTheme {
   }) {
     return CheckboxGroupTheme(
       labelStyle: labelStyle ?? this.labelStyle,
-      widgetsPadding: widgetsPadding ?? this.widgetsPadding,
+      itemsPadding: itemsPadding ?? this.itemsPadding,
       errorTextPadding: errorTextPadding ?? this.errorTextPadding,
     );
   }
@@ -84,12 +86,24 @@ class CheckboxGroupTheme {
 class RadioGroupTheme extends CheckboxGroupTheme {
   const RadioGroupTheme({
     TextStyle labelStyle,
-    EdgeInsets widgetsPadding,
+    EdgeInsets itemsPadding,
     EdgeInsets errorTextPadding,
   }) : super(
           errorTextPadding: errorTextPadding,
           labelStyle: labelStyle,
-          widgetsPadding: widgetsPadding,
+          itemsPadding: itemsPadding,
+        );
+}
+
+class SwitchGroupTheme extends CheckboxGroupTheme {
+  const SwitchGroupTheme({
+    TextStyle labelStyle,
+    EdgeInsets itemsPadding,
+    EdgeInsets errorTextPadding,
+  }) : super(
+          errorTextPadding: errorTextPadding,
+          labelStyle: labelStyle,
+          itemsPadding: itemsPadding,
         );
 }
 
@@ -99,8 +113,15 @@ class DefaultFormThemeData extends FormThemeData {
       : super(
             themeData: _buildLightTheme(context),
             padding: EdgeInsets.all(5),
-            checkboxGroupTheme: CheckboxGroupTheme(),
-            radioGroupTheme: RadioGroupTheme(),
+            checkboxGroupTheme: CheckboxGroupTheme(
+                itemsPadding: EdgeInsets.all(8),
+                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
+            radioGroupTheme: RadioGroupTheme(
+                itemsPadding: EdgeInsets.all(8),
+                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
+            switchGroupTheme: SwitchGroupTheme(
+                itemsPadding: EdgeInsets.all(8),
+                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
             labelPadding: const EdgeInsets.symmetric(vertical: 10));
 
   static TextTheme _buildTextTheme(TextTheme base) {
