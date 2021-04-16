@@ -9,19 +9,22 @@ class RadioItem extends SubControllableItem {
   final bool readOnly;
   final bool visible;
   final TextStyle textStyle;
+  final EdgeInsets padding;
 
   RadioItem(this.value, this.label,
       {String controlKey,
       this.ignoreSplit = false,
       this.readOnly = false,
       this.visible = true,
+      this.padding,
       this.textStyle})
       : super(controlKey, {
           'readOnly': readOnly ?? false,
           'visible': visible ?? true,
           'ignoreSplit': ignoreSplit ?? false,
           'label': label,
-          'textStyle': textStyle
+          'textStyle': textStyle,
+          'padding': padding ?? EdgeInsets.all(8),
         });
 }
 
@@ -40,6 +43,7 @@ class RadioGroup extends ValueField {
       EdgeInsets padding,
       bool readOnly = false,
       dynamic initialValue,
+      EdgeInsets errorTextPadding,
       @required bool inline})
       : super(
           controller,
@@ -47,6 +51,7 @@ class RadioGroup extends ValueField {
             'label': label,
             'split': split ?? 2,
             'items': items,
+            'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
           },
           key: key,
           readOnly: readOnly,
@@ -57,7 +62,6 @@ class RadioGroup extends ValueField {
           validator: validator,
           builder: (field) {
             FormThemeData formThemeData = FormThemeData.of(field.context);
-            RadioGroupTheme radioGroupTheme = formThemeData.radioGroupTheme;
             ThemeData themeData = Theme.of(field.context);
             ValueFieldState state = field as ValueFieldState;
 
@@ -66,8 +70,7 @@ class RadioGroup extends ValueField {
             EdgeInsets padding = state.padding;
             int split = inline ? 0 : state.getState('split');
             List<RadioItem> items = state.getState('items');
-            EdgeInsets itemsPadding =
-                radioGroupTheme.itemsPadding ?? EdgeInsets.all(8);
+            EdgeInsets errorTextPadding = state.getState('errorTextPadding');
 
             List<Widget> widgets = [];
             if (label != null) {
@@ -88,9 +91,7 @@ class RadioGroup extends ValueField {
             for (int i = 0; i < items.length; i++) {
               RadioItem button = items[i];
               var stateMap = controller.getUpdatedMap(button);
-              TextStyle labelStyle = stateMap['labelStyle'] ??
-                  radioGroupTheme.labelStyle ??
-                  TextStyle();
+              TextStyle labelStyle = stateMap['labelStyle'] ?? TextStyle();
               bool isReadOnly = readOnly || stateMap['readOnly'];
               bool isSelected = button.value == controller.value;
               Color color = isReadOnly
@@ -100,7 +101,7 @@ class RadioGroup extends ValueField {
                       : themeData.unselectedWidgetColor;
 
               Widget radio = Padding(
-                padding: itemsPadding,
+                padding: stateMap['padding'],
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -169,7 +170,7 @@ class RadioGroup extends ValueField {
                   overflow: inline ? TextOverflow.ellipsis : null,
                   style: FormThemeData.getErrorStyle(themeData));
               widgets.add(Padding(
-                padding: radioGroupTheme.errorTextPadding ?? EdgeInsets.zero,
+                padding: errorTextPadding,
                 child: text,
               ));
             }

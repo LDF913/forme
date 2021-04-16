@@ -6,17 +6,11 @@ class FormThemeData {
   final EdgeInsets padding;
   final ThemeData themeData;
   final EdgeInsets labelPadding;
-  final CheckboxGroupTheme checkboxGroupTheme;
-  final RadioGroupTheme radioGroupTheme;
-  final SwitchGroupTheme switchGroupTheme;
 
   FormThemeData(
       {this.padding = EdgeInsets.zero,
       @required this.themeData,
-      this.labelPadding,
-      this.switchGroupTheme = const SwitchGroupTheme(),
-      this.checkboxGroupTheme = const CheckboxGroupTheme(),
-      this.radioGroupTheme = const RadioGroupTheme()});
+      this.labelPadding});
 
   static FormThemeData of(BuildContext context) {
     return FormControllerDelegate.of(context).themeData;
@@ -113,15 +107,6 @@ class DefaultFormThemeData extends FormThemeData {
       : super(
             themeData: _buildLightTheme(context),
             padding: EdgeInsets.all(5),
-            checkboxGroupTheme: CheckboxGroupTheme(
-                itemsPadding: EdgeInsets.all(8),
-                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
-            radioGroupTheme: RadioGroupTheme(
-                itemsPadding: EdgeInsets.all(8),
-                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
-            switchGroupTheme: SwitchGroupTheme(
-                itemsPadding: EdgeInsets.all(4),
-                errorTextPadding: EdgeInsets.symmetric(horizontal: 4)),
             labelPadding: const EdgeInsets.symmetric(vertical: 10));
 
   static TextTheme _buildTextTheme(TextTheme base) {

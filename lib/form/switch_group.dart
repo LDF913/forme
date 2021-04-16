@@ -12,44 +12,46 @@ class SwitchGroupController extends SubController<List<int>> {
 }
 
 class SwitchGroupItem extends SubControllableItem {
-  final String label;
-  final bool readOnly;
-  final bool visible;
-  final TextStyle textStyle;
-  SwitchGroupItem(this.label,
-      {this.readOnly = false,
-      this.visible = true,
+  SwitchGroupItem(String label,
+      {bool readOnly = false,
+      bool visible = true,
       String controlKey,
-      this.textStyle})
+      EdgeInsets padding,
+      TextStyle textStyle})
       : super(controlKey, {
           'readOnly': readOnly ?? false,
           'visible': visible ?? true,
           'label': label,
-          'textStyle': textStyle
+          'textStyle': textStyle,
+          'padding': padding ?? EdgeInsets.all(4)
         });
 }
 
 class SwitchGroupFormField extends ValueField<List<int>> {
-  SwitchGroupFormField(
-    SwitchGroupController controller, {
-    Key key,
-    String label,
-    List<SwitchGroupItem> items,
-    bool readOnly = false,
-    ValueChanged<List<int>> onChanged,
-    FormFieldValidator<List<int>> validator,
-    AutovalidateMode autovalidateMode,
-    EdgeInsets padding,
-    bool hasSelectAllSwitch = true,
-    List<int> initialValue,
-    EdgeInsets contentPadding,
-  }) : super(
+  SwitchGroupFormField(SwitchGroupController controller,
+      {Key key,
+      String label,
+      List<SwitchGroupItem> items,
+      bool readOnly = false,
+      ValueChanged<List<int>> onChanged,
+      FormFieldValidator<List<int>> validator,
+      AutovalidateMode autovalidateMode,
+      EdgeInsets padding,
+      bool hasSelectAllSwitch = true,
+      List<int> initialValue,
+      EdgeInsets errorTextPadding,
+      EdgeInsets selectAllPadding,
+      bool selectAllDivier})
+      : super(
           controller,
           {
             'label': label,
             'items': items,
             'hasSelectAllSwitch': hasSelectAllSwitch,
-            'contentPadding': contentPadding ?? EdgeInsets.zero
+            'selectAllPadding':
+                selectAllPadding ?? EdgeInsets.symmetric(horizontal: 4),
+            'selectAllDivier': selectAllDivier ?? true,
+            'errorTextPadding': errorTextPadding ?? EdgeInsets.all(4)
           },
           key: key,
           readOnly: readOnly,
@@ -64,15 +66,14 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
 
-            SwitchGroupTheme switchGroupTheme = formThemeData.switchGroupTheme;
-
             String label = state.getState('label');
             List<SwitchGroupItem> items = state.getState('items');
             bool hasSelectAllSwitch = state.getState('hasSelectAllSwitch');
             bool readOnly = state.readOnly;
             EdgeInsets padding = state.padding;
-            EdgeInsets itemPadding =
-                switchGroupTheme.itemsPadding ?? EdgeInsets.zero;
+            EdgeInsets errorTextPadding = state.getState('errorTextPadding');
+            EdgeInsets selectAllPadding = state.getState('selectAllPadding');
+            bool selectAllDivier = state.getState('selectAllDivier');
 
             controller.init(items);
             Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
@@ -153,11 +154,11 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                       )
                     ],
                   ),
-                  padding: itemPadding,
+                  padding: selectAllPadding,
                 ),
                 onTap: readOnly || isAllReadOnly ? null : toggleValues,
               ));
-              columns.add(Divider());
+              if (selectAllDivier) columns.add(Divider());
             }
 
             for (int i = 0; i < items.length; i++) {
@@ -167,7 +168,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               children.add(Expanded(
                   child: Text(
                 stateMap['label'],
-                style: stateMap['textStyle'] ?? switchGroupTheme.labelStyle,
+                style: stateMap['textStyle'],
               )));
               bool isReadOnly = readOnly || stateMap['readOnly'];
               children.add(CupertinoSwitch(
@@ -185,7 +186,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                     child: Row(
                       children: children,
                     ),
-                    padding: itemPadding ?? EdgeInsets.zero,
+                    padding: stateMap['padding'],
                   ),
                   onTap: isReadOnly
                       ? null
@@ -197,8 +198,11 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               ));
             }
             if (state.hasError) {
-              columns.add(Text(state.errorText,
-                  style: FormThemeData.getErrorStyle(themeData)));
+              columns.add(Padding(
+                padding: errorTextPadding,
+                child: Text(state.errorText,
+                    style: FormThemeData.getErrorStyle(themeData)),
+              ));
             }
 
             return Padding(

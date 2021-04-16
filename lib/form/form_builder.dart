@@ -167,6 +167,7 @@ class FormBuilder extends StatefulWidget {
     dynamic initialValue,
     bool inline,
     int flex = 0,
+    EdgeInsets errorTextPadding,
   }) {
     RadioGroupController controller = _formController.newController(
         controlKey, () => RadioGroupController(value: initialValue));
@@ -189,6 +190,7 @@ class FormBuilder extends StatefulWidget {
         readOnly: readOnly,
         initialValue: initialValue,
         inline: inline,
+        errorTextPadding: errorTextPadding,
       ),
     ));
     if (!inline) nextLine();
@@ -207,6 +209,7 @@ class FormBuilder extends StatefulWidget {
       int flex = 0,
       EdgeInsets padding,
       List<int> initialValue,
+      EdgeInsets errorTextPadding,
       bool inline = false}) {
     CheckboxGroupController controller = _formController._controllers
         .putIfAbsent(
@@ -221,6 +224,7 @@ class FormBuilder extends StatefulWidget {
         List.of(items),
         controller,
         key: key,
+        errorTextPadding: errorTextPadding,
         label: label,
         validator: validator,
         onChanged: onChanged,
@@ -403,6 +407,9 @@ class FormBuilder extends StatefulWidget {
     FormFieldValidator<List<int>> validator,
     AutovalidateMode autovalidateMode,
     List<int> initialValue,
+    EdgeInsets errorTextPadding,
+    bool selectAllDivier,
+    EdgeInsets selectAllPadding,
   }) {
     SwitchGroupController controller = _formController.newController(
         controlKey, () => SwitchGroupController(value: initialValue));
@@ -422,6 +429,9 @@ class FormBuilder extends StatefulWidget {
         initialValue: initialValue,
         onChanged: onChanged,
         padding: padding,
+        errorTextPadding: errorTextPadding,
+        selectAllDivier: selectAllDivier,
+        selectAllPadding: selectAllPadding,
       ),
     ));
     nextLine();

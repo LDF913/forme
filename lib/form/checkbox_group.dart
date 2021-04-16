@@ -9,18 +9,21 @@ class CheckboxItem extends SubControllableItem {
   final bool readOnly;
   final bool visible;
   final TextStyle textStyle;
+  final EdgeInsets padding;
   CheckboxItem(this.label,
       {this.ignoreSplit = false,
       this.readOnly = false,
       this.visible = true,
       this.textStyle,
+      this.padding,
       String controlKey})
       : super(controlKey, {
           'readOnly': readOnly ?? false,
           'visible': visible ?? true,
           'ignoreSplit': ignoreSplit ?? false,
           'label': label,
-          'textStyle': textStyle
+          'textStyle': textStyle,
+          'padding': padding ?? EdgeInsets.all(8),
         });
 }
 
@@ -42,6 +45,7 @@ class CheckboxGroup extends ValueField<List<int>> {
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
       List<int> initialValue,
+      EdgeInsets errorTextPadding,
       @required bool inline})
       : super(
             controller,
@@ -49,6 +53,7 @@ class CheckboxGroup extends ValueField<List<int>> {
               'label': label,
               'split': split ?? 2,
               'items': items,
+              'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
             },
             key: key,
             onChanged: onChanged,
@@ -60,8 +65,6 @@ class CheckboxGroup extends ValueField<List<int>> {
             padding: padding,
             builder: (field) {
               FormThemeData formThemeData = FormThemeData.of(field.context);
-              CheckboxGroupTheme checkboxGroupTheme =
-                  formThemeData.checkboxGroupTheme;
               ThemeData themeData = Theme.of(field.context);
               final ValueFieldState<List<int>> state = field as ValueFieldState;
 
@@ -70,8 +73,7 @@ class CheckboxGroup extends ValueField<List<int>> {
               EdgeInsets padding = state.padding;
               int split = inline ? 0 : state.getState('split');
               List<CheckboxItem> items = state.getState('items');
-              EdgeInsets itemsPadding =
-                  checkboxGroupTheme.itemsPadding ?? EdgeInsets.all(8);
+              EdgeInsets errorTextPadding = state.getState('errorTextPadding');
 
               List<Widget> widgets = [];
               if (label != null) {
@@ -94,9 +96,7 @@ class CheckboxGroup extends ValueField<List<int>> {
               for (int i = 0; i < items.length; i++) {
                 CheckboxItem button = items[i];
                 var stateMap = controller.getUpdatedMap(button);
-                TextStyle labelStyle = stateMap['textStyle'] ??
-                    checkboxGroupTheme.labelStyle ??
-                    TextStyle();
+                TextStyle labelStyle = stateMap['textStyle'] ?? TextStyle();
                 bool isReadOnly = readOnly || stateMap['readOnly'];
 
                 Color color = isReadOnly
@@ -106,7 +106,7 @@ class CheckboxGroup extends ValueField<List<int>> {
                         : themeData.unselectedWidgetColor;
 
                 Widget checkbox = Padding(
-                  padding: itemsPadding,
+                  padding: stateMap['padding'],
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -176,8 +176,7 @@ class CheckboxGroup extends ValueField<List<int>> {
                     overflow: inline ? TextOverflow.ellipsis : null,
                     style: FormThemeData.getErrorStyle(themeData));
                 widgets.add(Padding(
-                  padding:
-                      checkboxGroupTheme.errorTextPadding ?? EdgeInsets.zero,
+                  padding: errorTextPadding,
                   child: text,
                 ));
               }
