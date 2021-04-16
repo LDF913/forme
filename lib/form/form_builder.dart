@@ -469,6 +469,7 @@ class FormBuilder extends StatefulWidget {
       int divisions,
       String label,
       SubLabelRender subLabelRender,
+      EdgeInsets contentPadding,
       bool inline = false}) {
     SliderController controller = _formController.newController(
         controlKey, () => SliderController(value: initialValue ?? min));
@@ -494,6 +495,7 @@ class FormBuilder extends StatefulWidget {
         subLabelRender: subLabelRender,
         inline: inline,
         padding: padding,
+        contentPadding: contentPadding,
       ),
     ));
     if (!inline) nextLine();
@@ -513,6 +515,7 @@ class FormBuilder extends StatefulWidget {
       int divisions,
       String label,
       RangeSubLabelRender rangeSubLabelRender,
+      EdgeInsets contentPadding,
       bool inline = false}) {
     RangeSliderController controller = _formController.newController(
         controlKey,
@@ -537,6 +540,7 @@ class FormBuilder extends StatefulWidget {
         inline: inline ?? false,
         rangeSubLabelRender: rangeSubLabelRender,
         padding: padding,
+        contentPadding: contentPadding,
       ),
     ));
     if (!inline) nextLine();

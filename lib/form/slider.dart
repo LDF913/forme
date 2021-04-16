@@ -32,7 +32,8 @@ class SliderFormField extends ValueField<double> {
             'max': max,
             'min': min,
             'label': label,
-            'contentPadding': contentPadding ?? EdgeInsets.zero
+            'contentPadding':
+                contentPadding ?? EdgeInsets.symmetric(horizontal: 10)
           },
           key: key,
           readOnly: readOnly,
@@ -172,7 +173,8 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               'max': max,
               'min': min,
               'label': label,
-              'contentPadding': contentPadding ?? EdgeInsets.zero
+              'contentPadding':
+                  contentPadding ?? EdgeInsets.symmetric(horizontal: 20)
             },
             readOnly: readOnly,
             padding: padding,

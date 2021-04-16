@@ -120,8 +120,8 @@ class DefaultFormThemeData extends FormThemeData {
                 itemsPadding: EdgeInsets.all(8),
                 errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
             switchGroupTheme: SwitchGroupTheme(
-                itemsPadding: EdgeInsets.all(8),
-                errorTextPadding: EdgeInsets.symmetric(horizontal: 8)),
+                itemsPadding: EdgeInsets.all(4),
+                errorTextPadding: EdgeInsets.symmetric(horizontal: 4)),
             labelPadding: const EdgeInsets.symmetric(vertical: 10));
 
   static TextTheme _buildTextTheme(TextTheme base) {

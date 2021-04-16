@@ -157,6 +157,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                 ),
                 onTap: readOnly || isAllReadOnly ? null : toggleValues,
               ));
+              columns.add(Divider());
             }
 
             for (int i = 0; i < items.length; i++) {
