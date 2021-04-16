@@ -210,7 +210,7 @@ class _TextFormFieldState extends ValueFieldState<String> {
   @override
   void doChangeValue(String value, {bool trigger = true}) {
     String replaceValue = value ?? '';
-    super.superDidChange(replaceValue);
+    super.overrideDidChange(replaceValue);
     if (onChanged != null && trigger) {
       onChanged(replaceValue);
     }
@@ -221,7 +221,7 @@ class _TextFormFieldState extends ValueFieldState<String> {
 
   @override
   void reset() {
-    super.superReset();
+    super.overrideReset();
     controller.text = widget.initialValue ?? '';
     if (onChanged != null) {
       onChanged(controller.text);

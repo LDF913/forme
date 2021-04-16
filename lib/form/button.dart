@@ -17,7 +17,7 @@ class Button extends CommonField {
           'child': child,
           'padding': padding,
         }, key: key, readOnly: readOnly, padding: padding, builder: (field) {
-          ValueFieldState state = field as ValueFieldState;
+          CommonFieldState state = field as CommonFieldState;
           FormThemeData themeData = FormThemeData.of(state.context);
           bool readOnly = state.readOnly;
           Widget child =

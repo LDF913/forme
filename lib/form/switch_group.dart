@@ -95,12 +95,12 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               statesMap[element] = stateMap;
             });
 
+            List<int> value = List.of(controller.value);
+
             bool selectAll = controllableItems.isNotEmpty &&
-                controllableItems
-                    .every((element) => controller.value.contains(element));
+                controllableItems.every((element) => value.contains(element));
 
             void changeValue(int index) {
-              List<int> value = controller.value;
               if (value.contains(index)) {
                 value.remove(index);
               } else {
@@ -111,7 +111,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
 
             void toggleValues() {
               if (selectAll) {
-                state.didChange(controller.value
+                state.didChange(value
                     .where((element) => !controllableItems.contains(element))
                     .toList());
               } else {
@@ -169,7 +169,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               )));
               bool isReadOnly = readOnly || stateMap['readOnly'];
               children.add(CupertinoSwitch(
-                value: controller.value.contains(i),
+                value: value.contains(i),
                 onChanged: isReadOnly
                     ? null
                     : (value) {

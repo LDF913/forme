@@ -87,7 +87,7 @@ class CheckboxGroup extends ValueField<List<int>> {
                 ));
               }
 
-              List<int> value = controller.value;
+              List<int> value = List.of(controller.value);
 
               List<Widget> wrapWidgets = [];
 
@@ -123,7 +123,6 @@ class CheckboxGroup extends ValueField<List<int>> {
                                 else
                                   value.add(i);
                                 state.didChange(value);
-                                if (onChanged != null) onChanged(value);
                               },
                         child: Row(
                           mainAxisSize: MainAxisSize.min,

@@ -15,7 +15,6 @@ class FormBuilder extends StatefulWidget {
   final List<_FormItemWidget> _builders = [];
   final List<List<_FormItemWidget>> _builderss = [];
   final FormControllerDelegate formControllerDelegate;
-
   _FormController get _formController => formControllerDelegate._formController;
 
   FormBuilder(this.formControllerDelegate);
@@ -372,15 +371,21 @@ class FormBuilder extends StatefulWidget {
       visible,
       controlKey,
       flex: 1,
-      child: Builder(builder: (context) {
-        FormThemeData formThemeData = FormThemeData.of(context);
-        return Padding(
-          padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-          child: Divider(
-            height: height ?? 1.0,
-          ),
-        );
-      }),
+      child: CommonField(
+        {'height': height ?? 1.0},
+        readOnly: true,
+        padding: padding,
+        builder: (field) {
+          CommonFieldState state = field as CommonFieldState;
+          FormThemeData formThemeData = FormThemeData.of(field.context);
+          return Padding(
+            padding: state.padding ?? formThemeData.padding ?? EdgeInsets.zero,
+            child: Divider(
+              height: state.getState('height'),
+            ),
+          );
+        },
+      ),
     ));
     nextLine();
     return this;
@@ -679,7 +684,8 @@ class _FormController extends ChangeNotifier {
   final Map<String, dynamic> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, _FormItemWidgetState> _states = {};
-  final Map<String, ValueFieldState> _fieldStates = {};
+  final Map<String, ValueFieldState> _valueFieldStates = {};
+  final Map<String, CommonFieldState> _commonFieldStates = {};
   final Map<String, List<ValueChanged<bool>>> _focusChangeMap = {};
   //when hide a form widget,it's state will dispose,we store it's state map here
   final Map<String, Map<String, dynamic>> _fieldStateMap = {};
@@ -734,8 +740,11 @@ class _FormController extends ChangeNotifier {
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
       _readOnly = readOnly;
-      _fieldStates.forEach((key, value) {
+      _valueFieldStates.forEach((key, value) {
         value.readOnly = _readOnly;
+      });
+      _commonFieldStates.forEach((key, value) {
+        value.readOnly = readOnly;
       });
     }
   }
@@ -768,20 +777,22 @@ class _FormController extends ChangeNotifier {
   }
 
   dynamic getValue(String controlKey) {
-    ValueFieldState state = _fieldStates.values
+    ValueFieldState state = _valueFieldStates.values
         .where((element) => (element.controlKey == controlKey))
         .first;
     return state == null ? null : state.value;
   }
 
   void rebuild(String controlKey, Map<String, dynamic> map) {
-    ValueFieldState state = _fieldStates[controlKey];
+    ValueFieldState state =
+        _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.rebuild(map);
   }
 
   void update(String controlKey, Map<String, dynamic> map) {
-    ValueFieldState state = _fieldStates[controlKey];
+    ValueFieldState state =
+        _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.update(map);
   }
@@ -793,7 +804,8 @@ class _FormController extends ChangeNotifier {
   }
 
   void setReadOnly(String controlKey, bool readOnly) {
-    ValueFieldState state = _fieldStates[controlKey];
+    ValueFieldState state =
+        _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.readOnly = readOnly;
   }
@@ -804,23 +816,23 @@ class _FormController extends ChangeNotifier {
   }
 
   bool isReadOnly(String controlKey) {
-    ValueFieldState state = _fieldStates[controlKey];
+    ValueFieldState state =
+        _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     return state == null ? false : state.readOnly;
   }
 
-  Map<String, dynamic> getData() {
+  Map<String, dynamic> getData({bool removeNull = true}) {
     Map<String, dynamic> map = {};
-    _fieldStates.values.forEach((element) {
+    _valueFieldStates.values.forEach((element) {
       dynamic value = element.value;
-      if (value != null) {
-        map[element.controlKey] = value;
-      }
+      if (removeNull && value == null) return;
+      map[element.controlKey] = value;
     });
     return map;
   }
 
   void setValue(String controlKey, dynamic value, {bool trigger = true}) {
-    _fieldStates.values
+    _valueFieldStates.values
         .where((element) => (element.controlKey == controlKey))
         .forEach((element) {
       element.doChangeValue(value, trigger: trigger);
@@ -828,12 +840,12 @@ class _FormController extends ChangeNotifier {
   }
 
   void reset() {
-    for (final FormFieldState<dynamic> field in _fieldStates.values)
+    for (final FormFieldState<dynamic> field in _valueFieldStates.values)
       field.reset();
   }
 
   void reset1(String controlKey) {
-    _fieldStates.values
+    _valueFieldStates.values
         .where((element) => (element.controlKey == controlKey))
         .forEach((element) {
       element.reset();
@@ -842,13 +854,13 @@ class _FormController extends ChangeNotifier {
 
   bool validate() {
     bool hasError = false;
-    for (final FormFieldState<dynamic> field in _fieldStates.values)
+    for (final FormFieldState<dynamic> field in _valueFieldStates.values)
       hasError = !field.validate() || hasError;
     return !hasError;
   }
 
   bool validate1(String controlKey) {
-    ValueFieldState state = _fieldStates.values
+    ValueFieldState state = _valueFieldStates.values
         .where((element) => (element.controlKey == controlKey))
         .first;
     return state == null ? true : state.validate();
@@ -880,7 +892,8 @@ class _FormController extends ChangeNotifier {
     _focusNodes.clear();
     _controllers.clear();
     _states.clear();
-    _fieldStates.clear();
+    _valueFieldStates.clear();
+    _commonFieldStates.clear();
     super.dispose();
   }
 }
@@ -977,24 +990,11 @@ class ValueField<T> extends FormField<T> {
   }
 
   @override
-  ValueFieldState<T> createState() => ValueFieldState<T>();
+  FormFieldState<T> createState() => ValueFieldState<T>();
 }
 
-class CommonField extends ValueField<Null> {
-  CommonField(
-    Map<String, dynamic> initStateMap, {
-    Key key,
-    FormFieldBuilder<Null> builder,
-    bool readOnly,
-    EdgeInsets padding,
-  }) : super(null, initStateMap,
-            key: key, readOnly: readOnly, padding: padding, builder: builder);
-}
-
-class ValueFieldState<T> extends FormFieldState<T> {
+abstract class BaseFieldState<T> extends FormFieldState<T> {
   ValueField<T> get widget => super.widget;
-  ValueNotifier get controller => widget.controller;
-  ValueChanged<T> get onChanged => widget.onChanged;
   _FormController get formController => _FormController.of(context);
   String get controlKey => _InheritedControlKey.of(context).controlKey;
   bool get readOnly =>
@@ -1022,18 +1022,50 @@ class ValueFieldState<T> extends FormFieldState<T> {
         : widget.initStateMap[stateKey];
   }
 
-  @override
-  void initState() {
-    super.initState();
-    if (controller is SubController) {
-      controller.addListener(handleSubControllerChange);
-    }
+  void rebuild(Map<String, dynamic> state) {
+    setState(() {
+      this._state = state ?? {};
+    });
+  }
+
+  void update(Map<String, dynamic> state) {
+    if (state == null) return;
+    setState(() {
+      state.forEach((key, value) {
+        this._state[key] = value;
+      });
+    });
+  }
+
+  void remove(String stateKey) {
+    setState(() {
+      _state.remove(stateKey);
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _state = formController._fieldStateMap.remove(controlKey) ?? {};
+  }
+
+  @override
+  void deactivate() {
+    formController._fieldStateMap[controlKey] = _state;
+    super.deactivate();
+  }
+}
+
+class ValueFieldState<T> extends BaseFieldState<T> {
+  ValueNotifier get controller => widget.controller;
+  ValueChanged<T> get onChanged => widget.onChanged;
+
+  @override
+  void initState() {
+    super.initState();
+    if (controller is SubController) {
+      controller.addListener(handleSubControllerChange);
+    }
   }
 
   @override
@@ -1046,14 +1078,13 @@ class ValueFieldState<T> extends FormFieldState<T> {
 
   @override
   void deactivate() {
-    formController._fieldStateMap[controlKey] = _state;
-    formController._fieldStates.remove(controlKey);
+    formController._valueFieldStates.remove(controlKey);
     super.deactivate();
   }
 
   @override
   Widget build(BuildContext context) {
-    formController._fieldStates[controlKey] = this;
+    formController._valueFieldStates[controlKey] = this;
     return super.build(context);
   }
 
@@ -1084,34 +1115,13 @@ class ValueFieldState<T> extends FormFieldState<T> {
   }
 
   @protected
-  void superDidChange(T value) {
+  void overrideDidChange(T value) {
     super.didChange(value);
   }
 
   @protected
-  void superReset() {
+  void overrideReset() {
     super.reset();
-  }
-
-  void rebuild(Map<String, dynamic> state) {
-    setState(() {
-      this._state = state ?? {};
-    });
-  }
-
-  void update(Map<String, dynamic> state) {
-    if (state == null) return;
-    setState(() {
-      state.forEach((key, value) {
-        this._state[key] = value;
-      });
-    });
-  }
-
-  void remove(String stateKey) {
-    setState(() {
-      _state.remove(stateKey);
-    });
   }
 
   T _getValue(T value) {
@@ -1123,6 +1133,34 @@ class ValueFieldState<T> extends FormFieldState<T> {
 
   void handleSubControllerChange() {
     setState(() {});
+  }
+}
+
+class CommonField extends ValueField {
+  CommonField(
+    Map<String, dynamic> initStateMap, {
+    Key key,
+    FormFieldBuilder builder,
+    bool readOnly,
+    EdgeInsets padding,
+  }) : super(null, initStateMap,
+            key: key, readOnly: readOnly, padding: padding, builder: builder);
+
+  @override
+  FormFieldState createState() => CommonFieldState();
+}
+
+class CommonFieldState extends BaseFieldState {
+  @override
+  void deactivate() {
+    formController._commonFieldStates.remove(controlKey);
+    super.deactivate();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    formController._commonFieldStates[controlKey] = this;
+    return super.build(context);
   }
 }
 
