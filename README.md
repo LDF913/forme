@@ -170,18 +170,18 @@ formController.themeData = DefaultFormTheme(context);//default theme from  https
 
 ## currently support field
 
-| field | return value |
-| ---| ---|
-| TextField|  string |
-| CheckboxGroup|  List&lt;int&gt; |
-| RadioGroup|  dynamic |
-| DateTimeField|  DateTime |
-| Selector|  List |
-| SwitchGroup|  List&lt;int&gt; |
-| SwitchInline|  bool |
-| NumberField|  num |
-| Slider|  double |
-| RangeSlider|  RangeValues |
+| field | return value | nullable|
+| ---| ---| --- |
+| TextField|  string | false |
+| CheckboxGroup|  List&lt;int&gt; | false |
+| RadioGroup|  dynamic | true |
+| DateTimeField|  DateTime | true |
+| Selector|  List | false |
+| SwitchGroup|  List&lt;int&gt; | false |
+| SwitchInline|  bool | true |
+| NumberField|  num | true |
+| Slider|  double | false |
+| RangeSlider|  RangeValues | false|
 
 ## project status
 
