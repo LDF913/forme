@@ -7,6 +7,9 @@
 FormControllerDelegate formController = FormControllerDelegate();
 
 Widget form = FormBuilder(formController)
+	.readOnly(readOnly)
+	.visible(visible)
+	.themeData(themeData)
 	.textField(
 	  'username',//control key ,used to get|set value and control readonly|visible  state
 	  labelText: 'username',
