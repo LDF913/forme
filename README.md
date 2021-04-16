@@ -178,7 +178,7 @@ formController.themeData = DefaultFormTheme(context);//default theme from  https
 | DateTimeField|  DateTime | true |
 | Selector|  List | false |
 | SwitchGroup|  List&lt;int&gt; | false |
-| SwitchInline|  bool | true |
+| SwitchInline|  bool | false |
 | NumberField|  num | true |
 | Slider|  double | false |
 | RangeSlider|  RangeValues | false|
