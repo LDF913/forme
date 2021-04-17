@@ -15,7 +15,7 @@ Widget form = FormBuilder(formController)
 	  labelText: 'username',
 	  clearable: true,
 	  flex: 3,
-	  validator: (value) => (value ?? '').isEmpty ? 'can not be empty !' : null,
+	  validator: (value) => value.isEmpty ? 'can not be empty !' : null,
 	);
 ```
 
@@ -133,6 +133,21 @@ formController.rebuild('selector', {
 });
 ```
 
+### set form field's validate mode
+``` dart
+formController.setAutovalidateMode(controlKey,autovalidateMode);
+```
+
+### set form field's initialValue
+``` dart
+formController.setInitialValue(controlKey,initialValue)
+```
+
+### set form field's padding
+``` dart
+formController.setPadding(controlKey,padding);
+```
+
 ### set form field's selection
 
 ``` dart
@@ -159,6 +174,12 @@ formController.getValue('controlKey');
 
 ``` dart
 formController.getData(removeNull:false); //return a map if removeNull is true ,map will not contain null value items
+```
+
+### completely remove a from field
+
+``` dart
+formController.remove(controlKey);
 ```
 
 ### set form theme

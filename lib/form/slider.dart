@@ -16,7 +16,6 @@ class SliderFormField extends ValueField<double> {
       ValueChanged<double> onChanged,
       FormFieldValidator<double> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       double initialValue,
       int divisions,
       double max,
@@ -37,7 +36,6 @@ class SliderFormField extends ValueField<double> {
           },
           key: key,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           replace: () => min,
           validator: validator,
@@ -53,7 +51,6 @@ class SliderFormField extends ValueField<double> {
             double min = state.getState('min');
             String label = state.getState('label');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             EdgeInsets contentPadding = state.getState('contentPadding');
 
             List<Widget> columns = [];
@@ -126,13 +123,11 @@ class SliderFormField extends ValueField<double> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: contentColumns),
             ));
-            return Padding(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: columns,
-                ),
-                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero);
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: columns,
+            );
           },
         );
 
@@ -160,7 +155,6 @@ class RangeSliderFormField extends ValueField<RangeValues> {
       double max,
       double min,
       String label,
-      EdgeInsets padding,
       bool inline,
       int divisions,
       RangeValues initialValue,
@@ -177,7 +171,6 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                   contentPadding ?? EdgeInsets.symmetric(horizontal: 20)
             },
             readOnly: readOnly,
-            padding: padding,
             onChanged: onChanged,
             validator: validator,
             initialValue: initialValue,
@@ -194,7 +187,6 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               double min = state.getState('min');
               String label = state.getState('label');
               bool readOnly = state.readOnly;
-              EdgeInsets padding = state.padding;
               EdgeInsets contentPadding = state.getState('contentPadding');
 
               List<Widget> columns = [];
@@ -291,13 +283,11 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                 ),
               ));
 
-              return Padding(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: columns,
-                  ),
-                  padding: padding ?? formThemeData.padding ?? EdgeInsets.zero);
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: columns,
+              );
             });
 }
 

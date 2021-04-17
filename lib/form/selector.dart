@@ -90,7 +90,6 @@ class SelectorFormField extends ValueField<List> {
       this.hintText,
       FormFieldValidator<List> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       this.iconSize = 24,
       this.multi = false,
       List initialValue,
@@ -114,7 +113,6 @@ class SelectorFormField extends ValueField<List> {
           },
           key: key,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           replace: () => [],
           validator: validator,
@@ -130,7 +128,6 @@ class SelectorFormField extends ValueField<List> {
             bool multi = state.getState('multi');
             bool clearable = state.getState('clearable');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             InputDecorationTheme inputDecorationTheme =
                 state.getState('inputDecorationTheme') ??
                     themeData.inputDecorationTheme;
@@ -251,10 +248,7 @@ class SelectorFormField extends ValueField<List> {
                             child: widget,
                           ),
                         )));
-            return Padding(
-              child: child,
-              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-            );
+            return child;
           },
         );
 

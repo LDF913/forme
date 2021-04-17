@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'form_builder.dart';
-import 'form_theme.dart';
 
 class ClearableTextFormField extends ValueField<String> {
   final bool obscureText;
@@ -27,7 +26,6 @@ class ClearableTextFormField extends ValueField<String> {
       bool passwordVisible,
       Widget prefixIcon,
       List<TextInputFormatter> inputFormatters,
-      EdgeInsets padding,
       TextStyle style,
       bool readOnly = false,
       String initialValue,
@@ -62,10 +60,8 @@ class ClearableTextFormField extends ValueField<String> {
           validator: validator,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          padding: padding,
           builder: (field) {
             final _TextFormFieldState state = field as _TextFormFieldState;
-            FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
 
             String labelText = state.getState('labelText');
@@ -83,7 +79,6 @@ class ClearableTextFormField extends ValueField<String> {
             List<Widget> suffixIcons = state.getState('suffixIcons');
             TextInputAction textInputAction = state.getState('textInputAction');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             InputDecorationTheme inputDecorationTheme =
                 state.getState('inputDecorationTheme') ??
                     themeData.inputDecorationTheme;
@@ -152,10 +147,7 @@ class ClearableTextFormField extends ValueField<String> {
               inputFormatters: inputFormatters,
             );
 
-            return Padding(
-              child: textField,
-              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-            );
+            return textField;
           },
         );
 
@@ -262,7 +254,6 @@ class DateTimeFormField extends ValueField<DateTime> {
       ValueChanged<DateTime> onChanged,
       FormFieldValidator<DateTime> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       int maxLines,
       DateTime initialValue,
       InputDecorationTheme inputDecorationTheme})
@@ -282,11 +273,9 @@ class DateTimeFormField extends ValueField<DateTime> {
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          padding: padding,
           key: key,
           builder: (field) {
             _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
-            final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
 
             String labelText = state.getState('labelText');
@@ -295,7 +284,6 @@ class DateTimeFormField extends ValueField<DateTime> {
             bool useTime = state.getState("useTime");
             int maxLines = state.getState("maxLines");
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             InputDecorationTheme inputDecorationTheme =
                 state.getState('inputDecorationTheme') ??
                     themeData.inputDecorationTheme;
@@ -381,9 +369,7 @@ class DateTimeFormField extends ValueField<DateTime> {
               style: style,
             );
 
-            return Padding(
-                child: textField,
-                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero);
+            return textField;
           },
         );
 
@@ -459,7 +445,6 @@ class NumberFormField extends ValueField<num> {
       ValueChanged<num> onChanged,
       FormFieldValidator<num> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       num initialValue,
       int decimal,
       double max,
@@ -509,9 +494,7 @@ class NumberFormField extends ValueField<num> {
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          padding: padding,
           builder: (field) {
-            final FormThemeData formThemeData = FormThemeData.of(field.context);
             final ThemeData themeData = Theme.of(field.context);
             _NumberFieldState state = field as _NumberFieldState;
 
@@ -523,7 +506,6 @@ class NumberFormField extends ValueField<num> {
             List<Widget> suffixIcons = state.getState('suffixIcons');
             TextInputAction textInputAction = state.getState('textInputAction');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             int decimal = state.getState('decimal');
             double max = state.getState('max');
             double min = state.getState('min');
@@ -616,9 +598,7 @@ class NumberFormField extends ValueField<num> {
               inputFormatters: formatters,
             );
 
-            return Padding(
-                child: textField,
-                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero);
+            return textField;
           },
         );
 

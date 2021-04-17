@@ -148,6 +148,22 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
                 onPressed: () {
+                  formController.setAutovalidateMode(
+                      'username', AutovalidateMode.always);
+                },
+                child: Text('set username always validate')),
+            TextButton(
+                onPressed: () {
+                  formController.setInitialValue('username', 'username');
+                },
+                child: Text('set username\'s initialValue')),
+            TextButton(
+                onPressed: () {
+                  formController.remove('username');
+                },
+                child: Text('remove username completely')),
+            TextButton(
+                onPressed: () {
                   setState(() {});
                 },
                 child: Text('rebuild page')),

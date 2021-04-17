@@ -40,7 +40,6 @@ class RadioGroup extends ValueField {
       FormFieldValidator validator,
       AutovalidateMode autovalidateMode,
       int split = 0,
-      EdgeInsets padding,
       bool readOnly = false,
       dynamic initialValue,
       EdgeInsets errorTextPadding,
@@ -55,7 +54,6 @@ class RadioGroup extends ValueField {
           },
           key: key,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
@@ -67,7 +65,6 @@ class RadioGroup extends ValueField {
 
             String label = inline ? null : state.getState('label');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             int split = inline ? 0 : state.getState('split');
             List<RadioItem> items = state.getState('items');
             EdgeInsets errorTextPadding = state.getState('errorTextPadding');
@@ -175,13 +172,10 @@ class RadioGroup extends ValueField {
               ));
             }
 
-            return Padding(
-              padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: widgets,
-              ),
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: widgets,
             );
           },
         );

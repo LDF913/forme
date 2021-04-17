@@ -12,6 +12,9 @@ import 'slider.dart';
 class FormBuilder extends StatefulWidget {
   static final String readOnlyKey = 'readOnly';
   static final String visibleKey = 'visible';
+  static final String autovalidateModeKey = 'autovalidateMode';
+  static final String initialValueKey = 'initialValue';
+
   final List<_FormItemWidget> _builders = [];
   final List<List<_FormItemWidget>> _builderss = [];
   final FormControllerDelegate formControllerDelegate;
@@ -82,7 +85,6 @@ class FormBuilder extends StatefulWidget {
             autovalidateMode: autovalidateMode,
             clearable: clearable,
             prefixIcon: prefixIcon,
-            padding: padding,
             readOnly: readOnly,
             style: style,
             initialValue: initialValue,
@@ -143,7 +145,6 @@ class FormBuilder extends StatefulWidget {
             passwordVisible: passwordVisible,
             onChanged: onChanged,
             inputFormatters: textInputFormatters,
-            padding: padding,
             readOnly: readOnly,
             style: style,
             initialValue: initialValue,
@@ -190,7 +191,6 @@ class FormBuilder extends StatefulWidget {
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
         split: split,
-        padding: padding,
         readOnly: readOnly,
         initialValue: initialValue,
         inline: inline,
@@ -234,7 +234,6 @@ class FormBuilder extends StatefulWidget {
         onChanged: onChanged,
         autovalidateMode: autovalidateMode,
         split: split,
-        padding: padding,
         readOnly: readOnly,
         initialValue: initialValue,
         inline: inline,
@@ -266,7 +265,6 @@ class FormBuilder extends StatefulWidget {
               label: label,
               child: child,
               onLongPress: onLongPress,
-              padding: padding,
               readOnly: readOnly,
             ),
           )),
@@ -303,7 +301,6 @@ class FormBuilder extends StatefulWidget {
               formatter: formatter,
               validator: validator,
               useTime: useTime,
-              padding: padding,
               readOnly: readOnly,
               style: style,
               maxLines: maxLines,
@@ -352,7 +349,6 @@ class FormBuilder extends StatefulWidget {
               clearable: clearable,
               validator: validator,
               autovalidateMode: autovalidateMode,
-              padding: padding,
               readOnly: readOnly,
               multi: multi,
               initialValue: initialValue,
@@ -379,18 +375,14 @@ class FormBuilder extends StatefulWidget {
       visible,
       controlKey,
       flex: 1,
+      padding: padding,
       child: CommonField(
         {'height': height ?? 1.0},
         readOnly: true,
-        padding: padding,
         builder: (field) {
           CommonFieldState state = field as CommonFieldState;
-          FormThemeData formThemeData = FormThemeData.of(field.context);
-          return Padding(
-            padding: state.padding ?? formThemeData.padding ?? EdgeInsets.zero,
-            child: Divider(
-              height: state.getState('height'),
-            ),
+          return Divider(
+            height: state.getState('height'),
           );
         },
       ),
@@ -422,6 +414,7 @@ class FormBuilder extends StatefulWidget {
       visible,
       controlKey,
       flex: 1,
+      padding: padding,
       child: SwitchGroupFormField(
         controller,
         label: label,
@@ -432,9 +425,7 @@ class FormBuilder extends StatefulWidget {
         autovalidateMode: autovalidateMode,
         initialValue: initialValue,
         onChanged: onChanged,
-        padding: padding,
         errorTextPadding: errorTextPadding,
-        selectAllDivier: selectAllDivier,
         selectAllPadding: selectAllPadding,
       ),
     ));
@@ -464,7 +455,6 @@ class FormBuilder extends StatefulWidget {
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
         initialValue: initialValue ?? false,
-        padding: padding,
       ),
     ));
     return this;
@@ -508,7 +498,6 @@ class FormBuilder extends StatefulWidget {
         initialValue: initialValue ?? min,
         subLabelRender: subLabelRender,
         inline: inline,
-        padding: padding,
         contentPadding: contentPadding,
       ),
     ));
@@ -553,7 +542,6 @@ class FormBuilder extends StatefulWidget {
         initialValue: initialValue ?? RangeValues(min, max),
         inline: inline ?? false,
         rangeSubLabelRender: rangeSubLabelRender,
-        padding: padding,
         contentPadding: contentPadding,
       ),
     ));
@@ -674,6 +662,17 @@ class FormControllerDelegate {
       _formController.setReadOnly(controlKey, readOnly);
   bool isReadOnly(String controlKey) => _formController.isReadOnly(controlKey);
 
+  void setPadding(String controlKey, EdgeInsets padding) =>
+      _formController.setPadding(controlKey, padding);
+  EdgeInsets getPadding(String controlKey) =>
+      _formController.getPadding(controlKey);
+
+  void setInitialValue(String controlKey, initialValue) =>
+      _formController.setInitialValue(controlKey, initialValue);
+  void setAutovalidateMode(
+          String controlKey, AutovalidateMode autovalidateMode) =>
+      _formController.setAutovalidateMode(controlKey, autovalidateMode);
+
   dynamic getValue(String controlKey) => _formController.getValue(controlKey);
   void setValue(String controlKey, dynamic value, {bool trigger = true}) =>
       _formController.setValue(controlKey, value, trigger: trigger);
@@ -690,16 +689,18 @@ class FormControllerDelegate {
 
   SubControllerDelegate getSubController(String controlKey) =>
       _formController.getSubController(controlKey);
+
+  void remove(String controlKey) => _formController.remove(controlKey);
 }
 
-typedef _ControllerProvider<T> = T Function();
+typedef _ControllerProvider = ValueNotifier Function();
 
 class _FormController extends ChangeNotifier {
   bool _visible = true;
   bool _readOnly = false;
   FormThemeData _themeData;
 
-  final Map<String, dynamic> _controllers = {};
+  final Map<String, ValueNotifier> _controllers = {};
   final Map<String, FocusNode> _focusNodes = {};
   final Map<String, _FormItemWidgetState> _states = {};
   final Map<String, ValueFieldState> _valueFieldStates = {};
@@ -712,7 +713,7 @@ class _FormController extends ChangeNotifier {
     return _InheritedFromController.of(context).formController;
   }
 
-  T newController<T>(String controlKey, _ControllerProvider<T> provider) {
+  ValueNotifier newController(String controlKey, _ControllerProvider provider) {
     return _controllers.putIfAbsent(controlKey, () => provider());
   }
 
@@ -828,6 +829,18 @@ class _FormController extends ChangeNotifier {
     state.readOnly = readOnly;
   }
 
+  void setPadding(String controlKey, EdgeInsets padding) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state == null) return;
+    state.padding = padding;
+  }
+
+  EdgeInsets getPadding(String controlKey) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state == null) return null;
+    return state.padding;
+  }
+
   bool isVisible(String controlKey) {
     _FormItemWidgetState state = _states[controlKey];
     return state == null ? false : state.visible;
@@ -887,8 +900,38 @@ class _FormController extends ChangeNotifier {
   void setSelection(String controlKey, int start, int end) {
     var controller = _controllers[controlKey];
     if (controller != null && controller is TextSelectionMixin) {
-      controller.setSelection(start, end);
+      (controller as TextSelectionMixin).setSelection(start, end);
     }
+  }
+
+  void setAutovalidateMode(
+      String controlKey, AutovalidateMode autovalidateMode) {
+    ValueFieldState state = _valueFieldStates[controlKey];
+    if (state == null) return;
+    state._setInitStateValue(FormBuilder.autovalidateModeKey, autovalidateMode);
+  }
+
+  void setInitialValue(String controlKey, initialValue) {
+    ValueFieldState state = _valueFieldStates[controlKey];
+    if (state == null) return;
+    state._setInitStateValue(FormBuilder.initialValueKey, initialValue);
+  }
+
+  void remove(String controlKey) {
+    _FormItemWidgetState state = _states[controlKey];
+    if (state == null) return;
+    state.remove();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      _focusChangeMap.remove(controlKey);
+      ValueNotifier controller = _controllers.remove(controlKey);
+      if (controller != null) controller.dispose();
+      FocusNode focusNode = _focusNodes.remove(controlKey);
+      if (focusNode != null) focusNode.dispose();
+      _states.remove(controlKey);
+      _valueFieldStates.remove(controlKey);
+      _commonFieldStates.remove(controlKey);
+      _fieldStateMap.remove(controlKey);
+    });
   }
 
   SubControllerDelegate getSubController(String controlKey) {
@@ -901,6 +944,7 @@ class _FormController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _focusChangeMap.clear();
     _focusNodes.values.forEach((element) {
       element.dispose();
     });
@@ -912,6 +956,7 @@ class _FormController extends ChangeNotifier {
     _states.clear();
     _valueFieldStates.clear();
     _commonFieldStates.clear();
+    _fieldStateMap.clear();
     super.dispose();
   }
 }
@@ -921,8 +966,9 @@ class _FormItemWidget extends StatefulWidget {
   final int flex;
   final bool visible;
   final Widget child;
+  final EdgeInsets padding;
   const _FormItemWidget(this.visible, this.controlKey,
-      {Key key, this.flex, this.child})
+      {Key key, this.flex, this.child, this.padding})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -931,10 +977,12 @@ class _FormItemWidget extends StatefulWidget {
 class _FormItemWidgetState extends State<_FormItemWidget> {
   bool _visible;
   int _flex;
+  EdgeInsets _padding;
+  bool _removed = false;
 
   get visible => _visible;
   set visible(bool visible) {
-    if (visible != _visible) {
+    if (!_removed && visible != _visible) {
       setState(() {
         _visible = visible;
       });
@@ -943,11 +991,29 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   get flex => _flex;
   set flex(int flex) {
-    if (flex != _flex) {
+    if (!_removed && flex != _flex) {
       setState(() {
         _flex = flex;
       });
     }
+  }
+
+  get padding =>
+      _padding ?? FormThemeData.of(context).padding ?? EdgeInsets.zero;
+  set padding(EdgeInsets padding) {
+    if (!_removed && _padding != padding) {
+      setState(() {
+        _padding = padding;
+      });
+    }
+  }
+
+  bool get removed => _removed;
+  void remove() {
+    if (_removed) return;
+    setState(() {
+      _removed = true;
+    });
   }
 
   @override
@@ -955,6 +1021,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     super.initState();
     _visible = widget.visible ?? true;
     _flex = widget.flex ?? 1;
+    _padding = widget.padding;
   }
 
   @override
@@ -965,13 +1032,19 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (_removed) {
+      return SizedBox.shrink();
+    }
     _FormController.of(context)._states[widget.controlKey] = this;
     return _InheritedControlKey(
       widget.controlKey,
       child: Visibility(
         visible: visible,
         child: Expanded(
-          child: widget.child,
+          child: Padding(
+            padding: padding,
+            child: widget.child,
+          ),
           flex: flex,
         ),
       ),
@@ -987,6 +1060,13 @@ class ValueField<T> extends FormField<T> {
   final NullValueReplace<T> replace;
   final Map<String, dynamic> initStateMap;
 
+  @override
+  AutovalidateMode get autovalidateMode =>
+      initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
+  @override
+  T get initialValue =>
+      initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
+
   ValueField(this.controller, this.initStateMap,
       {Key key,
       this.replace,
@@ -995,7 +1075,6 @@ class ValueField<T> extends FormField<T> {
       FormFieldValidator<T> validator,
       AutovalidateMode autovalidateMode,
       bool readOnly,
-      EdgeInsets padding,
       T initialValue})
       : super(
             key: key,
@@ -1003,8 +1082,9 @@ class ValueField<T> extends FormField<T> {
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
-    initStateMap.putIfAbsent(FormBuilder.readOnlyKey, () => readOnly);
-    initStateMap.putIfAbsent('padding', () => padding);
+    initStateMap[FormBuilder.readOnlyKey] = readOnly;
+    initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
+    initStateMap[FormBuilder.initialValueKey] = initialValue;
   }
 
   @override
@@ -1017,14 +1097,9 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
   String get controlKey => _InheritedControlKey.of(context).controlKey;
   bool get readOnly =>
       formController._readOnly || (getState(FormBuilder.readOnlyKey) ?? false);
-  EdgeInsets get padding => getState('padding');
 
   set readOnly(bool readOnly) {
     update({FormBuilder.readOnlyKey: readOnly});
-  }
-
-  set padding(EdgeInsets padding) {
-    update({'padding': padding});
   }
 
   Map<String, dynamic> _state = {};
@@ -1066,6 +1141,12 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
   void deactivate() {
     formController._fieldStateMap[controlKey] = _state;
     super.deactivate();
+  }
+
+  void _setInitStateValue(String stateKey, value) {
+    setState(() {
+      widget.initStateMap[stateKey] = value;
+    });
   }
 }
 
@@ -1151,9 +1232,8 @@ class CommonField extends ValueField {
     Key key,
     FormFieldBuilder builder,
     bool readOnly,
-    EdgeInsets padding,
   }) : super(null, initStateMap,
-            key: key, readOnly: readOnly, padding: padding, builder: builder);
+            key: key, readOnly: readOnly, builder: builder);
 
   @override
   FormFieldState createState() => CommonFieldState();
@@ -1336,22 +1416,22 @@ class SubControllerDelegate {
 
   void setVisible(String controlKey, bool visible) {
     _controller.update1(controlKey, {
-      'visible': visible,
+      FormBuilder.visibleKey: visible,
     });
   }
 
   void setReadOnly(String controlKey, bool readOnly) {
     _controller.update1(controlKey, {
-      'readOnly': readOnly,
+      FormBuilder.readOnlyKey: readOnly,
     });
   }
 
   bool isVisible(String controlKey) {
-    return _controller.getState(controlKey, 'visible');
+    return _controller.getState(controlKey, FormBuilder.visibleKey);
   }
 
   bool isReadOnly(String controlKey) {
-    return _controller.getState(controlKey, 'readOnly');
+    return _controller.getState(controlKey, FormBuilder.readOnlyKey);
   }
 
   bool hasState(String controlKey) {

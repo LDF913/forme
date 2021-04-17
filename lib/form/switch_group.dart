@@ -36,12 +36,10 @@ class SwitchGroupFormField extends ValueField<List<int>> {
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       bool hasSelectAllSwitch = true,
       List<int> initialValue,
       EdgeInsets errorTextPadding,
-      EdgeInsets selectAllPadding,
-      bool selectAllDivier})
+      EdgeInsets selectAllPadding})
       : super(
           controller,
           {
@@ -50,12 +48,10 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             'hasSelectAllSwitch': hasSelectAllSwitch,
             'selectAllPadding':
                 selectAllPadding ?? EdgeInsets.symmetric(horizontal: 4),
-            'selectAllDivier': selectAllDivier ?? true,
             'errorTextPadding': errorTextPadding ?? EdgeInsets.all(4)
           },
           key: key,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           replace: () => [],
           autovalidateMode: autovalidateMode,
@@ -70,10 +66,8 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             List<SwitchGroupItem> items = state.getState('items');
             bool hasSelectAllSwitch = state.getState('hasSelectAllSwitch');
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
             EdgeInsets errorTextPadding = state.getState('errorTextPadding');
             EdgeInsets selectAllPadding = state.getState('selectAllPadding');
-            bool selectAllDivier = state.getState('selectAllDivier');
 
             controller.init(items);
             Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
@@ -126,39 +120,43 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             }
 
             List<Widget> columns = [];
+
+            List<Widget> headerRow = [];
+
             if (label != null) {
               Text text = Text(label,
                   textAlign: TextAlign.left,
                   style:
                       FormThemeData.getLabelStyle(themeData, state.hasError));
-              columns.add(Padding(
+              headerRow.add(Padding(
                 padding: formThemeData.labelPadding ?? EdgeInsets.zero,
                 child: text,
               ));
             }
 
             if (items.length > 1 && hasSelectAllSwitch && !isAllInvisible) {
-              columns.add(InkWell(
+              headerRow.add(Spacer());
+              headerRow.add(InkWell(
                 child: Padding(
-                  child: Row(
-                    children: [
-                      Expanded(child: Text('全选')),
-                      CupertinoSwitch(
-                        value: selectAll,
-                        onChanged: readOnly || isAllReadOnly
-                            ? null
-                            : (value) {
-                                toggleValues();
-                              },
-                        activeColor: themeData.primaryColor,
-                      )
-                    ],
+                  child: CupertinoSwitch(
+                    value: selectAll,
+                    onChanged: readOnly || isAllReadOnly
+                        ? null
+                        : (value) {
+                            toggleValues();
+                          },
+                    activeColor: themeData.primaryColor,
                   ),
                   padding: selectAllPadding,
                 ),
                 onTap: readOnly || isAllReadOnly ? null : toggleValues,
               ));
-              if (selectAllDivier) columns.add(Divider());
+            }
+
+            if (headerRow.isNotEmpty) {
+              columns.add(Row(
+                children: headerRow,
+              ));
             }
 
             for (int i = 0; i < items.length; i++) {
@@ -205,13 +203,10 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               ));
             }
 
-            return Padding(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: columns,
-              ),
-              padding: formThemeData.padding ?? padding ?? EdgeInsets.zero,
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: columns,
             );
           },
         );
@@ -232,14 +227,12 @@ class SwitchInlineFormField extends ValueField<bool> {
       ValueChanged<bool> onChanged,
       FormFieldValidator<bool> validator,
       AutovalidateMode autovalidateMode,
-      EdgeInsets padding,
       bool initialValue})
       : super(
           controller,
           {},
           key: key,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           replace: () => false,
           autovalidateMode: autovalidateMode,
@@ -247,11 +240,9 @@ class SwitchInlineFormField extends ValueField<bool> {
           validator: validator,
           builder: (field) {
             final ValueFieldState state = field as ValueFieldState;
-            FormThemeData formThemeData = FormThemeData.of(field.context);
             ThemeData themeData = Theme.of(field.context);
 
             bool readOnly = state.readOnly;
-            EdgeInsets padding = state.padding;
 
             List<Widget> columns = [];
             columns.add(InkWell(
@@ -284,13 +275,10 @@ class SwitchInlineFormField extends ValueField<bool> {
                   style: FormThemeData.getErrorStyle(themeData)));
             }
 
-            return Padding(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: columns,
-              ),
-              padding: formThemeData.padding ?? padding ?? EdgeInsets.zero,
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: columns,
             );
           },
         );

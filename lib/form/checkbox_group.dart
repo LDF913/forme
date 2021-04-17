@@ -40,7 +40,6 @@ class CheckboxGroup extends ValueField<List<int>> {
       String label,
       ValueChanged<List<int>> onChanged,
       final bool readOnly,
-      EdgeInsets padding,
       int split,
       FormFieldValidator<List<int>> validator,
       AutovalidateMode autovalidateMode,
@@ -62,7 +61,6 @@ class CheckboxGroup extends ValueField<List<int>> {
             initialValue: initialValue ?? [],
             validator: validator,
             readOnly: readOnly,
-            padding: padding,
             builder: (field) {
               FormThemeData formThemeData = FormThemeData.of(field.context);
               ThemeData themeData = Theme.of(field.context);
@@ -70,7 +68,6 @@ class CheckboxGroup extends ValueField<List<int>> {
 
               String label = inline ? null : state.getState('label');
               bool readOnly = state.readOnly;
-              EdgeInsets padding = state.padding;
               int split = inline ? 0 : state.getState('split');
               List<CheckboxItem> items = state.getState('items');
               EdgeInsets errorTextPadding = state.getState('errorTextPadding');
@@ -181,13 +178,10 @@ class CheckboxGroup extends ValueField<List<int>> {
                 ));
               }
 
-              return Padding(
-                padding: padding ?? formThemeData.padding ?? EdgeInsets.zero,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: widgets,
-                ),
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: widgets,
               );
             });
 
