@@ -259,6 +259,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
               onPressed: () {
+                formController.update('button', {'label': 'new Text'});
+              },
+              child: Text('set button text'),
+            ),
+            TextButton(
+              onPressed: () {
                 formController.themeData = (++i) % 2 == 0
                     ? FormThemeData(themeData: Theme.of(context))
                     : DefaultFormThemeData(context);
@@ -294,7 +300,7 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
-        .button('button', () {
+        .textButton('button', () {
           print('x');
         }, flex: 0, label: 'sign in')
         .nextLine()
@@ -380,7 +386,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       rangeSubLabelRender: RangeSubLabelRender(
                           (start) => Text(start.round().toString()),
                           (end) => Text(end.round().toString())))
-                  .button('query', query, label: 'query');
+                  .textButton('query', query, label: 'query');
             },
             onSelectDialogShow: (formController) {
               //use this formController to control query form on search dialog

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'switch_group.dart';
-import 'button.dart';
 import 'checkbox_group.dart';
 import 'form_theme.dart';
 import 'text_field.dart';
@@ -243,7 +242,7 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder button(String controlKey, VoidCallback onPressed,
+  FormBuilder textButton(String controlKey, VoidCallback onPressed,
       {Key key,
       String label,
       Widget child,
@@ -251,22 +250,26 @@ class FormBuilder extends StatefulWidget {
       VoidCallback onLongPress,
       bool readOnly = false,
       bool visible = true,
-      Alignment alignment,
       EdgeInsets padding}) {
     _builders.add(
       _FormItemWidget(visible, controlKey,
           flex: flex,
-          child: Align(
-            alignment: alignment ?? Alignment.centerLeft,
-            child: Button(
-              controlKey,
-              onPressed,
-              key: key,
-              label: label,
-              child: child,
-              onLongPress: onLongPress,
-              readOnly: readOnly,
-            ),
+          padding: padding,
+          child: CommonField(
+            {
+              'label': label,
+              'child': child,
+            },
+            builder: (field) {
+              CommonFieldState state = field as CommonFieldState;
+              bool readOnly = state.readOnly;
+              Widget child =
+                  state.getState('child') ?? Text(state.getState('label'));
+              return TextButton(
+                  onPressed: readOnly ? null : onPressed,
+                  onLongPress: readOnly ? null : onLongPress,
+                  child: child);
+            },
           )),
     );
     return this;
@@ -549,6 +552,20 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
+  FormBuilder commonField(String controlKey,
+      {Key key,
+      int flex = 0,
+      bool readOnly = false,
+      bool visible = true,
+      EdgeInsets padding,
+      @required CommonField commonField}) {
+    _builders.add(
+      _FormItemWidget(visible, controlKey,
+          flex: flex, padding: padding, child: commonField),
+    );
+    return this;
+  }
+
   static List<CheckboxItem> toCheckboxItems(List<String> items) {
     return items.map((e) => CheckboxItem(e)).toList();
   }
@@ -803,14 +820,14 @@ class _FormController extends ChangeNotifier {
   }
 
   void rebuild(String controlKey, Map<String, dynamic> map) {
-    ValueFieldState state =
+    _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.rebuild(map);
   }
 
   void update(String controlKey, Map<String, dynamic> map) {
-    ValueFieldState state =
+    _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.update(map);
@@ -823,7 +840,7 @@ class _FormController extends ChangeNotifier {
   }
 
   void setReadOnly(String controlKey, bool readOnly) {
-    ValueFieldState state =
+    _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
     state.readOnly = readOnly;
@@ -847,7 +864,7 @@ class _FormController extends ChangeNotifier {
   }
 
   bool isReadOnly(String controlKey) {
-    ValueFieldState state =
+    _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     return state == null ? false : state.readOnly;
   }
@@ -1052,25 +1069,10 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 }
 
-typedef NullValueReplace<T> = T Function();
-
-class ValueField<T> extends FormField<T> {
-  final ValueNotifier controller;
-  final ValueChanged<T> onChanged;
-  final NullValueReplace<T> replace;
+abstract class _BaseField<T> extends FormField<T> {
   final Map<String, dynamic> initStateMap;
-
-  @override
-  AutovalidateMode get autovalidateMode =>
-      initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
-  @override
-  T get initialValue =>
-      initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
-
-  ValueField(this.controller, this.initStateMap,
+  _BaseField(this.initStateMap,
       {Key key,
-      this.replace,
-      this.onChanged,
       FormFieldBuilder<T> builder,
       FormFieldValidator<T> validator,
       AutovalidateMode autovalidateMode,
@@ -1083,16 +1085,48 @@ class ValueField<T> extends FormField<T> {
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
     initStateMap[FormBuilder.readOnlyKey] = readOnly;
-    initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
-    initStateMap[FormBuilder.initialValueKey] = initialValue;
+  }
+}
+
+typedef NullValueReplace<T> = T Function();
+
+class ValueField<T> extends _BaseField<T> {
+  final ValueNotifier controller;
+  final ValueChanged<T> onChanged;
+  final NullValueReplace<T> replace;
+
+  @override
+  AutovalidateMode get autovalidateMode =>
+      initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
+  @override
+  T get initialValue =>
+      initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
+
+  ValueField(this.controller, Map<String, dynamic> initStateMap,
+      {Key key,
+      this.replace,
+      this.onChanged,
+      FormFieldBuilder<T> builder,
+      FormFieldValidator<T> validator,
+      AutovalidateMode autovalidateMode,
+      bool readOnly,
+      T initialValue})
+      : super(initStateMap,
+            key: key,
+            builder: builder,
+            validator: validator,
+            autovalidateMode: autovalidateMode,
+            initialValue: initialValue) {
+    super.initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
+    super.initStateMap[FormBuilder.initialValueKey] = initialValue;
   }
 
   @override
-  FormFieldState<T> createState() => ValueFieldState<T>();
+  ValueFieldState<T> createState() => ValueFieldState<T>();
 }
 
-abstract class BaseFieldState<T> extends FormFieldState<T> {
-  ValueField<T> get widget => super.widget;
+abstract class _BaseFieldState<T> extends FormFieldState<T> {
+  _BaseField<T> get widget => super.widget;
   _FormController get formController => _FormController.of(context);
   String get controlKey => _InheritedControlKey.of(context).controlKey;
   bool get readOnly =>
@@ -1150,7 +1184,8 @@ abstract class BaseFieldState<T> extends FormFieldState<T> {
   }
 }
 
-class ValueFieldState<T> extends BaseFieldState<T> {
+class ValueFieldState<T> extends _BaseFieldState<T> {
+  ValueField<T> get widget => super.widget;
   ValueNotifier get controller => widget.controller;
   ValueChanged<T> get onChanged => widget.onChanged;
 
@@ -1226,20 +1261,19 @@ class ValueFieldState<T> extends BaseFieldState<T> {
   }
 }
 
-class CommonField extends ValueField {
+class CommonField extends _BaseField<Null> {
   CommonField(
     Map<String, dynamic> initStateMap, {
     Key key,
     FormFieldBuilder builder,
     bool readOnly,
-  }) : super(null, initStateMap,
-            key: key, readOnly: readOnly, builder: builder);
+  }) : super(initStateMap, key: key, readOnly: readOnly, builder: (field) {});
 
   @override
-  FormFieldState createState() => CommonFieldState();
+  CommonFieldState createState() => CommonFieldState();
 }
 
-class CommonFieldState extends BaseFieldState {
+class CommonFieldState extends _BaseFieldState<Null> {
   @override
   void deactivate() {
     formController._commonFieldStates.remove(controlKey);
