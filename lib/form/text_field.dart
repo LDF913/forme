@@ -7,7 +7,7 @@ import 'form_builder.dart';
 class ClearableTextFormField extends ValueField<String> {
   final bool obscureText;
   final FocusNode focusNode;
-  ClearableTextFormField(TextEditingController controller, this.focusNode,
+  ClearableTextFormField(TextController controller, this.focusNode,
       {String labelText,
       String hintText,
       Key key,
@@ -55,37 +55,38 @@ class ClearableTextFormField extends ValueField<String> {
             'inputDecorationTheme': inputDecorationTheme,
           },
           key: key,
+          replace: () => '',
           onChanged: onChanged,
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          builder: (field) {
-            final _TextFormFieldState state = field as _TextFormFieldState;
-            ThemeData themeData = Theme.of(field.context);
+          builder: (baseState, context, readOnly, stateMap, themeData,
+              formThemeData) {
+            final _TextFormFieldState state = baseState;
 
-            String labelText = state.getState('labelText');
-            String hintText = state.getState('hintText');
-            TextInputType keyboardType = state.getState('keyboardType');
-            bool autofocus = state.getState('autofocus');
-            int maxLines = state.getState('maxLines');
-            int maxLength = state.getState('maxLength');
-            bool clearable = state.getState('clearable');
-            Widget prefixIcon = state.getState('prefixIcon');
+            String labelText = stateMap['labelText'];
+            String hintText = stateMap['hintText'];
+            TextInputType keyboardType = stateMap['keyboardType'];
+            bool autofocus = stateMap['autofocus'];
+            int maxLines = stateMap['maxLines'];
+            int maxLength = stateMap['maxLength'];
+            bool clearable = stateMap['clearable'];
+            Widget prefixIcon = stateMap['prefixIcon'];
             List<TextInputFormatter> inputFormatters =
-                state.getState('inputFormatters');
-            TextStyle style = state.getState('style');
-            ToolbarOptions toolbarOptions = state.getState('toolbarOptions');
-            List<Widget> suffixIcons = state.getState('suffixIcons');
-            TextInputAction textInputAction = state.getState('textInputAction');
-            bool readOnly = state.readOnly;
+                stateMap['inputFormatters'];
+            TextStyle style = stateMap['style'];
+            ToolbarOptions toolbarOptions = stateMap['toolbarOptions'];
+            List<Widget> suffixIcons = stateMap['suffixIcons'];
+            TextInputAction textInputAction = stateMap['textInputAction'];
             InputDecorationTheme inputDecorationTheme =
-                state.getState('inputDecorationTheme') ??
+                stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
 
             List<Widget> suffixes = [];
-            if (clearable && !readOnly && controller.text.length > 0) {
-              suffixes.add(ClearButton(controller, focusNode, () {
+            if (clearable && !readOnly && controller.value.length > 0) {
+              suffixes.add(
+                  ClearButton(controller._textEditingController, focusNode, () {
                 state.didChange('');
               }));
             }
@@ -127,11 +128,11 @@ class ClearableTextFormField extends ValueField<String> {
             TextField textField = TextField(
               style: style,
               textAlignVertical: TextAlignVertical.center,
-              controller: controller,
+              controller: controller._textEditingController,
               focusNode: focusNode,
               textInputAction: textInputAction,
               decoration:
-                  effectiveDecoration.copyWith(errorText: field.errorText),
+                  effectiveDecoration.copyWith(errorText: state.errorText),
               keyboardType: keyboardType,
               autofocus: autofocus,
               obscureText: state.obscureText,
@@ -139,7 +140,7 @@ class ClearableTextFormField extends ValueField<String> {
               maxLines: maxLines,
               minLines: minLines,
               maxLength: maxLength,
-              onChanged: (value) => field.didChange(value),
+              onChanged: (value) => state.didChange(value),
               onTap: onTap,
               onEditingComplete: onEditingComplete,
               enabled: true,
@@ -155,20 +156,48 @@ class ClearableTextFormField extends ValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
+class TextController extends ValueNotifier<String> with TextSelectionMixin {
+  final TextEditingController _textEditingController;
+  TextController({String value})
+      : this._textEditingController = TextEditingController(text: value),
+        super(value);
+
+  @override
+  String get value => super.value ?? '';
+
+  @override
+  void setSelection(int start, int end) {
+    TextSelectionMixin.setSelectionWithTextEditingController(
+        start, end, _textEditingController);
+  }
+
+  @override
+  void selectAll() {
+    setSelection(0, _textEditingController.text.length);
+  }
+
+  @override
+  void dispose() {
+    _textEditingController.dispose();
+    super.dispose();
+  }
+}
+
 class _TextFormFieldState extends ValueFieldState<String> {
   bool obscureText = false;
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
-  TextEditingController get controller => super.controller;
+  TextController get controller => super.controller;
+  TextEditingController get textEditingController =>
+      controller._textEditingController;
   FocusNode get focusNode => widget.focusNode;
 
   bool get selectAllOnFocus => getState('selectAllOnFocus');
 
   void selectAll() {
     if (focusNode.hasFocus) {
-      controller.selection =
-          TextSelection(baseOffset: 0, extentOffset: controller.text.length);
+      controller.selectAll();
     }
   }
 
@@ -205,23 +234,18 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void doChangeValue(String value, {bool trigger = true}) {
-    String replaceValue = value ?? '';
-    super.overrideDidChange(replaceValue);
-    if (onChanged != null && trigger) {
-      onChanged(replaceValue);
-    }
-    if (controller.text != replaceValue) {
-      controller.text = replaceValue ?? '';
+  void didChange(String value) {
+    super.didChange(value);
+    if (textEditingController.text != controller.value) {
+      textEditingController.text = controller.value;
     }
   }
 
   @override
   void reset() {
-    super.overrideReset();
-    controller.text = widget.initialValue ?? '';
-    if (onChanged != null) {
-      onChanged(controller.text);
+    super.reset();
+    if (textEditingController.text != controller.value) {
+      textEditingController.text = controller.value;
     }
   }
 }
@@ -274,18 +298,15 @@ class DateTimeFormField extends ValueField<DateTime> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           key: key,
-          builder: (field) {
-            _DateTimeFormFieldState state = field as _DateTimeFormFieldState;
-            final ThemeData themeData = Theme.of(field.context);
-
-            String labelText = state.getState('labelText');
-            String hintText = state.getState('hintText');
-            TextStyle style = state.getState('style');
-            bool useTime = state.getState("useTime");
-            int maxLines = state.getState("maxLines");
-            bool readOnly = state.readOnly;
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            String labelText = stateMap['labelText'];
+            String hintText = stateMap['hintText'];
+            TextStyle style = stateMap['style'];
+            bool useTime = stateMap['useTime'];
+            int maxLines = stateMap['maxLines'];
             InputDecorationTheme inputDecorationTheme =
-                state.getState('inputDecorationTheme') ??
+                stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
 
             void pickTime() {
@@ -360,7 +381,7 @@ class DateTimeFormField extends ValueField<DateTime> {
               focusNode: focusNode,
               controller: controller._controller,
               decoration:
-                  effectiveDecoration.copyWith(errorText: field.errorText),
+                  effectiveDecoration.copyWith(errorText: state.errorText),
               obscureText: false,
               maxLines: maxLines,
               onTap: null,
@@ -405,8 +426,8 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   }
 
   @override
-  void doChangeValue(DateTime value, {bool trigger = true}) {
-    super.doChangeValue(value);
+  void didChange(DateTime value) {
+    super.didChange(value);
     textEditingController.text = value == null ? '' : _formatter(value);
   }
 
@@ -426,6 +447,11 @@ class NumberController extends ValueNotifier<num> with TextSelectionMixin {
   void setSelection(int start, int end) {
     TextSelectionMixin.setSelectionWithTextEditingController(
         start, end, _controller);
+  }
+
+  @override
+  void selectAll() {
+    setSelection(0, _controller.text.length);
   }
 
   @override
@@ -494,23 +520,22 @@ class NumberFormField extends ValueField<num> {
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          builder: (field) {
-            final ThemeData themeData = Theme.of(field.context);
-            _NumberFieldState state = field as _NumberFieldState;
+          builder: (baseState, context, readOnly, stateMap, themeData,
+              formThemeData) {
+            _NumberFieldState state = baseState;
 
-            String labelText = state.getState('labelText');
-            String hintText = state.getState('hintText');
-            bool clearable = state.getState('clearable');
-            Widget prefixIcon = state.getState('prefixIcon');
-            TextStyle style = state.getState('style');
-            List<Widget> suffixIcons = state.getState('suffixIcons');
-            TextInputAction textInputAction = state.getState('textInputAction');
-            bool readOnly = state.readOnly;
-            int decimal = state.getState('decimal');
-            double max = state.getState('max');
-            double min = state.getState('min');
+            String labelText = stateMap['labelText'];
+            String hintText = stateMap['hintText'];
+            bool clearable = stateMap['clearable'];
+            Widget prefixIcon = stateMap['prefixIcon'];
+            TextStyle style = stateMap['style'];
+            List<Widget> suffixIcons = stateMap['suffixIcons'];
+            TextInputAction textInputAction = stateMap['textInputAction'];
+            int decimal = stateMap['decimal'];
+            double max = stateMap['max'];
+            double min = stateMap['min'];
             InputDecorationTheme inputDecorationTheme =
-                state.getState('inputDecorationTheme') ??
+                stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
 
             String regex = r'[0-9' +
@@ -577,7 +602,7 @@ class NumberFormField extends ValueField<num> {
               controller: controller._controller,
               textInputAction: textInputAction,
               decoration:
-                  effectiveDecoration.copyWith(errorText: field.errorText),
+                  effectiveDecoration.copyWith(errorText: state.errorText),
               keyboardType: TextInputType.number,
               obscureText: false,
               maxLines: 1,
@@ -627,19 +652,20 @@ class _NumberFieldState extends ValueFieldState<num> {
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }
 
-  void didChangeAndNotChangeText(num value) {
-    super.didChange(value);
-  }
-
-  @override
-  void doChangeValue(dynamic value, {bool trigger = true}) {
+  num didChangeAndNotChangeText(dynamic value) {
     num toChange;
     if (value is String) {
       toChange = num.tryParse(value);
     } else {
       toChange = value;
     }
-    super.doChangeValue(toChange);
+    super.didChange(toChange);
+    return toChange;
+  }
+
+  @override
+  void didChange(dynamic value) {
+    num toChange = didChangeAndNotChangeText(value);
     String numberStr = toChange == null ? '' : toChange.toString();
     if (textEditingController.text != numberStr) {
       textEditingController.text = numberStr;

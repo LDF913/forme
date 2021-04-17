@@ -270,6 +270,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     : DefaultFormThemeData(context);
               },
               child: Text('change theme'),
+            ),
+            TextButton(
+              onPressed: () {
+                formController.update('commonField', {'text': 'new text'});
+              },
+              child: Text('change commonfield\'s text'),
             )
           ]),
         ));
@@ -309,8 +315,9 @@ class _MyHomePageState extends State<MyHomePage> {
           hintText: 'age',
           clearable: true,
           flex: 3,
-          min: 14,
+          min: -14,
           max: 99,
+          decimal: 2,
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
@@ -442,6 +449,14 @@ class _MyHomePageState extends State<MyHomePage> {
           }),
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
-        );
+        )
+        .commonField('commonField',
+            commonField: CommonField(
+              {'text': 'common text'},
+              builder: (state, context, readOnly, stateMap, themeData,
+                  formThemeData) {
+                return Text(stateMap['text']);
+              },
+            ));
   }
 }

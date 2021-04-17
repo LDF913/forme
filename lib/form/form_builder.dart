@@ -123,8 +123,8 @@ class FormBuilder extends StatefulWidget {
       TextInputAction textInputAction,
       List<TextInputFormatter> textInputFormatters,
       InputDecorationTheme inputDecorationTheme}) {
-    _CustomTextEditingController controller = _formController.newController(
-        controlKey, () => _CustomTextEditingController(text: initialValue));
+    TextController controller = _formController.newController(
+        controlKey, () => TextController(value: initialValue));
     FocusNode focusNode = _formController.newFocusNode(controlKey);
     _builders.add(_FormItemWidget(visible, controlKey,
         flex: flex,
@@ -260,11 +260,9 @@ class FormBuilder extends StatefulWidget {
               'label': label,
               'child': child,
             },
-            builder: (field) {
-              CommonFieldState state = field as CommonFieldState;
-              bool readOnly = state.readOnly;
-              Widget child =
-                  state.getState('child') ?? Text(state.getState('label'));
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
+              Widget child = stateMap['child'] ?? Text(stateMap['label']);
               return TextButton(
                   onPressed: readOnly ? null : onPressed,
                   onLongPress: readOnly ? null : onLongPress,
@@ -382,10 +380,10 @@ class FormBuilder extends StatefulWidget {
       child: CommonField(
         {'height': height ?? 1.0},
         readOnly: true,
-        builder: (field) {
-          CommonFieldState state = field as CommonFieldState;
+        builder:
+            (state, context, readOnly, stateMap, themeData, formThemeData) {
           return Divider(
-            height: state.getState('height'),
+            height: stateMap['height'],
           );
         },
       ),
@@ -670,6 +668,8 @@ class FormControllerDelegate {
       _formController.rebuild(controlKey, map);
   void update(String controlKey, Map<String, dynamic> map) =>
       _formController.update(controlKey, map);
+  void removeState(String controlKey, Set<String> stateKeys) =>
+      _formController.removeState(controlKey, stateKeys);
 
   void setVisible(String controlKey, bool visible) =>
       _formController.setVisible(controlKey, visible);
@@ -703,6 +703,7 @@ class FormControllerDelegate {
 
   void setSelection(String controlKey, int start, int end) =>
       _formController.setSelection(controlKey, start, end);
+  void selectAll(String controlKey) => _formController.selectAll(controlKey);
 
   SubControllerDelegate getSubController(String controlKey) =>
       _formController.getSubController(controlKey);
@@ -777,10 +778,10 @@ class _FormController extends ChangeNotifier {
     if (_readOnly != readOnly) {
       _readOnly = readOnly;
       _valueFieldStates.forEach((key, value) {
-        value.readOnly = _readOnly;
+        value._readOnly = _readOnly;
       });
       _commonFieldStates.forEach((key, value) {
-        value.readOnly = readOnly;
+        value._readOnly = readOnly;
       });
     }
   }
@@ -813,24 +814,23 @@ class _FormController extends ChangeNotifier {
   }
 
   dynamic getValue(String controlKey) {
-    ValueFieldState state = _valueFieldStates.values
-        .where((element) => (element.controlKey == controlKey))
-        .first;
-    return state == null ? null : state.value;
+    ValueFieldState state = _valueFieldStates[controlKey];
+    if (state == null) return true;
+    return state.value;
   }
 
   void rebuild(String controlKey, Map<String, dynamic> map) {
     _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
-    state.rebuild(map);
+    state._rebuild(map);
   }
 
   void update(String controlKey, Map<String, dynamic> map) {
     _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
-    state.update(map);
+    state._update(map);
   }
 
   void setVisible(String controlKey, bool visible) {
@@ -843,7 +843,7 @@ class _FormController extends ChangeNotifier {
     _BaseFieldState state =
         _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
     if (state == null) return;
-    state.readOnly = readOnly;
+    state._readOnly = readOnly;
   }
 
   void setPadding(String controlKey, EdgeInsets padding) {
@@ -908,16 +908,22 @@ class _FormController extends ChangeNotifier {
   }
 
   bool validate1(String controlKey) {
-    ValueFieldState state = _valueFieldStates.values
-        .where((element) => (element.controlKey == controlKey))
-        .first;
-    return state == null ? true : state.validate();
+    ValueFieldState state = _valueFieldStates[controlKey];
+    if (state == null) return true;
+    return state.validate();
   }
 
   void setSelection(String controlKey, int start, int end) {
     var controller = _controllers[controlKey];
     if (controller != null && controller is TextSelectionMixin) {
       (controller as TextSelectionMixin).setSelection(start, end);
+    }
+  }
+
+  void selectAll(String controlKey) {
+    var controller = _controllers[controlKey];
+    if (controller != null && controller is TextSelectionMixin) {
+      (controller as TextSelectionMixin).selectAll();
     }
   }
 
@@ -949,6 +955,13 @@ class _FormController extends ChangeNotifier {
       _commonFieldStates.remove(controlKey);
       _fieldStateMap.remove(controlKey);
     });
+  }
+
+  void removeState(String controlKey, Set<String> stateKeys) {
+    _BaseFieldState state =
+        _valueFieldStates[controlKey] ?? _commonFieldStates[controlKey];
+    if (state == null) return;
+    state._remove(stateKeys);
   }
 
   SubControllerDelegate getSubController(String controlKey) {
@@ -1069,6 +1082,14 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 }
 
+typedef FormFieldBuilder<T> = Widget Function(
+    FormFieldState<T> state,
+    BuildContext context,
+    bool readOnly,
+    Map<String, dynamic> stateMap,
+    ThemeData themeData,
+    FormThemeData formThemeData);
+
 abstract class _BaseField<T> extends FormField<T> {
   final Map<String, dynamic> initStateMap;
   _BaseField(this.initStateMap,
@@ -1080,7 +1101,16 @@ abstract class _BaseField<T> extends FormField<T> {
       T initialValue})
       : super(
             key: key,
-            builder: builder,
+            builder: (field) {
+              _BaseFieldState<T> state = field;
+              return builder(
+                  field,
+                  state.context,
+                  state.readOnly,
+                  state.getUpdatedMap(),
+                  Theme.of(state.context),
+                  FormThemeData.of(state.context));
+            },
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
@@ -1125,15 +1155,15 @@ class ValueField<T> extends _BaseField<T> {
   ValueFieldState<T> createState() => ValueFieldState<T>();
 }
 
-abstract class _BaseFieldState<T> extends FormFieldState<T> {
+class _BaseFieldState<T> extends FormFieldState<T> {
   _BaseField<T> get widget => super.widget;
   _FormController get formController => _FormController.of(context);
   String get controlKey => _InheritedControlKey.of(context).controlKey;
+
   bool get readOnly =>
       formController._readOnly || (getState(FormBuilder.readOnlyKey) ?? false);
-
-  set readOnly(bool readOnly) {
-    update({FormBuilder.readOnlyKey: readOnly});
+  set _readOnly(bool readOnly) {
+    _update({FormBuilder.readOnlyKey: readOnly});
   }
 
   Map<String, dynamic> _state = {};
@@ -1144,13 +1174,13 @@ abstract class _BaseFieldState<T> extends FormFieldState<T> {
         : widget.initStateMap[stateKey];
   }
 
-  void rebuild(Map<String, dynamic> state) {
+  void _rebuild(Map<String, dynamic> state) {
     setState(() {
       this._state = state ?? {};
     });
   }
 
-  void update(Map<String, dynamic> state) {
+  void _update(Map<String, dynamic> state) {
     if (state == null) return;
     setState(() {
       state.forEach((key, value) {
@@ -1159,16 +1189,19 @@ abstract class _BaseFieldState<T> extends FormFieldState<T> {
     });
   }
 
-  void remove(String stateKey) {
+  void _remove(Set<String> stateKeys) {
+    if (stateKeys == null || stateKeys.isEmpty) return;
     setState(() {
-      _state.remove(stateKey);
+      stateKeys.forEach((element) {
+        _state.remove(element);
+      });
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _state = formController._fieldStateMap.remove(controlKey) ?? {};
+    _state = formController._fieldStateMap.remove(controlKey) ?? {}; //TODO
   }
 
   @override
@@ -1181,6 +1214,16 @@ abstract class _BaseFieldState<T> extends FormFieldState<T> {
     setState(() {
       widget.initStateMap[stateKey] = value;
     });
+  }
+
+  Map<String, dynamic> getUpdatedMap() {
+    Map<String, dynamic> map = Map.from(this.widget.initStateMap);
+    for (String key in map.keys) {
+      if (_state.containsKey(key)) {
+        map[key] = _state[key];
+      }
+    }
+    return map;
   }
 }
 
@@ -1239,16 +1282,6 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
     }
   }
 
-  @protected
-  void overrideDidChange(T value) {
-    super.didChange(value);
-  }
-
-  @protected
-  void overrideReset() {
-    super.reset();
-  }
-
   T _getValue(T value) {
     if (value == null && widget.replace != null) {
       return widget.replace();
@@ -1285,10 +1318,31 @@ class CommonFieldState extends _BaseFieldState<Null> {
     formController._commonFieldStates[controlKey] = this;
     return super.build(context);
   }
+
+  @override
+  Null get value => null;
+  @override
+  String get errorText => null;
+  @override
+  bool get hasError => false;
+  @override
+  bool get isValid => true;
+  @override
+  void save() {}
+  @override
+  void reset() {}
+  @override
+  bool validate() => false;
+  @override
+  void didChange(Null value) {}
+  @override
+  @protected
+  void setValue(Null value) {}
 }
 
 mixin TextSelectionMixin {
   void setSelection(int start, int end);
+  void selectAll();
 
   static void setSelectionWithTextEditingController(
       int start, int end, TextEditingController controller) {
@@ -1297,16 +1351,6 @@ mixin TextSelectionMixin {
     int baseOffset = start < 0 ? 0 : start;
     controller.selection =
         TextSelection(baseOffset: baseOffset, extentOffset: extendsOffset);
-  }
-}
-
-class _CustomTextEditingController extends TextEditingController
-    with TextSelectionMixin {
-  _CustomTextEditingController({String text}) : super(text: text);
-
-  @override
-  void setSelection(int start, int end) {
-    TextSelectionMixin.setSelectionWithTextEditingController(start, end, this);
   }
 }
 
@@ -1357,10 +1401,14 @@ class SubController<T> extends ValueNotifier<T> {
 
   SubController(value) : super(value);
 
-  void remove(String controlKey, String stateKey) {
+  void remove(String controlKey, Set<String> stateKeys) {
     var state = _states[controlKey];
     if (state == null) return;
-    state.remove(stateKey);
+    if (stateKeys == null || stateKeys.isEmpty) return;
+    stateKeys.forEach((element) {
+      state.remove(element);
+    });
+    notifyListeners();
   }
 
   void update1(String controlKey, Map<String, dynamic> state) {

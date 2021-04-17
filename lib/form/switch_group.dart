@@ -57,17 +57,13 @@ class SwitchGroupFormField extends ValueField<List<int>> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
           validator: validator,
-          builder: (field) {
-            final ValueFieldState<List<int>> state = field as ValueFieldState;
-            FormThemeData formThemeData = FormThemeData.of(field.context);
-            ThemeData themeData = Theme.of(field.context);
-
-            String label = state.getState('label');
-            List<SwitchGroupItem> items = state.getState('items');
-            bool hasSelectAllSwitch = state.getState('hasSelectAllSwitch');
-            bool readOnly = state.readOnly;
-            EdgeInsets errorTextPadding = state.getState('errorTextPadding');
-            EdgeInsets selectAllPadding = state.getState('selectAllPadding');
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            String label = stateMap['label'];
+            List<SwitchGroupItem> items = stateMap['items'];
+            bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
+            EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
+            EdgeInsets selectAllPadding = stateMap['selectAllPadding'];
 
             controller.init(items);
             Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
@@ -238,12 +234,8 @@ class SwitchInlineFormField extends ValueField<bool> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? false,
           validator: validator,
-          builder: (field) {
-            final ValueFieldState state = field as ValueFieldState;
-            ThemeData themeData = Theme.of(field.context);
-
-            bool readOnly = state.readOnly;
-
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
             List<Widget> columns = [];
             columns.add(InkWell(
               child: Padding(

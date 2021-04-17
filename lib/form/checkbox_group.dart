@@ -61,16 +61,12 @@ class CheckboxGroup extends ValueField<List<int>> {
             initialValue: initialValue ?? [],
             validator: validator,
             readOnly: readOnly,
-            builder: (field) {
-              FormThemeData formThemeData = FormThemeData.of(field.context);
-              ThemeData themeData = Theme.of(field.context);
-              final ValueFieldState<List<int>> state = field as ValueFieldState;
-
-              String label = inline ? null : state.getState('label');
-              bool readOnly = state.readOnly;
-              int split = inline ? 0 : state.getState('split');
-              List<CheckboxItem> items = state.getState('items');
-              EdgeInsets errorTextPadding = state.getState('errorTextPadding');
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
+              String label = inline ? null : stateMap['label'];
+              int split = inline ? 0 : stateMap['split'];
+              List<CheckboxItem> items = stateMap['items'];
+              EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
 
               List<Widget> widgets = [];
               if (label != null) {

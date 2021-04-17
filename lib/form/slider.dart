@@ -41,17 +41,13 @@ class SliderFormField extends ValueField<double> {
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
-          builder: (field) {
-            final FormThemeData formThemeData = FormThemeData.of(field.context);
-            final ThemeData themeData = Theme.of(field.context);
-            final _SliderFieldState state = field;
-
-            int divisions = state.getState('divisions');
-            double max = state.getState('max');
-            double min = state.getState('min');
-            String label = state.getState('label');
-            bool readOnly = state.readOnly;
-            EdgeInsets contentPadding = state.getState('contentPadding');
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            int divisions = stateMap['divisions'];
+            double max = stateMap['max'];
+            double min = stateMap['min'];
+            String label = stateMap['label'];
+            EdgeInsets contentPadding = stateMap['contentPadding'];
 
             List<Widget> columns = [];
             if (label != null) {
@@ -99,7 +95,7 @@ class SliderFormField extends ValueField<double> {
                         if (!focusNode.hasFocus) {
                           focusNode.requestFocus();
                         }
-                        field.didChange(value);
+                        state.didChange(value);
                       },
                 activeColor: themeData.primaryColor,
                 inactiveColor: themeData.unselectedWidgetColor.withOpacity(0.4),
@@ -176,18 +172,13 @@ class RangeSliderFormField extends ValueField<RangeValues> {
             initialValue: initialValue,
             replace: () => RangeValues(min, max),
             autovalidateMode: autovalidateMode,
-            builder: (field) {
-              final FormThemeData formThemeData =
-                  FormThemeData.of(field.context);
-              final ThemeData themeData = Theme.of(field.context);
-              final ValueFieldState<RangeValues> state = field;
-
-              int divisions = state.getState('divisions');
-              double max = state.getState('max');
-              double min = state.getState('min');
-              String label = state.getState('label');
-              bool readOnly = state.readOnly;
-              EdgeInsets contentPadding = state.getState('contentPadding');
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
+              int divisions = stateMap['divisions'];
+              double max = stateMap['max'];
+              double min = stateMap['min'];
+              String label = stateMap['label'];
+              EdgeInsets contentPadding = stateMap['contentPadding'];
 
               List<Widget> columns = [];
               if (label != null) {
@@ -247,7 +238,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               }
 
               Widget slider = SliderTheme(
-                data: SliderTheme.of(field.context),
+                data: SliderTheme.of(context),
                 child: RangeSlider(
                   values: controller.value,
                   min: min,
@@ -256,7 +247,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                   onChanged: readOnly
                       ? null
                       : (RangeValues values) {
-                          field.didChange(values);
+                          state.didChange(values);
                         },
                   activeColor: themeData.primaryColor,
                   inactiveColor:

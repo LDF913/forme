@@ -58,16 +58,12 @@ class RadioGroup extends ValueField {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder: (field) {
-            FormThemeData formThemeData = FormThemeData.of(field.context);
-            ThemeData themeData = Theme.of(field.context);
-            ValueFieldState state = field as ValueFieldState;
-
-            String label = inline ? null : state.getState('label');
-            bool readOnly = state.readOnly;
-            int split = inline ? 0 : state.getState('split');
-            List<RadioItem> items = state.getState('items');
-            EdgeInsets errorTextPadding = state.getState('errorTextPadding');
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            String label = inline ? null : stateMap['label'];
+            int split = inline ? 0 : stateMap['split'];
+            List<RadioItem> items = stateMap['items'];
+            EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
 
             List<Widget> widgets = [];
             if (label != null) {

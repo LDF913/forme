@@ -118,18 +118,14 @@ class SelectorFormField extends ValueField<List> {
           validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
-          builder: (field) {
-            final ValueFieldState state = field as ValueFieldState;
-            FormThemeData formThemeData = FormThemeData.of(field.context);
-            ThemeData themeData = Theme.of(field.context);
-
-            String labelText = state.getState('labelText');
-            String hintText = state.getState('hintText');
-            bool multi = state.getState('multi');
-            bool clearable = state.getState('clearable');
-            bool readOnly = state.readOnly;
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            String labelText = stateMap['labelText'];
+            String hintText = stateMap['hintText'];
+            bool multi = stateMap['multi'];
+            bool clearable = stateMap['clearable'];
             InputDecorationTheme inputDecorationTheme =
-                state.getState('inputDecorationTheme') ??
+                stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
 
             SelectedChecker checker =
@@ -195,7 +191,7 @@ class SelectorFormField extends ValueField<List> {
               }
             }
             FormControllerDelegate formController =
-                FormControllerDelegate.of(field.context);
+                FormControllerDelegate.of(context);
 
             final InputDecoration effectiveDecoration = InputDecoration(
                 contentPadding: multi ? EdgeInsets.zero : null,
@@ -217,8 +213,7 @@ class SelectorFormField extends ValueField<List> {
                               ? null
                               : () async {
                                   focusNode.requestFocus();
-                                  List selected = await Navigator.of(
-                                          field.context,
+                                  List selected = await Navigator.of(context,
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(
                                           settings: RouteSettings(
@@ -236,13 +231,13 @@ class SelectorFormField extends ValueField<List> {
                                           },
                                           fullscreenDialog: true));
                                   if (selected != null) {
-                                    field.didChange(selected);
+                                    state.didChange(selected);
                                     focusNode.requestFocus();
                                   }
                                 },
                           child: InputDecorator(
                             decoration: effectiveDecoration.copyWith(
-                                errorText: field.errorText),
+                                errorText: state.errorText),
                             isEmpty: controller.value.isEmpty,
                             isFocused: Focus.of(context).hasFocus,
                             child: widget,
