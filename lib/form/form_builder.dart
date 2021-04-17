@@ -1267,7 +1267,7 @@ class CommonField extends _BaseField<Null> {
     Key key,
     FormFieldBuilder builder,
     bool readOnly,
-  }) : super(initStateMap, key: key, readOnly: readOnly, builder: (field) {});
+  }) : super(initStateMap, key: key, readOnly: readOnly, builder: builder);
 
   @override
   CommonFieldState createState() => CommonFieldState();
