@@ -1116,7 +1116,7 @@ abstract class _BaseField<T> extends FormField<T> {
 typedef NullValueReplace<T> = T Function();
 
 class ValueField<T> extends _BaseField<T> {
-  final ValueNotifier controller;
+  final ValueNotifier<T> controller;
   final ValueChanged<T> onChanged;
   final NullValueReplace<T> replace;
 
@@ -1227,7 +1227,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
 class ValueFieldState<T> extends _BaseFieldState<T> {
   ValueField<T> get widget => super.widget;
-  ValueNotifier get controller => widget.controller;
+  ValueNotifier<T> get controller => widget.controller;
   ValueChanged<T> get onChanged => widget.onChanged;
 
   @override
