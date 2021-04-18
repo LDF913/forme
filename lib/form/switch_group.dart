@@ -57,9 +57,9 @@ class SwitchGroupFormField extends ValueField<List<int>> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
           validator: validator,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _SwitchGroupController controller = notifier;
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _SwitchGroupController controller = state.controller;
             String label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
             bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
@@ -235,9 +235,9 @@ class SwitchInlineFormField extends ValueField<bool> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? false,
           validator: validator,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _SwitchController controller = notifier;
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _SwitchController controller = state.controller;
             List<Widget> columns = [];
             columns.add(InkWell(
               child: Padding(

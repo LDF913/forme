@@ -61,9 +61,9 @@ class CheckboxGroup extends ValueField<List<int>> {
             initialValue: initialValue ?? [],
             validator: validator,
             readOnly: readOnly,
-            builder: (state, context, readOnly, stateMap, themeData,
-                formThemeData, focusNodeProvider, notifier) {
-              _CheckboxGroupController controller = notifier;
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
+              _CheckboxGroupController controller = state.controller;
               String label = inline ? null : stateMap['label'];
               int split = inline ? 0 : stateMap['split'];
               List<CheckboxItem> items = stateMap['items'];

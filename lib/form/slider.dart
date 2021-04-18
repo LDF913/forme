@@ -41,10 +41,10 @@ class SliderFormField extends ValueField<double> {
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _SliderController controller = notifier;
-            FocusNode focusNode = focusNodeProvider();
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _SliderController controller = state.controller;
+            FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
@@ -175,9 +175,9 @@ class RangeSliderFormField extends ValueField<RangeValues> {
             initialValue: initialValue,
             replace: () => RangeValues(min, max),
             autovalidateMode: autovalidateMode,
-            builder: (state, context, readOnly, stateMap, themeData,
-                formThemeData, focusNodeProvider, notifier) {
-              _RangeSliderController controller = notifier;
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
+              _RangeSliderController controller = state.controller;
               int divisions = stateMap['divisions'];
               double max = stateMap['max'];
               double min = stateMap['min'];

@@ -58,9 +58,9 @@ class RadioGroup extends ValueField {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _RadioGroupController controller = notifier;
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _RadioGroupController controller = state.controller;
             String label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioItem> items = stateMap['items'];

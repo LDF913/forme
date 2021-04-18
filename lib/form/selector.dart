@@ -116,10 +116,10 @@ class SelectorFormField extends ValueField<List> {
           validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _SelectorController controller = notifier;
-            FocusNode focusNode = focusNodeProvider();
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _SelectorController controller = state.controller;
+            FocusNode focusNode = state.focusNode;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             bool multi = stateMap['multi'];

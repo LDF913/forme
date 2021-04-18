@@ -150,6 +150,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
                 onPressed: () {
+                  formController.setAutovalidateMode(
+                      'username', AutovalidateMode.always);
+                },
+                child: Text('validate username always')),
+            TextButton(
+                onPressed: () {
                   formController.remove('username');
                 },
                 child: Text('remove username completely')),
@@ -439,7 +445,7 @@ class _MyHomePageState extends State<MyHomePage> {
             commonField: CommonField(
               {'text': 'click me and change my text'},
               builder: (state, context, readOnly, stateMap, themeData,
-                  formThemeData, focusNodeProvider) {
+                  formThemeData) {
                 return TextButton(
                   child: Text(stateMap['text']),
                   onPressed: readOnly
@@ -459,7 +465,7 @@ class _MyHomePageState extends State<MyHomePage> {
               initialValue: '123',
               replace: () => '456',
               builder: (state, context, readOnly, stateMap, themeData,
-                  formThemeData, focusNodeProvider, controller) {
+                  formThemeData) {
                 return Text(stateMap['label']);
               },
             ));

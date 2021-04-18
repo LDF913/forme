@@ -9,27 +9,16 @@ import 'selector.dart';
 import 'slider.dart';
 
 typedef ControllerProvider<T> = ValueNotifier<T> Function();
-typedef ValueFieldBuilder<T> = Widget Function(
-    ValueFieldState<T> state,
-    BuildContext context,
-    bool readOnly,
-    Map<String, dynamic> stateMap,
-    ThemeData themeData,
-    FormThemeData formThemeData,
-    FocusNodeProvider focusNodeProvider,
-    ValueNotifier<T> controller);
-typedef CommonFieldBuilder = Widget Function(
-  CommonFieldState state,
+typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
+  K state,
   BuildContext context,
   bool readOnly,
   Map<String, dynamic> stateMap,
   ThemeData themeData,
   FormThemeData formThemeData,
-  FocusNodeProvider focusNodeProvider,
 );
 typedef NullValueReplace<T> = T Function();
 typedef SubFocusChanged = void Function(String key, bool hasFocus);
-typedef FocusNodeProvider = FocusNodes Function();
 
 class FormBuilder extends StatefulWidget {
   static final String readOnlyKey = 'readOnly';
@@ -275,8 +264,8 @@ class FormBuilder extends StatefulWidget {
               'label': label,
               'child': child,
             },
-            builder: (state, context, readOnly, stateMap, themeData,
-                formThemeData, focusNodeProvider) {
+            builder:
+                (state, context, readOnly, stateMap, themeData, formThemeData) {
               Widget child = stateMap['child'] ?? Text(stateMap['label']);
               return TextButton(
                   onPressed: readOnly ? null : onPressed,
@@ -389,8 +378,8 @@ class FormBuilder extends StatefulWidget {
       child: CommonField(
         {'height': height ?? 1.0},
         readOnly: true,
-        builder: (state, context, readOnly, stateMap, themeData, formThemeData,
-            focusNodeProvider) {
+        builder:
+            (state, context, readOnly, stateMap, themeData, formThemeData) {
           return Divider(
             height: stateMap['height'],
           );
@@ -782,6 +771,13 @@ class FormControllerDelegate {
   /// **only check is valid or not , won't show error**
   bool isValid1(String controlkey) => _formController.isValid1(controlkey);
 
+  void setAutovalidateMode(
+          String controlKey, AutovalidateMode autovalidateMode) =>
+      _formController.setAutovalidateMode(controlKey, autovalidateMode);
+
+  void setInitialValue(String controlKey, dynamic initialValue) =>
+      _formController.setInitialValue(controlKey, initialValue);
+
   /// set selection on form field
   ///
   /// **only works on textfield & numberfield**
@@ -886,13 +882,13 @@ class _FormController extends ChangeNotifier {
   }
 
   void requestFocus(String controlKey) {
-    FocusNode focusNode = focusNodes[controlKey];
+    FocusNodes focusNode = focusNodes[controlKey];
     if (focusNode == null) return;
     focusNode.requestFocus();
   }
 
   void unfocus(String controlKey) {
-    FocusNode focusNode = focusNodes[controlKey];
+    FocusNodes focusNode = focusNodes[controlKey];
     if (focusNode == null) return;
     focusNode.unfocus();
   }
@@ -913,15 +909,13 @@ class _FormController extends ChangeNotifier {
   }
 
   void rebuild(String controlKey, Map<String, dynamic> map) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    _BaseFieldState state = getBaseFieldState(controlKey);
     if (state == null) return;
     state._rebuild(map);
   }
 
   void update(String controlKey, Map<String, dynamic> map) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    _BaseFieldState state = getBaseFieldState(controlKey);
     if (state == null) return;
     state._update(map);
   }
@@ -933,8 +927,7 @@ class _FormController extends ChangeNotifier {
   }
 
   void setReadOnly(String controlKey, bool readOnly) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    _BaseFieldState state = getBaseFieldState(controlKey);
     if (state == null) return;
     state._readOnly = readOnly;
   }
@@ -957,8 +950,7 @@ class _FormController extends ChangeNotifier {
   }
 
   bool isReadOnly(String controlKey) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    _BaseFieldState state = getBaseFieldState(controlKey);
     return state == null ? false : state.readOnly;
   }
 
@@ -1024,17 +1016,13 @@ class _FormController extends ChangeNotifier {
   }
 
   void setSelection(String controlKey, int start, int end) {
-    var controller = controllers[controlKey];
-    if (controller != null && controller is TextSelectionMixin) {
-      (controller as TextSelectionMixin).setSelection(start, end);
-    }
+    TextSelectionMixin controller = getTextSelectionMixin(controlKey);
+    if (controller != null) controller.setSelection(start, end);
   }
 
   void selectAll(String controlKey) {
-    var controller = controllers[controlKey];
-    if (controller != null && controller is TextSelectionMixin) {
-      (controller as TextSelectionMixin).selectAll();
-    }
+    TextSelectionMixin controller = getTextSelectionMixin(controlKey);
+    if (controller != null) controller.selectAll();
   }
 
   void remove(String controlKey, {VoidCallback removed}) {
@@ -1055,10 +1043,22 @@ class _FormController extends ChangeNotifier {
   }
 
   void removeState(String controlKey, Set<String> stateKeys) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    _BaseFieldState state = getBaseFieldState(controlKey);
     if (state == null) return;
     state._remove(stateKeys);
+  }
+
+  void setAutovalidateMode(
+      String controlkey, AutovalidateMode autovalidateMode) {
+    ValueFieldState state = valueFieldStates[controlkey];
+    if (state == null) return;
+    state._setAutoValidateMode(autovalidateMode);
+  }
+
+  void setInitialValue(String controlkey, dynamic initialValue) {
+    ValueFieldState state = valueFieldStates[controlkey];
+    if (state == null) return;
+    state._setInitialValue(initialValue);
   }
 
   SubControllerDelegate getSubController(String controlKey) {
@@ -1084,6 +1084,17 @@ class _FormController extends ChangeNotifier {
     valueFieldStates.clear();
     commonFieldStates.clear();
     super.dispose();
+  }
+
+  _BaseFieldState getBaseFieldState(String controlKey) {
+    return valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+  }
+
+  TextSelectionMixin getTextSelectionMixin(String controlKey) {
+    var controller = controllers[controlKey];
+    if (controller != null && controller is TextSelectionMixin)
+      return controller as TextSelectionMixin;
+    return null;
   }
 }
 
@@ -1181,44 +1192,29 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 }
 
-typedef _BaseFieldBuilder<T> = Widget Function(
-    _BaseFieldState<T> state,
-    BuildContext context,
-    bool readOnly,
-    Map<String, dynamic> stateMap,
-    ThemeData themeData,
-    FormThemeData formThemeData,
-    FocusNodeProvider focusNodeProvider,
-    _FormController controller,
-    String controlKey);
-
-abstract class _BaseField<T> extends FormField<T> {
+abstract class _BaseField<T, K extends _BaseFieldState<T>>
+    extends FormField<T> {
   final Map<String, dynamic> _initStateMap;
   _BaseField(this._initStateMap,
       {Key key,
       FormFieldValidator<T> validator,
       AutovalidateMode autovalidateMode,
       bool readOnly,
-      _BaseFieldBuilder<T> builder,
+      _FieldBuilder<T, K> builder,
       T initialValue})
       : super(
             key: key,
             builder: (field) {
-              _BaseFieldState<T> state = field;
+              K state = field;
               FormThemeData formThemeData =
                   _FormController.of(state.context).themeData;
-              _FormController controller = _FormController.of(state.context);
-              String controlKey =
-                  _InheritedControlKey.of(state.context).controlKey;
               return builder(
                   state,
                   state.context,
                   state.readOnly,
                   Map.unmodifiable(state._state),
                   formThemeData.themeData,
-                  formThemeData, () {
-                return controller.newFocusNode(controlKey);
-              }, controller, controlKey);
+                  formThemeData);
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -1227,33 +1223,30 @@ abstract class _BaseField<T> extends FormField<T> {
   }
 }
 
-class ValueField<T> extends _BaseField<T> {
+class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
   final ValueChanged<T> onChanged;
   final NullValueReplace<T> replace;
   final ControllerProvider<T> controllerProvider;
+
+  @override
+  AutovalidateMode get autovalidateMode =>
+      _initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
+  @override
+  T get initialValue =>
+      _initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
 
   ValueField(this.controllerProvider, Map<String, dynamic> initStateMap,
       {Key key,
       this.replace,
       this.onChanged,
-      @required ValueFieldBuilder builder,
+      @required _FieldBuilder<T, ValueFieldState<T>> builder,
       FormFieldValidator<T> validator,
       AutovalidateMode autovalidateMode,
       bool readOnly,
       T initialValue})
-      : super(initStateMap, key: key, builder: (field,
-                context,
-                readOnly,
-                stateMap,
-                themeData,
-                formThemeData,
-                focusNodeProvider,
-                controller,
-                controlKey) {
-          ValueFieldState<T> state = field;
-          return builder(state, context, state.readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, state.controller);
-        },
+      : super(initStateMap,
+            key: key,
+            builder: builder,
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
@@ -1269,7 +1262,6 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   Map<String, dynamic> _state;
   String controlKey;
   _FormController _formController;
-  _BaseField<T> get widget => super.widget;
 
   /// current widget whether is readonly or not
   ///
@@ -1287,7 +1279,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   @override
   void initState() {
     super.initState();
-    _state = Map.from(widget._initStateMap);
+    _state = Map.from((widget as _BaseField)._initStateMap);
   }
 
   @override
@@ -1345,6 +1337,18 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   /// **you need to get controller in initControl()**
   ValueNotifier<T> controller;
+
+  void _setAutoValidateMode(AutovalidateMode autovalidateMode) {
+    setState(() {
+      widget._initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
+    });
+  }
+
+  void _setInitialValue(T initialValue) {
+    setState(() {
+      widget._initStateMap[FormBuilder.initialValueKey] = initialValue;
+    });
+  }
 
   @override
   void initControl() {
@@ -1410,25 +1414,13 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   }
 }
 
-class CommonField extends _BaseField<Null> {
+class CommonField extends _BaseField<Null, CommonFieldState> {
   CommonField(
     Map<String, dynamic> initStateMap, {
     Key key,
-    @required CommonFieldBuilder builder,
+    @required _FieldBuilder<Null, CommonFieldState> builder,
     bool readOnly,
-  }) : super(initStateMap, key: key, readOnly: readOnly, builder: (field,
-            context,
-            readOnly,
-            stateMap,
-            themeData,
-            formThemeData,
-            focusNodeProvider,
-            controller,
-            controlKey) {
-          CommonFieldState state = field;
-          return builder(state, context, state.readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider);
-        });
+  }) : super(initStateMap, key: key, readOnly: readOnly, builder: builder);
 
   @override
   CommonFieldState createState() => CommonFieldState();

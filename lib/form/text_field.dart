@@ -61,9 +61,9 @@ class ClearableTextFormField extends ValueField<String> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _TextController controller = notifier;
-            FocusNode focusNode = focusNodeProvider();
+              formThemeData) {
+            _TextController controller = baseState.controller;
+            FocusNode focusNode = baseState.focusNode;
             final _TextFormFieldState state = baseState;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
@@ -297,10 +297,10 @@ class DateTimeFormField extends ValueField<DateTime> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           key: key,
-          builder: (state, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _DateTimeController controller = notifier;
-            FocusNode focusNode = focusNodeProvider();
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            _DateTimeController controller = state.controller;
+            FocusNode focusNode = state.focusNode;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             TextStyle style = stateMap['style'];
@@ -522,9 +522,9 @@ class NumberFormField extends ValueField<num> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData, focusNodeProvider, notifier) {
-            _NumberController controller = notifier;
-            FocusNode focusNode = focusNodeProvider();
+              formThemeData) {
+            _NumberController controller = baseState.controller;
+            FocusNode focusNode = baseState.focusNode;
             _NumberFieldState state = baseState;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
