@@ -202,8 +202,8 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void initState() {
-    super.initState();
+  void init() {
+    super.init();
     obscureText = widget.obscureText;
     if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
@@ -523,7 +523,6 @@ class NumberFormField extends ValueField<num> {
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
             _NumberFieldState state = baseState;
-
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             bool clearable = stateMap['clearable'];
