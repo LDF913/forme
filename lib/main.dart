@@ -62,9 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     formController = FormControllerDelegate();
-    formController.onFocusChange('username', (value) {
+    formController.onFocusChange('username', FocusChanged(rootChanged: (value) {
       print('username focused: $value');
-    });
+    }));
   }
 
   @override
@@ -148,17 +148,6 @@ class _MyHomePageState extends State<MyHomePage> {
                         : 'set username readonly'));
               },
             ),
-            TextButton(
-                onPressed: () {
-                  formController.setAutovalidateMode(
-                      'username', AutovalidateMode.always);
-                },
-                child: Text('set username always validate')),
-            TextButton(
-                onPressed: () {
-                  formController.setInitialValue('username', 'username');
-                },
-                child: Text('set username\'s initialValue')),
             TextButton(
                 onPressed: () {
                   formController.remove('username');
@@ -450,7 +439,7 @@ class _MyHomePageState extends State<MyHomePage> {
             commonField: CommonField(
               {'text': 'click me and change my text'},
               builder: (state, context, readOnly, stateMap, themeData,
-                  formThemeData) {
+                  formThemeData, focusNodeProvider) {
                 return TextButton(
                   child: Text(stateMap['text']),
                   onPressed: readOnly
@@ -461,6 +450,17 @@ class _MyHomePageState extends State<MyHomePage> {
                           });
                         },
                 );
+              },
+            ))
+        .valueField('valueField',
+            valueField: ValueField(
+              () => ValueNotifier('123'),
+              {'label': 'custom value field ,click get form data'},
+              initialValue: '123',
+              replace: () => '456',
+              builder: (state, context, readOnly, stateMap, themeData,
+                  formThemeData, focusNodeProvider, controller) {
+                return Text(stateMap['label']);
               },
             ));
   }

@@ -5,12 +5,12 @@ import 'form_theme.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
-class SliderController extends ValueNotifier<double> {
-  SliderController({double value}) : super(value);
+class _SliderController extends ValueNotifier<double> {
+  _SliderController({double value}) : super(value);
 }
 
 class SliderFormField extends ValueField<double> {
-  SliderFormField(SliderController controller, FocusNode focusNode,
+  SliderFormField(
       {Key key,
       bool readOnly,
       ValueChanged<double> onChanged,
@@ -25,7 +25,7 @@ class SliderFormField extends ValueField<double> {
       bool inline = false,
       EdgeInsets contentPadding})
       : super(
-          controller,
+          () => _SliderController(value: initialValue ?? min),
           {
             'divisions': divisions,
             'max': max,
@@ -41,8 +41,10 @@ class SliderFormField extends ValueField<double> {
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, context, readOnly, stateMap, themeData,
+              formThemeData, focusNodeProvider, notifier) {
+            _SliderController controller = notifier;
+            FocusNode focusNode = focusNodeProvider();
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
@@ -138,12 +140,12 @@ class _SliderFieldState extends ValueFieldState<double> {
   double get value => super.value == null ? getState('min') : super.value;
 }
 
-class RangeSliderController extends ValueNotifier<RangeValues> {
-  RangeSliderController({RangeValues value}) : super(value);
+class _RangeSliderController extends ValueNotifier<RangeValues> {
+  _RangeSliderController({RangeValues value}) : super(value);
 }
 
 class RangeSliderFormField extends ValueField<RangeValues> {
-  RangeSliderFormField(RangeSliderController controller,
+  RangeSliderFormField(
       {ValueChanged<RangeValues> onChanged,
       FormFieldValidator<RangeValues> validator,
       AutovalidateMode autovalidateMode,
@@ -157,7 +159,8 @@ class RangeSliderFormField extends ValueField<RangeValues> {
       RangeSubLabelRender rangeSubLabelRender,
       EdgeInsets contentPadding})
       : super(
-            controller,
+            () => _RangeSliderController(
+                value: initialValue ?? RangeValues(min, max)),
             {
               'divisions': divisions,
               'max': max,
@@ -172,8 +175,9 @@ class RangeSliderFormField extends ValueField<RangeValues> {
             initialValue: initialValue,
             replace: () => RangeValues(min, max),
             autovalidateMode: autovalidateMode,
-            builder:
-                (state, context, readOnly, stateMap, themeData, formThemeData) {
+            builder: (state, context, readOnly, stateMap, themeData,
+                formThemeData, focusNodeProvider, notifier) {
+              _RangeSliderController controller = notifier;
               int divisions = stateMap['divisions'];
               double max = stateMap['max'];
               double min = stateMap['min'];

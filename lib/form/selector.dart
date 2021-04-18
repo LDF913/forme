@@ -17,15 +17,14 @@ typedef QueryFormBuilder = void Function(
 typedef OnSelectDialogShow = bool Function(
     FormControllerDelegate formController);
 
-class SelectorController extends ValueNotifier<List> {
-  SelectorController({List value}) : super(value);
-  final UniqueKey _key = UniqueKey();
+class _SelectorController extends ValueNotifier<List> {
+  _SelectorController({List value}) : super(value);
+  final UniqueKey key = UniqueKey();
   List<dynamic> get value => super.value == null ? [] : super.value;
   void set(List value) => super.value == null ? [] : List.from(value);
 }
 
 class SelectorFormField extends ValueField<List> {
-  final FocusNode focusNode;
   final bool clearable;
   final String labelText;
   final String hintText;
@@ -80,8 +79,7 @@ class SelectorFormField extends ValueField<List> {
     return v1 == v2;
   }
 
-  SelectorFormField(
-      this.focusNode, SelectorController controller, this.selectItemProvider,
+  SelectorFormField(this.selectItemProvider,
       {Key key,
       bool readOnly = false,
       ValueChanged<List> onChanged,
@@ -103,7 +101,7 @@ class SelectorFormField extends ValueField<List> {
       this.onTap,
       InputDecorationTheme inputDecorationTheme})
       : super(
-          controller,
+          () => _SelectorController(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -118,8 +116,10 @@ class SelectorFormField extends ValueField<List> {
           validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, context, readOnly, stateMap, themeData,
+              formThemeData, focusNodeProvider, notifier) {
+            _SelectorController controller = notifier;
+            FocusNode focusNode = focusNodeProvider();
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             bool multi = stateMap['multi'];
@@ -218,7 +218,7 @@ class SelectorFormField extends ValueField<List> {
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(
                                           settings: RouteSettings(
-                                              arguments: controller._key),
+                                              arguments: controller.key),
                                           builder: (BuildContext context) {
                                             return _SelectorDialog(
                                                 delegate,
@@ -253,7 +253,7 @@ class SelectorFormField extends ValueField<List> {
 }
 
 class _SelectorFormFieldState extends ValueFieldState<List> {
-  UniqueKey get dialogKey => (widget.controller as SelectorController)._key;
+  UniqueKey get dialogKey => (super.controller as _SelectorController).key;
 
   @override
   void didUpdateWidget(SelectorFormField oldWidget) {

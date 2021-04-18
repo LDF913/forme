@@ -27,15 +27,15 @@ class CheckboxItem extends SubControllableItem {
         });
 }
 
-class CheckboxGroupController extends SubController<List<int>> {
-  CheckboxGroupController({List<int> value}) : super(value);
+class _CheckboxGroupController extends SubController<List<int>> {
+  _CheckboxGroupController({List<int> value}) : super(value);
   List<int> get value => super.value == null ? [] : super.value;
   void set(List<int> value) =>
       super.value = value == null ? [] : List.of(value);
 }
 
 class CheckboxGroup extends ValueField<List<int>> {
-  CheckboxGroup(List<CheckboxItem> items, CheckboxGroupController controller,
+  CheckboxGroup(List<CheckboxItem> items,
       {Key key,
       String label,
       ValueChanged<List<int>> onChanged,
@@ -47,7 +47,7 @@ class CheckboxGroup extends ValueField<List<int>> {
       EdgeInsets errorTextPadding,
       @required bool inline})
       : super(
-            controller,
+            () => _CheckboxGroupController(value: initialValue),
             {
               'label': label,
               'split': split ?? 2,
@@ -61,8 +61,9 @@ class CheckboxGroup extends ValueField<List<int>> {
             initialValue: initialValue ?? [],
             validator: validator,
             readOnly: readOnly,
-            builder:
-                (state, context, readOnly, stateMap, themeData, formThemeData) {
+            builder: (state, context, readOnly, stateMap, themeData,
+                formThemeData, focusNodeProvider, notifier) {
+              _CheckboxGroupController controller = notifier;
               String label = inline ? null : stateMap['label'];
               int split = inline ? 0 : stateMap['split'];
               List<CheckboxItem> items = stateMap['items'];

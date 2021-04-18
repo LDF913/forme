@@ -6,8 +6,7 @@ import 'form_builder.dart';
 
 class ClearableTextFormField extends ValueField<String> {
   final bool obscureText;
-  final FocusNode focusNode;
-  ClearableTextFormField(TextController controller, this.focusNode,
+  ClearableTextFormField(
       {String labelText,
       String hintText,
       Key key,
@@ -36,7 +35,7 @@ class ClearableTextFormField extends ValueField<String> {
       TextInputAction textInputAction,
       InputDecorationTheme inputDecorationTheme})
       : super(
-          controller,
+          () => _TextController(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -62,9 +61,10 @@ class ClearableTextFormField extends ValueField<String> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData) {
+              formThemeData, focusNodeProvider, notifier) {
+            _TextController controller = notifier;
+            FocusNode focusNode = focusNodeProvider();
             final _TextFormFieldState state = baseState;
-
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             TextInputType keyboardType = stateMap['keyboardType'];
@@ -86,7 +86,7 @@ class ClearableTextFormField extends ValueField<String> {
             List<Widget> suffixes = [];
             if (clearable && !readOnly && controller.value.length > 0) {
               suffixes.add(
-                  ClearButton(controller._textEditingController, focusNode, () {
+                  ClearButton(controller.textEditingController, focusNode, () {
                 state.didChange('');
               }));
             }
@@ -128,7 +128,7 @@ class ClearableTextFormField extends ValueField<String> {
             TextField textField = TextField(
               style: style,
               textAlignVertical: TextAlignVertical.center,
-              controller: controller._textEditingController,
+              controller: controller.textEditingController,
               focusNode: focusNode,
               textInputAction: textInputAction,
               decoration:
@@ -156,10 +156,10 @@ class ClearableTextFormField extends ValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class TextController extends ValueNotifier<String> with TextSelectionMixin {
-  final TextEditingController _textEditingController;
-  TextController({String value})
-      : this._textEditingController = TextEditingController(text: value),
+class _TextController extends ValueNotifier<String> with TextSelectionMixin {
+  final TextEditingController textEditingController;
+  _TextController({String value})
+      : this.textEditingController = TextEditingController(text: value),
         super(value);
 
   @override
@@ -168,17 +168,17 @@ class TextController extends ValueNotifier<String> with TextSelectionMixin {
   @override
   void setSelection(int start, int end) {
     TextSelectionMixin.setSelectionWithTextEditingController(
-        start, end, _textEditingController);
+        start, end, textEditingController);
   }
 
   @override
   void selectAll() {
-    setSelection(0, _textEditingController.text.length);
+    setSelection(0, textEditingController.text.length);
   }
 
   @override
   void dispose() {
-    _textEditingController.dispose();
+    textEditingController.dispose();
     super.dispose();
   }
 }
@@ -188,10 +188,9 @@ class _TextFormFieldState extends ValueFieldState<String> {
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
-  TextController get controller => super.controller;
+  _TextController get controller => super.controller;
   TextEditingController get textEditingController =>
-      controller._textEditingController;
-  FocusNode get focusNode => widget.focusNode;
+      controller.textEditingController;
 
   bool get selectAllOnFocus => getState('selectAllOnFocus');
 
@@ -202,8 +201,8 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void init() {
-    super.init();
+  void initControl() {
+    super.initControl();
     obscureText = widget.obscureText;
     if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
@@ -250,23 +249,23 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 }
 
-class DateTimeController extends ValueNotifier<DateTime> {
-  TextEditingController _controller = new TextEditingController();
+class _DateTimeController extends ValueNotifier<DateTime> {
+  TextEditingController controller = new TextEditingController();
 
-  DateTimeController({DateTime value}) : super(value);
+  _DateTimeController({DateTime value}) : super(value);
 
-  TimeOfDay get _timeOfDay =>
+  TimeOfDay get timeOfDay =>
       value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
 
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    controller.dispose();
   }
 }
 
 class DateTimeFormField extends ValueField<DateTime> {
-  DateTimeFormField(DateTimeController controller, FocusNode focusNode,
+  DateTimeFormField(
       {Key key,
       String labelText,
       String hintText,
@@ -282,7 +281,7 @@ class DateTimeFormField extends ValueField<DateTime> {
       DateTime initialValue,
       InputDecorationTheme inputDecorationTheme})
       : super(
-          controller,
+          () => _DateTimeController(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -298,8 +297,10 @@ class DateTimeFormField extends ValueField<DateTime> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           key: key,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, context, readOnly, stateMap, themeData,
+              formThemeData, focusNodeProvider, notifier) {
+            _DateTimeController controller = notifier;
+            FocusNode focusNode = focusNodeProvider();
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
             TextStyle style = stateMap['style'];
@@ -322,7 +323,7 @@ class DateTimeFormField extends ValueField<DateTime> {
                   if (useTime)
                     showTimePicker(
                       context: state.context,
-                      initialTime: controller._timeOfDay ??
+                      initialTime: controller.timeOfDay ??
                           TimeOfDay(hour: value.hour, minute: value.minute),
                       builder: (BuildContext context, Widget child) {
                         return Localizations.override(
@@ -350,7 +351,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             List<Widget> suffixes = [];
 
             if (!readOnly) {
-              suffixes.add(ClearButton(controller._controller, focusNode, () {
+              suffixes.add(ClearButton(controller.controller, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -379,7 +380,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: controller._controller,
+              controller: controller.controller,
               decoration:
                   effectiveDecoration.copyWith(errorText: state.errorText),
               obscureText: false,
@@ -413,14 +414,14 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
           : DateTimeFormField.defaultDateFormatter;
 
   TextEditingController get textEditingController =>
-      (super.controller as DateTimeController)._controller;
+      (super.controller as _DateTimeController).controller;
 
   @override
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void initState() {
-    super.initState();
+  void initControl() {
+    super.initControl();
     textEditingController.text =
         widget.initialValue == null ? '' : _formatter(widget.initialValue);
   }
@@ -439,30 +440,30 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   }
 }
 
-class NumberController extends ValueNotifier<num> with TextSelectionMixin {
-  TextEditingController _controller = new TextEditingController();
-  NumberController({num value}) : super(value);
+class _NumberController extends ValueNotifier<num> with TextSelectionMixin {
+  TextEditingController controller = new TextEditingController();
+  _NumberController({num value}) : super(value);
 
   @override
   void setSelection(int start, int end) {
     TextSelectionMixin.setSelectionWithTextEditingController(
-        start, end, _controller);
+        start, end, controller);
   }
 
   @override
   void selectAll() {
-    setSelection(0, _controller.text.length);
+    setSelection(0, controller.text.length);
   }
 
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    controller.dispose();
   }
 }
 
 class NumberFormField extends ValueField<num> {
-  NumberFormField(NumberController controller, FocusNode focusNode,
+  NumberFormField(
       {Key key,
       String labelText,
       String hintText,
@@ -482,7 +483,7 @@ class NumberFormField extends ValueField<num> {
       TextInputAction textInputAction,
       InputDecorationTheme inputDecorationTheme})
       : super(
-          controller,
+          () => _NumberController(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -521,7 +522,9 @@ class NumberFormField extends ValueField<num> {
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData) {
+              formThemeData, focusNodeProvider, notifier) {
+            _NumberController controller = notifier;
+            FocusNode focusNode = focusNodeProvider();
             _NumberFieldState state = baseState;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
@@ -571,7 +574,7 @@ class NumberFormField extends ValueField<num> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
-              suffixes.add(ClearButton(controller._controller, focusNode, () {
+              suffixes.add(ClearButton(controller.controller, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -598,7 +601,7 @@ class NumberFormField extends ValueField<num> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: controller._controller,
+              controller: controller.controller,
               textInputAction: textInputAction,
               decoration:
                   effectiveDecoration.copyWith(errorText: state.errorText),
@@ -632,7 +635,7 @@ class NumberFormField extends ValueField<num> {
 
 class _NumberFieldState extends ValueFieldState<num> {
   TextEditingController get textEditingController =>
-      (super.controller as NumberController)._controller;
+      (super.controller as _NumberController).controller;
 
   @override
   NumberFormField get widget => super.widget as NumberFormField;
@@ -645,8 +648,8 @@ class _NumberFieldState extends ValueFieldState<num> {
           : super.value.toDouble();
 
   @override
-  void initState() {
-    super.initState();
+  void initControl() {
+    super.initControl();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }

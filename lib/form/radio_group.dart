@@ -28,12 +28,12 @@ class RadioItem extends SubControllableItem {
         });
 }
 
-class RadioGroupController extends SubController {
-  RadioGroupController({value}) : super(value);
+class _RadioGroupController extends SubController {
+  _RadioGroupController({value}) : super(value);
 }
 
 class RadioGroup extends ValueField {
-  RadioGroup(List<RadioItem> items, RadioGroupController controller,
+  RadioGroup(List<RadioItem> items,
       {Key key,
       String label,
       ValueChanged onChanged,
@@ -45,7 +45,7 @@ class RadioGroup extends ValueField {
       EdgeInsets errorTextPadding,
       @required bool inline})
       : super(
-          controller,
+          () => _RadioGroupController(value: initialValue),
           {
             'label': label,
             'split': split ?? 2,
@@ -58,8 +58,9 @@ class RadioGroup extends ValueField {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, context, readOnly, stateMap, themeData,
+              formThemeData, focusNodeProvider, notifier) {
+            _RadioGroupController controller = notifier;
             String label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioItem> items = stateMap['items'];
