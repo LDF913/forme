@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/form/slider.dart';
 import 'package:flutter_application_1/form/switch_group.dart';
@@ -270,12 +272,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     : DefaultFormThemeData(context);
               },
               child: Text('change theme'),
-            ),
-            TextButton(
-              onPressed: () {
-                formController.update('commonField', {'text': 'new text'});
-              },
-              child: Text('change commonfield\'s text'),
             )
           ]),
         ));
@@ -452,10 +448,19 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .commonField('commonField',
             commonField: CommonField(
-              {'text': 'common text'},
+              {'text': 'click me and change my text'},
               builder: (state, context, readOnly, stateMap, themeData,
                   formThemeData) {
-                return Text(stateMap['text']);
+                return TextButton(
+                  child: Text(stateMap['text']),
+                  onPressed: readOnly
+                      ? null
+                      : () {
+                          formController.update('commonField', {
+                            'text': Random.secure().nextDouble().toString()
+                          });
+                        },
+                );
               },
             ));
   }

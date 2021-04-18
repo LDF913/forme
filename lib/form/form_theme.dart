@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'form_builder.dart';
-
 class FormThemeData {
   final EdgeInsets padding;
   final ThemeData themeData;
@@ -11,10 +9,6 @@ class FormThemeData {
       {this.padding = EdgeInsets.zero,
       @required this.themeData,
       this.labelPadding});
-
-  static FormThemeData of(BuildContext context) {
-    return FormControllerDelegate.of(context).themeData;
-  }
 
   static TextStyle getErrorStyle(ThemeData themeData) {
     InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;

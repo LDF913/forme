@@ -637,13 +637,9 @@ class FormControllerDelegate {
       : _formController = formController;
   FormControllerDelegate() : _formController = _FormController();
 
-  static FormControllerDelegate of(BuildContext context) {
-    return FormControllerDelegate._(_FormController.of(context));
-  }
-
-  FormControllerDelegate copyTheme() {
+  static FormControllerDelegate copyTheme(BuildContext context) {
     _FormController formController = _FormController();
-    formController._themeData = _formController._themeData;
+    formController._themeData = _FormController.of(context)._themeData;
     return FormControllerDelegate._(formController);
   }
 
@@ -724,8 +720,7 @@ class _FormController extends ChangeNotifier {
   final Map<String, ValueFieldState> valueFieldStates = {};
   final Map<String, CommonFieldState> commonFieldStates = {};
   final Map<String, List<ValueChanged<bool>>> focusChangeMap = {};
-  final Map<String, Map<String, dynamic>> fieldStateMap =
-      {}; //used to hold field state map
+  final Map<String, Map<String, dynamic>> fieldStateMap = {};
   final Map<String, dynamic> dataMap = {};
 
   static _FormController of(BuildContext context) {
@@ -1024,7 +1019,9 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 
   get padding =>
-      _padding ?? FormThemeData.of(context).padding ?? EdgeInsets.zero;
+      _padding ??
+      _FormController.of(context)._themeData.padding ??
+      EdgeInsets.zero;
   set padding(EdgeInsets padding) {
     if (!_removed && _padding != padding) {
       setState(() {
@@ -1098,13 +1095,10 @@ abstract class _BaseField<T> extends FormField<T> {
             key: key,
             builder: (field) {
               _BaseFieldState<T> state = field;
-              return builder(
-                  field,
-                  state.context,
-                  state.readOnly,
-                  state.getUpdatedMap(),
-                  Theme.of(state.context),
-                  FormThemeData.of(state.context));
+              FormThemeData formThemeData =
+                  _FormController.of(state.context).themeData;
+              return builder(field, state.context, state.readOnly,
+                  state._updatedMap, formThemeData.themeData, formThemeData);
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -1211,10 +1205,9 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   }
 
   @protected
-  @mustCallSuper
   void init() {}
 
-  Map<String, dynamic> getUpdatedMap() {
+  Map<String, dynamic> get _updatedMap {
     Map<String, dynamic> map = Map.from(this.widget._initStateMap);
     for (String key in map.keys) {
       if (_state.containsKey(key)) {

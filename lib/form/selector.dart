@@ -190,8 +190,6 @@ class SelectorFormField extends ValueField<List> {
                 }
               }
             }
-            FormControllerDelegate formController =
-                FormControllerDelegate.of(context);
 
             final InputDecoration effectiveDecoration = InputDecoration(
                 contentPadding: multi ? EdgeInsets.zero : null,
@@ -202,6 +200,9 @@ class SelectorFormField extends ValueField<List> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   mainAxisSize: MainAxisSize.min,
                 )).applyDefaults(inputDecorationTheme);
+
+            FormControllerDelegate delegate =
+                FormControllerDelegate.copyTheme(context);
 
             Widget child = Focus(
                 focusNode: focusNode,
@@ -220,7 +221,7 @@ class SelectorFormField extends ValueField<List> {
                                               arguments: controller._key),
                                           builder: (BuildContext context) {
                                             return _SelectorDialog(
-                                                formController,
+                                                delegate,
                                                 selectItemRender,
                                                 checker,
                                                 controller.value,
@@ -315,7 +316,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   void initState() {
     super.initState();
     selected = List.from(widget.selected);
-    queryFormController = widget.formController.copyTheme();
+    queryFormController = widget.formController;
 
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
