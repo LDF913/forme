@@ -127,6 +127,7 @@ class ClearableTextFormField extends ValueField<String> {
                 .applyDefaults(inputDecorationTheme);
 
             TextField textField = TextField(
+              key: key,
               style: style,
               textAlignVertical: TextAlignVertical.center,
               controller: controller.textEditingController,
@@ -202,8 +203,8 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void initControl() {
-    super.initControl();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     obscureText = widget.obscureText;
     if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
@@ -421,8 +422,8 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void initControl() {
-    super.initControl();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     textEditingController.text =
         widget.initialValue == null ? '' : _formatter(widget.initialValue);
   }
@@ -649,8 +650,8 @@ class _NumberFieldState extends ValueFieldState<num> {
           : super.value.toDouble();
 
   @override
-  void initControl() {
-    super.initControl();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }
@@ -697,6 +698,20 @@ class _ClearButtonState extends State<ClearButton> {
     visible = widget.controller.text != '' && widget.focusNode.hasFocus;
     widget.focusNode.addListener(changeListener);
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(ClearButton old) {
+    super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(changeListener);
+      widget.controller.addListener(changeListener);
+    }
+    if (old.focusNode != widget.focusNode) {
+      old.focusNode.removeListener(changeListener);
+      widget.focusNode.addListener(changeListener);
+    }
+    visible = widget.focusNode.hasFocus && widget.controller.text != '';
   }
 
   @override

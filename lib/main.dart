@@ -92,6 +92,13 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Wrap(children: [
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'form1',
+                style: TextStyle(fontSize: 30),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
               child: Builder(builder: (context) {
                 return createForm(context);
               }),
@@ -103,12 +110,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(fontSize: 30),
               ),
             ),
-            Padding(
+            /*Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Builder(builder: (context) {
                 return createForm2(context);
               }),
-            ),
+            ),*/
             Builder(
               builder: (context) {
                 return TextButton(
@@ -193,40 +200,45 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 SubControllerDelegate subController =
                     formController.getSubController('checkbox');
-                return TextButton(
-                    onPressed: () {
-                      bool readOnly = subController.isReadOnly('male');
-                      subController.setReadOnly('male', !readOnly);
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(subController.isReadOnly('male')
-                        ? 'set male editable'
-                        : 'set male readonly'));
+                return subController == null
+                    ? SizedBox()
+                    : TextButton(
+                        onPressed: () {
+                          bool readOnly = subController.isReadOnly('male');
+                          subController.setReadOnly('male', !readOnly);
+                          (context as Element).markNeedsBuild();
+                        },
+                        child: Text(subController.isReadOnly('male')
+                            ? 'set male editable'
+                            : 'set male readonly'));
               },
             ),
             Builder(
               builder: (context) {
                 SubControllerDelegate subController =
                     formController.getSubController('switchGroup');
-                return TextButton(
-                    onPressed: () {
-                      bool visible =
-                          subController.getState('switch1', 'visible');
-                      bool readOnly =
-                          subController.getState('switch0', 'readOnly');
-                      subController.update({
-                        'switch0': {'readOnly': !readOnly},
-                        'switch1': {'visible': !visible}
-                      });
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text((subController.getState('switch1', 'visible')
-                            ? 'hide'
-                            : 'show') +
-                        ' switch 2 & set switch 1 ' +
-                        (subController.getState('switch0', 'readOnly')
-                            ? 'editable'
-                            : 'readOnly')));
+                return subController == null
+                    ? SizedBox()
+                    : TextButton(
+                        onPressed: () {
+                          bool visible =
+                              subController.getState('switch1', 'visible');
+                          bool readOnly =
+                              subController.getState('switch0', 'readOnly');
+                          subController.update({
+                            'switch0': {'readOnly': !readOnly},
+                            'switch1': {'visible': !visible}
+                          });
+                          (context as Element).markNeedsBuild();
+                        },
+                        child: Text(
+                            (subController.getState('switch1', 'visible')
+                                    ? 'hide'
+                                    : 'show') +
+                                ' switch 2 & set switch 1 ' +
+                                (subController.getState('switch0', 'readOnly')
+                                    ? 'editable'
+                                    : 'readOnly')));
               },
             ),
             TextButton(
@@ -283,7 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    return FormBuilder(formController)
+    return FormBuilder(FormControllerDelegate())
         .textField('username',
             labelText: 'username',
             clearable: true,
@@ -307,9 +319,6 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
-        .textButton('button', () {
-          print('x');
-        }, flex: 0, label: 'sign in')
         .nextLine()
         .numberField(
           'age',
@@ -470,8 +479,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm2(BuildContext context) {
     return FormBuilder(formController2)
-        .commonField('label1',
-            commonField: LabelField('username'), inline: true, flex: 2)
+        .widget(child: Label('username'), inline: true, flex: 2)
         .textField('username',
             hintText: 'username',
             flex: 3,
@@ -482,8 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
               return value.isEmpty ? 'not empty' : null;
             })
         .nextLine()
-        .commonField('label2',
-            commonField: LabelField('password'), inline: true, flex: 2)
+        .widget(child: Label('password'), inline: true, flex: 2)
         .textField('password',
             flex: 3,
             hintText: 'password',
@@ -493,24 +500,22 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'))
         .nextLine()
-        .commonField('label3',
-            flex: 2, commonField: LabelField('rememberMe'), inline: true)
+        .widget(flex: 2, child: Label('rememberMe'), inline: true)
         .switchInline('rememberMe', flex: 3)
         .nextLine()
-        .commonField(
-          'label4',
-          commonField: LabelField('age'),
+        .widget(
+          child: Label('age'),
           inline: true,
           flex: 2,
         )
-        .slider('age', min: 14, max: 100, inline: true, flex: 3,
-            onChanged: (value) {
-          formController2.update(
-              'label4', {'label': 'age(' + value.round().toString() + ')'});
-        })
+        .slider('age',
+            min: 14,
+            max: 100,
+            inline: true,
+            flex: 3,
+            subLabelRender: (value) => Text(value.round().toString()))
         .nextLine()
-        .commonField('label5',
-            commonField: LabelField('sex'), flex: 2, inline: true)
+        .widget(child: Label('sex'), flex: 2, inline: true)
         .radioGroup(
             'sex',
             [
@@ -520,8 +525,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3,
             inline: true)
         .nextLine()
-        .commonField('label6',
-            commonField: LabelField('habbit'), inline: true, flex: 2)
+        .widget(child: Label('habbit'), inline: true, flex: 2)
         .switchGroup('habbit',
             hasSelectAllSwitch: false,
             inline: true,
@@ -532,19 +536,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class LabelField extends CommonField {
-  LabelField(String label)
-      : super(
-          {
-            'label': label,
-          },
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
-            return Text(
-              stateMap['label'],
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
-            );
-          },
-        );
+class Label extends StatelessWidget {
+  final String label;
+  const Label(this.label, {Key key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    ThemeData themeData = Theme.of(context);
+    return Text(
+      label,
+      overflow: TextOverflow.ellipsis,
+      style: TextStyle(fontSize: 18, color: themeData.primaryColor),
+    );
+  }
 }

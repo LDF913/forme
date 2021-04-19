@@ -351,11 +351,14 @@ class FormBuilder extends StatefulWidget {
     OnSelectDialogShow onSelectDialogShow,
     VoidCallback onTap,
     InputDecorationTheme inputDecorationTheme,
+    bool inline = false,
+    int flex = 1,
   }) {
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     _builders.add(
       _FormItemWidget(visible, controlKey,
-          flex: 1,
+          flex: inline ? flex : 1,
           child: SelectorFormField(selectItemProvider,
               onChanged: onChanged,
               labelText: labelText,
@@ -376,7 +379,8 @@ class FormBuilder extends StatefulWidget {
               onSelectDialogShow: onSelectDialogShow,
               inputDecorationTheme: inputDecorationTheme)),
     );
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     return this;
   }
 
@@ -550,6 +554,24 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
+  FormBuilder widget(
+      {Key key,
+      int flex = 0,
+      bool visible = true,
+      EdgeInsets padding,
+      @required Widget child,
+      bool inline}) {
+    assert(child != null);
+    assert(!(child is _BaseField));
+    return _widget(null,
+        key: key,
+        flex: flex,
+        visible: visible,
+        padding: padding,
+        field: child,
+        inline: inline);
+  }
+
   FormBuilder commonField(String controlKey,
       {Key key,
       int flex = 0,
@@ -557,12 +579,12 @@ class FormBuilder extends StatefulWidget {
       EdgeInsets padding,
       @required CommonField commonField,
       bool inline}) {
-    return _baseField(controlKey,
+    return _widget(controlKey,
         key: key,
         flex: flex,
         visible: visible,
         padding: padding,
-        baseField: commonField,
+        field: commonField,
         inline: inline);
   }
 
@@ -573,27 +595,27 @@ class FormBuilder extends StatefulWidget {
       EdgeInsets padding,
       @required ValueField valueField,
       bool inline}) {
-    return _baseField(controlKey,
+    return _widget(controlKey,
         key: key,
         flex: flex,
         visible: visible,
         padding: padding,
-        baseField: valueField,
+        field: valueField,
         inline: inline);
   }
 
-  FormBuilder _baseField(String controlKey,
+  FormBuilder _widget(String controlKey,
       {Key key,
       int flex = 0,
       bool visible = true,
       EdgeInsets padding,
-      @required _BaseField baseField,
+      @required Widget field,
       bool inline}) {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(
       _FormItemWidget(visible, controlKey,
-          key: key, flex: flex, padding: padding, child: baseField),
+          key: key, flex: flex, padding: padding, child: field),
     );
     if (!inline) nextLine();
     return this;
@@ -646,9 +668,34 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
+    widget.nextLine();
     if (!listEquals(widget._builderss, oldWidget._builderss)) {
       builderss = widget._builderss;
     }
+    if (oldWidget._formController != widget._formController) {
+      widget.formControllerDelegate._formController =
+          oldWidget.formControllerDelegate._formController;
+      //should we directly copy old _formController  here ??
+    }
+    // remove unused or unmatched controlKeys
+    Map<String, Type> map = {};
+    for (List<_FormItemWidget> builders in widget._builderss) {
+      for (_FormItemWidget itemWidget in builders) {
+        String controlKey = itemWidget.controlKey;
+        if (controlKey != null) map[controlKey] = itemWidget.child.runtimeType;
+      }
+    }
+
+    Map<String, Type> currentMapFromFormController = widget
+        ._formController.states
+        .map((key, value) => MapEntry(key, value.widget.child.runtimeType));
+
+    currentMapFromFormController.forEach((key, value) {
+      if (!map.containsKey(key) || map[key] != value) {
+        debugPrint('remove unused or unmatch key:' + key);
+        widget._formController._remove(key);
+      }
+    });
   }
 
   @override
@@ -827,8 +874,7 @@ class FormControllerDelegate {
       _formController.getSubController(controlKey);
 
   /// remove a field completely
-  void remove(String controlKey, {VoidCallback removed}) =>
-      _formController.remove(controlKey, removed: removed);
+  void remove(String controlKey) => _formController.remove(controlKey);
 }
 
 class _FormController extends ChangeNotifier {
@@ -1056,21 +1102,28 @@ class _FormController extends ChangeNotifier {
     if (controller != null) controller.selectAll();
   }
 
-  void remove(String controlKey, {VoidCallback removed}) {
+  void remove(String controlKey) {
     _FormItemWidgetState state = states[controlKey];
     if (state == null) return;
     state.remove();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      focusChangeMap.remove(controlKey);
-      ValueNotifier controller = controllers.remove(controlKey);
-      if (controller != null) controller.dispose();
-      FocusNode focusNode = focusNodes.remove(controlKey);
-      if (focusNode != null) focusNode.dispose();
-      states.remove(controlKey);
-      valueFieldStates.remove(controlKey);
-      commonFieldStates.remove(controlKey);
-      if (removed != null) removed();
-    });
+    _remove(controlKey);
+  }
+
+  void _remove(String controlKey) {
+    focusChangeMap.remove(controlKey);
+    ValueNotifier controller = controllers.remove(controlKey);
+    FocusNode focusNode = focusNodes.remove(controlKey);
+    if (controller != null || focusNode != null) {
+      // some wigets may call removeListener() on controller or focusNode after we disposed
+      // if we do not  dispose controller & focusnode at end of this frame,an error will occur
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (controller != null) controller.dispose();
+        if (focusNode != null) focusNode.dispose();
+      });
+    }
+    states.remove(controlKey);
+    valueFieldStates.remove(controlKey);
+    commonFieldStates.remove(controlKey);
   }
 
   void removeState(String controlKey, Set<String> stateKeys) {
@@ -1214,7 +1267,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
       return SizedBox.shrink();
     }
     _FormController.of(context).states[widget.controlKey] = this;
-    if (widget.controlKey == 'username') print(flex);
     return _InheritedControlKey(widget.controlKey,
         child: Flexible(
           fit: visible ? FlexFit.tight : FlexFit.loose,
@@ -1306,7 +1358,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   ///
   /// if there's no focus node,will create a new one
   ///
-  /// **call this method in initControl()**
+  /// **call this method in didChangeDependencies()**
   FocusNodes get focusNode => _formController.newFocusNode(controlKey);
 
   Map<String, dynamic> get _getInitStateMap =>
@@ -1321,18 +1373,9 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (controlKey == null) {
-      controlKey = _InheritedControlKey.of(context).controlKey;
-      _formController = _FormController.of(context);
-      initControl();
-    }
+    controlKey = _InheritedControlKey.of(context).controlKey;
+    _formController = _FormController.of(context);
   }
-
-  /// override this method if you want to safely get focusnode & readonly
-  ///
-  /// this method only run once in state's lifecycle
-  @mustCallSuper
-  void initControl() {}
 
   set _readOnly(bool readOnly) {
     _update({FormBuilder.readOnlyKey: readOnly});
@@ -1384,7 +1427,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   ValueField<T> get widget => super.widget;
   ValueChanged<T> get onChanged => widget.onChanged;
 
-  /// **you need to get controller in initControl()**
+  /// **you need to get controller in didChangeDependencies()**
   ValueNotifier<T> controller;
 
   void _setAutoValidateMode(AutovalidateMode autovalidateMode) {
@@ -1400,8 +1443,8 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   }
 
   @override
-  void initControl() {
-    super.initControl();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     controller =
         _formController.newController(controlKey, widget.controllerProvider);
     controller.addListener(handleUpdate);
@@ -1539,8 +1582,8 @@ class _FormControllerScope extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return false;
+  bool updateShouldNotify(covariant _FormControllerScope oldWidget) {
+    return oldWidget.formController != formController;
   }
 }
 
