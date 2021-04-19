@@ -39,9 +39,14 @@ class FormBuilder extends StatefulWidget {
   final List<_FormItemWidget> _builders = [];
   final List<List<_FormItemWidget>> _builderss = [];
   final FormControllerDelegate formControllerDelegate;
+
+  final InlineLayout inlineLayout;
+
   _FormController get _formController => formControllerDelegate._formController;
 
-  FormBuilder(this.formControllerDelegate);
+  FormBuilder(this.formControllerDelegate,
+      {InlineLayout inlineLayout = InlineLayout.flex})
+      : this.inlineLayout = inlineLayout ?? InlineLayout.flex;
 
   /// add an empty row
   FormBuilder nextLine() {
@@ -1723,3 +1728,5 @@ class FocusNodes extends FocusNode {
     _nodes.clear();
   }
 }
+
+enum InlineLayout { flex, fractionally }
