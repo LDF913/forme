@@ -240,21 +240,18 @@ class SwitchInlineFormField extends ValueField<bool> {
             _SwitchController controller = state.controller;
             List<Widget> columns = [];
             columns.add(InkWell(
-              child: Padding(
-                child: Row(
-                  children: [
-                    CupertinoSwitch(
-                      value: controller.value,
-                      onChanged: readOnly
-                          ? null
-                          : (value) {
-                              state.didChange(!controller.value);
-                            },
-                      activeColor: themeData.primaryColor,
-                    )
-                  ],
-                ),
-                padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Row(
+                children: [
+                  CupertinoSwitch(
+                    value: controller.value,
+                    onChanged: readOnly
+                        ? null
+                        : (value) {
+                            state.didChange(!controller.value);
+                          },
+                    activeColor: themeData.primaryColor,
+                  )
+                ],
               ),
               onTap: readOnly
                   ? null

@@ -40,13 +40,9 @@ class FormBuilder extends StatefulWidget {
   final List<List<_FormItemWidget>> _builderss = [];
   final FormControllerDelegate formControllerDelegate;
 
-  final InlineLayout inlineLayout;
-
   _FormController get _formController => formControllerDelegate._formController;
 
-  FormBuilder(this.formControllerDelegate,
-      {InlineLayout inlineLayout = InlineLayout.flex})
-      : this.inlineLayout = inlineLayout ?? InlineLayout.flex;
+  FormBuilder(this.formControllerDelegate);
 
   /// add an empty row
   FormBuilder nextLine() {
@@ -422,14 +418,16 @@ class FormBuilder extends StatefulWidget {
     AutovalidateMode autovalidateMode,
     List<int> initialValue,
     EdgeInsets errorTextPadding,
-    bool selectAllDivier,
     EdgeInsets selectAllPadding,
+    bool inline = false,
+    int flex = 1,
   }) {
-    nextLine();
+    inline ??= false;
+    if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
-      flex: 1,
+      flex: inline ? flex : 1,
       padding: padding,
       child: SwitchGroupFormField(
         label: label,
@@ -444,7 +442,7 @@ class FormBuilder extends StatefulWidget {
         selectAllPadding: selectAllPadding,
       ),
     ));
-    nextLine();
+    if (!inline) nextLine();
     return this;
   }
 
@@ -486,13 +484,14 @@ class FormBuilder extends StatefulWidget {
       String label,
       SubLabelRender subLabelRender,
       EdgeInsets contentPadding,
-      bool inline = false}) {
+      bool inline = false,
+      int flex}) {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
-      flex: 1,
+      flex: inline ? flex : 1,
       child: SliderFormField(
         readOnly: readOnly,
         autovalidateMode: autovalidateMode,
@@ -600,12 +599,14 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  static List<CheckboxItem> toCheckboxItems(List<String> items) {
-    return items.map((e) => CheckboxItem(e)).toList();
+  static List<CheckboxItem> toCheckboxItems(List<String> items,
+      {EdgeInsets padding}) {
+    return items.map((e) => CheckboxItem(e, padding: padding)).toList();
   }
 
-  static List<RadioItem> toRadioItems(List<String> items) {
-    return items.map((e) => RadioItem(e, e)).toList();
+  static List<RadioItem> toRadioItems(List<String> items,
+      {EdgeInsets padding}) {
+    return items.map((e) => RadioItem(e, e, padding: padding)).toList();
   }
 
   static SelectItemProvider toSelectItemProvider(List items) {
@@ -616,8 +617,9 @@ class FormBuilder extends StatefulWidget {
     };
   }
 
-  static List<SwitchGroupItem> toSwitchGroupItems(List<String> items) {
-    return items.map((e) => SwitchGroupItem(e)).toList();
+  static List<SwitchGroupItem> toSwitchGroupItems(List<String> items,
+      {EdgeInsets padding}) {
+    return items.map((e) => SwitchGroupItem(e, padding: padding)).toList();
   }
 
   @override
@@ -1199,11 +1201,20 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 
   @override
+  void didUpdateWidget(_FormItemWidget old) {
+    super.didUpdateWidget(old);
+    _flex = widget.flex ?? 1;
+    _padding = widget.padding;
+    _visible = widget.visible ?? true;
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_removed) {
       return SizedBox.shrink();
     }
     _FormController.of(context).states[widget.controlKey] = this;
+    if (widget.controlKey == 'username') print(flex);
     return _InheritedControlKey(widget.controlKey,
         child: Flexible(
           fit: visible ? FlexFit.tight : FlexFit.loose,
@@ -1728,5 +1739,3 @@ class FocusNodes extends FocusNode {
     _nodes.clear();
   }
 }
-
-enum InlineLayout { flex, fractionally }

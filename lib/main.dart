@@ -465,24 +465,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         },
                 );
               },
-            ))
-        .valueField('valueField',
-            valueField: ValueField(
-              () => ValueNotifier('123'),
-              {'label': 'custom value field ,click get form data'},
-              initialValue: '123',
-              replace: () => '123',
-              builder: (state, context, readOnly, stateMap, themeData,
-                  formThemeData) {
-                return Text(stateMap['label']);
-              },
             ));
   }
 
   Widget createForm2(BuildContext context) {
     return FormBuilder(formController2)
+        .commonField('label1',
+            commonField: LabelField('username'), inline: true, flex: 2)
         .textField('username',
-            labelText: 'username',
+            hintText: 'username',
+            flex: 3,
             clearable: true,
             selectAllOnFocus: true,
             onChanged: (value) => print('username value changed $value'),
@@ -490,13 +482,69 @@ class _MyHomePageState extends State<MyHomePage> {
               return value.isEmpty ? 'not empty' : null;
             })
         .nextLine()
+        .commonField('label2',
+            commonField: LabelField('password'), inline: true, flex: 2)
         .textField('password',
+            flex: 3,
             hintText: 'password',
             obscureText: true,
             passwordVisible: true,
             clearable: true,
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
-            onChanged: (value) => print('password value changed $value'),
-            flex: 1);
+            onChanged: (value) => print('password value changed $value'))
+        .nextLine()
+        .commonField('label3',
+            flex: 2, commonField: LabelField('rememberMe'), inline: true)
+        .switchInline('rememberMe', flex: 3)
+        .nextLine()
+        .commonField(
+          'label4',
+          commonField: LabelField('age'),
+          inline: true,
+          flex: 2,
+        )
+        .slider('age', min: 14, max: 100, inline: true, flex: 3,
+            onChanged: (value) {
+          formController2.update(
+              'label4', {'label': 'age(' + value.round().toString() + ')'});
+        })
+        .nextLine()
+        .commonField('label5',
+            commonField: LabelField('sex'), flex: 2, inline: true)
+        .radioGroup(
+            'sex',
+            [
+              RadioItem(0, 'male', padding: EdgeInsets.zero),
+              RadioItem(1, 'female', padding: EdgeInsets.only(left: 10))
+            ],
+            flex: 3,
+            inline: true)
+        .nextLine()
+        .commonField('label6',
+            commonField: LabelField('habbit'), inline: true, flex: 2)
+        .switchGroup('habbit',
+            hasSelectAllSwitch: false,
+            inline: true,
+            flex: 3,
+            items: FormBuilder.toSwitchGroupItems(
+                ['basketball', 'football', 'girl'],
+                padding: EdgeInsets.only(top: 4)));
   }
+}
+
+class LabelField extends CommonField {
+  LabelField(String label)
+      : super(
+          {
+            'label': label,
+          },
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            return Text(
+              stateMap['label'],
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
+            );
+          },
+        );
 }

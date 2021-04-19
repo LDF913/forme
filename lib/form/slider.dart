@@ -115,7 +115,7 @@ class SliderFormField extends ValueField<double> {
             }
 
             columns.add(Padding(
-              padding: contentPadding,
+              padding: inline ? EdgeInsets.zero : contentPadding,
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
