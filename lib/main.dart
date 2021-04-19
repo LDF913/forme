@@ -68,11 +68,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-  }
-
-  @override
   void dispose() {
     super.dispose();
   }
@@ -306,9 +301,9 @@ class _MyHomePageState extends State<MyHomePage> {
           hintText: 'age',
           clearable: true,
           flex: 3,
-          min: -14,
+          min: -18,
           max: 99,
-          decimal: 2,
+          decimal: 0,
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
@@ -407,7 +402,6 @@ class _MyHomePageState extends State<MyHomePage> {
           min: 0,
           max: 100,
           label: 'age slider',
-          initialValue: 1,
           validator: (value) =>
               value < 50 ? 'age slider must bigger than 50' : null,
           subLabelRender: (value) => Text(value.toStringAsFixed(0)),
@@ -421,13 +415,12 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 2,
             initialValue: 0,
             onChanged: (v) => formController.setValue(
-                'sliderInline', v == null ? 0.0 : v.toDouble(), trigger: false))
-        .slider('sliderInline',
-            min: 0,
-            max: 100,
-            inline: true,
-            onChanged: (v) => formController
-                .setValue('sliderInlineText', v.round(), trigger: false))
+                'sliderInline', v == null ? 0.0 : v.toDouble(),
+                trigger: false))
+        .slider('sliderInline', min: 0, max: 100, inline: true, onChanged: (v) {
+          formController.setValue('sliderInlineText', v.round(),
+              trigger: false);
+        })
         .rangeSlider(
           'rangeSlider',
           min: 0,
@@ -463,7 +456,7 @@ class _MyHomePageState extends State<MyHomePage> {
               () => ValueNotifier('123'),
               {'label': 'custom value field ,click get form data'},
               initialValue: '123',
-              replace: () => '456',
+              replace: () => '123',
               builder: (state, context, readOnly, stateMap, themeData,
                   formThemeData) {
                 return Text(stateMap['label']);

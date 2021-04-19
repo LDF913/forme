@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'form_builder.dart';
 
@@ -427,8 +428,8 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   }
 
   @override
-  void didChange(DateTime value) {
-    super.didChange(value);
+  void doChangeValue(DateTime value, {bool trigger = true}) {
+    super.doChangeValue(value, trigger: trigger);
     textEditingController.text = value == null ? '' : _formatter(value);
   }
 
@@ -612,7 +613,7 @@ class NumberFormField extends ValueField<num> {
               onChanged: (value) {
                 num parsed = num.tryParse(value);
                 if (parsed != null) {
-                  state.didChangeAndNotChangeText(parsed);
+                  state.doChangeValue(parsed, updateText: false);
                 } else {
                   if (value.isEmpty) {
                     state.didChange(null);
@@ -654,23 +655,12 @@ class _NumberFieldState extends ValueFieldState<num> {
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }
 
-  num didChangeAndNotChangeText(dynamic value) {
-    num toChange;
-    if (value is String) {
-      toChange = num.tryParse(value);
-    } else {
-      toChange = value;
-    }
-    super.didChange(toChange);
-    return toChange;
-  }
-
   @override
-  void didChange(dynamic value) {
-    num toChange = didChangeAndNotChangeText(value);
-    String numberStr = toChange == null ? '' : toChange.toString();
-    if (textEditingController.text != numberStr) {
-      textEditingController.text = numberStr;
+  void doChangeValue(num value, {bool trigger = true, bool updateText = true}) {
+    super.doChangeValue(value, trigger: trigger);
+    String str = super.value == null ? '' : value.toString();
+    if (updateText && textEditingController.text != str) {
+      textEditingController.text = str;
     }
   }
 

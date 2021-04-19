@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'switch_group.dart';
@@ -8,6 +9,9 @@ import 'radio_group.dart';
 import 'selector.dart';
 import 'slider.dart';
 
+/// provide a value notifier for ValueField
+///
+/// it's only create once and maintained in [_FormController]
 typedef ControllerProvider<T> = ValueNotifier<T> Function();
 typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
   K state,
@@ -17,7 +21,13 @@ typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
   ThemeData themeData,
   FormThemeData formThemeData,
 );
+
+/// replace null value before set it to ValueField
+///
+/// it's useful if you don't want your custom value field return a null value
 typedef NullValueReplace<T> = T Function();
+
+/// listen sub focusnodes change
 typedef SubFocusChanged = void Function(String key, bool hasFocus);
 
 class FormBuilder extends StatefulWidget {
@@ -167,6 +177,10 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
+  /// add a radio group
+  ///
+  /// if inline is false,it will be added to current row
+  /// otherwise it will be placed in a new row
   FormBuilder radioGroup(
     String controlKey,
     List<RadioItem> items, {
@@ -606,9 +620,11 @@ class FormBuilder extends StatefulWidget {
 }
 
 class _FormBuilderState extends State<FormBuilder> {
+  List<List<_FormItemWidget>> builderss;
   @override
   void initState() {
     super.initState();
+    builderss = widget._builderss;
     widget._formController.addListener(() {
       setState(() {});
     });
@@ -621,6 +637,14 @@ class _FormBuilderState extends State<FormBuilder> {
   }
 
   @override
+  void didUpdateWidget(FormBuilder oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(widget._builderss, oldWidget._builderss)) {
+      builderss = widget._builderss;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     widget.nextLine();
 
@@ -629,7 +653,7 @@ class _FormBuilderState extends State<FormBuilder> {
     }
 
     List<Row> rows = [];
-    for (List<_FormItemWidget> builders in widget._builderss) {
+    for (List<_FormItemWidget> builders in builderss) {
       rows.add(Row(
         children: builders,
       ));
@@ -1175,20 +1199,18 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
       return SizedBox.shrink();
     }
     _FormController.of(context).states[widget.controlKey] = this;
-    return _InheritedControlKey(
-      widget.controlKey,
-      child: Flexible(
-        fit: visible ? FlexFit.tight : FlexFit.loose,
-        child: Visibility(
-            maintainState: true,
-            visible: visible,
-            child: Padding(
-              padding: padding,
-              child: widget.child,
-            )),
-        flex: flex,
-      ),
-    );
+    return _InheritedControlKey(widget.controlKey,
+        child: Flexible(
+          fit: visible ? FlexFit.tight : FlexFit.loose,
+          child: Visibility(
+              maintainState: true,
+              visible: visible,
+              child: Padding(
+                padding: padding,
+                child: widget.child,
+              )),
+          flex: flex,
+        ));
   }
 }
 
@@ -1208,13 +1230,8 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
               K state = field;
               FormThemeData formThemeData =
                   _FormController.of(state.context).themeData;
-              return builder(
-                  state,
-                  state.context,
-                  state.readOnly,
-                  Map.unmodifiable(state._state),
-                  formThemeData.themeData,
-                  formThemeData);
+              return builder(state, state.context, state.readOnly,
+                  state._stateMap, formThemeData.themeData, formThemeData);
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -1271,15 +1288,18 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   /// get current widget's focus node
   ///
-  ///if there's no focus node,will create a new one
+  /// if there's no focus node,will create a new one
   ///
   /// **call this method in initControl()**
   FocusNodes get focusNode => _formController.newFocusNode(controlKey);
 
+  Map<String, dynamic> get _getInitStateMap =>
+      (widget as _BaseField)._initStateMap;
+
   @override
   void initState() {
     super.initState();
-    _state = Map.from((widget as _BaseField)._initStateMap);
+    _state = {};
   }
 
   @override
@@ -1302,8 +1322,21 @@ class _BaseFieldState<T> extends FormFieldState<T> {
     _update({FormBuilder.readOnlyKey: readOnly});
   }
 
+  /// get state value
+  ///
+  /// it's equals to build method's stateMap[stateKey]
   getState(String stateKey) {
-    return _state[stateKey];
+    return _state.containsKey(stateKey)
+        ? _state[stateKey]
+        : _getInitStateMap[stateKey];
+  }
+
+  Map<String, dynamic> get _stateMap {
+    Map<String, dynamic> map = {};
+    _getInitStateMap.forEach((key, value) {
+      map[key] = _state.containsKey(key) ? _state[key] : value;
+    });
+    return map;
   }
 
   void _rebuild(Map<String, dynamic> state) {
@@ -1382,7 +1415,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   }
 
   void doChangeValue(T value, {bool trigger = true}) {
-    T replaceValue = _getValue(value);
+    T replaceValue = getReplacedValue(value);
     super.didChange(replaceValue);
     if (controller.value != replaceValue) {
       controller.value = replaceValue;
@@ -1395,14 +1428,15 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   @override
   void reset() {
     super.reset();
-    T value = _getValue(widget.initialValue);
+    T value = getReplacedValue(widget.initialValue);
     controller.value = value;
     if (onChanged != null) {
       onChanged(controller.value);
     }
   }
 
-  T _getValue(T value) {
+  @protected
+  T getReplacedValue(T value) {
     if (value == null && widget.replace != null) {
       return widget.replace();
     }
@@ -1606,10 +1640,16 @@ class SubControllerDelegate {
 
   SubControllerDelegate._(this._controller);
 
+  /// update sub item by it's controlkey
+  ///
+  /// this will rebuild whole form field , not only the sub item
   void update1(String controlKey, Map<String, dynamic> state) {
     _controller.update1(controlKey, state);
   }
 
+  /// if you want to update several sub items at one time ,
+  /// you should call this method for better performance
+  /// due to it's only rebuild form field once
   void update(Map<String, Map<String, dynamic>> states) {
     _controller.update(states);
   }
@@ -1643,6 +1683,7 @@ class SubControllerDelegate {
   }
 }
 
+/// used to listen focus change
 class FocusChanged {
   final ValueChanged<bool> rootChanged;
   final SubFocusChanged subChanged;
@@ -1655,6 +1696,11 @@ class FocusNodes extends FocusNode {
 
   FocusNodes._(this._subChanged);
 
+  /// create a new focus node if not exists
+  ///
+  /// return old FocusNode if it is exists
+  ///
+  /// **do not dispose it by yourself,it will auto dispose **
   FocusNode newFocusNode(String key) {
     assert(_nodes != null);
     FocusNode focusNode = _nodes[key];
