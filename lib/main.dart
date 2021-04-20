@@ -54,17 +54,19 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  FormControllerDelegate formController;
-
   int i = 1;
+
+  FormManagement formManagement;
 
   @override
   void initState() {
     super.initState();
-    formController = FormControllerDelegate();
-    formController.onFocusChange('username', FocusChanged(rootChanged: (value) {
-      print('username focused: $value');
-    }));
+    formManagement = FormManagement(initCallback: () {
+      formManagement.onFocusChange('username',
+          FocusChanged(rootChanged: (value) {
+        print('username focused: $value');
+      }));
+    });
   }
 
   @override
@@ -113,21 +115,21 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.visible = !formController.visible;
+                      formManagement.visible = !formManagement.visible;
                       (context as Element).markNeedsBuild();
                     },
                     child: Text(
-                        formController.visible ? 'hide form' : 'show form'));
+                        formManagement.visible ? 'hide form' : 'show form'));
               },
             ),
             Builder(
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.readOnly = !formController.readOnly;
+                      formManagement.readOnly = !formManagement.readOnly;
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.readOnly
+                    child: Text(formManagement.readOnly
                         ? 'set form editable'
                         : 'set form readonly'));
               },
@@ -136,11 +138,11 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.setVisible(
-                          'username', !formController.isVisible('username'));
+                      formManagement.setVisible(
+                          'username', !formManagement.isVisible('username'));
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isVisible('username')
+                    child: Text(formManagement.isVisible('username')
                         ? 'hide username'
                         : 'show username'));
               },
@@ -149,24 +151,24 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return TextButton(
                     onPressed: () {
-                      formController.setReadOnly(
-                          'username', !formController.isReadOnly('username'));
+                      formManagement.setReadOnly(
+                          'username', !formManagement.isReadOnly('username'));
                       (context as Element).markNeedsBuild();
                     },
-                    child: Text(formController.isReadOnly('username')
+                    child: Text(formManagement.isReadOnly('username')
                         ? 'set username editable'
                         : 'set username readonly'));
               },
             ),
             TextButton(
                 onPressed: () {
-                  formController.setAutovalidateMode(
+                  formManagement.setAutovalidateMode(
                       'username', AutovalidateMode.always);
                 },
                 child: Text('validate username always')),
             TextButton(
                 onPressed: () {
-                  formController.remove('username');
+                  formManagement.remove('username');
                 },
                 child: Text('remove username completely')),
             TextButton(
@@ -176,23 +178,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('rebuild page')),
             TextButton(
                 onPressed: () {
-                  formController.validate();
+                  formManagement.validate();
                 },
                 child: Text('validate')),
             TextButton(
                 onPressed: () {
-                  formController.validate1('username');
+                  formManagement.validate1('username');
                 },
                 child: Text('validate username only')),
             TextButton(
                 onPressed: () {
-                  formController.reset();
+                  formManagement.reset();
                 },
                 child: Text('reset')),
             Builder(
               builder: (context) {
                 SubControllerDelegate subController =
-                    formController.getSubController('checkbox');
+                    formManagement.getSubController('checkbox');
                 return subController == null
                     ? SizedBox()
                     : TextButton(
@@ -209,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Builder(
               builder: (context) {
                 SubControllerDelegate subController =
-                    formController.getSubController('switchGroup');
+                    formManagement.getSubController('switchGroup');
                 return subController == null
                     ? SizedBox()
                     : TextButton(
@@ -236,7 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             TextButton(
                 onPressed: () {
-                  formController.update('switchGroup', {
+                  formManagement.update('switchGroup', {
                     'items': List<SwitchGroupItem>.generate(
                         5,
                         (index) => SwitchGroupItem((index + 5).toString(),
@@ -248,36 +250,36 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('set switch items')),
             TextButton(
                 onPressed: () {
-                  formController.requestFocus('age');
+                  formManagement.requestFocus('age');
                 },
                 child: Text('age focus')),
             TextButton(
                 onPressed: () {
-                  formController.update('username', {
+                  formManagement.update('username', {
                     'labelText': DateTime.now().toString(),
                   });
                 },
                 child: Text('change username\'s label')),
             TextButton(
                 onPressed: () {
-                  formController.setSelection('age', 1, 1);
+                  formManagement.setSelection('age', 1, 1);
                 },
                 child: Text('set age\'s selection')),
             TextButton(
               onPressed: () {
-                print(formController.getData());
+                print(formManagement.getData());
               },
               child: Text('get form data'),
             ),
             TextButton(
               onPressed: () {
-                formController.update('button', {'label': 'new Text'});
+                formManagement.update('button', {'label': 'new Text'});
               },
               child: Text('set button text'),
             ),
             TextButton(
               onPressed: () {
-                formController.themeData = (++i) % 2 == 0
+                formManagement.formThemeData = (++i) % 2 == 0
                     ? FormThemeData(themeData: Theme.of(context))
                     : DefaultFormThemeData();
               },
@@ -288,7 +290,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    return FormBuilder(formController)
+    return FormBuilder(formManagement: formManagement)
         .textField('username', labelText: 'username', clearable: true)
         .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
             inline: true)
@@ -391,9 +393,9 @@ class _MyHomePageState extends State<MyHomePage> {
                           (end) => Text(end.round().toString())))
                   .textButton('query', query, label: 'query');
             },
-            onSelectDialogShow: (formController) {
-              //use this formController to control query form on search dialog
-              formController.setValue('filter', RangeValues(20, 50));
+            onSelectDialogShow: (formManagement) {
+              //use this formManagement to control query form on search dialog
+              formManagement.setValue('filter', RangeValues(20, 50));
               return true; //return true will set params before query
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
@@ -424,11 +426,11 @@ class _MyHomePageState extends State<MyHomePage> {
             labelText: 'inline slider',
             flex: 2,
             initialValue: 0,
-            onChanged: (v) => formController.setValue(
+            onChanged: (v) => formManagement.setValue(
                 'sliderInline', v == null ? 0.0 : v.toDouble(),
                 trigger: false))
         .slider('sliderInline', min: 0, max: 100, inline: true, onChanged: (v) {
-          formController.setValue('sliderInlineText', v.round(),
+          formManagement.setValue('sliderInlineText', v.round(),
               trigger: false);
         })
         .rangeSlider(
@@ -454,7 +456,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: readOnly
                       ? null
                       : () {
-                          formController.update('commonField', {
+                          formManagement.update('commonField', {
                             'text': Random.secure().nextDouble().toString()
                           });
                         },

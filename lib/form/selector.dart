@@ -14,8 +14,7 @@ typedef SelectItemProvider = Future<SelectItemPage> Function(
     int page, Map<String, dynamic> params);
 typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
-typedef OnSelectDialogShow = bool Function(
-    FormControllerDelegate formController);
+typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
 class _SelectorController extends ValueNotifier<List> {
   _SelectorController({List value}) : super(value);
@@ -211,8 +210,7 @@ class SelectorFormField extends ValueField<List> {
                               ? null
                               : () async {
                                   focusNode.requestFocus();
-                                  FormControllerDelegate delegate =
-                                      FormControllerDelegate.copyTheme(context);
+
                                   List selected = await Navigator.of(context,
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(
@@ -220,14 +218,15 @@ class SelectorFormField extends ValueField<List> {
                                               arguments: controller.key),
                                           builder: (BuildContext context) {
                                             return _SelectorDialog(
-                                                delegate,
+                                                FormManagement(),
                                                 selectItemRender,
                                                 checker,
                                                 controller.value,
                                                 selectItemProvider,
                                                 multi,
                                                 queryFormBuilder,
-                                                onSelectDialogShow);
+                                                onSelectDialogShow,
+                                                formThemeData);
                                           },
                                           fullscreenDialog: true));
                                   if (selected != null) {
@@ -274,7 +273,7 @@ class _SelectorFormFieldState extends ValueFieldState<List> {
 }
 
 class _SelectorDialog extends StatefulWidget {
-  final FormControllerDelegate formController;
+  final FormManagement formManagement;
   final SelectItemRender selectItemRender;
   final SelectedChecker selectedChecker;
   final List selected;
@@ -282,8 +281,9 @@ class _SelectorDialog extends StatefulWidget {
   final bool multi;
   final QueryFormBuilder queryFormBuilder;
   final OnSelectDialogShow onSelectDialogShow;
+  final FormThemeData formThemeData;
   _SelectorDialog(
-      this.formController,
+      this.formManagement,
       this.selectItemRender,
       this.selectedChecker,
       this.selected,
@@ -291,6 +291,7 @@ class _SelectorDialog extends StatefulWidget {
       this.multi,
       this.queryFormBuilder,
       this.onSelectDialogShow,
+      this.formThemeData,
       {Key key})
       : super(key: key);
   @override
@@ -308,21 +309,24 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   int gen = 0;
 
-  FormControllerDelegate queryFormController;
+  FormManagement queryFormManagement;
   Map<String, dynamic> params = {};
+
+  FormThemeData formThemeData;
 
   @override
   void initState() {
     super.initState();
     selected = List.from(widget.selected);
-    queryFormController = widget.formController;
+    queryFormManagement = widget.formManagement;
+    formThemeData = widget.formThemeData;
 
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         bool queryAfterLoadParams =
-            widget.onSelectDialogShow(queryFormController);
-        if (queryAfterLoadParams && queryFormController.validate()) {
-          params = queryFormController.getData();
+            widget.onSelectDialogShow(queryFormManagement);
+        if (queryAfterLoadParams && queryFormManagement.validate()) {
+          params = queryFormManagement.getData();
         }
         loadData(gen);
       });
@@ -347,7 +351,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   }
 
   void query() {
-    if (!queryFormController.validate()) {
+    if (!queryFormManagement.validate()) {
       return;
     }
     update(() {
@@ -358,7 +362,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       items = [];
       error = false;
       count = 0;
-      params = queryFormController.getData();
+      params = queryFormManagement.getData();
     });
     loadData(gen);
   }
@@ -375,8 +379,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   Widget renderSelectItems(dynamic item, bool multiSelect, bool isSelected,
       ThemeData themeData, FormThemeData formThemeData) {
-    Color color =
-        isSelected ? themeData.primaryColor : themeData.unselectedWidgetColor;
+    Color color = isSelected
+        ? formThemeData.themeData.primaryColor
+        : formThemeData.themeData.unselectedWidgetColor;
     return Padding(
         child: Row(
           children: [
@@ -400,7 +405,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     if (widget.queryFormBuilder == null) {
       return null;
     }
-    FormBuilder form = FormBuilder(queryFormController);
+    FormBuilder form = FormBuilder(
+      formManagement: queryFormManagement,
+    );
     widget.queryFormBuilder(form, query);
     return form;
   }
@@ -450,8 +457,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
             SelectItemRender render =
                 widget.selectItemRender ?? renderSelectItems;
             return InkWell(
-              child: render(item, widget.multi, selected, themeData,
-                  widget.formController.themeData),
+              child: render(item, widget.multi, selected,
+                  formThemeData.themeData, formThemeData),
               onTap: () {
                 toggle(item);
               },
@@ -463,8 +470,6 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeData themeData =
-        widget.formController.themeData.themeData ?? Theme.of(context);
     List<Widget> columns = [];
 
     Widget queryForm = buildQueryForm();
@@ -482,7 +487,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
               child: error
                   ? Icon(
                       Icons.error,
-                      color: themeData.errorColor,
+                      color: formThemeData.themeData.errorColor,
                       size: 50,
                     )
                   : empty
@@ -491,7 +496,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         ],
       )));
     } else {
-      columns.add(Expanded(child: buildView(themeData)));
+      columns.add(Expanded(child: buildView(formThemeData.themeData)));
     }
 
     if ((loading || error) && items.isNotEmpty) {
@@ -503,7 +508,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
               ? CircularProgressIndicator()
               : Icon(
                   Icons.error,
-                  color: themeData.errorColor,
+                  color: formThemeData.themeData.errorColor,
                   size: 50,
                 ),
         ),
@@ -526,7 +531,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         ],
       ),
       body: Theme(
-          data: themeData,
+          data: formThemeData.themeData,
           child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(
