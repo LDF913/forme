@@ -554,24 +554,6 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder widget(
-      {Key key,
-      int flex = 0,
-      bool visible = true,
-      EdgeInsets padding,
-      @required Widget child,
-      bool inline}) {
-    assert(child != null);
-    assert(!(child is _BaseField));
-    return _widget(null,
-        key: key,
-        flex: flex,
-        visible: visible,
-        padding: padding,
-        field: child,
-        inline: inline);
-  }
-
   FormBuilder commonField(String controlKey,
       {Key key,
       int flex = 0,
@@ -650,13 +632,21 @@ class FormBuilder extends StatefulWidget {
 
 class _FormBuilderState extends State<FormBuilder> {
   List<List<_FormItemWidget>> builderss;
+
+  void update() {
+    setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
     builderss = widget._builderss;
-    widget._formController.addListener(() {
-      setState(() {});
-    });
+    widget._formController.addListener(update);
+    for (List<_FormItemWidget> builders in builderss) {
+      for (_FormItemWidget itemWidget in builders) {
+        widget._formController.mapping[itemWidget.controlKey] = UniqueKey();
+      }
+    }
   }
 
   @override
@@ -673,9 +663,11 @@ class _FormBuilderState extends State<FormBuilder> {
       builderss = widget._builderss;
     }
     if (oldWidget._formController != widget._formController) {
-      widget.formControllerDelegate._formController =
-          oldWidget.formControllerDelegate._formController;
-      //should we directly copy old _formController  here ??
+      oldWidget._formController.removeListener(update);
+      _FormController migrated = _FormController.migrate(
+          oldWidget._formController, widget._formController);
+      migrated.addListener(update);
+      widget.formControllerDelegate._formController = migrated;
     }
     // remove unused or unmatched controlKeys
     Map<String, Type> map = {};
@@ -715,13 +707,14 @@ class _FormBuilderState extends State<FormBuilder> {
 
     return Theme(
         data: widget._formController.themeData.themeData,
-        child: _FormControllerScope(widget._formController,
-            child: Visibility(
-              maintainState: true,
+        child: Visibility(
+            visible: widget._formController._visible,
+            maintainState: true,
+            child: _FormControllerScope(
+              widget._formController,
               child: Column(
                 children: rows,
               ),
-              visible: widget._formController._visible,
             )));
   }
 }
@@ -888,9 +881,30 @@ class _FormController extends ChangeNotifier {
   final Map<String, ValueFieldState> valueFieldStates = {};
   final Map<String, CommonFieldState> commonFieldStates = {};
   final Map<String, List<FocusChanged>> focusChangeMap = {};
+  final Map<String, UniqueKey> mapping = {}; //used to get old controlKey
 
   static _FormController of(BuildContext context) {
     return _FormControllerScope.of(context).formController;
+  }
+
+  static _FormController migrate(_FormController old, _FormController now) {
+    _FormController migrated = _FormController();
+    migrated._readOnly = now._readOnly;
+    migrated._themeData = now._themeData;
+    migrated._visible = now._visible;
+    migrated.controllers.addAll(old.controllers);
+    old.controllers.clear();
+    migrated.focusNodes.addAll(old.focusNodes);
+    old.controllers.clear();
+    migrated.states.addAll(old.states);
+    old.states.clear();
+    migrated.valueFieldStates.addAll(old.valueFieldStates);
+    old.valueFieldStates.clear();
+    migrated.commonFieldStates.addAll(old.commonFieldStates);
+    old.commonFieldStates.clear();
+    migrated.focusChangeMap.addAll(old.focusChangeMap);
+    old.focusChangeMap.clear();
+    return migrated;
   }
 
   ValueNotifier newController(String controlKey, ControllerProvider provider) {
@@ -1156,14 +1170,16 @@ class _FormController extends ChangeNotifier {
   @override
   void dispose() {
     focusChangeMap.clear();
-    focusNodes.values.forEach((element) {
-      element.dispose();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      focusNodes.values.forEach((element) {
+        element.dispose();
+      });
+      controllers.values.forEach((element) {
+        element.dispose();
+      });
+      focusNodes.clear();
+      controllers.clear();
     });
-    controllers.values.forEach((element) {
-      element.dispose();
-    });
-    focusNodes.clear();
-    controllers.clear();
     states.clear();
     valueFieldStates.clear();
     commonFieldStates.clear();
@@ -1256,6 +1272,8 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void didUpdateWidget(_FormItemWidget old) {
     super.didUpdateWidget(old);
+    assert(old.controlKey == widget.controlKey,
+        'change controlKey at runtime is not supported !!!!');
     _flex = widget.flex ?? 1;
     _padding = widget.padding;
     _visible = widget.visible ?? true;
@@ -1344,6 +1362,7 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
 }
 
 class _BaseFieldState<T> extends FormFieldState<T> {
+  bool _init = false;
   Map<String, dynamic> _state;
   String controlKey;
   _FormController _formController;
@@ -1358,7 +1377,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   ///
   /// if there's no focus node,will create a new one
   ///
-  /// **call this method in didChangeDependencies()**
+  /// **call this method in initControl()**
   FocusNodes get focusNode => _formController.newFocusNode(controlKey);
 
   Map<String, dynamic> get _getInitStateMap =>
@@ -1375,7 +1394,19 @@ class _BaseFieldState<T> extends FormFieldState<T> {
     super.didChangeDependencies();
     controlKey = _InheritedControlKey.of(context).controlKey;
     _formController = _FormController.of(context);
+    if (!_init) {
+      _init = true;
+      initControl();
+    }
   }
+
+  /// initControl will  be  called immediately after didChangeDependencies  called
+  /// and this method will only be called once in state lifecycle,but didChangeDependencies not.
+  ///
+  /// when formcontroller changed,we copied old formcontroller's controllers & focusnodes into new formcontroller
+  /// so there's no need to handle controller or focusnode's listener in didChangeDependencies ,do that in this method
+  @mustCallSuper
+  void initControl() {}
 
   set _readOnly(bool readOnly) {
     _update({FormBuilder.readOnlyKey: readOnly});
@@ -1427,7 +1458,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   ValueField<T> get widget => super.widget;
   ValueChanged<T> get onChanged => widget.onChanged;
 
-  /// **you need to get controller in didChangeDependencies()**
+  /// **you need to get controller in initControl()**
   ValueNotifier<T> controller;
 
   void _setAutoValidateMode(AutovalidateMode autovalidateMode) {
@@ -1443,8 +1474,8 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initControl() {
+    super.initControl();
     controller =
         _formController.newController(controlKey, widget.controllerProvider);
     controller.addListener(handleUpdate);
@@ -1775,10 +1806,10 @@ class FocusNodes extends FocusNode {
 
   @override
   void dispose() {
-    super.dispose();
     _nodes.values.forEach((element) {
       element.dispose();
     });
     _nodes.clear();
+    super.dispose();
   }
 }

@@ -295,8 +295,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    return FormBuilder(FormControllerDelegate())
-        .textField('username',
+    return FormBuilder(formController)
+        .textField('username1',
             labelText: 'username',
             clearable: true,
             selectAllOnFocus: true,
@@ -479,7 +479,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm2(BuildContext context) {
     return FormBuilder(formController2)
-        .widget(child: Label('username'), inline: true, flex: 2)
         .textField('username',
             hintText: 'username',
             flex: 3,
@@ -490,7 +489,6 @@ class _MyHomePageState extends State<MyHomePage> {
               return value.isEmpty ? 'not empty' : null;
             })
         .nextLine()
-        .widget(child: Label('password'), inline: true, flex: 2)
         .textField('password',
             flex: 3,
             hintText: 'password',
@@ -500,14 +498,8 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'))
         .nextLine()
-        .widget(flex: 2, child: Label('rememberMe'), inline: true)
         .switchInline('rememberMe', flex: 3)
         .nextLine()
-        .widget(
-          child: Label('age'),
-          inline: true,
-          flex: 2,
-        )
         .slider('age',
             min: 14,
             max: 100,
@@ -515,7 +507,6 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3,
             subLabelRender: (value) => Text(value.round().toString()))
         .nextLine()
-        .widget(child: Label('sex'), flex: 2, inline: true)
         .radioGroup(
             'sex',
             [
@@ -525,7 +516,6 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3,
             inline: true)
         .nextLine()
-        .widget(child: Label('habbit'), inline: true, flex: 2)
         .switchGroup('habbit',
             hasSelectAllSwitch: false,
             inline: true,

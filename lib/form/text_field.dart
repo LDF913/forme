@@ -203,9 +203,14 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     obscureText = widget.obscureText;
+  }
+
+  @override
+  void initControl() {
+    super.initControl();
     if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
     }
@@ -213,10 +218,10 @@ class _TextFormFieldState extends ValueFieldState<String> {
 
   @override
   void dispose() {
-    super.dispose();
     if (selectAllOnFocus) {
       focusNode.removeListener(selectAll);
     }
+    super.dispose();
   }
 
   @override
@@ -261,8 +266,8 @@ class _DateTimeController extends ValueNotifier<DateTime> {
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
+    super.dispose();
   }
 }
 
@@ -422,8 +427,8 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initControl() {
+    super.initControl();
     textEditingController.text =
         widget.initialValue == null ? '' : _formatter(widget.initialValue);
   }
@@ -459,8 +464,8 @@ class _NumberController extends ValueNotifier<num> with TextSelectionMixin {
 
   @override
   void dispose() {
-    super.dispose();
     controller.dispose();
+    super.dispose();
   }
 }
 
@@ -650,8 +655,8 @@ class _NumberFieldState extends ValueFieldState<num> {
           : super.value.toDouble();
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initControl() {
+    super.initControl();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }
