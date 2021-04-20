@@ -296,14 +296,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm(BuildContext context) {
     return FormBuilder(formController)
-        .textField('username1',
-            labelText: 'username',
-            clearable: true,
-            selectAllOnFocus: true,
-            onChanged: (value) => print('username value changed $value'),
-            validator: (value) {
-              return value.isEmpty ? 'not empty' : null;
-            })
+        .nextLine()
+        .textField('username', labelText: 'username', clearable: true)
         .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
             inline: true)
         .switchInline(
@@ -352,7 +346,7 @@ class _MyHomePageState extends State<MyHomePage> {
           label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
-        .divider('divider')
+        .divider('divider1')
         .nextLine()
         .datetimeField(
           'startTime',

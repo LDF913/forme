@@ -95,7 +95,8 @@ class FormBuilder extends StatefulWidget {
       VoidCallback onEditingComplete,
       TextInputAction textInputAction,
       InputDecorationTheme inputDecorationTheme}) {
-    _builders.add(_FormItemWidget(visible, controlKey,
+    _builders.add(_FormItemWidget(
+        visible, controlKey, _formController.newUniqueKey(controlKey),
         flex: flex,
         child: NumberFormField(
             onChanged: onChanged,
@@ -149,7 +150,8 @@ class FormBuilder extends StatefulWidget {
       TextInputAction textInputAction,
       List<TextInputFormatter> textInputFormatters,
       InputDecorationTheme inputDecorationTheme}) {
-    _builders.add(_FormItemWidget(visible, controlKey,
+    _builders.add(_FormItemWidget(
+        visible, controlKey, _formController.newUniqueKey(controlKey),
         flex: flex,
         child: ClearableTextFormField(
             key: key,
@@ -204,6 +206,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: inline ? flex : 1,
       child: RadioGroup(
         List.of(items),
@@ -242,6 +245,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: inline ? flex : 1,
       child: CheckboxGroup(
         List.of(items),
@@ -271,7 +275,8 @@ class FormBuilder extends StatefulWidget {
       bool visible = true,
       EdgeInsets padding}) {
     _builders.add(
-      _FormItemWidget(visible, controlKey,
+      _FormItemWidget(
+          visible, controlKey, _formController.newUniqueKey(controlKey),
           flex: flex,
           padding: padding,
           child: CommonField(
@@ -309,7 +314,8 @@ class FormBuilder extends StatefulWidget {
       DateTime initialValue,
       InputDecorationTheme inputDecorationTheme}) {
     _builders.add(
-      _FormItemWidget(visible, controlKey,
+      _FormItemWidget(
+          visible, controlKey, _formController.newUniqueKey(controlKey),
           flex: flex,
           child: DateTimeFormField(
               key: key,
@@ -357,7 +363,8 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(
-      _FormItemWidget(visible, controlKey,
+      _FormItemWidget(
+          visible, controlKey, _formController.newUniqueKey(controlKey),
           flex: inline ? flex : 1,
           child: SelectorFormField(selectItemProvider,
               onChanged: onChanged,
@@ -392,6 +399,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: 1,
       padding: padding,
       child: CommonField(
@@ -431,6 +439,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: inline ? flex : 1,
       padding: padding,
       child: SwitchGroupFormField(
@@ -462,6 +471,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: flex,
       child: SwitchInlineFormField(
         validator: validator,
@@ -495,6 +505,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: inline ? flex : 1,
       child: SliderFormField(
         readOnly: readOnly,
@@ -534,6 +545,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemWidget(
       visible,
       controlKey,
+      _formController.newUniqueKey(controlKey),
       flex: 1,
       child: RangeSliderFormField(
         readOnly: readOnly,
@@ -555,14 +567,12 @@ class FormBuilder extends StatefulWidget {
   }
 
   FormBuilder commonField(String controlKey,
-      {Key key,
-      int flex = 0,
+      {int flex = 0,
       bool visible = true,
       EdgeInsets padding,
       @required CommonField commonField,
       bool inline}) {
     return _widget(controlKey,
-        key: key,
         flex: flex,
         visible: visible,
         padding: padding,
@@ -571,14 +581,12 @@ class FormBuilder extends StatefulWidget {
   }
 
   FormBuilder valueField(String controlKey,
-      {Key key,
-      int flex = 0,
+      {int flex = 0,
       bool visible = true,
       EdgeInsets padding,
       @required ValueField valueField,
       bool inline}) {
     return _widget(controlKey,
-        key: key,
         flex: flex,
         visible: visible,
         padding: padding,
@@ -587,8 +595,7 @@ class FormBuilder extends StatefulWidget {
   }
 
   FormBuilder _widget(String controlKey,
-      {Key key,
-      int flex = 0,
+      {int flex = 0,
       bool visible = true,
       EdgeInsets padding,
       @required Widget field,
@@ -596,8 +603,9 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(
-      _FormItemWidget(visible, controlKey,
-          key: key, flex: flex, padding: padding, child: field),
+      _FormItemWidget(
+          visible, controlKey, _formController.newUniqueKey(controlKey),
+          flex: flex, padding: padding, child: field),
     );
     if (!inline) nextLine();
     return this;
@@ -642,11 +650,6 @@ class _FormBuilderState extends State<FormBuilder> {
     super.initState();
     builderss = widget._builderss;
     widget._formController.addListener(update);
-    for (List<_FormItemWidget> builders in builderss) {
-      for (_FormItemWidget itemWidget in builders) {
-        widget._formController.mapping[itemWidget.controlKey] = UniqueKey();
-      }
-    }
   }
 
   @override
@@ -669,7 +672,8 @@ class _FormBuilderState extends State<FormBuilder> {
       migrated.addListener(update);
       widget.formControllerDelegate._formController = migrated;
     }
-    // remove unused or unmatched controlKeys
+
+    // remove unused or unmatched keys
     Map<String, Type> map = {};
     for (List<_FormItemWidget> builders in widget._builderss) {
       for (_FormItemWidget itemWidget in builders) {
@@ -684,22 +688,31 @@ class _FormBuilderState extends State<FormBuilder> {
 
     currentMapFromFormController.forEach((key, value) {
       if (!map.containsKey(key) || map[key] != value) {
-        debugPrint('remove unused or unmatch key:' + key);
-        widget._formController._remove(key);
+        debugPrint('dispose unused or unmatched resources :' + key);
+        widget._formController.disposeOldResource(key);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    //check duplicate control keys
+
     widget.nextLine();
 
     if (widget._formController.themeData == null) {
       widget._formController.themeData = DefaultFormThemeData(context);
     }
 
+    Set<String> controlKeys = {};
     List<Row> rows = [];
     for (List<_FormItemWidget> builders in builderss) {
+      for (_FormItemWidget itemWidget in builders) {
+        assert(itemWidget.controlKey != null, 'controlKey can not be null!!!');
+        assert(!controlKeys.contains(itemWidget.controlKey),
+            'controlkey must unique in a form');
+        controlKeys.add(itemWidget.controlKey);
+      }
       rows.add(Row(
         children: builders,
       ));
@@ -881,7 +894,7 @@ class _FormController extends ChangeNotifier {
   final Map<String, ValueFieldState> valueFieldStates = {};
   final Map<String, CommonFieldState> commonFieldStates = {};
   final Map<String, List<FocusChanged>> focusChangeMap = {};
-  final Map<String, UniqueKey> mapping = {}; //used to get old controlKey
+  final Map<String, UniqueKey> mapping = {};
 
   static _FormController of(BuildContext context) {
     return _FormControllerScope.of(context).formController;
@@ -904,11 +917,13 @@ class _FormController extends ChangeNotifier {
     old.commonFieldStates.clear();
     migrated.focusChangeMap.addAll(old.focusChangeMap);
     old.focusChangeMap.clear();
+    migrated.mapping.addAll(old.mapping);
+    old.mapping.clear();
     return migrated;
   }
 
-  ValueNotifier newController(String controlKey, ControllerProvider provider) {
-    return controllers.putIfAbsent(controlKey, () => provider());
+  UniqueKey newUniqueKey(String controlKey) {
+    return mapping.putIfAbsent(controlKey, () => UniqueKey());
   }
 
   FocusNodes newFocusNode(String controlKey) {
@@ -1120,16 +1135,10 @@ class _FormController extends ChangeNotifier {
     _FormItemWidgetState state = states[controlKey];
     if (state == null) return;
     state.remove();
-    _remove(controlKey);
-  }
-
-  void _remove(String controlKey) {
     focusChangeMap.remove(controlKey);
     ValueNotifier controller = controllers.remove(controlKey);
     FocusNode focusNode = focusNodes.remove(controlKey);
     if (controller != null || focusNode != null) {
-      // some wigets may call removeListener() on controller or focusNode after we disposed
-      // if we do not  dispose controller & focusnode at end of this frame,an error will occur
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         if (controller != null) controller.dispose();
         if (focusNode != null) focusNode.dispose();
@@ -1138,6 +1147,18 @@ class _FormController extends ChangeNotifier {
     states.remove(controlKey);
     valueFieldStates.remove(controlKey);
     commonFieldStates.remove(controlKey);
+    mapping.remove(controlKey);
+  }
+
+  void disposeOldResource(String controlKey) {
+    ValueNotifier controller = controllers.remove(controlKey);
+    FocusNode focusNode = focusNodes.remove(controlKey);
+    if (controller != null || focusNode != null) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (controller != null) controller.dispose();
+        if (focusNode != null) focusNode.dispose();
+      });
+    }
   }
 
   void removeState(String controlKey, Set<String> stateKeys) {
@@ -1183,6 +1204,7 @@ class _FormController extends ChangeNotifier {
     states.clear();
     valueFieldStates.clear();
     commonFieldStates.clear();
+    mapping.clear();
     super.dispose();
   }
 
@@ -1204,8 +1226,8 @@ class _FormItemWidget extends StatefulWidget {
   final bool visible;
   final Widget child;
   final EdgeInsets padding;
-  const _FormItemWidget(this.visible, this.controlKey,
-      {Key key, this.flex, this.child, this.padding})
+  _FormItemWidget(this.visible, this.controlKey, Key key,
+      {this.flex, this.child, this.padding})
       : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormItemWidgetState();
@@ -1265,6 +1287,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
 
   @override
   void deactivate() {
+    _FormController.of(context).mapping.remove(widget.controlKey);
     _FormController.of(context).states.remove(widget.controlKey);
     super.deactivate();
   }
@@ -1272,8 +1295,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void didUpdateWidget(_FormItemWidget old) {
     super.didUpdateWidget(old);
-    assert(old.controlKey == widget.controlKey,
-        'change controlKey at runtime is not supported !!!!');
     _flex = widget.flex ?? 1;
     _padding = widget.padding;
     _visible = widget.visible ?? true;
@@ -1362,14 +1383,13 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
 }
 
 class _BaseFieldState<T> extends FormFieldState<T> {
-  bool _init = false;
   Map<String, dynamic> _state;
   String controlKey;
   _FormController _formController;
 
   /// current widget whether is readonly or not
   ///
-  /// **call this method in initControl()**
+  /// **call this method in initController()**
   bool get readOnly =>
       _formController._readOnly || (getState(FormBuilder.readOnlyKey) ?? false);
 
@@ -1377,7 +1397,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   ///
   /// if there's no focus node,will create a new one
   ///
-  /// **call this method in initControl()**
+  /// **call this method in initController()**
   FocusNodes get focusNode => _formController.newFocusNode(controlKey);
 
   Map<String, dynamic> get _getInitStateMap =>
@@ -1394,19 +1414,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
     super.didChangeDependencies();
     controlKey = _InheritedControlKey.of(context).controlKey;
     _formController = _FormController.of(context);
-    if (!_init) {
-      _init = true;
-      initControl();
-    }
   }
-
-  /// initControl will  be  called immediately after didChangeDependencies  called
-  /// and this method will only be called once in state lifecycle,but didChangeDependencies not.
-  ///
-  /// when formcontroller changed,we copied old formcontroller's controllers & focusnodes into new formcontroller
-  /// so there's no need to handle controller or focusnode's listener in didChangeDependencies ,do that in this method
-  @mustCallSuper
-  void initControl() {}
 
   set _readOnly(bool readOnly) {
     _update({FormBuilder.readOnlyKey: readOnly});
@@ -1458,7 +1466,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   ValueField<T> get widget => super.widget;
   ValueChanged<T> get onChanged => widget.onChanged;
 
-  /// **you need to get controller in initControl()**
+  /// **you need to get controller in initController()**
   ValueNotifier<T> controller;
 
   void _setAutoValidateMode(AutovalidateMode autovalidateMode) {
@@ -1474,12 +1482,20 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   }
 
   @override
-  void initControl() {
-    super.initControl();
-    controller =
-        _formController.newController(controlKey, widget.controllerProvider);
-    controller.addListener(handleUpdate);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    controller = _formController.controllers[controlKey];
+    if (controller == null) {
+      controller = widget.controllerProvider();
+      _formController.controllers[controlKey] = controller;
+      controller.addListener(handleUpdate);
+      initController();
+    }
   }
+
+  /// initController will  be  called immediately after new controller created via ControllerProvider
+  @mustCallSuper
+  void initController() {}
 
   @override
   void dispose() {
@@ -1629,8 +1645,8 @@ class _InheritedControlKey extends InheritedWidget {
   }
 
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return false;
+  bool updateShouldNotify(covariant _InheritedControlKey oldWidget) {
+    return oldWidget.controlKey != controlKey;
   }
 }
 

@@ -209,8 +209,8 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void initControl() {
-    super.initControl();
+  void initController() {
+    super.initController();
     if (selectAllOnFocus) {
       focusNode.addListener(selectAll);
     }
@@ -427,8 +427,8 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void initControl() {
-    super.initControl();
+  void initController() {
+    super.initController();
     textEditingController.text =
         widget.initialValue == null ? '' : _formatter(widget.initialValue);
   }
@@ -655,8 +655,8 @@ class _NumberFieldState extends ValueFieldState<num> {
           : super.value.toDouble();
 
   @override
-  void initControl() {
-    super.initControl();
+  void initController() {
+    super.initController();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
   }
