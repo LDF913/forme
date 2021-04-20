@@ -201,9 +201,6 @@ class SelectorFormField extends ValueField<List> {
                   mainAxisSize: MainAxisSize.min,
                 )).applyDefaults(inputDecorationTheme);
 
-            FormControllerDelegate delegate =
-                FormControllerDelegate.copyTheme(context);
-
             Widget child = Focus(
                 focusNode: focusNode,
                 canRequestFocus: true,
@@ -214,6 +211,8 @@ class SelectorFormField extends ValueField<List> {
                               ? null
                               : () async {
                                   focusNode.requestFocus();
+                                  FormControllerDelegate delegate =
+                                      FormControllerDelegate.copyTheme(context);
                                   List selected = await Navigator.of(context,
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(

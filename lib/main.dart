@@ -295,9 +295,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    return FormBuilder(formController)
-        .nextLine()
-        .textField('username', labelText: 'username', clearable: true)
+    return FormBuilder(FormControllerDelegate())
+        .textField('username2', labelText: 'username', clearable: true)
         .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
             inline: true)
         .switchInline(
