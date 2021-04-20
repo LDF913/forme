@@ -97,9 +97,9 @@ class SwitchGroupTheme extends CheckboxGroupTheme {
 
 //copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
 class DefaultFormThemeData extends FormThemeData {
-  DefaultFormThemeData(BuildContext context)
+  DefaultFormThemeData()
       : super(
-            themeData: _buildLightTheme(context),
+            themeData: _buildLightTheme(),
             padding: EdgeInsets.all(5),
             labelPadding: const EdgeInsets.symmetric(vertical: 10));
 
@@ -122,9 +122,10 @@ class DefaultFormThemeData extends FormThemeData {
     );
   }
 
-  static ThemeData _buildLightTheme(BuildContext context) {
+  static ThemeData _buildLightTheme() {
     final Color primaryColor = HexColor('#54D3C2');
     final Color secondaryColor = HexColor('#54D3C2');
+    final Color dividerColor = Color(0x1f000000);
     final ColorScheme colorScheme = const ColorScheme.light().copyWith(
       primary: primaryColor,
       secondary: secondaryColor,
@@ -143,17 +144,30 @@ class DefaultFormThemeData extends FormThemeData {
           fontSize: 18,
         ),
         focusedErrorBorder: UnderlineInputBorder(
-            borderSide:
-                Divider.createBorderSide(context, color: base.errorColor)),
+            borderSide: BorderSide(
+          color: primaryColor,
+          width: 0.0,
+        )),
         errorBorder: UnderlineInputBorder(
-            borderSide:
-                Divider.createBorderSide(context, color: base.errorColor)),
-        enabledBorder:
-            UnderlineInputBorder(borderSide: Divider.createBorderSide(context)),
+            borderSide: BorderSide(
+          color: primaryColor,
+          width: 0.0,
+        )),
+        enabledBorder: UnderlineInputBorder(
+            borderSide: BorderSide(
+          color: dividerColor,
+          width: 0.0,
+        )),
         border: UnderlineInputBorder(
-            borderSide: Divider.createBorderSide(context, width: 0)),
+            borderSide: BorderSide(
+          color: dividerColor,
+          width: 0.0,
+        )),
         focusedBorder: UnderlineInputBorder(
-          borderSide: Divider.createBorderSide(context, color: primaryColor),
+          borderSide: BorderSide(
+            color: primaryColor,
+            width: 0.0,
+          ),
         ),
       ),
       sliderTheme: SliderThemeData(

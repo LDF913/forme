@@ -42,7 +42,7 @@ class FormBuilder extends StatefulWidget {
 
   _FormController get _formController => formControllerDelegate._formController;
 
-  FormBuilder(this.formControllerDelegate);
+  FormBuilder(this.formControllerDelegate, {Key key}) : super(key: key);
 
   /// add an empty row
   FormBuilder nextLine() {
@@ -656,8 +656,8 @@ class _FormBuilderState extends State<FormBuilder> {
     }
     if (oldWidget._formController != widget._formController) {
       debugPrint("form controller changed");
-      debugPrint('oldWidget controller ' +
-          oldWidget._formController.hashCode.toString());
+      debugPrint(
+          'oldWidget controller ' + widget._formController.hashCode.toString());
       oldWidget._formController.removeListener(update);
       _FormController migrated = _FormController.migrate(
           oldWidget._formController, widget._formController);
@@ -671,10 +671,6 @@ class _FormBuilderState extends State<FormBuilder> {
   Widget build(BuildContext context) {
     widget.nextLine();
 
-    if (widget._formController.themeData == null) {
-      widget._formController.themeData = DefaultFormThemeData(context);
-    }
-
     Set<String> controlKeys = {};
     List<Row> rows = [];
     for (List<_FormItemBuilder> builders in builderss) {
@@ -684,8 +680,8 @@ class _FormBuilderState extends State<FormBuilder> {
         assert(!controlKeys.contains(builder.controlKey),
             'controlkey must unique in a form');
         controlKeys.add(builder.controlKey);
-        children.add(_FormItemWidget(
-            builder, widget._formController.newUniqueKey(builder.controlKey)));
+        UniqueKey key = widget._formController.newUniqueKey(builder.controlKey);
+        children.add(_FormItemWidget(builder, key));
       }
       rows.add(Row(
         children: children,
@@ -693,6 +689,9 @@ class _FormBuilderState extends State<FormBuilder> {
     }
     controlKeys = null;
 
+    if (widget._formController.themeData == null) {
+      widget._formController.themeData = DefaultFormThemeData();
+    }
     return Theme(
         data: widget._formController.themeData.themeData,
         child: Visibility(
@@ -886,7 +885,7 @@ class _FormController extends ChangeNotifier {
     migrated.controllers.addAll(old.controllers);
     old.controllers.clear();
     migrated.focusNodes.addAll(old.focusNodes);
-    old.controllers.clear();
+    old.focusNodes.clear();
     migrated.states.addAll(old.states);
     old.states.clear();
     migrated.valueFieldStates.addAll(old.valueFieldStates);
@@ -1166,16 +1165,14 @@ class _FormController extends ChangeNotifier {
   @override
   void dispose() {
     focusChangeMap.clear();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      focusNodes.values.forEach((element) {
-        element.dispose();
-      });
-      controllers.values.forEach((element) {
-        element.dispose();
-      });
-      focusNodes.clear();
-      controllers.clear();
+    focusNodes.values.forEach((element) {
+      element.dispose();
     });
+    controllers.values.forEach((element) {
+      element.dispose();
+    });
+    focusNodes.clear();
+    controllers.clear();
     states.clear();
     valueFieldStates.clear();
     commonFieldStates.clear();
@@ -1218,8 +1215,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   int _flex;
   EdgeInsets _padding;
   bool _removed = false;
-
-  _FormController formController;
 
   get visible => _visible;
   set visible(bool visible) {
@@ -1267,29 +1262,34 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     _padding = widget.padding;
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    formController = _FormController.of(context);
-    formController.states[widget.controlKey] = this;
-  }
+  _FormController formController;
 
   @override
   void deactivate() {
     super.deactivate();
-    print(this.formController == _FormController.of(context));
-    debugPrint('form item dispose');
+    formController = _FormController.of(context);
+  }
+
+  @override
+  void dispose() {
     formController.releasedWhenFormItemDisposed(widget.controlKey);
-    debugPrint('diposeing form item field\'form controller:' +
+    debugPrint('disposing form item field\'form controller:' +
         this.formController.hashCode.toString());
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(_FormItemWidget old) {
     super.didUpdateWidget(old);
-    _flex = widget.flex ?? 1;
-    _padding = widget.padding;
-    _visible = widget.visible ?? true;
+    if (_flex != widget.flex) {
+      _flex = widget.flex ?? 1;
+    }
+    if (_padding != widget.padding) {
+      _padding = widget.padding;
+    }
+    if (_visible != widget.visible) {
+      _visible = widget.visible ?? true;
+    }
   }
 
   @override
@@ -1297,6 +1297,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     if (_removed) {
       return SizedBox.shrink();
     }
+    _FormController.of(context).states[widget.controlKey] = this;
     return _InheritedControlKey(widget.controlKey,
         child: Flexible(
           fit: visible ? FlexFit.tight : FlexFit.loose,
@@ -1336,41 +1337,6 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
             initialValue: initialValue) {
     _initStateMap[FormBuilder.readOnlyKey] = readOnly;
   }
-}
-
-class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
-  final ValueChanged<T> onChanged;
-  final NullValueReplace<T> replace;
-  final ControllerProvider<T> controllerProvider;
-
-  @override
-  AutovalidateMode get autovalidateMode =>
-      _initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
-  @override
-  T get initialValue =>
-      _initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
-
-  ValueField(this.controllerProvider, Map<String, dynamic> initStateMap,
-      {Key key,
-      this.replace,
-      this.onChanged,
-      @required _FieldBuilder<T, ValueFieldState<T>> builder,
-      FormFieldValidator<T> validator,
-      AutovalidateMode autovalidateMode,
-      bool readOnly,
-      T initialValue})
-      : super(initStateMap,
-            key: key,
-            builder: builder,
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            initialValue: initialValue) {
-    super._initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
-    super._initStateMap[FormBuilder.initialValueKey] = initialValue;
-  }
-
-  @override
-  ValueFieldState<T> createState() => ValueFieldState<T>();
 }
 
 class _BaseFieldState<T> extends FormFieldState<T> {
@@ -1451,6 +1417,47 @@ class _BaseFieldState<T> extends FormFieldState<T> {
       });
     });
   }
+
+  @override
+  void deactivate() {
+    super.deactivate();
+    _formController = _FormController.of(context);
+  }
+}
+
+class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
+  final ValueChanged<T> onChanged;
+  final NullValueReplace<T> replace;
+  final ControllerProvider<T> controllerProvider;
+
+  @override
+  AutovalidateMode get autovalidateMode =>
+      _initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
+  @override
+  T get initialValue =>
+      _initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
+
+  ValueField(this.controllerProvider, Map<String, dynamic> initStateMap,
+      {Key key,
+      this.replace,
+      this.onChanged,
+      @required _FieldBuilder<T, ValueFieldState<T>> builder,
+      FormFieldValidator<T> validator,
+      AutovalidateMode autovalidateMode,
+      bool readOnly,
+      T initialValue})
+      : super(initStateMap,
+            key: key,
+            builder: builder,
+            validator: validator,
+            autovalidateMode: autovalidateMode,
+            initialValue: initialValue) {
+    super._initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
+    super._initStateMap[FormBuilder.initialValueKey] = initialValue;
+  }
+
+  @override
+  ValueFieldState<T> createState() => ValueFieldState<T>();
 }
 
 class ValueFieldState<T> extends _BaseFieldState<T> {
@@ -1483,8 +1490,6 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
       controller.addListener(handleUpdate);
       initController();
     }
-    debugPrint(
-        'value field\'form controller:' + _formController.hashCode.toString());
   }
 
   /// initController will  be  called immediately after new controller created via ControllerProvider
@@ -1495,7 +1500,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   void dispose() {
     debugPrint(controlKey + ' value field dispose');
     _formController.releasedWhenValueFieldDisposed(controlKey);
-    debugPrint('diposeing value field\'form controller:' +
+    debugPrint('disposing value field\'form controller:' +
         _formController.hashCode.toString());
     super.dispose();
   }

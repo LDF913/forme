@@ -55,7 +55,6 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   FormControllerDelegate formController;
-  FormControllerDelegate formController2;
 
   int i = 1;
 
@@ -66,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
     formController.onFocusChange('username', FocusChanged(rootChanged: (value) {
       print('username focused: $value');
     }));
-    formController2 = FormControllerDelegate();
   }
 
   @override
@@ -100,6 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Builder(builder: (context) {
+                print("build form");
                 return createForm(context);
               }),
             ),
@@ -110,12 +109,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(fontSize: 30),
               ),
             ),
-            /*Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Builder(builder: (context) {
-                return createForm2(context);
-              }),
-            ),*/
             Builder(
               builder: (context) {
                 return TextButton(
@@ -286,7 +279,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 formController.themeData = (++i) % 2 == 0
                     ? FormThemeData(themeData: Theme.of(context))
-                    : DefaultFormThemeData(context);
+                    : DefaultFormThemeData();
               },
               child: Text('change theme'),
             )
@@ -295,8 +288,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm(BuildContext context) {
-    return FormBuilder(FormControllerDelegate())
-        .textField('username2', labelText: 'username', clearable: true)
+    return FormBuilder(formController)
+        .textField('username', labelText: 'username', clearable: true)
         .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
             inline: true)
         .switchInline(
@@ -468,54 +461,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
             ));
-  }
-
-  Widget createForm2(BuildContext context) {
-    return FormBuilder(formController2)
-        .textField('username',
-            hintText: 'username',
-            flex: 3,
-            clearable: true,
-            selectAllOnFocus: true,
-            onChanged: (value) => print('username value changed $value'),
-            validator: (value) {
-              return value.isEmpty ? 'not empty' : null;
-            })
-        .nextLine()
-        .textField('password',
-            flex: 3,
-            hintText: 'password',
-            obscureText: true,
-            passwordVisible: true,
-            clearable: true,
-            toolbarOptions: ToolbarOptions(copy: false, paste: false),
-            onChanged: (value) => print('password value changed $value'))
-        .nextLine()
-        .switchInline('rememberMe', flex: 3)
-        .nextLine()
-        .slider('age',
-            min: 14,
-            max: 100,
-            inline: true,
-            flex: 3,
-            subLabelRender: (value) => Text(value.round().toString()))
-        .nextLine()
-        .radioGroup(
-            'sex',
-            [
-              RadioItem(0, 'male', padding: EdgeInsets.zero),
-              RadioItem(1, 'female', padding: EdgeInsets.only(left: 10))
-            ],
-            flex: 3,
-            inline: true)
-        .nextLine()
-        .switchGroup('habbit',
-            hasSelectAllSwitch: false,
-            inline: true,
-            flex: 3,
-            items: FormBuilder.toSwitchGroupItems(
-                ['basketball', 'football', 'girl'],
-                padding: EdgeInsets.only(top: 4)));
   }
 }
 
