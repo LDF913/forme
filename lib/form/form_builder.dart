@@ -624,15 +624,10 @@ class FormBuilder extends StatefulWidget {
 class _FormBuilderState extends State<FormBuilder> {
   bool _readOnly;
   bool _visible;
-  FormThemeData _formThemeData;
 
   List<List<_FormItemBuilder>> builderss;
 
   _FormManagement formManagement;
-
-  void update() {
-    setState(() {});
-  }
 
   @override
   void initState() {
@@ -640,10 +635,12 @@ class _FormBuilderState extends State<FormBuilder> {
     builderss = widget._builderss;
     _readOnly = widget._readOnly;
     _visible = widget._visible;
-    _formThemeData = widget._formThemeData;
-    formManagement =
-        _FormManagement(this, enableDebugPrint: widget.enableDebugPrint);
+    formManagement = _FormManagement(this, widget._formThemeData,
+        enableDebugPrint: widget.enableDebugPrint);
     widget.formManagement._formManagement = formManagement;
+    formManagement.addListener(() {
+      setState(() {});
+    });
     if (widget.formManagement._initCallback != null)
       widget.formManagement._initCallback();
   }
@@ -664,14 +661,6 @@ class _FormBuilderState extends State<FormBuilder> {
     if (_visible != visible) {
       setState(() {
         _visible = visible ?? true;
-      });
-    }
-  }
-
-  set formThemeData(FormThemeData formThemeData) {
-    if (_formThemeData != formThemeData) {
-      setState(() {
-        _formThemeData = formThemeData ?? DefaultFormThemeData();
       });
     }
   }
@@ -737,7 +726,7 @@ class _FormBuilderState extends State<FormBuilder> {
       _readOnly = widget._readOnly;
     }
     if (oldWidget._formThemeData != widget._formThemeData) {
-      _formThemeData = widget._formThemeData;
+      formManagement._formThemeData = widget._formThemeData;
     }
     _FormManagement old = widget.formManagement._formManagement;
     if (old == null) {
@@ -784,7 +773,7 @@ class _FormBuilderState extends State<FormBuilder> {
     }
     controlKeys = null;
     return Theme(
-        data: _formThemeData.themeData,
+        data: formManagement._formThemeData.themeData,
         child: Visibility(
             visible: _visible,
             maintainState: true,
@@ -839,8 +828,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     }
   }
 
-  get padding =>
-      _padding ?? _FormManagement.of(context).state._formThemeData.padding;
+  get padding => _padding ?? _FormManagement.of(context)._formThemeData.padding;
   set padding(EdgeInsets padding) {
     if (!_removed && _padding != padding) {
       setState(() {
@@ -935,7 +923,7 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
             builder: (field) {
               K state = field;
               FormThemeData formThemeData =
-                  _FormManagement.of(state.context).state._formThemeData;
+                  _FormManagement.of(state.context)._formThemeData;
               return builder(state, state.context, state.readOnly,
                   state._stateMap, formThemeData.themeData, formThemeData);
             },
@@ -1420,7 +1408,7 @@ class _FormItemBuilder {
         this.padding = padding ?? EdgeInsets.zero;
 }
 
-class _FormManagement {
+class _FormManagement extends ChangeNotifier {
   _FormBuilderState state;
   final Map<String, ValueNotifier> controllers = {};
   final Map<String, FocusNode> focusNodes = {};
@@ -1434,7 +1422,22 @@ class _FormManagement {
   final Map<String, Key> locationMapping = {};
   final bool enableDebugPrint;
 
-  _FormManagement(this.state, {this.enableDebugPrint = true});
+  int gen = 0;
+  int _gen = 0; //used to compare and update notifier
+
+  FormThemeData _formThemeData;
+
+  _FormManagement(this.state, FormThemeData formThemeData,
+      {this.enableDebugPrint = false})
+      : this._formThemeData = formThemeData;
+
+  set formThemeData(FormThemeData formThemeData) {
+    if (formThemeData != _formThemeData) {
+      _formThemeData = formThemeData;
+      gen++;
+      notifyListeners();
+    }
+  }
 
   Key newFieldKey(String controlKey) {
     return mapping.putIfAbsent(
@@ -1693,6 +1696,7 @@ class _FormManagement {
     return null;
   }
 
+  @override
   void dispose() {
     focusChangeMap.clear();
     focusNodes.values.forEach((element) {
@@ -1709,6 +1713,7 @@ class _FormManagement {
     mapping.clear();
     locationMapping.clear();
     state = null;
+    super.dispose();
   }
 
   static _FormManagement of(BuildContext context) {
@@ -1730,8 +1735,12 @@ class _FormManagementData extends InheritedWidget {
   _FormManagementData(this.data, {Widget child}) : super(child: child);
 
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return false;
+  bool updateShouldNotify(covariant _FormManagementData oldWidget) {
+    bool notify = data.gen != data._gen;
+    if (notify) {
+      data._gen = data.gen;
+    }
+    return notify;
   }
 }
 
@@ -1774,13 +1783,13 @@ class FormManagement {
   set readOnly(bool readOnly) => _formManagement.state.readOnly = readOnly;
 
   /// get current FormThemeData
-  FormThemeData get formThemeData => _formManagement.state._formThemeData;
+  FormThemeData get formThemeData => _formManagement._formThemeData;
 
   /// set a new theme to form
   ///
   /// this will rebuild all fields
   set formThemeData(FormThemeData formThemeData) =>
-      _formManagement.state.formThemeData = formThemeData;
+      _formManagement.formThemeData = formThemeData;
 
   /// request focus on form field
   ///
