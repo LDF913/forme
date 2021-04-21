@@ -301,11 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3,
             clearable: true)
         .nextLine()
-        .widget(
-          field: Label('password'),
-          flex: 2,
-          inline: true,
-        )
+        .widget(field: Label('password'), flex: 2, inline: true)
         .textField(
             controlKey: 'password',
             hintText: 'password',

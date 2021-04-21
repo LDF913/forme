@@ -46,16 +46,19 @@ class FormBuilder extends StatefulWidget {
   final bool _visible;
   final FormThemeData _formThemeData;
   final FormManagement formManagement;
+  final bool enableDebugPrint;
 
   FormBuilder(
       {bool readOnly,
       bool visible,
       FormThemeData formThemeData,
-      FormManagement formManagement})
+      FormManagement formManagement,
+      bool enableDebugPrint})
       : this._formThemeData = formThemeData ?? DefaultFormThemeData(),
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
-        this.formManagement = formManagement ?? FormManagement();
+        this.formManagement = formManagement ?? FormManagement(),
+        this.enableDebugPrint = enableDebugPrint ?? true;
 
   /// add an empty row
   FormBuilder nextLine() {
@@ -638,7 +641,8 @@ class _FormBuilderState extends State<FormBuilder> {
     _readOnly = widget._readOnly;
     _visible = widget._visible;
     _formThemeData = widget._formThemeData;
-    formManagement = _FormManagement(this);
+    formManagement =
+        _FormManagement(this, enableDebugPrint: widget.enableDebugPrint);
     widget.formManagement._formManagement = formManagement;
     if (widget.formManagement._initCallback != null)
       widget.formManagement._initCallback();
@@ -674,7 +678,7 @@ class _FormBuilderState extends State<FormBuilder> {
 
   @override
   void dispose() {
-    debugPrint("form dispose");
+    formManagement.dPrint("form dispose");
     formManagement.dispose();
     super.dispose();
   }
@@ -682,7 +686,7 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    debugPrint("form didUpdateWidget");
+    formManagement.dPrint("form didUpdateWidget");
     widget.nextLine();
 
     builderss = widget._builderss;
@@ -696,7 +700,8 @@ class _FormBuilderState extends State<FormBuilder> {
 
         if (builder.controlKey != null &&
             formManagement.locationMapping.containsKey(location)) {
-          debugPrint('$location has a new controlKey ,will be disposed');
+          formManagement
+              .dPrint('$location has a new controlKey ,will be disposed');
           formManagement.locationMapping.remove(location);
         }
 
@@ -706,7 +711,7 @@ class _FormBuilderState extends State<FormBuilder> {
           Type childType = builder.child.runtimeType;
           if (currentType != childType) {
             formManagement.locationMapping.remove(location);
-            debugPrint(
+            formManagement.dPrint(
                 '$location type: $childType not match $currentType ,will be disposed');
           }
         }
@@ -717,7 +722,7 @@ class _FormBuilderState extends State<FormBuilder> {
 
     formManagement.locationMapping.removeWhere((key, value) {
       if (!locations.contains(key)) {
-        debugPrint('$key not exists any more ,will be disposed');
+        formManagement.dPrint('$key not exists any more ,will be disposed');
         return true;
       }
       return false;
@@ -758,7 +763,7 @@ class _FormBuilderState extends State<FormBuilder> {
         String controlKey = builder.controlKey;
         if (controlKey == null) {
           controlKey = '$row,$column'; //use location as it's control key
-          debugPrint(
+          formManagement.dPrint(
               '$controlKey has no specific controlKey,use location instead');
           key = formManagement.newLocationKey(controlKey);
         } else {
@@ -876,6 +881,8 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     if (oldWidget.child.runtimeType != widget.child.runtimeType) {
       _FormManagement formManagement = _FormManagement.of(context);
       formManagement.releasedWhenValueFieldDisposed(widget.controlKey);
+      formManagement.dPrint(
+          '${widget.controlKey} type: ${widget.child.runtimeType} not match ${oldWidget.child.runtimeType}  ,will be disposed');
     }
   }
 
@@ -888,7 +895,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void dispose() {
     formManagement.releasedWhenFormItemDisposed(widget.controlKey);
-    debugPrint(widget.controlKey + ' form item disposed');
+    formManagement.dPrint('${widget.controlKey} form item disposed');
     super.dispose();
   }
 
@@ -961,16 +968,12 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   Map<String, dynamic> get _getInitStateMap =>
       (widget as _BaseField)._initStateMap;
 
+  void dPrint(String msg) => _formManagement.dPrint(msg);
+
   @override
   void initState() {
     super.initState();
     _state = {};
-  }
-
-  @override
-  void didUpdateWidget(Widget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _formManagement.focusNodes.remove(controlKey);
   }
 
   @override
@@ -1099,7 +1102,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   @override
   void dispose() {
-    debugPrint(controlKey + ' value field dispose');
+    _formManagement.dPrint('$controlKey value field dispose');
     _formManagement.releasedWhenValueFieldDisposed(controlKey);
     super.dispose();
   }
@@ -1164,7 +1167,7 @@ class CommonFieldState extends _BaseFieldState<Null> {
 
   @override
   void dispose() {
-    debugPrint(controlKey + ' common field dispose');
+    _formManagement.dPrint('$controlKey common field dispose');
     _formManagement.releasedWhenCommonFieldDisposed(controlKey);
     super.dispose();
   }
@@ -1474,7 +1477,7 @@ class _FormManagement {
   }
 
   void releasedWhenCommonFieldDisposed(String controlKey) {
-    debugPrint('releasedWhenCommonFieldDisposed : $controlKey');
+    dPrint('releasedWhenCommonFieldDisposed : $controlKey');
     focusChangeMap.remove(controlKey);
     FocusNode focusNode = focusNodes.remove(controlKey);
     if (focusNode != null) {
@@ -1484,7 +1487,7 @@ class _FormManagement {
   }
 
   void releasedWhenValueFieldDisposed(String controlKey) {
-    debugPrint('releasedWhenValueFieldDisposed : $controlKey');
+    dPrint('releasedWhenValueFieldDisposed : $controlKey');
     focusChangeMap.remove(controlKey);
     FocusNode focusNode = focusNodes.remove(controlKey);
     if (focusNode != null) {
@@ -1498,7 +1501,7 @@ class _FormManagement {
   }
 
   void releasedWhenFormItemDisposed(String controlKey) {
-    debugPrint('releasedWhenFormItemDisposed : $controlKey');
+    dPrint('releasedWhenFormItemDisposed : $controlKey');
     states.remove(controlKey);
     mapping.remove(controlKey);
     //locationMapping.remove(controlKey);
@@ -1714,8 +1717,10 @@ class _FormManagement {
         .data;
   }
 
-  void _debugPrint() {
-    if (!kReleaseMode && enableDebugPrint) {}
+  void dPrint(String msg) {
+    if (!kReleaseMode && enableDebugPrint) {
+      debugPrint(msg);
+    }
   }
 }
 
