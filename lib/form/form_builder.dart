@@ -1841,6 +1841,9 @@ class FormManagement {
   /// get form data
   Map<String, dynamic> get data => _formManagement.getData();
 
+  Map<String, dynamic> getData({bool removeNull = true}) =>
+      _formManagement.getData(removeNull: removeNull);
+
   /// reset form
   ///
   /// **only reset all value fields**

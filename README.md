@@ -4,12 +4,9 @@
 ## basic usage
 
 ``` dart
-FormControllerDelegate formController = FormControllerDelegate();
+FormManagement formManagement
 
-Widget form = FormBuilder(formController)
-	.readOnly(readOnly)
-	.visible(visible)
-	.themeData(themeData)
+Widget form = FormBuilder(formManagement)
 	.textField(
 	  'username',//control key ,used to get|set value and control readonly|visible  state
 	  labelText: 'username',
@@ -24,27 +21,27 @@ Widget form = FormBuilder(formController)
 ### hide|show form
 
 ``` dart
-formController.visible = !formController.visible;
+formManagement.visible = !formManagement.visible;
 ```
 
 ### set form readonly|editable
 
 ``` dart
-formController.readOnly = !formController.readOnly;
+formManagement.readOnly = !formManagement.readOnly;
 ```
 
 ### hide|show form field
 
 ``` dart
-bool isVisible = formController.isVisible('form field\'s controlKey');
-formController.setVisible('form field\'s controlKey',!isVisible)
+bool isVisible = formManagement.isVisible(controlKey);
+formManagement.setVisible(controlKey,!isVisible)
 ```
 
 ### set form field readonly|editable
 
 ``` dart
-bool isReadOnly = formController.isReadOnly('form field\'s controlKey');
-formController.setReadOnly('form field\'s controlKey',!isReadOnly)
+bool isReadOnly = formManagement.isReadOnly(controlKey);
+formManagement.setReadOnly(controlKey,!isReadOnly)
 ```
 
 ### sub controller
@@ -52,9 +49,9 @@ formController.setReadOnly('form field\'s controlKey',!isReadOnly)
 if you want to control sub item's state (like radiogroup's radio item) ,you can use this method
 
 ``` dart
-SubControllerDelegate subController = formController.getSubController(controlKey);
+SubControllerDelegate subController = formManagement.getSubController(controlKey);
 subController.update1(String itemControlKey, Map<String, dynamic> state); //update sub item's state
-subController.update(Map<String, Map<String, dynamic>> states);//udpate multi sub items's state
+subController.update(Map<String, Map<String, dynamic>> states);//udpate multi sub items's state , for better performance,you should use this method to update multi items
 subController.getState(String itemControlKey, String key);//get sub item's state value
 subController.setVisible(String itemControlKey, bool visible);//equals to update(itemControlKey,{'visible':visible})
 subController.setReadOnly(String itemControlKey, bool readOnly);//equals to update(itemControlKey,{'readOnly':readOnly})
@@ -68,35 +65,64 @@ bool subController.hasState(String itemControlKey);//check itemControlKey exists
 ### validate form
 
 ``` dart
-formController.validate();
+formManagement.validate();
 ```
 
 ### validate one field
 
 ``` dart
-formController.validate1(controlKey);
+formManagement.validate1(controlKey);
+```
+
+### check form is valid
+
+**unlike validate method,this method won't display error msg**
+
+``` dart
+formManagement.isValid
+```
+
+### check field is valid
+
+**unlike validate1 method,this method won't display error msg**
+
+``` dart
+formManagement.isValid1(controlkey);
 ```
 
 ### reset form
 
 ``` dart
-formController.reset();
+formManagement.reset();
 ```
 
 ### reset one field
 
 ``` dart
-formController.reset1(controlKey);
+formManagement.reset1(controlKey);
+```
+
+
+### set autovalidatemode
+
+``` dart
+formManagement.setAutovalidateMode(controlKey,autovalidateMode);
+```
+
+### set initialValue
+
+``` dart
+formManagement.setInitialValue(controlKey,initialValue);
 ```
 
 ### focus form field
 ```
-formController.requestFocus('form field\'s controlKey');
+formManagement.requestFocus(controlKey);
 ```
 
 ### unfocus form field
 ```
-formController.unFocus('form field\'s controlKey');
+formManagement.unFocus(controlKey);
 ```
 
 ### listen focus change
@@ -106,52 +132,51 @@ onFocusChange(bool value){
 	print('username focused: $value');
 }
 
-formController.onFocusChange('username',onFocusChange);
+FormManagement(initCallback:(){
+	formManagement.onFocusChange('username',onFocusChange);
+});
 ```
 
 ### stop listen focus change
 
 ``` dart
-formController.offFocusChange('username',onFocusChange);
+formManagement.offFocusChange('username',onFocusChange);
 ```
 
 ### update form field
 
 ``` dart
 //update username's label
-formController.update('form field\'s controlKey', {
+formManagement.update(controlKey, {
 	'labelText': DateTime.now().toString(),
 });
 ```
 
 ``` dart
 //update selector's items
-formController.setValue('selector', null);
-formController.rebuild('selector', {
+formManagement.setValue('selector', null);
+formManagement.update('selector', {
 	'items': FormBuilder.toSelectorItems(
 		[Random().nextDouble().toString()])
 });
 ```
 
-### set form field's validate mode
-``` dart
-formController.setAutovalidateMode(controlKey,autovalidateMode);
-```
+### rebuild form field's state
 
-### set form field's initialValue
 ``` dart
-formController.setInitialValue(controlKey,initialValue)
+formManagement.rebuild(controlKey,{});
 ```
 
 ### set form field's padding
 ``` dart
-formController.setPadding(controlKey,padding);
+formManagement.setPadding(controlKey,padding);
 ```
 
 ### set form field's selection
 
 ``` dart
-formController.setSelection(controlKey,start,end);
+formManagement.setSelection(controlKey,start,end);
+formManagement.selectAll(controlKey);
 ```
 
 only works on textfield|numberfield
@@ -159,7 +184,7 @@ only works on textfield|numberfield
 ### set form field's value
  
 ``` dart
-formController.setValue('controlKey',value,trigger:false);
+formManagement.setValue('controlKey',value,trigger:false);
 ```
 
 trigger: whether  trigger onChanged or not
@@ -167,26 +192,27 @@ trigger: whether  trigger onChanged or not
 ### get form field's value
 
 ``` dart
-formController.getValue('controlKey');
+formManagement.getValue('controlKey');
 ```
 
 ### get form data
 
 ``` dart
-formController.getData(removeNull:false); //return a map if removeNull is true ,map will not contain null value items
+formManagement.data; // auto remove null
+formManagement.getData({bool removeNull = false});
 ```
 
 ### completely remove a from field
 
 ``` dart
-formController.remove(controlKey);
+formManagement.remove(controlKey);
 ```
 
 ### set form theme
 
 ``` dart
-formController.themeData = FormThemeData(themeData);// system theme
-formController.themeData = DefaultFormTheme(context);//default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+formManagement.formThemeData = FormThemeData(themeData);// system theme
+formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
 ```
 
 ## currently support field
@@ -207,3 +233,9 @@ formController.themeData = DefaultFormTheme(context);//default theme from  https
 ## project status
 
 developing
+
+## develop plan
+
+1. support insert field
+2. performance test 
+3. support more fields
