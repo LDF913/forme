@@ -291,15 +291,17 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm(BuildContext context) {
     return FormBuilder(formManagement: formManagement)
-        .textField('username', labelText: 'username', clearable: true)
-        .checkboxGroup('rememberMe', [CheckboxItem('remember me')],
-            inline: true)
+        .textField(
+            controlKey: 'username', labelText: 'username', clearable: true)
+        .checkboxGroup([CheckboxItem('remember me')],
+            controlKey: 'rememberMe', inline: true)
         .switchInline(
-          'switch1',
+          controlKey: 'switch1',
           onChanged: (value) => print('switch1 value changed $value'),
         )
         .nextLine()
-        .textField('password',
+        .textField(
+            controlKey: 'password',
             hintText: 'password',
             obscureText: true,
             passwordVisible: true,
@@ -307,12 +309,15 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
-        .textButton('button', (management) {
+        .textButton((management) {
+          management.selectAll('password');
+        }, label: 'button')
+        .textButton((management) {
           management.selectAll('password');
         }, label: 'button')
         .nextLine()
         .numberField(
-          'age',
+          controlKey: 'age',
           hintText: 'age',
           clearable: true,
           flex: 3,
@@ -322,52 +327,54 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
-        .radioGroup('radioInline', FormBuilder.toRadioItems(['1', '2']),
-            inline: true)
+        .radioGroup(FormBuilder.toRadioItems(['1', '2']),
+            controlKey: 'radioInline', inline: true)
         .checkboxGroup(
-          'checkbox',
           [CheckboxItem('male', controlKey: 'male'), CheckboxItem('female')],
+          controlKey: 'checkbox',
           split: 2,
           label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
-        .divider('divider')
+        .divider()
         .radioGroup(
-          'radio',
           [
             RadioItem('1', '1', controlKey: 'radio 1'),
             RadioItem('2', '2', controlKey: 'radio 2'),
           ],
+          controlKey: 'radio',
           onChanged: (value) => print('radio value changed $value'),
           label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
-        .divider('divider1')
+        .divider()
         .nextLine()
         .datetimeField(
-          'startTime',
+          controlKey: 'startTime',
           useTime: true,
           hintText: 'startTime',
           onChanged: (value) => print('startTime value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
         .datetimeField(
-          'endTime',
+          controlKey: 'endTime',
           useTime: true,
           hintText: 'endTime',
           onChanged: (value) => print('endTime value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
         .nextLine()
-        .textField('remark',
+        .textField(
+            controlKey: 'remark',
             hintText: 'remark',
             maxLines: 5,
             flex: 1,
             clearable: true,
             onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
-        .selector('selector',
+        .selector(
+            controlKey: 'selector',
             labelText: 'selector',
             multi: true,
             selectItemProvider: (page, params) {
@@ -387,14 +394,15 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             queryFormBuilder: (builder, query) {
               builder
-                  .rangeSlider('filter',
+                  .rangeSlider(
+                      controlKey: 'filter',
                       min: 1,
                       max: 100,
                       inline: true,
                       rangeSubLabelRender: RangeSubLabelRender(
                           (start) => Text(start.round().toString()),
                           (end) => Text(end.round().toString())))
-                  .textButton('query', (formManagement) {
+                  .textButton((formManagement) {
                 query();
               }, label: 'query');
             },
@@ -406,7 +414,8 @@ class _MyHomePageState extends State<MyHomePage> {
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
-        .switchGroup('switchGroup',
+        .switchGroup(
+            controlKey: 'switchGroup',
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) => value.isEmpty ? 'select one pls !' : null,
@@ -417,7 +426,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     controlKey: 'switch$index')))
         .slider(
-          'slider',
+          controlKey: 'slider',
           min: 0,
           max: 100,
           label: 'age slider',
@@ -427,7 +436,8 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('age slider value changed ' + value.toStringAsFixed(0)),
         )
-        .numberField('sliderInlineText',
+        .numberField(
+            controlKey: 'sliderInlineText',
             min: 0,
             max: 100,
             labelText: 'inline slider',
@@ -436,12 +446,17 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (v) => formManagement.setValue(
                 'sliderInline', v == null ? 0.0 : v.toDouble(),
                 trigger: false))
-        .slider('sliderInline', min: 0, max: 100, inline: true, onChanged: (v) {
-          formManagement.setValue('sliderInlineText', v.round(),
-              trigger: false);
-        })
+        .slider(
+            controlKey: 'sliderInline',
+            min: 0,
+            max: 100,
+            inline: true,
+            onChanged: (v) {
+              formManagement.setValue('sliderInlineText', v.round(),
+                  trigger: false);
+            })
         .rangeSlider(
-          'rangeSlider',
+          controlKey: 'rangeSlider',
           min: 0,
           max: 100,
           label: 'range slider',
@@ -453,8 +468,9 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
         )
-        .commonField('commonField',
-            commonField: CommonField(
+        .widget(
+            controlKey: 'commonField',
+            field: CommonField(
               {'text': 'click me and change my text'},
               builder: (state, context, readOnly, stateMap, themeData,
                   formThemeData) {

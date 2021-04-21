@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,16 +48,14 @@ class FormBuilder extends StatefulWidget {
   final FormManagement formManagement;
 
   FormBuilder(
-      {Key key,
-      bool readOnly,
+      {bool readOnly,
       bool visible,
       FormThemeData formThemeData,
       FormManagement formManagement})
       : this._formThemeData = formThemeData ?? DefaultFormThemeData(),
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
-        this.formManagement = formManagement ?? FormManagement(),
-        super(key: key);
+        this.formManagement = formManagement ?? FormManagement();
 
   /// add an empty row
   FormBuilder nextLine() {
@@ -71,11 +67,11 @@ class FormBuilder extends StatefulWidget {
   }
 
   /// add a number field to current row
-  FormBuilder numberField(String controlKey,
-      {String hintText,
+  FormBuilder numberField(
+      {String controlKey,
+      String hintText,
       String labelText,
       VoidCallback onTap,
-      Key key,
       int flex,
       Widget prefixIcon,
       ValueChanged<num> onChanged,
@@ -94,7 +90,9 @@ class FormBuilder extends StatefulWidget {
       VoidCallback onEditingComplete,
       TextInputAction textInputAction,
       InputDecorationTheme inputDecorationTheme}) {
-    _builders.add(_FormItemBuilder(visible, controlKey,
+    _builders.add(_FormItemBuilder(
+        visible: visible,
+        controlKey: controlKey,
         flex: flex,
         child: NumberFormField(
             onChanged: onChanged,
@@ -119,11 +117,11 @@ class FormBuilder extends StatefulWidget {
   }
 
   /// add a textfield to current row
-  FormBuilder textField(String controlKey,
-      {String hintText,
+  FormBuilder textField(
+      {String controlKey,
+      String hintText,
       String labelText,
       VoidCallback onTap,
-      Key key,
       bool obscureText = false,
       int flex,
       int maxLines = 1,
@@ -148,7 +146,9 @@ class FormBuilder extends StatefulWidget {
       TextInputAction textInputAction,
       List<TextInputFormatter> textInputFormatters,
       InputDecorationTheme inputDecorationTheme}) {
-    _builders.add(_FormItemBuilder(visible, controlKey,
+    _builders.add(_FormItemBuilder(
+        visible: visible,
+        controlKey: controlKey,
         flex: flex,
         child: ClearableTextFormField(
             key: key,
@@ -182,9 +182,8 @@ class FormBuilder extends StatefulWidget {
   /// if inline is false,it will be added to current row
   /// otherwise it will be placed in a new row
   FormBuilder radioGroup(
-    String controlKey,
     List<RadioItem> items, {
-    Key key,
+    String controlKey,
     String label,
     ValueChanged onChanged,
     bool readOnly = false,
@@ -201,8 +200,8 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: inline ? flex : 1,
       child: RadioGroup(
         List.of(items),
@@ -222,8 +221,8 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder checkboxGroup(String controlKey, List<CheckboxItem> items,
-      {Key key,
+  FormBuilder checkboxGroup(List<CheckboxItem> items,
+      {String controlKey,
       String label,
       ValueChanged<List<int>> onChanged,
       FormFieldValidator<List<int>> validator,
@@ -239,8 +238,8 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: inline ? flex : 1,
       child: CheckboxGroup(
         List.of(items),
@@ -260,8 +259,8 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder textButton(String controlKey, OnPressed onPressed,
-      {Key key,
+  FormBuilder textButton(OnPressed onPressed,
+      {String controlKey,
       String label,
       Widget child,
       int flex = 0,
@@ -270,7 +269,9 @@ class FormBuilder extends StatefulWidget {
       bool visible = true,
       EdgeInsets padding}) {
     _builders.add(
-      _FormItemBuilder(visible, controlKey,
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
           flex: flex,
           padding: padding,
           child: CommonField(
@@ -295,8 +296,8 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder datetimeField(String controlKey,
-      {Key key,
+  FormBuilder datetimeField(
+      {String controlKey,
       String labelText,
       String hintText,
       bool readOnly = false,
@@ -312,7 +313,9 @@ class FormBuilder extends StatefulWidget {
       DateTime initialValue,
       InputDecorationTheme inputDecorationTheme}) {
     _builders.add(
-      _FormItemBuilder(visible, controlKey,
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
           flex: flex,
           child: DateTimeFormField(
               key: key,
@@ -331,8 +334,8 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder selector(
-    String controlKey, {
+  FormBuilder selector({
+    String controlKey,
     String labelText,
     String hintText,
     bool readOnly = false,
@@ -360,7 +363,9 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(
-      _FormItemBuilder(visible, controlKey,
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
           flex: inline ? flex : 1,
           child: SelectorFormField(selectItemProvider,
               onChanged: onChanged,
@@ -387,14 +392,15 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder divider(String controlKey,
-      {double height = 1.0,
+  FormBuilder divider(
+      {String controlKey,
+      double height = 1.0,
       bool visible = true,
       EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 5)}) {
     nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: 1,
       padding: padding,
       child: CommonField(
@@ -412,8 +418,8 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder switchGroup(
-    String controlKey, {
+  FormBuilder switchGroup({
+    String controlKey,
     String label,
     bool visible = true,
     bool readOnly = false,
@@ -432,8 +438,8 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: inline ? flex : 1,
       padding: padding,
       child: SwitchGroupFormField(
@@ -453,8 +459,9 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder switchInline(String controlKey,
-      {bool visible = true,
+  FormBuilder switchInline(
+      {String controlKey,
+      bool visible = true,
       bool readOnly = false,
       EdgeInsets padding,
       int flex = 0,
@@ -463,8 +470,8 @@ class FormBuilder extends StatefulWidget {
       AutovalidateMode autovalidateMode,
       bool initialValue}) {
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: flex,
       child: SwitchInlineFormField(
         validator: validator,
@@ -477,8 +484,9 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder slider(String controlKey,
-      {bool visible = true,
+  FormBuilder slider(
+      {String controlKey,
+      bool visible = true,
       bool readOnly = false,
       EdgeInsets padding,
       ValueChanged<double> onChanged,
@@ -496,8 +504,8 @@ class FormBuilder extends StatefulWidget {
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: inline ? flex : 1,
       child: SliderFormField(
         readOnly: readOnly,
@@ -518,8 +526,9 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder rangeSlider(String controlKey,
-      {bool visible = true,
+  FormBuilder rangeSlider(
+      {String controlKey,
+      bool visible = true,
       bool readOnly = false,
       EdgeInsets padding,
       ValueChanged<RangeValues> onChanged,
@@ -535,8 +544,8 @@ class FormBuilder extends StatefulWidget {
       bool inline = false}) {
     if (!inline) nextLine();
     _builders.add(_FormItemBuilder(
-      visible,
-      controlKey,
+      visible: visible,
+      controlKey: controlKey,
       flex: 1,
       child: RangeSliderFormField(
         readOnly: readOnly,
@@ -557,45 +566,24 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder commonField(String controlKey,
-      {int flex = 0,
-      bool visible = true,
-      EdgeInsets padding,
-      @required CommonField commonField,
-      bool inline}) {
-    return _widget(controlKey,
-        flex: flex,
-        visible: visible,
-        padding: padding,
-        field: commonField,
-        inline: inline);
-  }
-
-  FormBuilder valueField(String controlKey,
-      {int flex = 0,
-      bool visible = true,
-      EdgeInsets padding,
-      @required ValueField valueField,
-      bool inline}) {
-    return _widget(controlKey,
-        flex: flex,
-        visible: visible,
-        padding: padding,
-        field: valueField,
-        inline: inline);
-  }
-
-  FormBuilder _widget(String controlKey,
-      {int flex = 0,
+  FormBuilder widget(
+      {String controlKey,
+      int flex = 0,
       bool visible = true,
       EdgeInsets padding,
       @required Widget field,
       bool inline}) {
+    assert(field is ValueField || field is CommonField,
+        'field must valuefield or commonfield');
     inline ??= false;
     if (!inline) nextLine();
     _builders.add(
-      _FormItemBuilder(visible, controlKey,
-          flex: flex, padding: padding, child: field),
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
+          flex: flex,
+          padding: padding,
+          child: field),
     );
     if (!inline) nextLine();
     return this;
@@ -694,7 +682,51 @@ class _FormBuilderState extends State<FormBuilder> {
     super.didUpdateWidget(oldWidget);
     debugPrint("form didUpdateWidget");
     widget.nextLine();
+    if (oldWidget._builderss.length != widget._builderss.length) {
+      debugPrint(
+          "form seems add or delete some rows,affect fields will dispose and rebuild !");
+    }
+
     builderss = widget._builderss;
+    Set<String> locations = {};
+    int row = 0;
+    for (List<_FormItemBuilder> builders in builderss) {
+      int column = 0;
+      for (_FormItemBuilder builder in builders) {
+        String location = '$row,$column';
+        locations.add(location);
+
+        if (builder.controlKey != null &&
+            formManagement.locationMapping.containsKey(location)) {
+          debugPrint('$location has a new controlKey ,will be disposed');
+          formManagement.locationMapping.remove(location);
+        }
+
+        _FormItemWidgetState state = formManagement.states[location];
+        if (state != null) {
+          Type currentType = state.widget.child.runtimeType;
+          Type childType = builder.child.runtimeType;
+          if (currentType != childType) {
+            formManagement.locationMapping.remove(location);
+            debugPrint(
+                '$location type: $childType not match $currentType ,will be disposed');
+          }
+        }
+        column++;
+      }
+      row++;
+    }
+
+    formManagement.locationMapping.removeWhere((key, value) {
+      if (!locations.contains(key)) {
+        debugPrint('$key not exists any more ,will be disposed');
+        return true;
+      }
+      return false;
+    });
+
+    locations = null;
+
     if (oldWidget._visible != widget._visible) {
       _visible = widget._visible;
     }
@@ -719,19 +751,33 @@ class _FormBuilderState extends State<FormBuilder> {
     widget.nextLine();
     Set<String> controlKeys = {};
     List<Row> rows = [];
+    int row = 0;
     for (List<_FormItemBuilder> builders in builderss) {
       List<_FormItemWidget> children = [];
+      int column = 0;
       for (_FormItemBuilder builder in builders) {
-        assert(builder.controlKey != null, 'controlKey can not be null!!!');
-        assert(!controlKeys.contains(builder.controlKey),
+        Key key;
+        String controlKey = builder.controlKey;
+        if (controlKey == null) {
+          controlKey = '$row,$column'; //use location as it's control key
+          debugPrint(
+              '$controlKey has no specific controlKey,use location instead');
+          key = formManagement.newLocationKey(controlKey);
+        } else {
+          assert(
+              !controlKey.contains(','), 'controlKey can not contains char , ');
+          key = formManagement.newFieldKey(controlKey);
+        }
+        assert(!controlKeys.contains(controlKey),
             'controlkey must unique in a form');
-        controlKeys.add(builder.controlKey);
-        UniqueKey key = formManagement.newUniqueKey(builder.controlKey);
-        children.add(_FormItemWidget(builder, key));
+        controlKeys.add(controlKey);
+        children.add(_FormItemWidget(builder, controlKey, key));
+        column++;
       }
       rows.add(Row(
         children: children,
       ));
+      row++;
     }
     controlKeys = null;
     return Theme(
@@ -754,9 +800,8 @@ class _FormItemWidget extends StatefulWidget {
   final bool visible;
   final Widget child;
   final EdgeInsets padding;
-  _FormItemWidget(_FormItemBuilder builder, Key key)
+  _FormItemWidget(_FormItemBuilder builder, this.controlKey, Key key)
       : this.visible = builder.visible,
-        this.controlKey = builder.controlKey,
         this.child = builder.child,
         this.flex = builder.flex,
         this.padding = builder.padding,
@@ -840,7 +885,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void dispose() {
     formManagement.releasedWhenFormItemDisposed(widget.controlKey);
-    debugPrint('disposing form item field ' + widget.controlKey);
+    debugPrint(widget.controlKey + ' form item disposed');
     super.dispose();
   }
 
@@ -917,6 +962,12 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   void initState() {
     super.initState();
     _state = {};
+  }
+
+  @override
+  void didUpdateWidget(Widget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _formManagement.focusNodes.remove(controlKey);
   }
 
   @override
@@ -1110,7 +1161,7 @@ class CommonFieldState extends _BaseFieldState<Null> {
 
   @override
   void dispose() {
-    debugPrint(controlKey + ' value field dispose');
+    debugPrint(controlKey + ' common field dispose');
     _formManagement.releasedWhenCommonFieldDisposed(controlKey);
     super.dispose();
   }
@@ -1356,9 +1407,8 @@ class _FormItemBuilder {
   final bool visible;
   final Widget child;
   final EdgeInsets padding;
-
-  _FormItemBuilder(bool visible, this.controlKey,
-      {int flex, this.child, EdgeInsets padding})
+  _FormItemBuilder(
+      {bool visible, this.controlKey, int flex, this.child, EdgeInsets padding})
       : this.visible = visible ?? true,
         this.flex = flex ?? 1,
         this.padding = padding ?? EdgeInsets.zero;
@@ -1372,12 +1422,22 @@ class _FormManagement {
   final Map<String, ValueFieldState> valueFieldStates = {};
   final Map<String, CommonFieldState> commonFieldStates = {};
   final Map<String, List<FocusChanged>> focusChangeMap = {};
-  final Map<String, UniqueKey> mapping = {};
+  final Map<String, Key> mapping = {};
+
+  /// used to create uniquekey that not has a controlKey
+  final Map<String, Key> locationMapping = {};
 
   _FormManagement(this.state);
 
-  UniqueKey newUniqueKey(String controlKey) {
-    return mapping.putIfAbsent(controlKey, () => UniqueKey());
+  Key newFieldKey(String controlKey) {
+    return mapping.putIfAbsent(
+        controlKey,
+        () =>
+            GlobalKey()); //use global key here to hold state ... any good way to this without a lib?
+  }
+
+  Key newLocationKey(String location) {
+    return locationMapping.putIfAbsent(location, () => GlobalKey());
   }
 
   FocusNodes newFocusNode(String controlKey) {
@@ -1410,24 +1470,34 @@ class _FormManagement {
   }
 
   void releasedWhenCommonFieldDisposed(String controlKey) {
+    debugPrint('releasedWhenCommonFieldDisposed : $controlKey');
     focusChangeMap.remove(controlKey);
     FocusNode focusNode = focusNodes.remove(controlKey);
-    if (focusNode != null) focusNode.dispose();
+    if (focusNode != null) {
+      focusNode.dispose();
+    }
     commonFieldStates.remove(controlKey);
   }
 
   void releasedWhenValueFieldDisposed(String controlKey) {
+    debugPrint('releasedWhenValueFieldDisposed : $controlKey');
     focusChangeMap.remove(controlKey);
     FocusNode focusNode = focusNodes.remove(controlKey);
-    if (focusNode != null) focusNode.dispose();
+    if (focusNode != null) {
+      focusNode.dispose();
+    }
     ValueNotifier controller = controllers.remove(controlKey);
-    if (controller != null) controller.dispose();
+    if (controller != null) {
+      controller.dispose();
+    }
     valueFieldStates.remove(controlKey);
   }
 
   void releasedWhenFormItemDisposed(String controlKey) {
+    debugPrint('releasedWhenFormItemDisposed : $controlKey');
     states.remove(controlKey);
     mapping.remove(controlKey);
+    locationMapping.remove(controlKey);
   }
 
   void requestFocus(String controlKey) {
@@ -1630,6 +1700,7 @@ class _FormManagement {
     valueFieldStates.clear();
     commonFieldStates.clear();
     mapping.clear();
+    locationMapping.clear();
     state = null;
   }
 
