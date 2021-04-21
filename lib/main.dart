@@ -104,13 +104,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 return createForm(context);
               }),
             ),
-            Padding(
+            /*Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'form2',
                 style: TextStyle(fontSize: 30),
               ),
-            ),
+            ),*/
             Builder(
               builder: (context) {
                 return TextButton(
@@ -267,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('set age\'s selection')),
             TextButton(
               onPressed: () {
-                print(formManagement.getData());
+                print(formManagement.data);
               },
               child: Text('get form data'),
             ),
@@ -307,6 +307,9 @@ class _MyHomePageState extends State<MyHomePage> {
             toolbarOptions: ToolbarOptions(copy: false, paste: false),
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
+        .textButton('button', (management) {
+          management.selectAll('password');
+        }, label: 'button')
         .nextLine()
         .numberField(
           'age',
@@ -391,7 +394,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       rangeSubLabelRender: RangeSubLabelRender(
                           (start) => Text(start.round().toString()),
                           (end) => Text(end.round().toString())))
-                  .textButton('query', query, label: 'query');
+                  .textButton('query', (formManagement) {
+                query();
+              }, label: 'query');
             },
             onSelectDialogShow: (formManagement) {
               //use this formManagement to control query form on search dialog
@@ -405,9 +410,11 @@ class _MyHomePageState extends State<MyHomePage> {
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) => value.isEmpty ? 'select one pls !' : null,
+            selectAllPadding: EdgeInsets.only(right: 8),
             items: List<SwitchGroupItem>.generate(
                 3,
                 (index) => SwitchGroupItem(index.toString(),
+                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                     controlKey: 'switch$index')))
         .slider(
           'slider',
@@ -456,6 +463,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: readOnly
                       ? null
                       : () {
+                          FormManagement.of(context);
                           formManagement.update('commonField', {
                             'text': Random.secure().nextDouble().toString()
                           });

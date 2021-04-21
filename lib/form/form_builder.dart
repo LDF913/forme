@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +15,9 @@ import 'slider.dart';
 ///
 /// it's only create once and maintained in [_FormManagement]
 typedef ControllerProvider<T> = ValueNotifier<T> Function();
+
+typedef OnPressed = void Function(FormManagement management);
+
 typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
   K state,
   BuildContext context,
@@ -49,10 +54,11 @@ class FormBuilder extends StatefulWidget {
       bool readOnly,
       bool visible,
       FormThemeData formThemeData,
-      this.formManagement})
+      FormManagement formManagement})
       : this._formThemeData = formThemeData ?? DefaultFormThemeData(),
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
+        this.formManagement = formManagement ?? FormManagement(),
         super(key: key);
 
   /// add an empty row
@@ -254,7 +260,7 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder textButton(String controlKey, VoidCallback onPressed,
+  FormBuilder textButton(String controlKey, OnPressed onPressed,
       {Key key,
       String label,
       Widget child,
@@ -276,7 +282,11 @@ class FormBuilder extends StatefulWidget {
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
               Widget child = stateMap['child'] ?? Text(stateMap['label']);
               return TextButton(
-                  onPressed: readOnly ? null : onPressed,
+                  onPressed: readOnly
+                      ? null
+                      : () {
+                          onPressed(formManagement);
+                        },
                   onLongPress: readOnly ? null : onLongPress,
                   child: child);
             },
@@ -694,8 +704,14 @@ class _FormBuilderState extends State<FormBuilder> {
     if (oldWidget._formThemeData != widget._formThemeData) {
       _formThemeData = widget._formThemeData;
     }
-    widget.formManagement._formManagement =
-        formManagement; // we do not call init again ! formManagement are always same!
+    _FormManagement old = widget.formManagement._formManagement;
+    if (old == null) {
+      widget.formManagement._formManagement =
+          formManagement; // we do not call init again ! formManagement are always same!
+    } else {
+      assert(old == formManagement,
+          'this form management is used to control another form ,you can not use this form management to control this form ,try to create a new one!');
+    }
   }
 
   @override
@@ -1349,7 +1365,7 @@ class _FormItemBuilder {
 }
 
 class _FormManagement {
-  final _FormBuilderState state;
+  _FormBuilderState state;
   final Map<String, ValueNotifier> controllers = {};
   final Map<String, FocusNode> focusNodes = {};
   final Map<String, _FormItemWidgetState> states = {};
@@ -1515,11 +1531,9 @@ class _FormManagement {
   }
 
   void reset1(String controlKey) {
-    valueFieldStates.values
-        .where((element) => (element.controlKey == controlKey))
-        .forEach((element) {
-      element.reset();
-    });
+    ValueFieldState state = valueFieldStates[controlKey];
+    if (state == null) return;
+    state.reset();
   }
 
   bool validate() {
@@ -1616,6 +1630,7 @@ class _FormManagement {
     valueFieldStates.clear();
     commonFieldStates.clear();
     mapping.clear();
+    state = null;
   }
 
   static _FormManagement of(BuildContext context) {
@@ -1636,6 +1651,20 @@ class _FormManagementData extends InheritedWidget {
   }
 }
 
+/// a management used to control a form
+///
+/// ```
+/// FormBuilder(formManagement:your form management)
+/// ```
+///
+/// any method in formmanagement can only be used after a formmangement is initialled,
+/// you can pass a initCallback argument to listen when formmanament is initialled,
+/// in fact formmanagement is initialled after form state initState() is called,so it's
+/// safely to control form after a frame is completed,if you are used to commonfield
+/// to control form , you can also get a useable formmanagement via FormManagement.of(context)
+/// **context is from commonfield's build method ,not you own!**
+///
+/// **a initCallback will only be called once in form state's lifecycle due to _FormManagement's instance won't change**
 class FormManagement {
   static FormManagement of(BuildContext context) {
     return FormManagement._(_FormManagement.of(context));
@@ -1726,7 +1755,7 @@ class FormManagement {
       _formManagement.setValue(controlKey, value, trigger: trigger);
 
   /// get form data
-  Map<String, dynamic> getData() => _formManagement.getData();
+  Map<String, dynamic> get data => _formManagement.getData();
 
   /// reset form
   ///

@@ -326,7 +326,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         bool queryAfterLoadParams =
             widget.onSelectDialogShow(queryFormManagement);
         if (queryAfterLoadParams && queryFormManagement.validate()) {
-          params = queryFormManagement.getData();
+          params = queryFormManagement.data;
         }
         loadData(gen);
       });
@@ -362,7 +362,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       items = [];
       error = false;
       count = 0;
-      params = queryFormManagement.getData();
+      params = queryFormManagement.data;
     });
     loadData(gen);
   }
