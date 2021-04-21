@@ -99,18 +99,21 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Builder(builder: (context) {
-                print("build form");
-                return createForm(context);
-              }),
+              child: createForm(),
             ),
-            /*Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'form2',
-                style: TextStyle(fontSize: 30),
+            Row(children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'form2',
+                  style: TextStyle(fontSize: 30),
+                ),
               ),
-            ),*/
+            ]),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: createForm2(),
+            ),
             Builder(
               builder: (context) {
                 return TextButton(
@@ -289,7 +292,73 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
   }
 
-  Widget createForm(BuildContext context) {
+  Widget createForm2() {
+    return FormBuilder()
+        .widget(field: Label('username'), flex: 2, inline: true)
+        .textField(
+            controlKey: 'username',
+            hintText: 'username',
+            flex: 3,
+            clearable: true)
+        .nextLine()
+        .widget(
+          field: Label('password'),
+          flex: 2,
+          inline: true,
+        )
+        .textField(
+            controlKey: 'password',
+            hintText: 'password',
+            flex: 3,
+            obscureText: true,
+            passwordVisible: true,
+            clearable: true)
+        .nextLine()
+        .widget(field: Label('rememberMe'), flex: 2, inline: true)
+        .switchInline(
+            controlKey: 'rememberMe',
+            flex: 3,
+            initialValue: true,
+            padding: EdgeInsets.symmetric(vertical: 10))
+        .nextLine()
+        .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
+        .widget(field: Label('sex'), flex: 2, inline: true)
+        .radioGroup(
+            FormBuilder.toRadioItems(['male', 'female'],
+                padding: EdgeInsets.symmetric(horizontal: 4)),
+            inline: true,
+            flex: 3,
+            controlKey: 'sex')
+        .nextLine()
+        .divider(padding: EdgeInsets.only(top: 10))
+        .widget(field: Label('habbit'), flex: 2, inline: true)
+        .switchGroup(
+            hasSelectAllSwitch: false,
+            controlKey: 'habbit',
+            items: FormBuilder.toSwitchGroupItems(['sport', 'film', 'sleep']),
+            padding: EdgeInsets.only(top: 2, bottom: 2),
+            inline: true,
+            flex: 3)
+        .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
+        .nextLine()
+        .widget(field: Label('age'), flex: 2, inline: true)
+        .slider(
+          inline: true,
+          flex: 3,
+          controlKey: 'age',
+          max: 100,
+          min: 14,
+          padding: EdgeInsets.symmetric(horizontal: 4),
+          subLabelRender: (value) => Text(value.round().toString()),
+        )
+        .widget(
+          field: Button(),
+          flex: 1,
+          inline: false,
+        );
+  }
+
+  Widget createForm() {
     return FormBuilder(formManagement: formManagement)
         .textField(
             controlKey: 'username', labelText: 'username', clearable: true)
@@ -490,16 +559,92 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class Label extends StatelessWidget {
+class Label extends CommonField {
   final String label;
-  const Label(this.label, {Key key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    ThemeData themeData = Theme.of(context);
-    return Text(
-      label,
-      overflow: TextOverflow.ellipsis,
-      style: TextStyle(fontSize: 18, color: themeData.primaryColor),
-    );
-  }
+  Label(this.label, {Key key})
+      : super(
+          {'label': label},
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            return Text(
+              stateMap['label'],
+              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
+            );
+          },
+        );
+}
+
+// from
+class Button extends CommonField {
+  Button()
+      : super(
+          {},
+          builder:
+              (state, context, readOnly, stateMap, themeData, formThemeData) {
+            return Padding(
+              padding: const EdgeInsets.only(
+                  left: 16, right: 16, bottom: 16, top: 8),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: themeData.primaryColor,
+                  borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.6),
+                      blurRadius: 8,
+                      offset: const Offset(4, 4),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: const BorderRadius.all(Radius.circular(24.0)),
+                    highlightColor: Colors.transparent,
+                    onTap: () {
+                      Map<String, Widget> widgets = FormManagement.of(context)
+                          .data
+                          .map((key, value) => MapEntry(
+                              key,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(key),
+                                    flex: 1,
+                                  ),
+                                  Expanded(
+                                    child: Text(value.toString()),
+                                    flex: 1,
+                                  ),
+                                ],
+                              )));
+                      showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              content: Container(
+                                width: double.maxFinite,
+                                child: Column(
+                                  children: List.from(widgets.values),
+                                ),
+                              ),
+                            );
+                          });
+                    },
+                    child: Center(
+                      child: Text(
+                        'Apply',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 18,
+                            color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
 }

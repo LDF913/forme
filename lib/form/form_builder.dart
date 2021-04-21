@@ -472,6 +472,7 @@ class FormBuilder extends StatefulWidget {
     _builders.add(_FormItemBuilder(
       visible: visible,
       controlKey: controlKey,
+      padding: padding,
       flex: flex,
       child: SwitchInlineFormField(
         validator: validator,
@@ -507,6 +508,7 @@ class FormBuilder extends StatefulWidget {
       visible: visible,
       controlKey: controlKey,
       flex: inline ? flex : 1,
+      padding: padding,
       child: SliderFormField(
         readOnly: readOnly,
         autovalidateMode: autovalidateMode,
@@ -682,10 +684,6 @@ class _FormBuilderState extends State<FormBuilder> {
     super.didUpdateWidget(oldWidget);
     debugPrint("form didUpdateWidget");
     widget.nextLine();
-    if (oldWidget._builderss.length != widget._builderss.length) {
-      debugPrint(
-          "form seems add or delete some rows,affect fields will dispose and rebuild !");
-    }
 
     builderss = widget._builderss;
     Set<String> locations = {};
@@ -1497,7 +1495,7 @@ class _FormManagement {
     debugPrint('releasedWhenFormItemDisposed : $controlKey');
     states.remove(controlKey);
     mapping.remove(controlKey);
-    locationMapping.remove(controlKey);
+    //locationMapping.remove(controlKey);
   }
 
   void requestFocus(String controlKey) {
