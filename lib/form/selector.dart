@@ -407,6 +407,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
     FormBuilder form = FormBuilder(
       formManagement: queryFormManagement,
+      formThemeData: formThemeData,
     );
     widget.queryFormBuilder(form, query);
     return form;
