@@ -97,7 +97,7 @@ class SwitchGroupTheme extends CheckboxGroupTheme {
 
 //copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
 class DefaultFormThemeData extends FormThemeData {
-  DefaultFormThemeData()
+  DefaultFormThemeData._()
       : super(
             themeData: _buildLightTheme(),
             padding: EdgeInsets.all(5),

@@ -284,7 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: () {
                 formManagement.formThemeData = (++i) % 2 == 0
                     ? FormThemeData(themeData: Theme.of(context))
-                    : DefaultFormThemeData();
+                    : FormThemeData.defaultTheme;
               },
               child: Text('change theme'),
             )

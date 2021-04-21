@@ -54,7 +54,7 @@ class FormBuilder extends StatefulWidget {
       FormThemeData formThemeData,
       FormManagement formManagement,
       bool enableDebugPrint})
-      : this._formThemeData = formThemeData ?? DefaultFormThemeData(),
+      : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
         this.formManagement = formManagement ?? FormManagement(),
