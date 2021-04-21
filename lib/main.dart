@@ -323,8 +323,8 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
         .widget(field: Label('sex'), flex: 2, inline: true)
-        .radioGroup(
-            FormBuilder.toRadioItems(['male', 'female'],
+        .checkboxGroup(
+            FormBuilder.toCheckboxItems(['male', 'female'],
                 padding: EdgeInsets.symmetric(horizontal: 4)),
             inline: true,
             flex: 3,

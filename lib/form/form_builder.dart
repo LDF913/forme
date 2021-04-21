@@ -872,6 +872,11 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     if (oldWidget.padding != widget.padding) {
       _padding = widget.padding;
     }
+
+    if (oldWidget.child.runtimeType != widget.child.runtimeType) {
+      _FormManagement formManagement = _FormManagement.of(context);
+      formManagement.releasedWhenValueFieldDisposed(widget.controlKey);
+    }
   }
 
   @override
@@ -1424,8 +1429,9 @@ class _FormManagement {
 
   /// used to create uniquekey that not has a controlKey
   final Map<String, Key> locationMapping = {};
+  final bool enableDebugPrint;
 
-  _FormManagement(this.state);
+  _FormManagement(this.state, {this.enableDebugPrint = true});
 
   Key newFieldKey(String controlKey) {
     return mapping.putIfAbsent(
@@ -1706,6 +1712,10 @@ class _FormManagement {
     return context
         .dependOnInheritedWidgetOfExactType<_FormManagementData>()
         .data;
+  }
+
+  void _debugPrint() {
+    if (!kReleaseMode && enableDebugPrint) {}
   }
 }
 
