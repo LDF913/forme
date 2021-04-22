@@ -604,12 +604,12 @@ class Button extends CommonField {
                       FormManagement management = FormManagement.of(context);
                       if (!management.hasControlKey('num')) {
                         management.startEdit();
-                        management.insert(2,
+                        management.insert(
                             field: Label("new row"),
                             inline: true,
                             flex: 2,
                             insertColumn: true);
-                        management.insert(2,
+                        management.insert(
                             inline: true,
                             flex: 3,
                             field: NumberFormField(),

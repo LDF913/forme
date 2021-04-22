@@ -692,8 +692,9 @@ class _FormBuilderState extends State<FormBuilder> {
     });
   }
 
-  void insert(int column,
-      {int row,
+  void insert(
+      {int column,
+      int row,
       String controlKey,
       int flex = 0,
       bool visible = true,
@@ -704,11 +705,17 @@ class _FormBuilderState extends State<FormBuilder> {
     assert(edit, 'you should call startEdit first!');
     assert(field is ValueField || field is CommonField,
         'field must valuefield or commonfield');
-    assert(column >= 0 &&
-        ((column < formLayout.rows.length && !insertColumn) ||
-            (column <= formLayout.rows.length && insertColumn)));
-    _FormRow formRow =
-        insertColumn ? formLayout.insert(column) : formLayout.rows[column];
+    assert(column == null ||
+        (column >= 0 &&
+            ((column < formLayout.rows.length && !insertColumn) ||
+                (column <= formLayout.rows.length && insertColumn))));
+    _FormRow formRow = column == null
+        ? insertColumn
+            ? formLayout.append()
+            : formLayout.rows[formLayout.rows.length - 1]
+        : insertColumn
+            ? formLayout.insert(column)
+            : formLayout.rows[column];
     _FormItemBuilder builder = _FormItemBuilder(
         visible: visible,
         controlKey: controlKey,
@@ -1995,8 +2002,9 @@ class FormManagement {
   /// especially those fields that does not has a controlKey will also dispose state and create a new one,
   /// it means you are lost field states
   /// that you setted via update or rebuild
-  void insert(int column,
-          {int row,
+  void insert(
+          {int column,
+          int row,
           String controlKey,
           int flex = 1,
           bool visible = true,
@@ -2004,7 +2012,8 @@ class FormManagement {
           @required Widget field,
           bool inline,
           bool insertColumn}) =>
-      _formManagement.state.insert(column,
+      _formManagement.state.insert(
+          column: column,
           row: row,
           field: field,
           controlKey: controlKey,
@@ -2019,14 +2028,17 @@ class FormManagement {
 
   bool hasControlKey(String controlKey) =>
       _formManagement.hasControlKey(controlKey);
+
+  int get rows => _formManagement.state.formLayout.rows.length;
 }
 
 class _FormLayout {
   final List<_FormRow> rows = [_FormRow()];
 
-  int append() {
-    rows.add(_FormRow());
-    return rows.length - 1;
+  _FormRow append() {
+    _FormRow row = _FormRow();
+    rows.add(row);
+    return row;
   }
 
   _FormRow insert(int index) {
