@@ -202,7 +202,9 @@ formManagement.data; // auto remove null
 formManagement.getData({bool removeNull = false});
 ```
 
-### completely remove a from field
+###  remove a from field 
+
+**not removed from widget tree**
 
 ``` dart
 formManagement.remove(controlKey);
@@ -213,6 +215,71 @@ formManagement.remove(controlKey);
 ``` dart
 formManagement.formThemeData = FormThemeData(themeData);// system theme
 formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+```
+
+### manage FormLayout
+
+#### get FormLayoutManagement
+
+``` dart
+FormLayoutManagement formLayoutManagement = formManagement.formLayoutManagement;
+```
+
+#### get rows
+
+``` dart
+int rows = formLayoutManagement.getRows({bool editing = false}); //if editing is true, return current editing layout rows count , otherwise return form layout rows count
+```
+
+#### get columns
+
+``` dart
+int columns = formLayoutManagement.getColumns(row,{bool editing  false})
+```
+
+#### start edit
+
+``` dart
+formLayoutManagement.startEdit();
+```
+
+### remove field in widget tree
+
+``` dart
+formLayoutManagement.remove(controlKey);
+```
+
+### remove field|row in widget tree by position
+
+``` dart
+formLayoutManagement.removeAtPosition(int row,{int column})
+```
+
+### insert a field
+
+``` dart
+formLayoutManagement.insert(
+      {int column,
+      int row,
+      String controlKey,
+      int flex = 1,
+      bool visible = true,
+      EdgeInsets padding,
+      @required Widget field,
+      bool inline = true,
+      bool insertRow = false})
+```
+
+#### apply
+
+``` dart
+formLayoutManagement.apply();
+```
+
+#### cancel
+
+``` dart
+formLayoutManagement.cancel();
 ```
 
 ## currently support field
