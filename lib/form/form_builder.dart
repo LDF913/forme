@@ -644,7 +644,7 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void initState() {
     super.initState();
-    formLayout = widget._formLayout;
+    formLayout = widget._formLayout.copy();
     _readOnly = widget._readOnly;
     _visible = widget._visible;
     formManagement = _FormManagement(this, widget._formThemeData,
@@ -738,7 +738,7 @@ class _FormBuilderState extends State<FormBuilder> {
     widget.nextLine();
 
     if (!oldWidget._formLayout.compare(widget._formLayout)) {
-      formLayout = widget._formLayout;
+      formLayout = widget._formLayout.copy();
     }
 
     Set<String> locations = {};
@@ -2060,6 +2060,12 @@ class _FormLayout {
     }
     return true;
   }
+
+  _FormLayout copy() {
+    _FormLayout layout = _FormLayout();
+    layout.rows.addAll(rows.map((e) => e.copy()).toList());
+    return layout;
+  }
 }
 
 class _FormRow {
@@ -2104,5 +2110,12 @@ class _FormRow {
       }
     }
     return true;
+  }
+
+  _FormRow copy() {
+    _FormRow row = _FormRow();
+    row.stretchable = stretchable;
+    row.builders.addAll(List.of(builders));
+    return row;
   }
 }
