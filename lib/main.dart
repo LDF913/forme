@@ -600,15 +600,31 @@ class Button extends CommonField {
                     borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                     highlightColor: Colors.transparent,
                     onTap: () {
-                      FormManagement.of(context).insert(0,
-                          inline: true,
-                          flex: 1,
-                          field: NumberFormField(),
-                          controlKey: 'num',
-                          insertColumn: true);
-                      Map<String, Widget> widgets = FormManagement.of(context)
-                          .data
-                          .map((key, value) => MapEntry(
+                      FormManagement management = FormManagement.of(context);
+                      if (!management.hasControlKey('num')) {
+                        management.startEdit();
+                        management.insert(2,
+                            field: Label("new row"),
+                            inline: true,
+                            flex: 2,
+                            insertColumn: true);
+                        management.insert(2,
+                            inline: true,
+                            flex: 3,
+                            field: NumberFormField(),
+                            controlKey: 'num');
+                        management.apply();
+                        management.setValue('num',
+                            123); //this will not work,because num will be added to form at next frame
+
+                        WidgetsBinding.instance
+                            .addPostFrameCallback((timeStamp) {
+                          management.setValue('num', 123);
+                        });
+                      }
+
+                      Map<String, Widget> widgets =
+                          management.data.map((key, value) => MapEntry(
                               key,
                               Row(
                                 children: [

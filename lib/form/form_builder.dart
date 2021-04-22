@@ -633,8 +633,12 @@ class _FormBuilderState extends State<FormBuilder> {
   bool _readOnly;
   bool _visible;
 
+  bool edit = false;
+
   _FormLayout formLayout;
   _FormManagement formManagement;
+
+  List<VoidCallback> actions = [];
 
   @override
   void initState() {
@@ -672,6 +676,21 @@ class _FormBuilderState extends State<FormBuilder> {
     }
   }
 
+  void startEdit() {
+    if (!edit) edit = true;
+  }
+
+  void apply() {
+    assert(edit);
+    setState(() {
+      edit = false;
+      for (VoidCallback callback in actions) {
+        callback();
+      }
+      actions.clear();
+    });
+  }
+
   void insert(int column,
       {int row,
       String controlKey,
@@ -681,6 +700,7 @@ class _FormBuilderState extends State<FormBuilder> {
       @required Widget field,
       bool inline = true,
       bool insertColumn = false}) {
+    assert(edit, 'you should call startEdit first!');
     assert(field is ValueField || field is CommonField,
         'field must valuefield or commonfield');
     assert(column >= 0 &&
@@ -695,7 +715,7 @@ class _FormBuilderState extends State<FormBuilder> {
         inline: inline,
         padding: padding,
         child: field);
-    setState(() {
+    actions.add(() {
       if (row == null)
         formRow.append(builder);
       else
@@ -716,8 +736,10 @@ class _FormBuilderState extends State<FormBuilder> {
     formManagement.dPrint("form didUpdateWidget");
     widget.nextLine();
 
-    formLayout = widget._formLayout;
-    formLayout.removeEmptyRow();
+    if (!oldWidget._formLayout.compare(widget._formLayout)) {
+      formLayout = widget._formLayout;
+    }
+
     Set<String> locations = {};
     int row = 0;
 
@@ -1731,6 +1753,8 @@ class _FormManagement extends ChangeNotifier {
     return null;
   }
 
+  bool hasControlKey(String controlKey) => states.containsKey(controlKey);
+
   _BaseFieldState getBaseFieldState(String controlKey) {
     return valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
   }
@@ -1962,7 +1986,12 @@ class FormManagement {
   /// remove a field completely
   void remove(String controlKey) => _formManagement.remove(controlKey);
 
-  /// insert a field at position
+  /// when you call insert method ,you should call this method first!
+  void startEdit() => _formManagement.state.startEdit();
+
+  bool get isEditing => _formManagement.state.edit;
+
+  /// insert a field at position,before you call this method, you must call startEdit first,and call apply after finished
   ///
   /// for better performance , you'd use setVisible rather than this method ,
   /// setVisible only affect one or several fields,but this method will rebuild form,
@@ -1987,6 +2016,12 @@ class FormManagement {
           padding: padding,
           inline: inline ?? true,
           insertColumn: insertColumn ?? false);
+
+  /// after inserted fields, you should call this method to build form
+  void apply() => _formManagement.state.apply();
+
+  bool hasControlKey(String controlKey) =>
+      _formManagement.hasControlKey(controlKey);
 }
 
 class _FormLayout {
@@ -2009,6 +2044,20 @@ class _FormLayout {
 
   void removeEmptyRow() {
     rows.removeWhere((element) => element.builders.isEmpty);
+  }
+
+  bool compare(_FormLayout other) {
+    removeEmptyRow();
+    other.removeEmptyRow();
+    if (rows.length != other.rows.length) return false;
+    for (int i = 0; i < rows.length; i++) {
+      _FormRow row = rows[i];
+      _FormRow otherRow = other.rows[i];
+      if (!row.compare(otherRow)) {
+        return false;
+      }
+    }
+    return true;
   }
 }
 
@@ -2042,5 +2091,17 @@ class _FormRow {
     else {
       builders.insert(index, builder);
     }
+  }
+
+  bool compare(_FormRow other) {
+    if (builders.length != other.builders.length) return false;
+    for (int i = 0; i < builders.length; i++) {
+      _FormItemBuilder builder = builders[i];
+      _FormItemBuilder otherBuilder = other.builders[i];
+      if (builder.child.runtimeType != otherBuilder.child.runtimeType) {
+        return false;
+      }
+    }
+    return true;
   }
 }
