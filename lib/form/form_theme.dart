@@ -30,6 +30,8 @@ class FormThemeData {
                 : themeData.hintColor)
         .merge(inputDecorationTheme.labelStyle);
   }
+
+  static final defaultTheme = DefaultFormThemeData._();
 }
 
 class HexColor extends Color {
@@ -42,57 +44,6 @@ class HexColor extends Color {
     }
     return int.parse(hexColor, radix: 16);
   }
-}
-
-class CheckboxGroupTheme {
-  final TextStyle labelStyle;
-  final EdgeInsets itemsPadding;
-  final EdgeInsets errorTextPadding;
-
-  const CheckboxGroupTheme({
-    this.labelStyle,
-    this.itemsPadding,
-    this.errorTextPadding,
-  });
-
-  CheckboxGroupTheme copyWith({
-    TextStyle labelStyle,
-    EdgeInsets itemsPadding,
-    EdgeInsets errorTextPadding,
-    Color selectedColor,
-    Color unselectedColor,
-    Color disabledColor,
-  }) {
-    return CheckboxGroupTheme(
-      labelStyle: labelStyle ?? this.labelStyle,
-      itemsPadding: itemsPadding ?? this.itemsPadding,
-      errorTextPadding: errorTextPadding ?? this.errorTextPadding,
-    );
-  }
-}
-
-class RadioGroupTheme extends CheckboxGroupTheme {
-  const RadioGroupTheme({
-    TextStyle labelStyle,
-    EdgeInsets itemsPadding,
-    EdgeInsets errorTextPadding,
-  }) : super(
-          errorTextPadding: errorTextPadding,
-          labelStyle: labelStyle,
-          itemsPadding: itemsPadding,
-        );
-}
-
-class SwitchGroupTheme extends CheckboxGroupTheme {
-  const SwitchGroupTheme({
-    TextStyle labelStyle,
-    EdgeInsets itemsPadding,
-    EdgeInsets errorTextPadding,
-  }) : super(
-          errorTextPadding: errorTextPadding,
-          labelStyle: labelStyle,
-          itemsPadding: itemsPadding,
-        );
 }
 
 //copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
