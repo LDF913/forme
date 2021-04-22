@@ -320,6 +320,7 @@ class FormBuilder extends StatefulWidget {
               visible: visible,
               inline: true,
               controlKey: controlKey,
+              padding: padding,
               flex: flex,
               child: DateTimeFormField(
                   key: key,
@@ -1473,7 +1474,7 @@ class _FormItemBuilder {
       this.inline = false})
       : this.visible = visible ?? true,
         this.flex = flex ?? 1,
-        this.padding = padding ?? EdgeInsets.zero;
+        this.padding = padding;
 }
 
 class _FormManagement extends ChangeNotifier {
