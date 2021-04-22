@@ -644,7 +644,7 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void initState() {
     super.initState();
-    formLayout = widget._formLayout.copy();
+    formLayout = widget._formLayout;
     _readOnly = widget._readOnly;
     _visible = widget._visible;
     formManagement = _FormManagement(this, widget._formThemeData,
@@ -736,11 +736,7 @@ class _FormBuilderState extends State<FormBuilder> {
     super.didUpdateWidget(oldWidget);
     formManagement.dPrint("form didUpdateWidget");
     widget.nextLine();
-
-    if (!oldWidget._formLayout.compare(widget._formLayout)) {
-      formLayout = widget._formLayout.copy();
-    }
-
+    formLayout = widget._formLayout;
     Set<String> locations = {};
     int row = 0;
 
@@ -2046,26 +2042,6 @@ class _FormLayout {
   void removeEmptyRow() {
     rows.removeWhere((element) => element.builders.isEmpty);
   }
-
-  bool compare(_FormLayout other) {
-    removeEmptyRow();
-    other.removeEmptyRow();
-    if (rows.length != other.rows.length) return false;
-    for (int i = 0; i < rows.length; i++) {
-      _FormRow row = rows[i];
-      _FormRow otherRow = other.rows[i];
-      if (!row.compare(otherRow)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  _FormLayout copy() {
-    _FormLayout layout = _FormLayout();
-    layout.rows.addAll(rows.map((e) => e.copy()).toList());
-    return layout;
-  }
 }
 
 class _FormRow {
@@ -2098,24 +2074,5 @@ class _FormRow {
     else {
       builders.insert(index, builder);
     }
-  }
-
-  bool compare(_FormRow other) {
-    if (builders.length != other.builders.length) return false;
-    for (int i = 0; i < builders.length; i++) {
-      _FormItemBuilder builder = builders[i];
-      _FormItemBuilder otherBuilder = other.builders[i];
-      if (builder.child.runtimeType != otherBuilder.child.runtimeType) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  _FormRow copy() {
-    _FormRow row = _FormRow();
-    row.stretchable = stretchable;
-    row.builders.addAll(List.of(builders));
-    return row;
   }
 }

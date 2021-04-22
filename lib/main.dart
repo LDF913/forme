@@ -516,6 +516,7 @@ class _MyHomePageState extends State<MyHomePage> {
             controlKey: 'sliderInline',
             min: 0,
             max: 100,
+            initialValue: 10,
             inline: true,
             onChanged: (v) {
               formManagement.setValue('sliderInlineText', v.round(),
