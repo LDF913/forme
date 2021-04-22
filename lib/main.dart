@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/form/slider.dart';
 import 'package:flutter_application_1/form/switch_group.dart';
+import 'package:flutter_application_1/form/text_field.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'form/checkbox_group.dart';
@@ -599,6 +600,12 @@ class Button extends CommonField {
                     borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                     highlightColor: Colors.transparent,
                     onTap: () {
+                      FormManagement.of(context).insert(0,
+                          inline: true,
+                          flex: 1,
+                          field: NumberFormField(),
+                          controlKey: 'num',
+                          insertColumn: true);
                       Map<String, Widget> widgets = FormManagement.of(context)
                           .data
                           .map((key, value) => MapEntry(
