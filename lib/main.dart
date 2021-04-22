@@ -603,18 +603,25 @@ class Button extends CommonField {
                     onTap: () {
                       FormManagement management = FormManagement.of(context);
                       if (!management.hasControlKey('num')) {
-                        management.startEdit();
-                        management.insert(
+                        FormLayoutManagement formLayoutManagement =
+                            management.formLayoutManagement;
+                        formLayoutManagement.startEdit();
+                        formLayoutManagement.removeAtPosition(0);
+                        int row =
+                            formLayoutManagement.getRows(editing: true) - 1;
+                        formLayoutManagement.insert(
+                            row: row,
                             field: Label("new row"),
                             inline: true,
                             flex: 2,
-                            insertColumn: true);
-                        management.insert(
+                            insertRow: true);
+                        formLayoutManagement.insert(
+                            row: row,
                             inline: true,
                             flex: 3,
                             field: NumberFormField(),
                             controlKey: 'num');
-                        management.apply();
+                        formLayoutManagement.apply();
                         management.setValue('num',
                             123); //this will not work,because num will be added to form at next frame
 

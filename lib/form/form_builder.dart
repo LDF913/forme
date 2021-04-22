@@ -46,6 +46,11 @@ class FormBuilder extends StatefulWidget {
   final FormManagement formManagement;
   final bool enableDebugPrint;
 
+  FormBuilder nextLine() {
+    _formLayout.lastEmptyRow();
+    return this;
+  }
+
   FormBuilder(
       {bool readOnly,
       bool visible,
@@ -57,12 +62,6 @@ class FormBuilder extends StatefulWidget {
         this._visible = visible ?? true,
         this.formManagement = formManagement ?? FormManagement(),
         this.enableDebugPrint = enableDebugPrint ?? true;
-
-  /// add an empty row
-  FormBuilder nextLine() {
-    if (_formLayout.last().builders.isNotEmpty) _formLayout.append();
-    return this;
-  }
 
   /// append a number field to current row
   FormBuilder numberField(
@@ -88,7 +87,7 @@ class FormBuilder extends StatefulWidget {
       VoidCallback onEditingComplete,
       TextInputAction textInputAction,
       InputDecorationTheme inputDecorationTheme}) {
-    _formLayout.last().append(_FormItemBuilder(
+    _formLayout.lastStretchableRow().append(_FormItemBuilder(
         visible: visible,
         controlKey: controlKey,
         flex: flex,
@@ -145,7 +144,7 @@ class FormBuilder extends StatefulWidget {
       TextInputAction textInputAction,
       List<TextInputFormatter> textInputFormatters,
       InputDecorationTheme inputDecorationTheme}) {
-    _formLayout.last().append(_FormItemBuilder(
+    _formLayout.lastStretchableRow().append(_FormItemBuilder(
         visible: visible,
         controlKey: controlKey,
         flex: flex,
@@ -198,27 +197,27 @@ class FormBuilder extends StatefulWidget {
     EdgeInsets errorTextPadding,
   }) {
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          flex: inline ? flex : 1,
-          inline: inline,
-          child: RadioGroup(
-            List.of(items),
-            key: key,
-            label: label,
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            onChanged: onChanged,
-            split: split,
-            readOnly: readOnly,
-            initialValue: initialValue,
-            inline: inline,
-            errorTextPadding: errorTextPadding,
-          ),
-        ));
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      flex: inline ? flex : 1,
+      inline: inline,
+      child: RadioGroup(
+        List.of(items),
+        key: key,
+        label: label,
+        validator: validator,
+        autovalidateMode: autovalidateMode,
+        onChanged: onChanged,
+        split: split,
+        readOnly: readOnly,
+        initialValue: initialValue,
+        inline: inline,
+        errorTextPadding: errorTextPadding,
+      ),
+    ));
     return this;
   }
 
@@ -237,27 +236,27 @@ class FormBuilder extends StatefulWidget {
       EdgeInsets errorTextPadding,
       bool inline = false}) {
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          inline: inline,
-          flex: inline ? flex : 1,
-          child: CheckboxGroup(
-            List.of(items),
-            key: key,
-            errorTextPadding: errorTextPadding,
-            label: label,
-            validator: validator,
-            onChanged: onChanged,
-            autovalidateMode: autovalidateMode,
-            split: split,
-            readOnly: readOnly,
-            initialValue: initialValue,
-            inline: inline,
-          ),
-        ));
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      inline: inline,
+      flex: inline ? flex : 1,
+      child: CheckboxGroup(
+        List.of(items),
+        key: key,
+        errorTextPadding: errorTextPadding,
+        label: label,
+        validator: validator,
+        onChanged: onChanged,
+        autovalidateMode: autovalidateMode,
+        split: split,
+        readOnly: readOnly,
+        initialValue: initialValue,
+        inline: inline,
+      ),
+    ));
     return this;
   }
 
@@ -270,7 +269,7 @@ class FormBuilder extends StatefulWidget {
       bool readOnly = false,
       bool visible = true,
       EdgeInsets padding}) {
-    _formLayout.last().append(
+    _formLayout.lastStretchableRow().append(
           _FormItemBuilder(
               visible: visible,
               controlKey: controlKey,
@@ -315,7 +314,7 @@ class FormBuilder extends StatefulWidget {
       ValueChanged<DateTime> onChanged,
       DateTime initialValue,
       InputDecorationTheme inputDecorationTheme}) {
-    _formLayout.last().append(
+    _formLayout.lastStretchableRow().append(
           _FormItemBuilder(
               visible: visible,
               inline: true,
@@ -366,35 +365,35 @@ class FormBuilder extends StatefulWidget {
     int flex = 1,
   }) {
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(
-          _FormItemBuilder(
-              visible: visible,
-              controlKey: controlKey,
-              flex: inline ? flex : 1,
-              inline: inline,
-              child: SelectorFormField(selectItemProvider,
-                  onChanged: onChanged,
-                  labelText: labelText,
-                  hintText: hintText,
-                  clearable: clearable,
-                  validator: validator,
-                  autovalidateMode: autovalidateMode,
-                  readOnly: readOnly,
-                  multi: multi,
-                  initialValue: initialValue,
-                  selectedChecker: selectedChecker,
-                  selectItemRender: selectItemRender,
-                  selectedItemRender: selectedItemRender,
-                  selectedSorter: selectedSorter,
-                  onTap: onTap,
-                  selectedItemLayoutType: selectedItemLayoutType,
-                  queryFormBuilder: queryFormBuilder,
-                  onSelectDialogShow: onSelectDialogShow,
-                  inputDecorationTheme: inputDecorationTheme)),
-        );
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
+          flex: inline ? flex : 1,
+          inline: inline,
+          child: SelectorFormField(selectItemProvider,
+              onChanged: onChanged,
+              labelText: labelText,
+              hintText: hintText,
+              clearable: clearable,
+              validator: validator,
+              autovalidateMode: autovalidateMode,
+              readOnly: readOnly,
+              multi: multi,
+              initialValue: initialValue,
+              selectedChecker: selectedChecker,
+              selectItemRender: selectItemRender,
+              selectedItemRender: selectedItemRender,
+              selectedSorter: selectedSorter,
+              onTap: onTap,
+              selectedItemLayoutType: selectedItemLayoutType,
+              queryFormBuilder: queryFormBuilder,
+              onSelectDialogShow: onSelectDialogShow,
+              inputDecorationTheme: inputDecorationTheme)),
+    );
     inline ??= false;
-    if (!inline) nextLine();
     return this;
   }
 
@@ -403,25 +402,24 @@ class FormBuilder extends StatefulWidget {
       double height = 1.0,
       bool visible = true,
       EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 5)}) {
-    nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          flex: 1,
-          inline: false,
-          padding: padding,
-          child: CommonField(
-            {'height': height ?? 1.0},
-            readOnly: true,
-            builder:
-                (state, context, readOnly, stateMap, themeData, formThemeData) {
-              return Divider(
-                height: stateMap['height'],
-              );
-            },
-          ),
-        ));
-    nextLine();
+    _FormRow row = _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      flex: 1,
+      inline: false,
+      padding: padding,
+      child: CommonField(
+        {'height': height ?? 1.0},
+        readOnly: true,
+        builder:
+            (state, context, readOnly, stateMap, themeData, formThemeData) {
+          return Divider(
+            height: stateMap['height'],
+          );
+        },
+      ),
+    ));
     return this;
   }
 
@@ -443,27 +441,27 @@ class FormBuilder extends StatefulWidget {
     int flex = 1,
   }) {
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          flex: inline ? flex : 1,
-          padding: padding,
-          inline: inline,
-          child: SwitchGroupFormField(
-            label: label,
-            readOnly: readOnly,
-            items: items ?? [],
-            hasSelectAllSwitch: hasSelectAllSwitch ?? true,
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            initialValue: initialValue,
-            onChanged: onChanged,
-            errorTextPadding: errorTextPadding,
-            selectAllPadding: selectAllPadding,
-          ),
-        ));
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      flex: inline ? flex : 1,
+      padding: padding,
+      inline: inline,
+      child: SwitchGroupFormField(
+        label: label,
+        readOnly: readOnly,
+        items: items ?? [],
+        hasSelectAllSwitch: hasSelectAllSwitch ?? true,
+        validator: validator,
+        autovalidateMode: autovalidateMode,
+        initialValue: initialValue,
+        onChanged: onChanged,
+        errorTextPadding: errorTextPadding,
+        selectAllPadding: selectAllPadding,
+      ),
+    ));
     return this;
   }
 
@@ -477,7 +475,7 @@ class FormBuilder extends StatefulWidget {
       FormFieldValidator<bool> validator,
       AutovalidateMode autovalidateMode,
       bool initialValue}) {
-    _formLayout.last().append(_FormItemBuilder(
+    _formLayout.lastStretchableRow().append(_FormItemBuilder(
           visible: visible,
           controlKey: controlKey,
           padding: padding,
@@ -512,29 +510,29 @@ class FormBuilder extends StatefulWidget {
       bool inline = false,
       int flex}) {
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          flex: inline ? flex : 1,
-          padding: padding,
-          inline: inline,
-          child: SliderFormField(
-            readOnly: readOnly,
-            autovalidateMode: autovalidateMode,
-            onChanged: onChanged,
-            validator: validator,
-            min: min,
-            max: max,
-            label: label,
-            divisions: divisions,
-            initialValue: initialValue ?? min,
-            subLabelRender: subLabelRender,
-            inline: inline,
-            contentPadding: contentPadding,
-          ),
-        ));
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      flex: inline ? flex : 1,
+      padding: padding,
+      inline: inline,
+      child: SliderFormField(
+        readOnly: readOnly,
+        autovalidateMode: autovalidateMode,
+        onChanged: onChanged,
+        validator: validator,
+        min: min,
+        max: max,
+        label: label,
+        divisions: divisions,
+        initialValue: initialValue ?? min,
+        subLabelRender: subLabelRender,
+        inline: inline,
+        contentPadding: contentPadding,
+      ),
+    ));
     return this;
   }
 
@@ -554,28 +552,28 @@ class FormBuilder extends StatefulWidget {
       RangeSubLabelRender rangeSubLabelRender,
       EdgeInsets contentPadding,
       bool inline = false}) {
-    if (!inline) nextLine();
-    _formLayout.last().append(_FormItemBuilder(
-          visible: visible,
-          controlKey: controlKey,
-          flex: 1,
-          inline: inline,
-          child: RangeSliderFormField(
-            readOnly: readOnly,
-            autovalidateMode: autovalidateMode,
-            onChanged: onChanged,
-            validator: validator,
-            min: min,
-            max: max,
-            label: inline ? null : label,
-            divisions: divisions,
-            initialValue: initialValue ?? RangeValues(min, max),
-            inline: inline ?? false,
-            rangeSubLabelRender: rangeSubLabelRender,
-            contentPadding: contentPadding,
-          ),
-        ));
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(_FormItemBuilder(
+      visible: visible,
+      controlKey: controlKey,
+      flex: 1,
+      inline: inline,
+      child: RangeSliderFormField(
+        readOnly: readOnly,
+        autovalidateMode: autovalidateMode,
+        onChanged: onChanged,
+        validator: validator,
+        min: min,
+        max: max,
+        label: inline ? null : label,
+        divisions: divisions,
+        initialValue: initialValue ?? RangeValues(min, max),
+        inline: inline ?? false,
+        rangeSubLabelRender: rangeSubLabelRender,
+        contentPadding: contentPadding,
+      ),
+    ));
     return this;
   }
 
@@ -589,17 +587,17 @@ class FormBuilder extends StatefulWidget {
     assert(field is ValueField || field is CommonField,
         'field must valuefield or commonfield');
     inline ??= false;
-    if (!inline) nextLine();
-    _formLayout.last().append(
-          _FormItemBuilder(
-              visible: visible,
-              controlKey: controlKey,
-              flex: flex,
-              inline: inline,
-              padding: padding,
-              child: field),
-        );
-    if (!inline) nextLine();
+    _FormRow row =
+        inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
+    row.append(
+      _FormItemBuilder(
+          visible: visible,
+          controlKey: controlKey,
+          flex: flex,
+          inline: inline,
+          padding: padding,
+          child: field),
+    );
     return this;
   }
 
@@ -634,12 +632,8 @@ class _FormBuilderState extends State<FormBuilder> {
   bool _readOnly;
   bool _visible;
 
-  bool edit = false;
-
   _FormLayout formLayout;
   _FormManagement formManagement;
-
-  List<VoidCallback> actions = [];
 
   @override
   void initState() {
@@ -677,18 +671,9 @@ class _FormBuilderState extends State<FormBuilder> {
     }
   }
 
-  void startEdit() {
-    if (!edit) edit = true;
-  }
-
-  void apply() {
-    assert(edit);
+  set _formLayout(_FormLayout layout) {
     setState(() {
-      edit = false;
-      for (VoidCallback callback in actions) {
-        callback();
-      }
-      actions.clear();
+      this.formLayout = layout;
     });
   }
 
@@ -701,35 +686,7 @@ class _FormBuilderState extends State<FormBuilder> {
       EdgeInsets padding,
       @required Widget field,
       bool inline = true,
-      bool insertColumn = false}) {
-    assert(edit, 'you should call startEdit first!');
-    assert(field is ValueField || field is CommonField,
-        'field must valuefield or commonfield');
-    assert(column == null ||
-        (column >= 0 &&
-            ((column < formLayout.rows.length && !insertColumn) ||
-                (column <= formLayout.rows.length && insertColumn))));
-    _FormRow formRow = column == null
-        ? insertColumn
-            ? formLayout.append()
-            : formLayout.rows[formLayout.rows.length - 1]
-        : insertColumn
-            ? formLayout.insert(column)
-            : formLayout.rows[column];
-    _FormItemBuilder builder = _FormItemBuilder(
-        visible: visible,
-        controlKey: controlKey,
-        flex: flex,
-        inline: inline,
-        padding: padding,
-        child: field);
-    actions.add(() {
-      if (row == null)
-        formRow.append(builder);
-      else
-        formRow.insert(builder, row);
-    });
-  }
+      bool insertColumn = false}) {}
 
   @override
   void dispose() {
@@ -742,7 +699,6 @@ class _FormBuilderState extends State<FormBuilder> {
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
     formManagement.dPrint("form didUpdateWidget");
-    widget.nextLine();
     formLayout = widget._formLayout;
     Set<String> locations = {};
     int row = 0;
@@ -1987,49 +1943,20 @@ class FormManagement {
   SubControllerDelegate getSubController(String controlKey) =>
       _formManagement.getSubController(controlKey);
 
-  /// remove a field completely
-  void remove(String controlKey) => _formManagement.remove(controlKey);
-
-  /// when you call insert method ,you should call this method first!
-  void startEdit() => _formManagement.state.startEdit();
-
-  bool get isEditing => _formManagement.state.edit;
-
-  /// insert a field at position,before you call this method, you must call startEdit first,and call apply after finished
+  /// mark a field as removed and you can not control this field any more,
+  /// related resources will be disposed after form state disposed,
   ///
-  /// for better performance , you'd use setVisible rather than this method ,
-  /// setVisible only affect one or several fields,but this method will rebuild form,
-  /// especially those fields that does not has a controlKey will also dispose state and create a new one,
-  /// it means you are lost field states
-  /// that you setted via update or rebuild
-  void insert(
-          {int column,
-          int row,
-          String controlKey,
-          int flex = 1,
-          bool visible = true,
-          EdgeInsets padding,
-          @required Widget field,
-          bool inline,
-          bool insertColumn}) =>
-      _formManagement.state.insert(
-          column: column,
-          row: row,
-          field: field,
-          controlKey: controlKey,
-          flex: flex ?? 1,
-          visible: visible ?? true,
-          padding: padding,
-          inline: inline ?? true,
-          insertColumn: insertColumn ?? false);
-
-  /// after inserted fields, you should call this method to build form
-  void apply() => _formManagement.state.apply();
+  /// this method won't remove field in widget tree , so when you get row count var [FormLayoutManagement],
+  /// this field will also be calculated
+  ///
+  /// if you really need to remove a field or a row in widget tree, see [FormLayoutManagement]
+  void remove(String controlKey) => _formManagement.remove(controlKey);
 
   bool hasControlKey(String controlKey) =>
       _formManagement.hasControlKey(controlKey);
 
-  int get rows => _formManagement.state.formLayout.rows.length;
+  FormLayoutManagement get formLayoutManagement =>
+      FormLayoutManagement._(_formManagement);
 }
 
 class _FormLayout {
@@ -2047,12 +1974,30 @@ class _FormLayout {
     return row;
   }
 
-  _FormRow last() {
-    return rows[rows.length - 1];
+  _FormRow lastStretchableRow() {
+    _FormRow lastRow = rows[rows.length - 1];
+    if (lastRow.stretchable) {
+      return lastRow;
+    }
+    return append();
+  }
+
+  _FormRow lastEmptyRow() {
+    _FormRow lastRow = rows[rows.length - 1];
+    if (lastRow.builders.isEmpty) {
+      return lastRow;
+    }
+    return append();
   }
 
   void removeEmptyRow() {
     rows.removeWhere((element) => element.builders.isEmpty);
+  }
+
+  _FormLayout copy() {
+    _FormLayout formLayout = _FormLayout();
+    formLayout.rows.addAll(rows.map((e) => e.copy()).toList());
+    return formLayout;
   }
 }
 
@@ -2072,6 +2017,7 @@ class _FormRow {
 
   void insert(_FormItemBuilder builder, int index) {
     if (builders.isEmpty) {
+      assert(index == 0);
       if (!builder.inline) {
         stretchable = false;
       }
@@ -2086,5 +2032,133 @@ class _FormRow {
     else {
       builders.insert(index, builder);
     }
+  }
+
+  _FormRow copy() {
+    _FormRow row = _FormRow();
+    row.builders.addAll(List.of(builders));
+    row.stretchable = stretchable;
+    return row;
+  }
+}
+
+/// used to control the layout of form
+///
+/// you should call startEdit first and call apply when finished
+class FormLayoutManagement {
+  _FormLayout _formLayout;
+  final _FormManagement _formManagement;
+  FormLayoutManagement._(this._formManagement);
+
+  bool get isEditing => _formLayout != null;
+
+  /// get rows of form
+  ///
+  /// if editing is true get current editing form's rows
+  int getRows({bool editing = false}) {
+    if (editing)
+      assert(_formLayout != null, 'you should call startEdit first!');
+    return editing
+        ? _formLayout.rows.length
+        : _formManagement.state.formLayout.rows.length;
+  }
+
+  /// get columns of a row
+  ///
+  /// if editing is true get current editing form's columns of a row
+  int getColumns(int row, {bool editing = false}) {
+    assert(row >= 0);
+    if (editing)
+      assert(_formLayout != null, 'you should call startEdit first!');
+    _FormRow formRow = editing
+        ? _formLayout.rows[row]
+        : _formManagement.state.formLayout.rows[row];
+    return formRow.builders.length;
+  }
+
+  // remove a field in widget tree
+  // if row only has this field ,it will be also removed
+  void remove(String controlKey) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    _formLayout.rows.forEach((element) {
+      element.builders
+          .removeWhere((element) => element.controlKey == controlKey);
+    });
+  }
+
+  // remove field or a row at position
+  void removeAtPosition(int row, {int column}) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    assert(row >= 0 && row < _formLayout.rows.length);
+    if (column == null) {
+      _formLayout.rows.removeAt(row);
+    } else {
+      _FormRow formRow = _formLayout.rows[row];
+      assert(column >= 0 && column < formRow.builders.length);
+      formRow.builders.removeAt(column);
+    }
+  }
+
+  /// insert a field at position,before you call this method, you must call startEdit first,and call apply after finished
+  ///
+  /// for better performance , you'd use setVisible rather than this method ,
+  /// setVisible only affect one or several fields,but this method will rebuild form,
+  /// especially those fields that does not has a controlKey will also dispose state and create a new one,
+  /// it means you are lost field states
+  /// that you setted via update or rebuild
+  void insert(
+      {int column,
+      int row,
+      String controlKey,
+      int flex = 1,
+      bool visible = true,
+      EdgeInsets padding,
+      @required Widget field,
+      bool inline = true,
+      bool insertRow = false}) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    assert(field is ValueField || field is CommonField,
+        'field must valuefield or commonfield');
+    assert(row == null ||
+        (row >= 0 &&
+            ((row < _formLayout.rows.length && !insertRow) ||
+                (row <= _formLayout.rows.length && insertRow))));
+    _FormRow formRow = row == null
+        ? insertRow
+            ? _formLayout.append()
+            : _formLayout.rows[_formLayout.rows.length - 1]
+        : insertRow
+            ? _formLayout.insert(row)
+            : _formLayout.rows[row];
+    _FormItemBuilder builder = _FormItemBuilder(
+        visible: visible,
+        controlKey: controlKey,
+        flex: flex,
+        inline: inline,
+        padding: padding,
+        child: field);
+    if (column == null)
+      formRow.append(builder);
+    else
+      formRow.insert(builder, column);
+  }
+
+  void startEdit() {
+    assert(_formLayout == null,
+        'call apply first before you call startEdit again');
+    _formLayout = _formManagement.state.formLayout.copy();
+    _formLayout.removeEmptyRow();
+  }
+
+  void cancel() {
+    assert(_formLayout != null, 'call startEdit first before you cancel');
+    _formLayout = null;
+  }
+
+  void apply() {
+    assert(_formLayout != null, 'call startEdit first before you apply');
+    _formLayout.removeEmptyRow();
+    _formManagement.state._formLayout = _formLayout;
+    _formLayout = null;
   }
 }
