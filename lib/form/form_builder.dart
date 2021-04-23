@@ -1439,6 +1439,7 @@ class _FormItemBuilder {
 
 /// used to holder,dipose and get form resources
 ///
+/// this class should  not be accessed by user
 class _FormResourceManagement extends ChangeNotifier {
   _FormBuilderState state;
   final Map<String, ValueNotifier> controllers = {};
@@ -1539,6 +1540,13 @@ class _FormResourceManagement extends ChangeNotifier {
     states.remove(controlKey);
     mapping.remove(controlKey);
     //locationMapping.remove(controlKey);
+  }
+
+  FocusNode getFocusNode(String controlKey) {
+    FocusNode focusNode = focusNodes[controlKey];
+    assert(focusNode != null,
+        'no FocusNode can be founded by controlKey : $controlKey');
+    return focusNode;
   }
 
   _FormItemWidgetState getItemState(String controlKey) {
@@ -1683,16 +1691,12 @@ class FormManagement {
 
   /// request focus on form field
   void requestFocus(String controlKey) {
-    FocusNodes focusNode = _formResourceManagement.focusNodes[controlKey];
-    if (focusNode == null) return;
-    focusNode.requestFocus();
+    _formResourceManagement.getFocusNode(controlKey).requestFocus();
   }
 
   /// unfocus
   void unfocus(String controlKey) {
-    FocusNodes focusNode = _formResourceManagement.focusNodes[controlKey];
-    if (focusNode == null) return;
-    focusNode.unfocus();
+    _formResourceManagement.getFocusNode(controlKey).unfocus();
   }
 
   /// listen form field's focus change
@@ -1895,12 +1899,9 @@ class FormManagement {
 
 /// used to control the layout of form
 class FormLayoutManagement {
-  _FormLayout _formLayout;
   FormWidgetTreeManagement _formWidgetTreeManagement;
   final _FormResourceManagement _formResourceManagement;
   FormLayoutManagement._(this._formResourceManagement);
-
-  bool get isEditing => _formLayout != null;
 
   /// get rows of form
   int get rows => _formResourceManagement.state.formLayout.rows.length;
@@ -1909,6 +1910,15 @@ class FormLayoutManagement {
   int getColumns(int row) {
     assert(row >= 0);
     return _formResourceManagement.state.formLayout.rows[row].builders.length;
+  }
+
+  bool isVisible(int row, {int column}) {
+    List<_FormItemWidgetState> states =
+        _getItemsStateAtPostion(row, column: column);
+    for (_FormItemWidgetState state in states) {
+      if (!state.visible) return false;
+    }
+    return true;
   }
 
   void setVisibleAtPosition(int row, bool visible, {int column}) {
@@ -1964,6 +1974,8 @@ class FormWidgetTreeManagement {
   _FormLayout _formLayout;
   final _FormResourceManagement _formResourceManagement;
   FormWidgetTreeManagement._(this._formResourceManagement);
+
+  bool get isEditing => _formLayout != null;
 
   /// get editing layout rows
   int get rows {
