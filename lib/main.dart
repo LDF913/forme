@@ -102,19 +102,6 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
             ),
-            Row(children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'form2',
-                  style: TextStyle(fontSize: 30),
-                ),
-              ),
-            ]),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: createForm2(),
-            ),
             Builder(
               builder: (context) {
                 return TextButton(
@@ -126,6 +113,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         formManagement.visible ? 'hide form' : 'show form'));
               },
             ),
+            TextButton(
+                onPressed: () {
+                  formManagement.formLayoutManagement
+                      .setVisibleAtPosition(0, false);
+                },
+                child: Text('hide first row')),
+            TextButton(
+                onPressed: () {
+                  formManagement.formLayoutManagement
+                      .setReadOnlyAtPosition(0, true);
+                },
+                child: Text('set first row readonly')),
             Builder(
               builder: (context) {
                 return TextButton(
@@ -266,7 +265,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text('change username\'s label')),
             TextButton(
                 onPressed: () {
-                  formManagement.setSelection('age', 1, 1);
+                  formManagement
+                      .getTextSelectionManagement('age')
+                      .setSelection(1, 1);
                 },
                 child: Text('set age\'s selection')),
             TextButton(
@@ -288,7 +289,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     : FormThemeData.defaultTheme;
               },
               child: Text('change theme'),
-            )
+            ),
+            Row(children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'form2',
+                  style: TextStyle(fontSize: 30),
+                ),
+              ),
+            ]),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+              child: createForm2(),
+            ),
           ]),
         ));
   }
@@ -358,15 +372,6 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     return FormBuilder(formManagement: formManagement)
         .textField(
-            controlKey: 'username', labelText: 'username', clearable: true)
-        .checkboxGroup([CheckboxItem('remember me')],
-            controlKey: 'rememberMe', inline: true)
-        .switchInline(
-          controlKey: 'switch1',
-          onChanged: (value) => print('switch1 value changed $value'),
-        )
-        .nextLine()
-        .textField(
             controlKey: 'password',
             hintText: 'password',
             obscureText: true,
@@ -376,11 +381,17 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
         .textButton((management) {
-          management.selectAll('password');
+          management.getTextSelectionManagement('password').selectAll();
         }, label: 'button')
-        .textButton((management) {
-          management.selectAll('password');
-        }, label: 'button')
+        .nextLine()
+        .textField(
+            controlKey: 'username', labelText: 'username', clearable: true)
+        .checkboxGroup([CheckboxItem('remember me')],
+            controlKey: 'rememberMe', inline: true)
+        .switchInline(
+          controlKey: 'switch1',
+          onChanged: (value) => print('switch1 value changed $value'),
+        )
         .nextLine()
         .numberField(
           controlKey: 'age',
@@ -602,32 +613,35 @@ class Button extends CommonField {
                     highlightColor: Colors.transparent,
                     onTap: () {
                       FormManagement management = FormManagement.of(context);
-                      if (!management.hasControlKey('num')) {
-                        FormLayoutManagement formLayoutManagement =
-                            management.formLayoutManagement;
-                        formLayoutManagement.startEdit();
-                        formLayoutManagement.removeAtPosition(0);
-                        int row =
-                            formLayoutManagement.getRows(editing: true) - 1;
-                        formLayoutManagement.insert(
-                            row: row,
-                            field: Label("new row"),
-                            inline: true,
-                            flex: 2,
-                            insertRow: true);
-                        formLayoutManagement.insert(
-                            row: row,
-                            inline: true,
-                            flex: 3,
-                            field: NumberFormField(),
-                            controlKey: 'num');
-                        formLayoutManagement.apply();
-                        management.setValue('num',
-                            123); //this will not work,because num will be added to form at next frame
+                      if (!management.hasControlKey('num0')) {
+                        FormLayoutEditor editor =
+                            management.formLayoutManagement.formLayoutEditor;
+                        editor.startEdit();
+                        editor.removeAtPosition(0);
+                        for (int i = 0; i <= 10; i++) {
+                          int row = editor.rows - 1;
+                          editor.insert(
+                              row: row,
+                              field: Label("new row"),
+                              inline: true,
+                              flex: 2,
+                              insertRow: true);
+                          editor.insert(
+                              row: row,
+                              inline: true,
+                              flex: 3,
+                              field: NumberFormField(
+                                initialValue: i,
+                              ),
+                              controlKey: 'num$i');
+                        }
+                        editor.apply();
+                        management.setValue('num0',
+                            123); //this will not work,because nums will be added to form at next frame
 
                         WidgetsBinding.instance
                             .addPostFrameCallback((timeStamp) {
-                          management.setValue('num', 123);
+                          management.setValue('num0', 123);
                         });
                       }
 
@@ -652,8 +666,10 @@ class Button extends CommonField {
                             return AlertDialog(
                               content: Container(
                                 width: double.maxFinite,
-                                child: Column(
-                                  children: List.from(widgets.values),
+                                child: SingleChildScrollView(
+                                  child: Column(
+                                    children: List.from(widgets.values),
+                                  ),
                                 ),
                               ),
                             );

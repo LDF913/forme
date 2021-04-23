@@ -582,10 +582,8 @@ class FormBuilder extends StatefulWidget {
       int flex = 0,
       bool visible = true,
       EdgeInsets padding,
-      @required Widget field,
+      @required _BaseField field,
       bool inline}) {
-    assert(field is ValueField || field is CommonField,
-        'field must valuefield or commonfield');
     inline ??= false;
     _FormRow row =
         inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
@@ -602,13 +600,17 @@ class FormBuilder extends StatefulWidget {
   }
 
   static List<CheckboxItem> toCheckboxItems(List<String> items,
-      {EdgeInsets padding}) {
-    return items.map((e) => CheckboxItem(e, padding: padding)).toList();
+      {EdgeInsets padding, TextStyle style}) {
+    return items
+        .map((e) => CheckboxItem(e, padding: padding, textStyle: style))
+        .toList();
   }
 
   static List<RadioItem> toRadioItems(List<String> items,
-      {EdgeInsets padding}) {
-    return items.map((e) => RadioItem(e, e, padding: padding)).toList();
+      {EdgeInsets padding, TextStyle style}) {
+    return items
+        .map((e) => RadioItem(e, e, padding: padding, textStyle: style))
+        .toList();
   }
 
   static SelectItemProvider toSelectItemProvider(List items) {
@@ -620,8 +622,10 @@ class FormBuilder extends StatefulWidget {
   }
 
   static List<SwitchGroupItem> toSwitchGroupItems(List<String> items,
-      {EdgeInsets padding}) {
-    return items.map((e) => SwitchGroupItem(e, padding: padding)).toList();
+      {EdgeInsets padding, TextStyle style}) {
+    return items
+        .map((e) => SwitchGroupItem(e, padding: padding, textStyle: style))
+        .toList();
   }
 
   @override
@@ -633,7 +637,7 @@ class _FormBuilderState extends State<FormBuilder> {
   bool _visible;
 
   _FormLayout formLayout;
-  _FormManagement formManagement;
+  _FormResourceManagement formResourceManagement;
 
   @override
   void initState() {
@@ -641,10 +645,11 @@ class _FormBuilderState extends State<FormBuilder> {
     formLayout = widget._formLayout;
     _readOnly = widget._readOnly;
     _visible = widget._visible;
-    formManagement = _FormManagement(this, widget._formThemeData,
+    formResourceManagement = _FormResourceManagement(
+        this, widget._formThemeData,
         enableDebugPrint: widget.enableDebugPrint);
-    widget.formManagement._formManagement = formManagement;
-    formManagement.addListener(() {
+    widget.formManagement._formResourceManagement = formResourceManagement;
+    formResourceManagement.addListener(() {
       setState(() {});
     });
     if (widget.formManagement._initCallback != null)
@@ -654,10 +659,10 @@ class _FormBuilderState extends State<FormBuilder> {
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
       _readOnly = readOnly ?? false;
-      formManagement.valueFieldStates.values.forEach((element) {
+      formResourceManagement.valueFieldStates.values.forEach((element) {
         element._readOnly = _readOnly;
       });
-      formManagement.commonFieldStates.values.forEach((element) {
+      formResourceManagement.commonFieldStates.values.forEach((element) {
         element._readOnly = _readOnly;
       });
     }
@@ -677,29 +682,19 @@ class _FormBuilderState extends State<FormBuilder> {
     });
   }
 
-  void insert(
-      {int column,
-      int row,
-      String controlKey,
-      int flex = 0,
-      bool visible = true,
-      EdgeInsets padding,
-      @required Widget field,
-      bool inline = true,
-      bool insertColumn = false}) {}
-
   @override
   void dispose() {
-    formManagement.dPrint("form dispose");
-    formManagement.dispose();
+    formResourceManagement.dPrint("form dispose");
+    formResourceManagement.dispose();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    formManagement.dPrint("form didUpdateWidget");
+    formResourceManagement.dPrint("form didUpdateWidget");
     formLayout = widget._formLayout;
+
     Set<String> locations = {};
     int row = 0;
 
@@ -710,19 +705,19 @@ class _FormBuilderState extends State<FormBuilder> {
         locations.add(location);
 
         if (builder.controlKey != null &&
-            formManagement.locationMapping.containsKey(location)) {
-          formManagement
+            formResourceManagement.locationMapping.containsKey(location)) {
+          formResourceManagement
               .dPrint('$location has a new controlKey ,will be disposed');
-          formManagement.locationMapping.remove(location);
+          formResourceManagement.locationMapping.remove(location);
         }
 
-        _FormItemWidgetState state = formManagement.states[location];
+        _FormItemWidgetState state = formResourceManagement.states[location];
         if (state != null) {
           Type currentType = state.widget.child.runtimeType;
           Type childType = builder.child.runtimeType;
           if (currentType != childType) {
-            formManagement.locationMapping.remove(location);
-            formManagement.dPrint(
+            formResourceManagement.locationMapping.remove(location);
+            formResourceManagement.dPrint(
                 '$location type: $childType not match $currentType ,will be disposed');
           }
         }
@@ -731,9 +726,10 @@ class _FormBuilderState extends State<FormBuilder> {
       row++;
     }
 
-    formManagement.locationMapping.removeWhere((key, value) {
+    formResourceManagement.locationMapping.removeWhere((key, value) {
       if (!locations.contains(key)) {
-        formManagement.dPrint('$key not exists any more ,will be disposed');
+        formResourceManagement
+            .dPrint('$key not exists any more ,will be disposed');
         return true;
       }
       return false;
@@ -748,14 +744,14 @@ class _FormBuilderState extends State<FormBuilder> {
       _readOnly = widget._readOnly;
     }
     if (oldWidget._formThemeData != widget._formThemeData) {
-      formManagement._formThemeData = widget._formThemeData;
+      formResourceManagement._formThemeData = widget._formThemeData;
     }
-    _FormManagement old = widget.formManagement._formManagement;
+    _FormResourceManagement old = widget.formManagement._formResourceManagement;
     if (old == null) {
-      widget.formManagement._formManagement =
-          formManagement; // we do not call init again ! formManagement are always same!
+      widget.formManagement._formResourceManagement =
+          formResourceManagement; // we do not call init again ! formManagement are always same!
     } else {
-      assert(old == formManagement,
+      assert(old == formResourceManagement,
           'this form management is used to control another form ,you can not use this form management to control this form ,try to create a new one!');
     }
   }
@@ -774,18 +770,18 @@ class _FormBuilderState extends State<FormBuilder> {
         String controlKey = builder.controlKey;
         if (controlKey == null) {
           controlKey = '$row,$column'; //use location as it's control key
-          formManagement.dPrint(
+          formResourceManagement.dPrint(
               '$controlKey has no specific controlKey,use location instead');
-          key = formManagement.newLocationKey(controlKey);
+          key = formResourceManagement.newLocationKey(controlKey);
         } else {
           assert(
               !controlKey.contains(','), 'controlKey can not contains char , ');
-          key = formManagement.newFieldKey(controlKey);
+          key = formResourceManagement.newFieldKey(controlKey);
         }
         assert(!controlKeys.contains(controlKey),
             'controlkey must unique in a form');
         controlKeys.add(controlKey);
-        children.add(_FormItemWidget(builder, controlKey, key));
+        children.add(_FormItemWidget(builder, controlKey, key, row, column));
         column++;
       }
       rows.add(Row(
@@ -795,12 +791,12 @@ class _FormBuilderState extends State<FormBuilder> {
     }
     controlKeys = null;
     return Theme(
-        data: formManagement._formThemeData.themeData,
+        data: formResourceManagement._formThemeData.themeData,
         child: Visibility(
             visible: _visible,
             maintainState: true,
             child: _FormManagementData(
-              formManagement,
+              formResourceManagement,
               child: Column(
                 children: rows,
               ),
@@ -812,9 +808,12 @@ class _FormItemWidget extends StatefulWidget {
   final String controlKey;
   final int flex;
   final bool visible;
-  final Widget child;
+  final _BaseField child;
   final EdgeInsets padding;
-  _FormItemWidget(_FormItemBuilder builder, this.controlKey, Key key)
+  final int row;
+  final int column;
+  _FormItemWidget(
+      _FormItemBuilder builder, this.controlKey, Key key, this.row, this.column)
       : this.visible = builder.visible,
         this.child = builder.child,
         this.flex = builder.flex,
@@ -830,7 +829,7 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   EdgeInsets _padding;
   bool _removed = false;
 
-  _FormManagement formManagement;
+  _FormResourceManagement formResourceManagement;
 
   get visible => _visible;
   set visible(bool visible) {
@@ -850,7 +849,8 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     }
   }
 
-  get padding => _padding ?? _FormManagement.of(context)._formThemeData.padding;
+  get padding =>
+      _padding ?? _FormResourceManagement.of(context)._formThemeData.padding;
   set padding(EdgeInsets padding) {
     if (!_removed && _padding != padding) {
       setState(() {
@@ -889,9 +889,10 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
     }
 
     if (oldWidget.child.runtimeType != widget.child.runtimeType) {
-      _FormManagement formManagement = _FormManagement.of(context);
-      formManagement.releasedWhenValueFieldDisposed(widget.controlKey);
-      formManagement.dPrint(
+      _FormResourceManagement formResourceManagement =
+          _FormResourceManagement.of(context);
+      formResourceManagement.releasedWhenValueFieldDisposed(widget.controlKey);
+      formResourceManagement.dPrint(
           '${widget.controlKey} type: ${widget.child.runtimeType} not match ${oldWidget.child.runtimeType}  ,will be disposed');
     }
   }
@@ -899,22 +900,22 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   @override
   void deactivate() {
     super.deactivate();
-    formManagement = _FormManagement.of(context);
+    formResourceManagement = _FormResourceManagement.of(context);
   }
 
   @override
   void dispose() {
-    formManagement.releasedWhenFormItemDisposed(widget.controlKey);
-    formManagement.dPrint('${widget.controlKey} form item disposed');
+    formResourceManagement.releasedWhenFormItemDisposed(widget.controlKey);
+    formResourceManagement.dPrint('${widget.controlKey} form item disposed');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _FormResourceManagement.of(context).states[widget.controlKey] = this;
     if (_removed) {
       return SizedBox.shrink();
     }
-    _FormManagement.of(context).states[widget.controlKey] = this;
     return _InheritedControlKey(widget.controlKey,
         child: Flexible(
           fit: visible ? FlexFit.tight : FlexFit.loose,
@@ -945,7 +946,7 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
             builder: (field) {
               K state = field;
               FormThemeData formThemeData =
-                  _FormManagement.of(state.context)._formThemeData;
+                  _FormResourceManagement.of(state.context)._formThemeData;
               return builder(state, state.context, state.readOnly,
                   state._stateMap, formThemeData.themeData, formThemeData);
             },
@@ -959,13 +960,13 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
 class _BaseFieldState<T> extends FormFieldState<T> {
   Map<String, dynamic> _state;
   String controlKey;
-  _FormManagement _formManagement;
+  _FormResourceManagement _formResourceManagement;
 
   /// current widget whether is readonly or not
   ///
   /// **call this method in initController()**
   bool get readOnly =>
-      _formManagement.state._readOnly ||
+      _formResourceManagement.state._readOnly ||
       (getState(FormBuilder.readOnlyKey) ?? false);
 
   /// get current widget's focus node
@@ -973,12 +974,12 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   /// if there's no focus node,will create a new one
   ///
   /// **call this method in initController()**
-  FocusNodes get focusNode => _formManagement.newFocusNode(controlKey);
+  FocusNodes get focusNode => _formResourceManagement.newFocusNode(controlKey);
 
   Map<String, dynamic> get _getInitStateMap =>
       (widget as _BaseField)._initStateMap;
 
-  void dPrint(String msg) => _formManagement.dPrint(msg);
+  void dPrint(String msg) => _formResourceManagement.dPrint(msg);
 
   @override
   void initState() {
@@ -990,7 +991,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     controlKey = _InheritedControlKey.of(context).controlKey;
-    _formManagement = _FormManagement.of(context);
+    _formResourceManagement = _FormResourceManagement.of(context);
   }
 
   set _readOnly(bool readOnly) {
@@ -1096,11 +1097,11 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _formManagement.valueFieldStates[controlKey] = this;
-    controller = _formManagement.controllers[controlKey];
+    _formResourceManagement.valueFieldStates[controlKey] = this;
+    controller = _formResourceManagement.controllers[controlKey];
     if (controller == null) {
       controller = widget.controllerProvider();
-      _formManagement.controllers[controlKey] = controller;
+      _formResourceManagement.controllers[controlKey] = controller;
       controller.addListener(handleUpdate);
       initController();
     }
@@ -1112,8 +1113,8 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   @override
   void dispose() {
-    _formManagement.dPrint('$controlKey value field dispose');
-    _formManagement.releasedWhenValueFieldDisposed(controlKey);
+    _formResourceManagement.dPrint('$controlKey value field dispose');
+    _formResourceManagement.releasedWhenValueFieldDisposed(controlKey);
     super.dispose();
   }
 
@@ -1172,13 +1173,13 @@ class CommonFieldState extends _BaseFieldState<Null> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _formManagement.commonFieldStates[controlKey] = this;
+    _formResourceManagement.commonFieldStates[controlKey] = this;
   }
 
   @override
   void dispose() {
-    _formManagement.dPrint('$controlKey common field dispose');
-    _formManagement.releasedWhenCommonFieldDisposed(controlKey);
+    _formResourceManagement.dPrint('$controlKey common field dispose');
+    _formResourceManagement.releasedWhenCommonFieldDisposed(controlKey);
     super.dispose();
   }
 
@@ -1203,7 +1204,7 @@ class CommonFieldState extends _BaseFieldState<Null> {
   void setValue(Null value) {}
 }
 
-mixin TextSelectionMixin {
+mixin TextSelectionManagement {
   void setSelection(int start, int end);
   void selectAll();
 
@@ -1436,7 +1437,9 @@ class _FormItemBuilder {
         this.padding = padding;
 }
 
-class _FormManagement extends ChangeNotifier {
+/// used to holder,dipose and get form resources
+///
+class _FormResourceManagement extends ChangeNotifier {
   _FormBuilderState state;
   final Map<String, ValueNotifier> controllers = {};
   final Map<String, FocusNode> focusNodes = {};
@@ -1455,7 +1458,7 @@ class _FormManagement extends ChangeNotifier {
 
   FormThemeData _formThemeData;
 
-  _FormManagement(this.state, FormThemeData formThemeData,
+  _FormResourceManagement(this.state, FormThemeData formThemeData,
       {this.enableDebugPrint = false})
       : this._formThemeData = formThemeData;
 
@@ -1538,192 +1541,49 @@ class _FormManagement extends ChangeNotifier {
     //locationMapping.remove(controlKey);
   }
 
-  void requestFocus(String controlKey) {
-    FocusNodes focusNode = focusNodes[controlKey];
-    if (focusNode == null) return;
-    focusNode.requestFocus();
-  }
-
-  void unfocus(String controlKey) {
-    FocusNodes focusNode = focusNodes[controlKey];
-    if (focusNode == null) return;
-    focusNode.unfocus();
-  }
-
-  void onFocusChange(String controlKey, FocusChanged onChanged) {
-    List<FocusChanged> list = focusChangeMap[controlKey];
-    if (list == null) {
-      focusChangeMap[controlKey] = [onChanged];
-    } else {
-      list.add(onChanged);
-    }
-  }
-
-  void offFocusChange(String controlKey, FocusChanged onChanged) {
-    List<FocusChanged> list = focusChangeMap[controlKey];
-    if (list == null) return;
-    list.remove(onChanged);
-  }
-
-  void rebuild(String controlKey, Map<String, dynamic> map) {
-    _BaseFieldState state = getBaseFieldState(controlKey);
-    if (state == null) return;
-    state._rebuild(map);
-  }
-
-  void update(String controlKey, Map<String, dynamic> map) {
-    _BaseFieldState state = getBaseFieldState(controlKey);
-    if (state == null) return;
-    state._update(map);
-  }
-
-  void setVisible(String controlKey, bool visible) {
+  _FormItemWidgetState getItemState(String controlKey) {
     _FormItemWidgetState state = states[controlKey];
-    if (state == null) return;
-    state.visible = visible;
+    assert(
+        state != null, 'not item can be founded by controlKey : $controlKey');
+    return state;
   }
 
-  void setReadOnly(String controlKey, bool readOnly) {
-    _BaseFieldState state = getBaseFieldState(controlKey);
-    if (state == null) return;
-    state._readOnly = readOnly;
-  }
-
-  void setPadding(String controlKey, EdgeInsets padding) {
-    _FormItemWidgetState state = states[controlKey];
-    if (state == null) return;
-    state.padding = padding;
-  }
-
-  EdgeInsets getPadding(String controlKey) {
-    _FormItemWidgetState state = states[controlKey];
-    if (state == null) return null;
-    return state.padding;
-  }
-
-  bool isVisible(String controlKey) {
-    _FormItemWidgetState state = states[controlKey];
-    return state == null ? false : state.visible;
-  }
-
-  bool isReadOnly(String controlKey) {
-    _BaseFieldState state = getBaseFieldState(controlKey);
-    return state == null ? false : state.readOnly;
-  }
-
-  Map<String, dynamic> getData({bool removeNull = true}) {
-    Map<String, dynamic> map = {};
-    valueFieldStates.values.forEach((element) {
-      dynamic value = element.value;
-      if (removeNull && value == null) return;
-      map[element.controlKey] = value;
-    });
-    return map;
-  }
-
-  dynamic getValue(String controlKey) {
+  ValueFieldState getValueFieldState(String controlKey) {
     ValueFieldState state = valueFieldStates[controlKey];
-    if (state == null) return null;
-    return state.value;
+    assert(state != null,
+        'not value field can be founded by controlKey : $controlKey');
+    return state;
   }
 
-  void setValue(String controlKey, dynamic value, {bool trigger = true}) {
-    ValueFieldState state = valueFieldStates[controlKey];
-    if (state == null) return;
-    state.doChangeValue(value, trigger: trigger);
+  TextSelectionManagement getTextSelectionManagement(String controlKey) {
+    var controller = getController(controlKey);
+    assert(controller is TextSelectionManagement,
+        'controller is not implemented TextSelectionManagement');
+    return controller as TextSelectionManagement;
   }
 
-  void reset() {
-    for (final FormFieldState<dynamic> field in valueFieldStates.values)
-      field.reset();
+  SubController getSubController(String controlKey) {
+    var controller = getController(controlKey);
+    assert(controller is SubController,
+        'controller is not implemented SubController');
+    return controller;
   }
 
-  void reset1(String controlKey) {
-    ValueFieldState state = valueFieldStates[controlKey];
-    if (state == null) return;
-    state.reset();
+  _BaseFieldState getBaseFieldState(String controlKey,
+      {bool isRequired = true}) {
+    _BaseFieldState state =
+        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
+    if (isRequired)
+      assert(state == null,
+          'neither value field nor common field can be founded by controlKey : $controlKey');
+    return state;
   }
 
-  bool validate() {
-    bool hasError = false;
-    for (final FormFieldState<dynamic> field in valueFieldStates.values)
-      hasError = !field.validate() || hasError;
-    return !hasError;
-  }
-
-  bool validate1(String controlKey) {
-    ValueFieldState state = valueFieldStates[controlKey];
-    if (state == null) return true;
-    return state.validate();
-  }
-
-  bool get isValid {
-    bool hasError = false;
-    for (final FormFieldState<dynamic> field in valueFieldStates.values)
-      hasError = !field.isValid || hasError;
-    return !hasError;
-  }
-
-  bool isValid1(String controlKey) {
-    ValueFieldState state = valueFieldStates[controlKey];
-    if (state == null) return true;
-    return state.isValid;
-  }
-
-  void setSelection(String controlKey, int start, int end) {
-    TextSelectionMixin controller = getTextSelectionMixin(controlKey);
-    if (controller != null) controller.setSelection(start, end);
-  }
-
-  void selectAll(String controlKey) {
-    TextSelectionMixin controller = getTextSelectionMixin(controlKey);
-    if (controller != null) controller.selectAll();
-  }
-
-  void remove(String controlKey) {
-    _FormItemWidgetState state = states[controlKey];
-    if (state == null) return;
-    state.remove();
-  }
-
-  void removeState(String controlKey, Set<String> stateKeys) {
-    _BaseFieldState state = getBaseFieldState(controlKey);
-    if (state == null) return;
-    state._remove(stateKeys);
-  }
-
-  void setAutovalidateMode(
-      String controlkey, AutovalidateMode autovalidateMode) {
-    ValueFieldState state = valueFieldStates[controlkey];
-    if (state == null) return;
-    state._setAutoValidateMode(autovalidateMode);
-  }
-
-  void setInitialValue(String controlkey, dynamic initialValue) {
-    ValueFieldState state = valueFieldStates[controlkey];
-    if (state == null) return;
-    state._setInitialValue(initialValue);
-  }
-
-  SubControllerDelegate getSubController(String controlKey) {
+  ChangeNotifier getController(String controlKey) {
     var controller = controllers[controlKey];
-    if (controller != null && controller is SubController) {
-      return SubControllerDelegate._(controller);
-    }
-    return null;
-  }
-
-  bool hasControlKey(String controlKey) => states.containsKey(controlKey);
-
-  _BaseFieldState getBaseFieldState(String controlKey) {
-    return valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
-  }
-
-  TextSelectionMixin getTextSelectionMixin(String controlKey) {
-    var controller = controllers[controlKey];
-    if (controller != null && controller is TextSelectionMixin)
-      return controller as TextSelectionMixin;
-    return null;
+    assert(controller != null,
+        'no controller can be founded by controlKey : $controlKey');
+    return controller;
   }
 
   @override
@@ -1746,7 +1606,7 @@ class _FormManagement extends ChangeNotifier {
     super.dispose();
   }
 
-  static _FormManagement of(BuildContext context) {
+  static _FormResourceManagement of(BuildContext context) {
     return context
         .dependOnInheritedWidgetOfExactType<_FormManagementData>()
         .data;
@@ -1760,7 +1620,7 @@ class _FormManagement extends ChangeNotifier {
 }
 
 class _FormManagementData extends InheritedWidget {
-  final _FormManagement data;
+  final _FormResourceManagement data;
 
   _FormManagementData(this.data, {Widget child}) : super(child: child);
 
@@ -1790,158 +1650,222 @@ class _FormManagementData extends InheritedWidget {
 /// **a initCallback will only be called once in form state's lifecycle due to _FormManagement's instance won't change**
 class FormManagement {
   static FormManagement of(BuildContext context) {
-    return FormManagement._(_FormManagement.of(context));
+    return FormManagement._(_FormResourceManagement.of(context));
   }
 
-  _FormManagement _formManagement;
+  _FormResourceManagement _formResourceManagement;
+  FormLayoutManagement _formLayoutManagement;
 
   final VoidCallback _initCallback;
 
-  FormManagement._(this._formManagement) : this._initCallback = null;
+  FormManagement._(this._formResourceManagement) : this._initCallback = null;
   FormManagement({VoidCallback initCallback})
-      : this._formManagement = null,
+      : this._formResourceManagement = null,
         this._initCallback = initCallback;
 
   ///  whether form is visible or not
-  bool get visible => _formManagement.state._visible;
+  bool get visible => _formResourceManagement.state._visible;
 
   /// set form visible after build
-  set visible(bool visible) => _formManagement.state.visible = visible;
+  set visible(bool visible) => _formResourceManagement.state.visible = visible;
 
   ///  whether form is readOnly or not
-  bool get readOnly => _formManagement.state._readOnly;
-  set readOnly(bool readOnly) => _formManagement.state.readOnly = readOnly;
+  bool get readOnly => _formResourceManagement.state._readOnly;
+  set readOnly(bool readOnly) =>
+      _formResourceManagement.state.readOnly = readOnly;
 
   /// get current FormThemeData
-  FormThemeData get formThemeData => _formManagement._formThemeData;
+  FormThemeData get formThemeData => _formResourceManagement._formThemeData;
 
   /// set a new theme to form
   ///
   /// this will rebuild all fields
   set formThemeData(FormThemeData formThemeData) =>
-      _formManagement.formThemeData = formThemeData;
+      _formResourceManagement.formThemeData = formThemeData;
 
   /// request focus on form field
-  ///
-  /// nothing  happened if controlKey is not exists or field is not focusable
-  void requestFocus(String controlKey) =>
-      _formManagement.requestFocus(controlKey);
+  void requestFocus(String controlKey) {
+    FocusNodes focusNode = _formResourceManagement.focusNodes[controlKey];
+    if (focusNode == null) return;
+    focusNode.requestFocus();
+  }
 
   /// unfocus
-  ///
-  /// nothing  happened if controlKey is not exists or field is not focusable
-  void unfocus(String controlKey) => _formManagement.unfocus(controlKey);
+  void unfocus(String controlKey) {
+    FocusNodes focusNode = _formResourceManagement.focusNodes[controlKey];
+    if (focusNode == null) return;
+    focusNode.unfocus();
+  }
 
   /// listen form field's focus change
-  void onFocusChange(String controlKey, FocusChanged onChanged) =>
-      _formManagement.onFocusChange(controlKey, onChanged);
+  void onFocusChange(String controlKey, FocusChanged onChanged) {
+    List<FocusChanged> list =
+        _formResourceManagement.focusChangeMap[controlKey];
+    if (list == null) {
+      _formResourceManagement.focusChangeMap[controlKey] = [onChanged];
+    } else {
+      list.add(onChanged);
+    }
+  }
 
   /// stop listen form field's focus change
-  void offFocusChange(String controlKey, FocusChanged onChanged) =>
-      _formManagement.offFocusChange(controlKey, onChanged);
+  void offFocusChange(String controlKey, FocusChanged onChanged) {
+    List<FocusChanged> list =
+        _formResourceManagement.focusChangeMap[controlKey];
+    if (list == null) return;
+    list.remove(onChanged);
+  }
 
-  void rebuild(String controlKey, Map<String, dynamic> map) =>
-      _formManagement.rebuild(controlKey, map);
-  void update(String controlKey, Map<String, dynamic> map) =>
-      _formManagement.update(controlKey, map);
-  void removeState(String controlKey, Set<String> stateKeys) =>
-      _formManagement.removeState(controlKey, stateKeys);
+  void rebuild(String controlKey, Map<String, dynamic> map) {
+    _formResourceManagement.getBaseFieldState(controlKey)._rebuild(map);
+  }
 
-  void setVisible(String controlKey, bool visible) =>
-      _formManagement.setVisible(controlKey, visible);
+  void update(String controlKey, Map<String, dynamic> map) {
+    _formResourceManagement.getBaseFieldState(controlKey)._update(map);
+  }
+
+  void removeState(String controlKey, Set<String> stateKeys) {
+    _formResourceManagement.getBaseFieldState(controlKey)._remove(stateKeys);
+  }
+
+  void setVisible(String controlKey, bool visible) {
+    _formResourceManagement.getItemState(controlKey).visible = visible;
+  }
 
   /// whether form field is visible or not
-  bool isVisible(String controlKey) => _formManagement.isVisible(controlKey);
+  bool isVisible(String controlKey) {
+    return _formResourceManagement.getItemState(controlKey).visible;
+  }
 
   /// set field's readOnly state
-  void setReadOnly(String controlKey, bool readOnly) =>
-      _formManagement.setReadOnly(controlKey, readOnly);
+  void setReadOnly(String controlKey, bool readOnly) {
+    _formResourceManagement.getBaseFieldState(controlKey)._readOnly = readOnly;
+  }
 
   /// whether form field is readOnly or not
-  bool isReadOnly(String controlKey) => _formManagement.isReadOnly(controlKey);
+  bool isReadOnly(String controlKey) {
+    return _formResourceManagement.getBaseFieldState(controlKey).readOnly;
+  }
 
   /// set form field's padding
-  void setPadding(String controlKey, EdgeInsets padding) =>
-      _formManagement.setPadding(controlKey, padding);
+  void setPadding(String controlKey, EdgeInsets padding) {
+    _formResourceManagement.getItemState(controlKey).padding = padding;
+  }
 
   /// get form field's padding
-  EdgeInsets getPadding(String controlKey) =>
-      _formManagement.getPadding(controlKey);
+  EdgeInsets getPadding(String controlKey) {
+    return _formResourceManagement.getItemState(controlKey).padding;
+  }
 
   /// get value field's value
-  dynamic getValue(String controlKey) => _formManagement.getValue(controlKey);
+  dynamic getValue(String controlKey) {
+    return _formResourceManagement.getValueFieldState(controlKey).value;
+  }
 
   /// set value
   ///
   /// [trigger] whether trigger onChanged
-  void setValue(String controlKey, dynamic value, {bool trigger = true}) =>
-      _formManagement.setValue(controlKey, value, trigger: trigger);
+  void setValue(String controlKey, dynamic value, {bool trigger = true}) {
+    _formResourceManagement
+        .getValueFieldState(controlKey)
+        .doChangeValue(value, trigger: trigger);
+  }
 
   /// get form data
-  Map<String, dynamic> get data => _formManagement.getData();
+  Map<String, dynamic> get data => getData();
 
-  Map<String, dynamic> getData({bool removeNull = true}) =>
-      _formManagement.getData(removeNull: removeNull);
+  Map<String, dynamic> getData({bool removeNull = true}) {
+    Map<String, dynamic> map = {};
+    _formResourceManagement.valueFieldStates.values.forEach((element) {
+      dynamic value = element.value;
+      if (removeNull && value == null) return;
+      map[element.controlKey] = value;
+    });
+    return map;
+  }
 
   /// reset form
   ///
   /// **only reset all value fields**
-  void reset() => _formManagement.reset();
+  void reset() {
+    for (final FormFieldState<dynamic> field
+        in _formResourceManagement.valueFieldStates.values) field.reset();
+  }
 
   /// reset on field
   ///
   /// **will set field value to it's initialValue**
-  void reset1(String controlKey) => _formManagement.reset1(controlKey);
+  void reset1(String controlKey) {
+    _formResourceManagement.getValueFieldState(controlKey).reset();
+  }
 
   /// validate form and return is valid or not
   ///
   /// **will display error if invalid ,
   /// if you only want to know the form is valid or not ,
   /// use [isValid() instead**
-  bool validate() => _formManagement.validate();
+  bool validate() {
+    bool hasError = false;
+    for (final FormFieldState<dynamic> field in _formResourceManagement
+        .valueFieldStates.values) hasError = !field.validate() || hasError;
+    return !hasError;
+  }
 
   /// validate a form field and return is valid or not
   ///
   /// **will display error if invalid ,
   /// if you only want to know the field is valid or not ,
   /// use [isValid(String controlKey)] instead**
-  bool validate1(String controlKey) => _formManagement.validate1(controlKey);
+  bool validate1(String controlKey) {
+    return _formResourceManagement.valueFieldStates[controlKey].validate();
+  }
 
   /// whether form is valid or not
   ///
   /// **only check is valid or not , won't show error**
-  bool get isValid => _formManagement.isValid;
+  bool get isValid {
+    bool hasError = false;
+    for (final FormFieldState<dynamic> field in _formResourceManagement
+        .valueFieldStates.values) hasError = !field.isValid || hasError;
+    return !hasError;
+  }
 
   /// whether a form field is valid or not
   ///
   /// **only check is valid or not , won't show error**
-  bool isValid1(String controlkey) => _formManagement.isValid1(controlkey);
+  bool isValid1(String controlKey) {
+    return _formResourceManagement.getValueFieldState(controlKey).isValid;
+  }
 
   /// set value field's autovalidatemode state
   void setAutovalidateMode(
-          String controlKey, AutovalidateMode autovalidateMode) =>
-      _formManagement.setAutovalidateMode(controlKey, autovalidateMode);
+      String controlKey, AutovalidateMode autovalidateMode) {
+    _formResourceManagement
+        .getValueFieldState(controlKey)
+        ._setAutoValidateMode(autovalidateMode);
+  }
 
   /// set value field's initialValue state
-  void setInitialValue(String controlKey, dynamic initialValue) =>
-      _formManagement.setInitialValue(controlKey, initialValue);
+  void setInitialValue(String controlKey, dynamic initialValue) {
+    _formResourceManagement
+        .getValueFieldState(controlKey)
+        ._setInitialValue(initialValue);
+  }
 
-  /// set selection on form field
+  /// get textSelectionManagement
   ///
-  /// **only works on textfield & numberfield**
-  void setSelection(String controlKey, int start, int end) =>
-      _formManagement.setSelection(controlKey, start, end);
-
-  /// select all text in form field
-  ///
-  /// **only works on textfield & numberfield**
-  void selectAll(String controlKey) => _formManagement.selectAll(controlKey);
+  /// only support textfield|numberfield
+  TextSelectionManagement getTextSelectionManagement(String controlKey) =>
+      _formResourceManagement.getTextSelectionManagement(controlKey);
 
   /// get SubController
   ///
   /// used to control sub item's state (like radiogroup's radio item)
-  SubControllerDelegate getSubController(String controlKey) =>
-      _formManagement.getSubController(controlKey);
+  SubControllerDelegate getSubController(String controlKey) {
+    SubController controller =
+        _formResourceManagement.getSubController(controlKey);
+    return SubControllerDelegate._(controller);
+  }
 
   /// mark a field as removed and you can not control this field any more,
   /// related resources will be disposed after form state disposed,
@@ -1950,13 +1874,194 @@ class FormManagement {
   /// this field will also be calculated
   ///
   /// if you really need to remove a field or a row in widget tree, see [FormLayoutManagement]
-  void remove(String controlKey) => _formManagement.remove(controlKey);
+  void remove(String controlKey) {
+    _FormItemWidgetState state =
+        _formResourceManagement.getItemState(controlKey);
+    state.remove();
+  }
 
-  bool hasControlKey(String controlKey) =>
-      _formManagement.hasControlKey(controlKey);
+  /// whether a field is removed or not
+  bool isRemoved(String controlKey) {
+    _FormItemWidgetState state =
+        _formResourceManagement.getItemState(controlKey);
+    return state._removed;
+  }
+
+  bool hasControlKey(String controlKey) {
+    return _formResourceManagement.states.containsKey(controlKey);
+  }
 
   FormLayoutManagement get formLayoutManagement =>
-      FormLayoutManagement._(_formManagement);
+      _formLayoutManagement ??= FormLayoutManagement._(_formResourceManagement);
+}
+
+/// used to control the layout of form
+class FormLayoutManagement {
+  _FormLayout _formLayout;
+  FormLayoutEditor _formLayoutEditor;
+  final _FormResourceManagement _formResourceManagement;
+  FormLayoutManagement._(this._formResourceManagement);
+
+  bool get isEditing => _formLayout != null;
+
+  /// get rows of form
+  int get rows => _formResourceManagement.state.formLayout.rows.length;
+
+  /// get columns of a row
+  int getColumns(int row) {
+    assert(row >= 0);
+    return _formResourceManagement.state.formLayout.rows[row].builders.length;
+  }
+
+  void setVisibleAtPosition(int row, bool visible, {int column}) {
+    _getItemsStateAtPostion(row, column: column).forEach((element) {
+      element.visible = visible;
+    });
+  }
+
+  void setReadOnlyAtPosition(int row, bool readOnly, {int column}) {
+    _getItemsStateAtPostion(row, column: column)
+        .map((e) =>
+            _formResourceManagement.getBaseFieldState(e.widget.controlKey))
+        .where((element) => element != null)
+        .forEach((element) {
+      element._readOnly = readOnly;
+    });
+  }
+
+  bool isRemovedAtPosition(int row, int column) {
+    List<_FormItemWidgetState> states =
+        _getItemsStateAtPostion(row, column: column);
+    assert(states.length == 1);
+    return states[0]._removed;
+  }
+
+  List<_FormItemWidgetState> _getItemsStateAtPostion(int row, {int column}) {
+    List<_FormItemWidgetState> states =
+        _formResourceManagement.states.values.where((element) {
+      if (element.widget.row == row) {
+        return column == null ? true : column == element.widget.column;
+      }
+      return false;
+    }).toList();
+    assert(states.isNotEmpty,
+        'no item states can be founded at ${column == null ? row : row.toString() + ',' + column.toString()}');
+    return states;
+  }
+
+  /// get form layout editor
+  /// used to insert/remove fields or rows in widget tree
+  FormLayoutEditor get formLayoutEditor =>
+      _formLayoutEditor ??= FormLayoutEditor._(_formResourceManagement);
+}
+
+/// used to insert/remove field or row in widget tree
+///
+/// any insert/remove method will rebuild form ,especially those fields that
+/// does not has a controlKey will also dispose state and create a new one,
+/// it means you are lost field states that you setted via update or rebuild
+///
+/// you should call startEdit first and call apply when finished
+class FormLayoutEditor {
+  _FormLayout _formLayout;
+  final _FormResourceManagement _formResourceManagement;
+  FormLayoutEditor._(this._formResourceManagement);
+
+  /// get editing layout rows
+  int get rows {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    return _formLayout.rows.length;
+  }
+
+  /// get columns of a row
+  int getColumns(int row) {
+    assert(row >= 0);
+    assert(_formLayout != null, 'you should call startEdit first!');
+    return _formLayout.rows[row].builders.length;
+  }
+
+  // remove a field in widget tree
+  // if row only has this field ,it will be also removed
+  void remove(String controlKey) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    _formLayout.rows.forEach((element) {
+      element.builders
+          .removeWhere((element) => element.controlKey == controlKey);
+    });
+  }
+
+  // remove field or a row at position
+  void removeAtPosition(int row, {int column}) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    assert(row >= 0 && row < _formLayout.rows.length);
+    if (column == null) {
+      _formLayout.rows.removeAt(row);
+    } else {
+      _FormRow formRow = _formLayout.rows[row];
+      assert(column >= 0 && column < formRow.builders.length);
+      formRow.builders.removeAt(column);
+    }
+  }
+
+  /// insert a field at position
+  ///
+  /// for better performance , you'd use [FormLayoutManagement.setVisibleAtPosition] rather than this method ,
+  /// setVisible only affect one or several fields,but this method will rebuild form,
+  void insert(
+      {int column,
+      int row,
+      String controlKey,
+      int flex = 1,
+      bool visible = true,
+      EdgeInsets padding,
+      @required Widget field,
+      bool inline = true,
+      bool insertRow = false}) {
+    assert(_formLayout != null, 'you should call startEdit first!');
+    assert(field is ValueField || field is CommonField,
+        'field must valuefield or commonfield');
+    assert(row == null ||
+        (row >= 0 &&
+            ((row < _formLayout.rows.length && !insertRow) ||
+                (row <= _formLayout.rows.length && insertRow))));
+    _FormRow formRow = row == null
+        ? insertRow
+            ? _formLayout.append()
+            : _formLayout.rows[_formLayout.rows.length - 1]
+        : insertRow
+            ? _formLayout.insert(row)
+            : _formLayout.rows[row];
+    _FormItemBuilder builder = _FormItemBuilder(
+        visible: visible,
+        controlKey: controlKey,
+        flex: flex,
+        inline: inline,
+        padding: padding,
+        child: field);
+    if (column == null)
+      formRow.append(builder);
+    else
+      formRow.insert(builder, column);
+  }
+
+  void startEdit() {
+    assert(_formLayout == null,
+        'call apply first before you call startEdit again');
+    _formLayout = _formResourceManagement.state.formLayout.copy();
+    _formLayout.removeEmptyRow();
+  }
+
+  void cancel() {
+    assert(_formLayout != null, 'call startEdit first before you cancel');
+    _formLayout = null;
+  }
+
+  void apply() {
+    assert(_formLayout != null, 'call startEdit first before you apply');
+    _formLayout.removeEmptyRow();
+    _formResourceManagement.state._formLayout = _formLayout;
+    _formLayout = null;
+  }
 }
 
 class _FormLayout {
@@ -2039,126 +2144,5 @@ class _FormRow {
     row.builders.addAll(List.of(builders));
     row.stretchable = stretchable;
     return row;
-  }
-}
-
-/// used to control the layout of form
-///
-/// you should call startEdit first and call apply when finished
-class FormLayoutManagement {
-  _FormLayout _formLayout;
-  final _FormManagement _formManagement;
-  FormLayoutManagement._(this._formManagement);
-
-  bool get isEditing => _formLayout != null;
-
-  /// get rows of form
-  ///
-  /// if editing is true get current editing form's rows
-  int getRows({bool editing = false}) {
-    if (editing)
-      assert(_formLayout != null, 'you should call startEdit first!');
-    return editing
-        ? _formLayout.rows.length
-        : _formManagement.state.formLayout.rows.length;
-  }
-
-  /// get columns of a row
-  ///
-  /// if editing is true get current editing form's columns of a row
-  int getColumns(int row, {bool editing = false}) {
-    assert(row >= 0);
-    if (editing)
-      assert(_formLayout != null, 'you should call startEdit first!');
-    _FormRow formRow = editing
-        ? _formLayout.rows[row]
-        : _formManagement.state.formLayout.rows[row];
-    return formRow.builders.length;
-  }
-
-  // remove a field in widget tree
-  // if row only has this field ,it will be also removed
-  void remove(String controlKey) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    _formLayout.rows.forEach((element) {
-      element.builders
-          .removeWhere((element) => element.controlKey == controlKey);
-    });
-  }
-
-  // remove field or a row at position
-  void removeAtPosition(int row, {int column}) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    assert(row >= 0 && row < _formLayout.rows.length);
-    if (column == null) {
-      _formLayout.rows.removeAt(row);
-    } else {
-      _FormRow formRow = _formLayout.rows[row];
-      assert(column >= 0 && column < formRow.builders.length);
-      formRow.builders.removeAt(column);
-    }
-  }
-
-  /// insert a field at position,before you call this method, you must call startEdit first,and call apply after finished
-  ///
-  /// for better performance , you'd use setVisible rather than this method ,
-  /// setVisible only affect one or several fields,but this method will rebuild form,
-  /// especially those fields that does not has a controlKey will also dispose state and create a new one,
-  /// it means you are lost field states
-  /// that you setted via update or rebuild
-  void insert(
-      {int column,
-      int row,
-      String controlKey,
-      int flex = 1,
-      bool visible = true,
-      EdgeInsets padding,
-      @required Widget field,
-      bool inline = true,
-      bool insertRow = false}) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    assert(field is ValueField || field is CommonField,
-        'field must valuefield or commonfield');
-    assert(row == null ||
-        (row >= 0 &&
-            ((row < _formLayout.rows.length && !insertRow) ||
-                (row <= _formLayout.rows.length && insertRow))));
-    _FormRow formRow = row == null
-        ? insertRow
-            ? _formLayout.append()
-            : _formLayout.rows[_formLayout.rows.length - 1]
-        : insertRow
-            ? _formLayout.insert(row)
-            : _formLayout.rows[row];
-    _FormItemBuilder builder = _FormItemBuilder(
-        visible: visible,
-        controlKey: controlKey,
-        flex: flex,
-        inline: inline,
-        padding: padding,
-        child: field);
-    if (column == null)
-      formRow.append(builder);
-    else
-      formRow.insert(builder, column);
-  }
-
-  void startEdit() {
-    assert(_formLayout == null,
-        'call apply first before you call startEdit again');
-    _formLayout = _formManagement.state.formLayout.copy();
-    _formLayout.removeEmptyRow();
-  }
-
-  void cancel() {
-    assert(_formLayout != null, 'call startEdit first before you cancel');
-    _formLayout = null;
-  }
-
-  void apply() {
-    assert(_formLayout != null, 'call startEdit first before you apply');
-    _formLayout.removeEmptyRow();
-    _formManagement.state._formLayout = _formLayout;
-    _formLayout = null;
   }
 }
