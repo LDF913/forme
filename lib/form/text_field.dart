@@ -158,7 +158,8 @@ class ClearableTextFormField extends ValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextController extends ValueNotifier<String> with TextSelectionMixin {
+class _TextController extends ValueNotifier<String>
+    with TextSelectionManagement {
   final TextEditingController textEditingController;
   _TextController({String value})
       : this.textEditingController = TextEditingController(text: value),
@@ -169,7 +170,7 @@ class _TextController extends ValueNotifier<String> with TextSelectionMixin {
 
   @override
   void setSelection(int start, int end) {
-    TextSelectionMixin.setSelectionWithTextEditingController(
+    TextSelectionManagement.setSelectionWithTextEditingController(
         start, end, textEditingController);
   }
 
@@ -447,13 +448,14 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   }
 }
 
-class _NumberController extends ValueNotifier<num> with TextSelectionMixin {
+class _NumberController extends ValueNotifier<num>
+    with TextSelectionManagement {
   TextEditingController controller = new TextEditingController();
   _NumberController({num value}) : super(value);
 
   @override
   void setSelection(int start, int end) {
-    TextSelectionMixin.setSelectionWithTextEditingController(
+    TextSelectionManagement.setSelectionWithTextEditingController(
         start, end, controller);
   }
 

@@ -372,6 +372,15 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     return FormBuilder(formManagement: formManagement)
         .textField(
+            controlKey: 'username', labelText: 'username', clearable: true)
+        .checkboxGroup([CheckboxItem('remember me')],
+            controlKey: 'rememberMe', inline: true)
+        .switchInline(
+          controlKey: 'switch1',
+          onChanged: (value) => print('switch1 value changed $value'),
+        )
+        .nextLine()
+        .textField(
             controlKey: 'password',
             hintText: 'password',
             obscureText: true,
@@ -382,16 +391,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 1)
         .textButton((management) {
           management.getTextSelectionManagement('password').selectAll();
-        }, label: 'button')
-        .nextLine()
-        .textField(
-            controlKey: 'username', labelText: 'username', clearable: true)
-        .checkboxGroup([CheckboxItem('remember me')],
-            controlKey: 'rememberMe', inline: true)
-        .switchInline(
-          controlKey: 'switch1',
-          onChanged: (value) => print('switch1 value changed $value'),
-        )
+        }, label: 'button', controlKey: 'button')
         .nextLine()
         .numberField(
           controlKey: 'age',
@@ -614,8 +614,8 @@ class Button extends CommonField {
                     onTap: () {
                       FormManagement management = FormManagement.of(context);
                       if (!management.hasControlKey('num0')) {
-                        FormLayoutEditor editor =
-                            management.formLayoutManagement.formLayoutEditor;
+                        FormWidgetTreeManagement editor = management
+                            .formLayoutManagement.formWidgetTreeManagement;
                         editor.startEdit();
                         editor.removeAtPosition(0);
                         for (int i = 0; i <= 10; i++) {

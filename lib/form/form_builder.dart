@@ -1569,13 +1569,11 @@ class _FormResourceManagement extends ChangeNotifier {
     return controller;
   }
 
-  _BaseFieldState getBaseFieldState(String controlKey,
-      {bool isRequired = true}) {
+  _BaseFieldState getBaseFieldState(String controlKey) {
     _BaseFieldState state =
         valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
-    if (isRequired)
-      assert(state == null,
-          'neither value field nor common field can be founded by controlKey : $controlKey');
+    assert(state != null,
+        'neither value field nor common field can be founded by controlKey : $controlKey');
     return state;
   }
 
@@ -1898,7 +1896,7 @@ class FormManagement {
 /// used to control the layout of form
 class FormLayoutManagement {
   _FormLayout _formLayout;
-  FormLayoutEditor _formLayoutEditor;
+  FormWidgetTreeManagement _formWidgetTreeManagement;
   final _FormResourceManagement _formResourceManagement;
   FormLayoutManagement._(this._formResourceManagement);
 
@@ -1923,7 +1921,6 @@ class FormLayoutManagement {
     _getItemsStateAtPostion(row, column: column)
         .map((e) =>
             _formResourceManagement.getBaseFieldState(e.widget.controlKey))
-        .where((element) => element != null)
         .forEach((element) {
       element._readOnly = readOnly;
     });
@@ -1951,8 +1948,9 @@ class FormLayoutManagement {
 
   /// get form layout editor
   /// used to insert/remove fields or rows in widget tree
-  FormLayoutEditor get formLayoutEditor =>
-      _formLayoutEditor ??= FormLayoutEditor._(_formResourceManagement);
+  FormWidgetTreeManagement get formWidgetTreeManagement =>
+      _formWidgetTreeManagement ??=
+          FormWidgetTreeManagement._(_formResourceManagement);
 }
 
 /// used to insert/remove field or row in widget tree
@@ -1962,10 +1960,10 @@ class FormLayoutManagement {
 /// it means you are lost field states that you setted via update or rebuild
 ///
 /// you should call startEdit first and call apply when finished
-class FormLayoutEditor {
+class FormWidgetTreeManagement {
   _FormLayout _formLayout;
   final _FormResourceManagement _formResourceManagement;
-  FormLayoutEditor._(this._formResourceManagement);
+  FormWidgetTreeManagement._(this._formResourceManagement);
 
   /// get editing layout rows
   int get rows {
