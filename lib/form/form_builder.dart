@@ -2145,6 +2145,7 @@ class _FormRow {
     if (index == builders.length)
       append(builder);
     else {
+      assert(stretchable, 'row is not stretchable,can not insert field');
       builders.insert(index, builder);
     }
   }
