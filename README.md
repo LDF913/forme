@@ -172,14 +172,15 @@ formManagement.rebuild(controlKey,{});
 formManagement.setPadding(controlKey,padding);
 ```
 
-### set form field's selection
+### TextSelectionManagement
 
 ``` dart
-formManagement.setSelection(controlKey,start,end);
-formManagement.selectAll(controlKey);
+TextSelectionManagement textSelectionManagement = formMangement.getTextSelectionManagement(controlKey);
+textSelectionManagement.setSelection(controlKey,start,end);
+textSelectionManagement.selectAll(controlKey);
 ```
 
-only works on textfield|numberfield
+** only works on textfield|numberfield **
 
 ### set form field's value
  
@@ -228,7 +229,7 @@ FormLayoutManagement formLayoutManagement = formManagement.formLayoutManagement;
 #### get rows
 
 ``` dart
-int rows = formLayoutManagement.getRows({bool editing = false}); //if editing is true, return current editing layout rows count , otherwise return form layout rows count
+int rows = formLayoutManagement.rows; 
 ```
 
 #### get columns
@@ -237,10 +238,16 @@ int rows = formLayoutManagement.getRows({bool editing = false}); //if editing is
 int columns = formLayoutManagement.getColumns(row,{bool editing  false})
 ```
 
-#### start edit
+#### check field at position is visible
 
 ``` dart
-formLayoutManagement.startEdit();
+bool isVisible(int row, {int column})
+```
+
+#### set field at position 
+
+``` dart
+void setVisibleAtPosition(int row, bool visible, {int column})
 ```
 
 ### remove field in widget tree
