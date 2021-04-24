@@ -44,7 +44,6 @@ class FormBuilder extends StatefulWidget {
   final bool _visible;
   final FormThemeData _formThemeData;
   final FormManagement formManagement;
-  final bool enableDebugPrint;
 
   FormBuilder nextLine() {
     _formLayout.lastEmptyRow();
@@ -60,8 +59,7 @@ class FormBuilder extends StatefulWidget {
       : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
-        this.formManagement = formManagement ?? FormManagement(),
-        this.enableDebugPrint = enableDebugPrint ?? true;
+        this.formManagement = formManagement ?? FormManagement();
 
   /// append a number field to current row
   FormBuilder numberField(
@@ -635,6 +633,7 @@ class FormBuilder extends StatefulWidget {
 class _FormBuilderState extends State<FormBuilder> {
   bool _readOnly;
   bool _visible;
+  bool rebuildLayout = false;
 
   _FormResourceManagement formResourceManagement;
   _FormLayout _formLayout;
@@ -654,8 +653,7 @@ class _FormBuilderState extends State<FormBuilder> {
     _visible = widget._visible;
     _formLayout = widget._formLayout;
     _formThemeData = widget._formThemeData;
-    formResourceManagement = _FormResourceManagement(this,
-        enableDebugPrint: widget.enableDebugPrint);
+    formResourceManagement = _FormResourceManagement(this);
     widget.formManagement._formResourceManagement = formResourceManagement;
     if (widget.formManagement._initCallback != null)
       widget.formManagement._initCallback();
@@ -685,13 +683,13 @@ class _FormBuilderState extends State<FormBuilder> {
     if (this._formLayout != formLayout) {
       setState(() {
         _formLayout = formLayout;
+        rebuildLayout = true;
       });
     }
   }
 
   @override
   void dispose() {
-    formResourceManagement.dPrint("form dispose");
     formResourceManagement.dispose();
     super.dispose();
   }
@@ -699,7 +697,6 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    formResourceManagement.dPrint("form didUpdateWidget");
     _formLayout = widget._formLayout;
     if (oldWidget._visible != widget._visible) {
       _visible = widget._visible;
@@ -722,11 +719,6 @@ class _FormBuilderState extends State<FormBuilder> {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      print(formResourceManagement.statesList);
-      print(formResourceManagement.valueFieldStatesList);
-      print(formResourceManagement.commonFieldStatesList);
-    });
     _formLayout.removeEmptyRow();
     Set<String> controlKeys = {};
     List<Row> rows = [];
@@ -739,8 +731,9 @@ class _FormBuilderState extends State<FormBuilder> {
         String controlKey = builder.controlKey;
         if (controlKey == null) {
           controlKey = '$row,$column'; //use location as it's control key
-          if (formResourceManagement.mapping.isNotEmpty) //TODO
+          if (rebuildLayout) {
             key = UniqueKey();
+          }
         } else {
           assert(
               !controlKey.contains(','), 'controlKey can not contains char , ');
@@ -757,6 +750,7 @@ class _FormBuilderState extends State<FormBuilder> {
       ));
       row++;
     }
+    rebuildLayout = false;
     controlKeys = null;
     return Theme(
         data: _formThemeData.themeData,
@@ -871,7 +865,6 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   void dispose() {
     formResourceManagement.statesList.remove(this);
     formResourceManagement.mapping.remove(widget.controlKey);
-    formResourceManagement.dPrint('${widget.controlKey} form item disposed');
     super.dispose();
   }
 
@@ -953,10 +946,10 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   }
 
   void notifyFocusChange(String key, bool hasFocus) {
-    List<FocusChanged> listeners =
-        _formResourceManagement.focusChangeMap[controlKey];
+    List<FocusListener> listeners =
+        _formResourceManagement.focusListenerMap[controlKey];
     if (listeners == null || listeners.isEmpty) return;
-    for (FocusChanged listener in listeners) {
+    for (FocusListener listener in listeners) {
       if (key == null && listener.rootChanged != null)
         listener.rootChanged(hasFocus);
       if (key != null && listener.subChanged != null)
@@ -966,8 +959,6 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   Map<String, dynamic> get _getInitStateMap =>
       (widget as _BaseField)._initStateMap;
-
-  void dPrint(String msg) => _formResourceManagement.dPrint(msg);
 
   @override
   void initState() {
@@ -1379,10 +1370,10 @@ class SubControllerDelegate {
 }
 
 /// used to listen focus change
-class FocusChanged {
+class FocusListener {
   final ValueChanged<bool> rootChanged;
   final SubFocusChanged subChanged;
-  FocusChanged({this.rootChanged, this.subChanged});
+  FocusListener({this.rootChanged, this.subChanged});
 }
 
 class FocusNodes extends FocusNode {
@@ -1446,19 +1437,17 @@ class _FormItemBuilder {
 /// this class should  not be accessed by user
 class _FormResourceManagement {
   _FormBuilderState state;
-  final Map<String, List<FocusChanged>> focusChangeMap = {};
+  final Map<String, List<FocusListener>> focusListenerMap = {};
   final Map<String, Key> mapping = {};
 
   List<_FormItemWidgetState> statesList = [];
   List<ValueFieldState> valueFieldStatesList = [];
   List<CommonFieldState> commonFieldStatesList = [];
 
-  final bool enableDebugPrint;
-
   int gen = 0;
   int _gen = 0; //used to compare and update notifier
 
-  _FormResourceManagement(this.state, {this.enableDebugPrint = false});
+  _FormResourceManagement(this.state);
 
   Key newFieldKey(String controlKey) {
     return mapping.putIfAbsent(
@@ -1526,7 +1515,7 @@ class _FormResourceManagement {
   }
 
   void dispose() {
-    focusChangeMap.clear();
+    focusListenerMap.clear();
     statesList.clear();
     valueFieldStatesList.clear();
     commonFieldStatesList.clear();
@@ -1538,12 +1527,6 @@ class _FormResourceManagement {
     return context
         .dependOnInheritedWidgetOfExactType<_FormManagementData>()
         .data;
-  }
-
-  void dPrint(String msg) {
-    if (!kReleaseMode && enableDebugPrint) {
-      debugPrint(msg);
-    }
   }
 }
 
@@ -1629,20 +1612,20 @@ class FormManagement {
   }
 
   /// listen form field's focus change
-  void onFocusChange(String controlKey, FocusChanged onChanged) {
-    List<FocusChanged> list =
-        _formResourceManagement.focusChangeMap[controlKey];
+  void onFocusChange(String controlKey, FocusListener onChanged) {
+    List<FocusListener> list =
+        _formResourceManagement.focusListenerMap[controlKey];
     if (list == null) {
-      _formResourceManagement.focusChangeMap[controlKey] = [onChanged];
+      _formResourceManagement.focusListenerMap[controlKey] = [onChanged];
     } else {
       list.add(onChanged);
     }
   }
 
   /// stop listen form field's focus change
-  void offFocusChange(String controlKey, FocusChanged onChanged) {
-    List<FocusChanged> list =
-        _formResourceManagement.focusChangeMap[controlKey];
+  void offFocusChange(String controlKey, FocusListener onChanged) {
+    List<FocusListener> list =
+        _formResourceManagement.focusListenerMap[controlKey];
     if (list == null) return;
     list.remove(onChanged);
   }
