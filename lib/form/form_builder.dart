@@ -1945,6 +1945,7 @@ class FormLayoutManagement {
     return _formResourceManagement.state._formLayout.rows[row].builders.length;
   }
 
+  /// whether a field|row is visiable
   bool isVisible(int row, {int column}) {
     List<_FormItemWidgetState> states =
         _getItemsStateAtPostion(row, column: column);
@@ -1954,12 +1955,14 @@ class FormLayoutManagement {
     return true;
   }
 
+  /// set a field|row visiable
   void setVisibleAtPosition(int row, bool visible, {int column}) {
     _getItemsStateAtPostion(row, column: column).forEach((element) {
       element.visible = visible;
     });
   }
 
+  /// set a field|row readOnly
   void setReadOnlyAtPosition(int row, bool readOnly, {int column}) {
     _getItemsStateAtPostion(row, column: column)
         .map((e) =>
@@ -1969,6 +1972,14 @@ class FormLayoutManagement {
     });
   }
 
+  /// mark a row|field as removed
+  void removeAtPosition(int row, {int column}) {
+    _getItemsStateAtPostion(row, column: column).forEach((element) {
+      element.remove();
+    });
+  }
+
+  /// whether a field|row is removed
   bool isRemovedAtPosition(int row, int column) {
     return _getItemStateAtPosition(row, column)._removed;
   }
@@ -2068,9 +2079,9 @@ class FormLayoutManagement {
   }
 }
 
-/// used to insert/remove field or row in widget tree
+/// used to modify widget tree
 ///
-/// any insert/remove method will rebuild form ,especially those fields that
+/// any method that modify widget tree will rebuild form ,especially those fields that
 /// does not has a controlKey will also dispose state and create a new one,
 /// it means you are lost field states that you setted via update or rebuild
 ///
