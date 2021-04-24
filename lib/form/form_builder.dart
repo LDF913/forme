@@ -641,8 +641,10 @@ class _FormBuilderState extends State<FormBuilder> {
 
   set formThemeData(FormThemeData formThemeData) {
     if (formThemeData != _formThemeData) {
-      _formThemeData = formThemeData;
-      formResourceManagement.gen++;
+      setState(() {
+        _formThemeData = formThemeData;
+        formResourceManagement.gen++;
+      });
     }
   }
 
@@ -1465,7 +1467,7 @@ class _FormResourceManagement {
   _FormItemWidgetState getItemState(String controlKey) {
     _FormItemWidgetState state = statesList.firstWhere(
         (element) => element.widget.controlKey == controlKey,
-        orElse: null);
+        orElse: () => null);
     assert(
         state != null, 'not item can be founded by controlKey : $controlKey');
     return state;
@@ -1474,7 +1476,7 @@ class _FormResourceManagement {
   ValueFieldState getValueFieldState(String controlKey) {
     ValueFieldState state = valueFieldStatesList.firstWhere(
         (element) => element.controlKey == controlKey,
-        orElse: null);
+        orElse: () => null);
     assert(state != null,
         'value field can be founded by controlKey : $controlKey');
     return state;
@@ -1818,7 +1820,7 @@ class FormManagement {
   }
 }
 
-/// used to control the layout of form
+/// used to control form  field by it's position of layout
 ///
 /// if your form field has a controlKey,use [FormManagement] first if it meet you needs!
 ///

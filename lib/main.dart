@@ -65,13 +65,13 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     formManagement = FormManagement(initCallback: () {
       formManagement.onFocusChange('username',
-          FocusChanged(rootChanged: (value) {
+          FocusListener(rootChanged: (value) {
         print('username focused: $value');
       }));
     });
     formManagement2 = FormManagement(initCallback: () {
       formManagement2.onFocusChange('username',
-          FocusChanged(rootChanged: (value) {
+          FocusListener(rootChanged: (value) {
         print('username focused: $value');
       }));
     });
@@ -105,11 +105,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 style: TextStyle(fontSize: 30),
               ),
             ),
-            /*Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
             ),
-            createButtons(),*/
+            createButtons(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm2(),
