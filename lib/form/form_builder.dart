@@ -664,10 +664,10 @@ class _FormBuilderState extends State<FormBuilder> {
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
       _readOnly = readOnly ?? false;
-      formResourceManagement.valueFieldStates.values.forEach((element) {
+      formResourceManagement.commonFieldStatesList.forEach((element) {
         element._readOnly = _readOnly;
       });
-      formResourceManagement.commonFieldStates.values.forEach((element) {
+      formResourceManagement.valueFieldStatesList.forEach((element) {
         element._readOnly = _readOnly;
       });
     }
@@ -685,7 +685,6 @@ class _FormBuilderState extends State<FormBuilder> {
     if (this._formLayout != formLayout) {
       setState(() {
         _formLayout = formLayout;
-        formResourceManagement.releasePositionResources();
       });
     }
   }
@@ -723,6 +722,11 @@ class _FormBuilderState extends State<FormBuilder> {
 
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      print(formResourceManagement.statesList);
+      print(formResourceManagement.valueFieldStatesList);
+      print(formResourceManagement.commonFieldStatesList);
+    });
     _formLayout.removeEmptyRow();
     Set<String> controlKeys = {};
     List<Row> rows = [];
@@ -735,8 +739,7 @@ class _FormBuilderState extends State<FormBuilder> {
         String controlKey = builder.controlKey;
         if (controlKey == null) {
           controlKey = '$row,$column'; //use location as it's control key
-          if (formResourceManagement.mapping.isNotEmpty &&
-              !formResourceManagement.states.containsKey(controlKey))
+          if (formResourceManagement.mapping.isNotEmpty) //TODO
             key = UniqueKey();
         } else {
           assert(
@@ -842,6 +845,15 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (formResourceManagement == null) {
+      formResourceManagement = _FormResourceManagement.of(context);
+      formResourceManagement.statesList.add(this);
+    }
+  }
+
+  @override
   void didUpdateWidget(_FormItemWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.visible != widget.visible) {
@@ -856,30 +868,15 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 
   @override
-  void deactivate() {
-    super.deactivate();
-    formResourceManagement = _FormResourceManagement.of(context);
-  }
-
-  @override
   void dispose() {
-    _FormItemWidgetState old = formResourceManagement.states[widget.controlKey];
-    if (old == this) {
-      formResourceManagement.releasedWhenFormItemDisposed(widget.controlKey);
-    }
+    formResourceManagement.statesList.remove(this);
+    formResourceManagement.mapping.remove(widget.controlKey);
     formResourceManagement.dPrint('${widget.controlKey} form item disposed');
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _FormResourceManagement formResourceManagement =
-        _FormResourceManagement.of(context);
-    _FormItemWidgetState old = formResourceManagement.states[widget.controlKey];
-    if (old != null && old != this) {
-      formResourceManagement.releasedWhenFormItemDisposed(widget.controlKey);
-    }
-    formResourceManagement.states[widget.controlKey] = this;
     if (_removed) {
       return SizedBox.shrink();
     }
@@ -943,11 +940,28 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   /// get current widget's focus node
   ///
   /// if there's no focus node,will create a new one
+  ///
+  /// you need get focusNode in [initFormResourceManagement]
   FocusNodes get focusNode {
-    if (_formResourceManagement.mapping.containsKey(controlKey)) {
-      return _formResourceManagement.newFocusNode(controlKey);
+    if (_focusNode == null) {
+      _focusNode = FocusNodes._(subFocusChanged: notifyFocusChange);
+      _focusNode.addListener(() {
+        notifyFocusChange(null, _focusNode.hasFocus);
+      });
     }
-    return _focusNode ??= FocusNodes._();
+    return _focusNode;
+  }
+
+  void notifyFocusChange(String key, bool hasFocus) {
+    List<FocusChanged> listeners =
+        _formResourceManagement.focusChangeMap[controlKey];
+    if (listeners == null || listeners.isEmpty) return;
+    for (FocusChanged listener in listeners) {
+      if (key == null && listener.rootChanged != null)
+        listener.rootChanged(hasFocus);
+      if (key != null && listener.subChanged != null)
+        listener.subChanged(key, hasFocus);
+    }
   }
 
   Map<String, dynamic> get _getInitStateMap =>
@@ -965,8 +979,14 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     controlKey = _InheritedControlKey.of(context).controlKey;
-    _formResourceManagement = _FormResourceManagement.of(context);
+    if (_formResourceManagement == null) {
+      _formResourceManagement = _FormResourceManagement.of(context);
+      initFormResourceManagement();
+    }
   }
+
+  @mustCallSuper
+  void initFormResourceManagement() {}
 
   set _readOnly(bool readOnly) {
     _update({FormBuilder.readOnlyKey: readOnly});
@@ -1015,8 +1035,8 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   @override
   void dispose() {
+    if (focusNode != null) focusNode.dispose();
     super.dispose();
-    if (_focusNode != null) _focusNode.dispose();
   }
 }
 
@@ -1063,17 +1083,6 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   /// **you need to get valueNotifier in initValueNotifier()**
   ValueNotifier<T> get valueNotifier {
-    if (_formResourceManagement.mapping.containsKey(controlKey)) {
-      ValueNotifier valueNotifier =
-          _formResourceManagement.valueNotifiers[controlKey];
-      if (valueNotifier == null) {
-        valueNotifier = widget.formValueNotifierProvider();
-        _formResourceManagement.valueNotifiers[controlKey] = valueNotifier;
-        valueNotifier.addListener(handleUpdate);
-        initValueNotifier();
-      }
-      return valueNotifier;
-    }
     if (_valueNotifier == null) {
       _valueNotifier = widget.formValueNotifierProvider();
       _valueNotifier.addListener(handleUpdate);
@@ -1097,25 +1106,6 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   /// initController will  be  called immediately after new controller created via ControllerProvider
   @mustCallSuper
   void initValueNotifier() {}
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    ValueFieldState old = _formResourceManagement.valueFieldStates[controlKey];
-    if (old != null && old != this) {
-      _formResourceManagement.releasedWhenValueFieldDisposed(controlKey);
-    }
-    _formResourceManagement.valueFieldStates[controlKey] = this;
-  }
-
-  @override
-  void dispose() {
-    _formResourceManagement.dPrint('$controlKey common field dispose');
-    if (_formResourceManagement.valueFieldStates[controlKey] == this) {
-      _formResourceManagement.releasedWhenValueFieldDisposed(controlKey);
-    }
-    super.dispose();
-  }
 
   @override
   void didChange(T value) {
@@ -1154,6 +1144,19 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
   void handleUpdate() {
     setState(() {});
   }
+
+  @override
+  void initFormResourceManagement() {
+    super.initFormResourceManagement();
+    _formResourceManagement.valueFieldStatesList.add(this);
+  }
+
+  @override
+  void dispose() {
+    if (valueNotifier != null) valueNotifier.dispose();
+    _formResourceManagement.valueFieldStatesList.remove(this);
+    super.dispose();
+  }
 }
 
 class CommonField extends _BaseField<Null, CommonFieldState> {
@@ -1170,28 +1173,15 @@ class CommonField extends _BaseField<Null, CommonFieldState> {
 
 class CommonFieldState extends _BaseFieldState<Null> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    CommonFieldState old =
-        _formResourceManagement.commonFieldStates[controlKey];
-    if (old != null && old != this) {
-      _formResourceManagement.releasedWhenCommonFieldDisposed(controlKey);
-    }
-    _formResourceManagement.commonFieldStates[controlKey] = this;
+  void initFormResourceManagement() {
+    super.initFormResourceManagement();
+    _formResourceManagement.commonFieldStatesList.add(this);
   }
 
   @override
   void dispose() {
-    _formResourceManagement.dPrint('$controlKey common field dispose');
-    if (_formResourceManagement.commonFieldStates[controlKey] == this) {
-      _formResourceManagement.releasedWhenCommonFieldDisposed(controlKey);
-    }
     super.dispose();
+    _formResourceManagement.commonFieldStatesList.remove(this);
   }
 
   @override
@@ -1245,7 +1235,7 @@ class _InheritedControlKey extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant _InheritedControlKey oldWidget) {
-    return true;
+    return oldWidget.controlKey != controlKey;
   }
 }
 
@@ -1456,13 +1446,12 @@ class _FormItemBuilder {
 /// this class should  not be accessed by user
 class _FormResourceManagement {
   _FormBuilderState state;
-  final Map<String, ValueNotifier> valueNotifiers = {};
-  final Map<String, FocusNode> focusNodes = {};
-  final Map<String, _FormItemWidgetState> states = {};
-  final Map<String, ValueFieldState> valueFieldStates = {};
-  final Map<String, CommonFieldState> commonFieldStates = {};
   final Map<String, List<FocusChanged>> focusChangeMap = {};
   final Map<String, Key> mapping = {};
+
+  List<_FormItemWidgetState> statesList = [];
+  List<ValueFieldState> valueFieldStatesList = [];
+  List<CommonFieldState> commonFieldStatesList = [];
 
   final bool enableDebugPrint;
 
@@ -1478,102 +1467,27 @@ class _FormResourceManagement {
             GlobalKey()); //use global key here to hold state ... any good way to do this without a lib?
   }
 
-  FocusNodes newFocusNode(String controlKey) {
-    FocusNodes focusNode = focusNodes[controlKey];
-    if (focusNode != null) {
-      return focusNode;
-    }
-    focusNode = FocusNodes._(subFocusChanged: (key, hasFocus) {
-      List<FocusChanged> list = focusChangeMap[controlKey];
-      if (list == null || list.isEmpty) return;
-      bool hasFocus = focusNode.hasFocus;
-      for (FocusChanged focusChanged in list) {
-        if (focusChanged.subChanged != null) {
-          focusChanged.subChanged(key, hasFocus);
-        }
-      }
-    });
-    focusNodes[controlKey] = focusNode;
-    focusNode.addListener(() {
-      List<FocusChanged> list = focusChangeMap[controlKey];
-      if (list == null || list.isEmpty) return;
-      bool hasFocus = focusNode.hasFocus;
-      for (FocusChanged focusChanged in list) {
-        if (focusChanged.rootChanged != null) {
-          focusChanged.rootChanged(hasFocus);
-        }
-      }
-    });
-    return focusNode;
-  }
-
-  void releasedWhenCommonFieldDisposed(String controlKey) {
-    dPrint('releasedWhenCommonFieldDisposed : $controlKey');
-    releaseFocusNode(controlKey);
-    commonFieldStates.remove(controlKey);
-  }
-
-  void releasePositionResources() {
-    valueNotifiers.removeWhere((key, value) {
-      bool shouldRemove = !mapping.containsKey(key);
-      if (shouldRemove) value.dispose();
-      return shouldRemove;
-    });
-    focusNodes.removeWhere((key, value) {
-      bool shouldRemove = !mapping.containsKey(key);
-      if (shouldRemove) value.dispose();
-      return shouldRemove;
-    });
-    states.removeWhere((key, value) => !mapping.containsKey(key));
-    valueFieldStates.removeWhere((key, value) => !mapping.containsKey(key));
-    commonFieldStates.removeWhere((key, value) => !mapping.containsKey(key));
-    focusChangeMap.removeWhere((key, value) => !mapping.containsKey(key));
-  }
-
-  void releasedWhenValueFieldDisposed(String controlKey) {
-    dPrint('releasedWhenValueFieldDisposed : $controlKey');
-    releaseFocusNode(controlKey);
-    ValueNotifier valueNotifier = valueNotifiers.remove(controlKey);
-    if (valueNotifier != null) {
-      valueNotifier.dispose();
-      dPrint('$controlKey valueNotifier dispose');
-    }
-    valueFieldStates.remove(controlKey);
-  }
-
-  void releasedWhenFormItemDisposed(String controlKey) {
-    dPrint('releasedWhenFormItemDisposed : $controlKey');
-    states.remove(controlKey);
-    mapping.remove(controlKey);
-  }
-
-  void releaseFocusNode(String controlKey) {
-    FocusNodes focusNode = focusNodes.remove(controlKey);
-    if (focusNode != null) {
-      focusChangeMap.remove(controlKey);
-      focusNode.dispose();
-      dPrint('$controlKey focusNode dispose');
-    }
-  }
-
   FocusNode getFocusNode(String controlKey) {
-    FocusNode focusNode = focusNodes[controlKey];
-    assert(focusNode != null,
-        'no FocusNode can be founded by controlKey : $controlKey');
-    return focusNode;
+    _BaseFieldState state = getBaseFieldState(controlKey);
+    assert(state._focusNode != null);
+    return state._focusNode;
   }
 
   _FormItemWidgetState getItemState(String controlKey) {
-    _FormItemWidgetState state = states[controlKey];
+    _FormItemWidgetState state = statesList.firstWhere(
+        (element) => element.widget.controlKey == controlKey,
+        orElse: null);
     assert(
         state != null, 'not item can be founded by controlKey : $controlKey');
     return state;
   }
 
   ValueFieldState getValueFieldState(String controlKey) {
-    ValueFieldState state = valueFieldStates[controlKey];
+    ValueFieldState state = valueFieldStatesList.firstWhere(
+        (element) => element.controlKey == controlKey,
+        orElse: null);
     assert(state != null,
-        'not value field can be founded by controlKey : $controlKey');
+        'value field can be founded by controlKey : $controlKey');
     return state;
   }
 
@@ -1592,33 +1506,30 @@ class _FormResourceManagement {
   }
 
   _BaseFieldState getBaseFieldState(String controlKey) {
-    _BaseFieldState state =
-        valueFieldStates[controlKey] ?? commonFieldStates[controlKey];
-    assert(state != null,
-        'neither value field nor common field can be founded by controlKey : $controlKey');
+    _BaseFieldState state = valueFieldStatesList.firstWhere(
+        (element) => element.controlKey == controlKey,
+        orElse: () => null);
+    if (state == null) {
+      state = commonFieldStatesList.firstWhere(
+          (element) => element.controlKey == controlKey,
+          orElse: () => null);
+    }
+    assert(
+        state != null, 'not field can be founded by controlKey : $controlKey');
     return state;
   }
 
   ValueNotifier getValueNotifier(String controlKey) {
-    var valueNotifier = valueNotifiers[controlKey];
-    assert(valueNotifier != null,
-        'no valueNotifier can be founded by controlKey : $controlKey');
-    return valueNotifier;
+    ValueFieldState state = getValueFieldState(controlKey);
+    assert(state._valueNotifier != null);
+    return state._valueNotifier;
   }
 
   void dispose() {
     focusChangeMap.clear();
-    focusNodes.values.forEach((element) {
-      element.dispose();
-    });
-    valueNotifiers.values.forEach((element) {
-      element.dispose();
-    });
-    focusNodes.clear();
-    valueNotifiers.clear();
-    states.clear();
-    valueFieldStates.clear();
-    commonFieldStates.clear();
+    statesList.clear();
+    valueFieldStatesList.clear();
+    commonFieldStatesList.clear();
     mapping.clear();
     state = null;
   }
@@ -1796,7 +1707,7 @@ class FormManagement {
 
   Map<String, dynamic> getData({bool removeNull = true}) {
     Map<String, dynamic> map = {};
-    _formResourceManagement.valueFieldStates.values.forEach((element) {
+    _formResourceManagement.valueFieldStatesList.forEach((element) {
       dynamic value = element.value;
       if (removeNull && value == null) return;
       map[element.controlKey] = value;
@@ -1808,8 +1719,9 @@ class FormManagement {
   ///
   /// **only reset all value fields**
   void reset() {
-    for (final FormFieldState<dynamic> field
-        in _formResourceManagement.valueFieldStates.values) field.reset();
+    _formResourceManagement.valueFieldStatesList.forEach((element) {
+      element.reset();
+    });
   }
 
   /// reset on field
@@ -1827,7 +1739,7 @@ class FormManagement {
   bool validate() {
     bool hasError = false;
     for (final FormFieldState<dynamic> field in _formResourceManagement
-        .valueFieldStates.values) hasError = !field.validate() || hasError;
+        .valueFieldStatesList) hasError = !field.validate() || hasError;
     return !hasError;
   }
 
@@ -1837,7 +1749,7 @@ class FormManagement {
   /// if you only want to know the field is valid or not ,
   /// use [isValid(String controlKey)] instead**
   bool validate1(String controlKey) {
-    return _formResourceManagement.valueFieldStates[controlKey].validate();
+    return _formResourceManagement.getValueFieldState(controlKey).validate();
   }
 
   /// whether form is valid or not
@@ -1846,7 +1758,7 @@ class FormManagement {
   bool get isValid {
     bool hasError = false;
     for (final FormFieldState<dynamic> field in _formResourceManagement
-        .valueFieldStates.values) hasError = !field.isValid || hasError;
+        .valueFieldStatesList) hasError = !field.isValid || hasError;
     return !hasError;
   }
 
@@ -1895,20 +1807,17 @@ class FormManagement {
   ///
   /// if you really need to remove a field or a row in widget tree, see [FormLayoutManagement]
   void remove(String controlKey) {
-    _FormItemWidgetState state =
-        _formResourceManagement.getItemState(controlKey);
-    state.remove();
+    _formResourceManagement.getItemState(controlKey).remove();
   }
 
   /// whether a field is removed or not
   bool isRemoved(String controlKey) {
-    _FormItemWidgetState state =
-        _formResourceManagement.getItemState(controlKey);
-    return state._removed;
+    return _formResourceManagement.getItemState(controlKey)._removed;
   }
 
   bool hasControlKey(String controlKey) {
-    return _formResourceManagement.states.containsKey(controlKey);
+    return _formResourceManagement.statesList
+        .any((element) => element.widget.controlKey == controlKey);
   }
 
   FormLayoutManagement get formLayoutManagement {
@@ -2030,7 +1939,7 @@ class FormLayoutManagement {
       return _formResourceManagement.getValueNotifier(state.widget.controlKey);
     }
     ValueFieldState valueFieldState =
-        _formResourceManagement.valueFieldStates[state.widget.controlKey];
+        _formResourceManagement.getValueFieldState(state.widget.controlKey);
     assert(valueFieldState._valueNotifier != null);
     return valueFieldState._valueNotifier;
   }
@@ -2067,7 +1976,7 @@ class FormLayoutManagement {
 
   List<_FormItemWidgetState> _getItemsStateAtPostion(int row, {int column}) {
     List<_FormItemWidgetState> states =
-        _formResourceManagement.states.values.where((element) {
+        _formResourceManagement.statesList.where((element) {
       if (element.widget.row == row) {
         return column == null ? true : column == element.widget.column;
       }
