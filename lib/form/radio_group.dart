@@ -60,7 +60,7 @@ class RadioGroup extends ValueField {
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _RadioGroupController controller = state.controller;
+            _RadioGroupController controller = state.valueNotifier;
             String label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioItem> items = stateMap['items'];

@@ -5,8 +5,8 @@ import 'form_theme.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
-class _SliderController extends ValueNotifier<double> {
-  _SliderController({double value}) : super(value);
+class _SliderValueNotifier extends ValueNotifier<double> {
+  _SliderValueNotifier({double value}) : super(value);
 }
 
 class SliderFormField extends ValueField<double> {
@@ -25,7 +25,7 @@ class SliderFormField extends ValueField<double> {
       bool inline = false,
       EdgeInsets contentPadding})
       : super(
-          () => _SliderController(value: initialValue ?? min),
+          () => _SliderValueNotifier(value: initialValue ?? min),
           {
             'divisions': divisions,
             'max': max,
@@ -43,7 +43,7 @@ class SliderFormField extends ValueField<double> {
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SliderController controller = state.controller;
+            _SliderValueNotifier controller = state.valueNotifier;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
@@ -140,8 +140,8 @@ class _SliderFieldState extends ValueFieldState<double> {
   double get value => super.value == null ? getState('min') : super.value;
 }
 
-class _RangeSliderController extends ValueNotifier<RangeValues> {
-  _RangeSliderController({RangeValues value}) : super(value);
+class _RangeSliderValueNotifier extends ValueNotifier<RangeValues> {
+  _RangeSliderValueNotifier({RangeValues value}) : super(value);
 }
 
 class RangeSliderFormField extends ValueField<RangeValues> {
@@ -159,7 +159,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
       RangeSubLabelRender rangeSubLabelRender,
       EdgeInsets contentPadding})
       : super(
-            () => _RangeSliderController(
+            () => _RangeSliderValueNotifier(
                 value: initialValue ?? RangeValues(min, max)),
             {
               'divisions': divisions,
@@ -177,7 +177,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
             autovalidateMode: autovalidateMode,
             builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              _RangeSliderController controller = state.controller;
+              _RangeSliderValueNotifier controller = state.valueNotifier;
               int divisions = stateMap['divisions'];
               double max = stateMap['max'];
               double min = stateMap['min'];

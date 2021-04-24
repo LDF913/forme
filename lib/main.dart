@@ -58,6 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int i = 1;
 
   FormManagement formManagement;
+  FormManagement formManagement2;
 
   @override
   void initState() {
@@ -68,6 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print('username focused: $value');
       }));
     });
+    formManagement2 = FormManagement();
   }
 
   @override
@@ -90,7 +92,7 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
         ),
         body: SingleChildScrollView(
-          child: Wrap(children: [
+          child: Column(children: [
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
@@ -102,213 +104,212 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
             ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formManagement.visible = !formManagement.visible;
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(
-                        formManagement.visible ? 'hide form' : 'show form'));
-              },
-            ),
-            TextButton(
-                onPressed: () {
-                  formManagement.formLayoutManagement
-                      .setVisibleAtPosition(0, false);
-                },
-                child: Text('hide first row')),
-            TextButton(
-                onPressed: () {
-                  formManagement.formLayoutManagement
-                      .setReadOnlyAtPosition(0, true);
-                },
-                child: Text('set first row readonly')),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formManagement.readOnly = !formManagement.readOnly;
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(formManagement.readOnly
-                        ? 'set form editable'
-                        : 'set form readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formManagement.setVisible(
-                          'username', !formManagement.isVisible('username'));
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(formManagement.isVisible('username')
-                        ? 'hide username'
-                        : 'show username'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                return TextButton(
-                    onPressed: () {
-                      formManagement.setReadOnly(
-                          'username', !formManagement.isReadOnly('username'));
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(formManagement.isReadOnly('username')
-                        ? 'set username editable'
-                        : 'set username readonly'));
-              },
-            ),
-            TextButton(
-                onPressed: () {
-                  formManagement.setAutovalidateMode(
-                      'username', AutovalidateMode.always);
-                },
-                child: Text('validate username always')),
-            TextButton(
-                onPressed: () {
-                  formManagement.remove('username');
-                },
-                child: Text('remove username completely')),
-            TextButton(
-                onPressed: () {
-                  setState(() {});
-                },
-                child: Text('rebuild page')),
-            TextButton(
-                onPressed: () {
-                  formManagement.validate();
-                },
-                child: Text('validate')),
-            TextButton(
-                onPressed: () {
-                  formManagement.validate1('username');
-                },
-                child: Text('validate username only')),
-            TextButton(
-                onPressed: () {
-                  formManagement.reset();
-                },
-                child: Text('reset')),
-            Builder(
-              builder: (context) {
-                SubControllerDelegate subController =
-                    formManagement.getSubController('checkbox');
-                return subController == null
-                    ? SizedBox()
-                    : TextButton(
-                        onPressed: () {
-                          bool readOnly = subController.isReadOnly('male');
-                          subController.setReadOnly('male', !readOnly);
-                          (context as Element).markNeedsBuild();
-                        },
-                        child: Text(subController.isReadOnly('male')
-                            ? 'set male editable'
-                            : 'set male readonly'));
-              },
-            ),
-            Builder(
-              builder: (context) {
-                SubControllerDelegate subController =
-                    formManagement.getSubController('switchGroup');
-                return subController == null
-                    ? SizedBox()
-                    : TextButton(
-                        onPressed: () {
-                          bool visible =
-                              subController.getState('switch1', 'visible');
-                          bool readOnly =
-                              subController.getState('switch0', 'readOnly');
-                          subController.update({
-                            'switch0': {'readOnly': !readOnly},
-                            'switch1': {'visible': !visible}
-                          });
-                          (context as Element).markNeedsBuild();
-                        },
-                        child: Text(
-                            (subController.getState('switch1', 'visible')
-                                    ? 'hide'
-                                    : 'show') +
-                                ' switch 2 & set switch 1 ' +
-                                (subController.getState('switch0', 'readOnly')
-                                    ? 'editable'
-                                    : 'readOnly')));
-              },
-            ),
-            TextButton(
-                onPressed: () {
-                  formManagement.update('switchGroup', {
-                    'items': List<SwitchGroupItem>.generate(
-                        5,
-                        (index) => SwitchGroupItem((index + 5).toString(),
-                            controlKey: 'switch$index',
-                            textStyle: TextStyle(
-                                color: Theme.of(context).primaryColor)))
-                  });
-                },
-                child: Text('set switch items')),
-            TextButton(
-                onPressed: () {
-                  formManagement.requestFocus('age');
-                },
-                child: Text('age focus')),
-            TextButton(
-                onPressed: () {
-                  formManagement.update('username', {
-                    'labelText': DateTime.now().toString(),
-                  });
-                },
-                child: Text('change username\'s label')),
-            TextButton(
-                onPressed: () {
-                  formManagement
-                      .getTextSelectionManagement('age')
-                      .setSelection(1, 1);
-                },
-                child: Text('set age\'s selection')),
-            TextButton(
-              onPressed: () {
-                print(formManagement.data);
-              },
-              child: Text('get form data'),
-            ),
-            TextButton(
-              onPressed: () {
-                formManagement.update('button', {'label': 'new Text'});
-              },
-              child: Text('set button text'),
-            ),
-            TextButton(
-              onPressed: () {
-                formManagement.formThemeData = (++i) % 2 == 0
-                    ? FormThemeData(themeData: Theme.of(context))
-                    : FormThemeData.defaultTheme;
-              },
-              child: Text('change theme'),
-            ),
-            Row(children: [
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'form2',
-                  style: TextStyle(fontSize: 30),
-                ),
-              ),
-            ]),
+            createButtons(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm2(),
             ),
+            createButtons2(),
           ]),
         ));
   }
 
+  Widget createButtons() {
+    Wrap buttons = Wrap(
+      children: [
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  formManagement.visible = !formManagement.visible;
+                  (context as Element).markNeedsBuild();
+                },
+                child:
+                    Text(formManagement.visible ? 'hide form' : 'show form'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  formManagement.readOnly = !formManagement.readOnly;
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(formManagement.readOnly
+                    ? 'set form editable'
+                    : 'set form readonly'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  formManagement.setVisible(
+                      'username', !formManagement.isVisible('username'));
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(formManagement.isVisible('username')
+                    ? 'hide username'
+                    : 'show username'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  formManagement.setReadOnly(
+                      'username', !formManagement.isReadOnly('username'));
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(formManagement.isReadOnly('username')
+                    ? 'set username editable'
+                    : 'set username readonly'));
+          },
+        ),
+        TextButton(
+            onPressed: () {
+              formManagement.setAutovalidateMode(
+                  'username', AutovalidateMode.always);
+            },
+            child: Text('validate username always')),
+        TextButton(
+            onPressed: () {
+              formManagement.remove('username');
+            },
+            child: Text('remove username completely')),
+        TextButton(
+            onPressed: () {
+              setState(() {});
+            },
+            child: Text('rebuild page')),
+        TextButton(
+            onPressed: () {
+              formManagement.validate();
+            },
+            child: Text('validate')),
+        TextButton(
+            onPressed: () {
+              formManagement.validate1('username');
+            },
+            child: Text('validate username only')),
+        TextButton(
+            onPressed: () {
+              formManagement.reset();
+            },
+            child: Text('reset')),
+        Builder(
+          builder: (context) {
+            SubControllerDelegate subController =
+                formManagement.getSubController('checkbox');
+            return subController == null
+                ? SizedBox()
+                : TextButton(
+                    onPressed: () {
+                      bool readOnly = subController.isReadOnly('male');
+                      subController.setReadOnly('male', !readOnly);
+                      (context as Element).markNeedsBuild();
+                    },
+                    child: Text(subController.isReadOnly('male')
+                        ? 'set male editable'
+                        : 'set male readonly'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            SubControllerDelegate subController =
+                formManagement.getSubController('switchGroup');
+            return subController == null
+                ? SizedBox()
+                : TextButton(
+                    onPressed: () {
+                      bool visible =
+                          subController.getState('switch1', 'visible');
+                      bool readOnly =
+                          subController.getState('switch0', 'readOnly');
+                      subController.update({
+                        'switch0': {'readOnly': !readOnly},
+                        'switch1': {'visible': !visible}
+                      });
+                      (context as Element).markNeedsBuild();
+                    },
+                    child: Text((subController.getState('switch1', 'visible')
+                            ? 'hide'
+                            : 'show') +
+                        ' switch 2 & set switch 1 ' +
+                        (subController.getState('switch0', 'readOnly')
+                            ? 'editable'
+                            : 'readOnly')));
+          },
+        ),
+        TextButton(
+            onPressed: () {
+              formManagement.update('switchGroup', {
+                'items': List<SwitchGroupItem>.generate(
+                    5,
+                    (index) => SwitchGroupItem((index + 5).toString(),
+                        controlKey: 'switch$index',
+                        textStyle:
+                            TextStyle(color: Theme.of(context).primaryColor)))
+              });
+            },
+            child: Text('set switch items')),
+        TextButton(
+            onPressed: () {
+              formManagement.requestFocus('age');
+            },
+            child: Text('age focus')),
+        TextButton(
+            onPressed: () {
+              formManagement.update('username', {
+                'labelText': DateTime.now().toString(),
+              });
+            },
+            child: Text('change username\'s label')),
+        TextButton(
+            onPressed: () {
+              formManagement
+                  .getTextSelectionManagement('age')
+                  .setSelection(1, 1);
+            },
+            child: Text('set age\'s selection')),
+        TextButton(
+          onPressed: () {
+            print(formManagement.data);
+          },
+          child: Text('get form data'),
+        ),
+        TextButton(
+          onPressed: () {
+            formManagement.update('button', {'label': 'new Text'});
+          },
+          child: Text('set button text'),
+        ),
+        TextButton(
+          onPressed: () {
+            formManagement.formThemeData = (++i) % 2 == 0
+                ? FormThemeData(themeData: Theme.of(context))
+                : FormThemeData.defaultTheme;
+          },
+          child: Text('change theme'),
+        ),
+        Row(children: [
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'form2',
+              style: TextStyle(fontSize: 30),
+            ),
+          ),
+        ])
+      ],
+    );
+    return Row(
+      children: [Expanded(child: buttons)],
+    );
+  }
+
   Widget createForm2() {
-    return FormBuilder()
+    return FormBuilder(formManagement: formManagement2)
         .widget(field: Label('username'), flex: 2, inline: true)
         .textField(
             controlKey: 'username',
@@ -367,6 +368,99 @@ class _MyHomePageState extends State<MyHomePage> {
           flex: 1,
           inline: false,
         );
+  }
+
+  Widget createButtons2() {
+    return Wrap(
+      children: [
+        TextButton(
+            onPressed: () {
+              formManagement2.formLayoutManagement.updateAtPosition(0, 0, {
+                'label': '123',
+              });
+            },
+            child: Text('change label at position 0,0')),
+        TextButton(
+            onPressed: () {
+              formManagement2.formLayoutManagement
+                  .setValueAtPosition(0, 1, 'hello world');
+            },
+            child: Text('set value at position 0,1')),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  formManagement2.formLayoutManagement.setVisibleAtPosition(
+                      0, !formManagement2.formLayoutManagement.isVisible(0));
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(formManagement2.initialled
+                    ? formManagement2.formLayoutManagement.isVisible(0)
+                        ? 'hide first row'
+                        : 'show first row'
+                    : 'hide first row'));
+          },
+        ),
+        TextButton(
+            onPressed: () {
+              formManagement2.formLayoutManagement
+                  .setReadOnlyAtPosition(0, true);
+            },
+            child: Text('set first row readonly')),
+        TextButton(
+            onPressed: () {
+              FormWidgetTreeManagement formWidgetTreeManagement =
+                  formManagement2.formWidgetTreeManagement;
+              formWidgetTreeManagement.startEdit();
+              formWidgetTreeManagement.swapRow(0, 1);
+              formWidgetTreeManagement.apply();
+            },
+            child: Text('swap first row and second row')),
+        TextButton(
+            onPressed: () {
+              FormWidgetTreeManagement formWidgetTreeManagement =
+                  formManagement2.formWidgetTreeManagement;
+
+              if (!formManagement2.hasControlKey('num0')) {
+                formWidgetTreeManagement.startEdit();
+                for (int i = 0; i <= 10; i++) {
+                  int row = formWidgetTreeManagement.rows - 1;
+                  formWidgetTreeManagement.insert(
+                      row: row,
+                      field: Label("new row"),
+                      inline: true,
+                      flex: 2,
+                      insertRow: true);
+                  formWidgetTreeManagement.insert(
+                      row: row,
+                      inline: true,
+                      flex: 3,
+                      field: NumberFormField(
+                        initialValue: i,
+                      ),
+                      controlKey: 'num$i');
+                }
+                formWidgetTreeManagement.apply();
+              }
+            },
+            child: Text('append 10 numberfield rows before apply button')),
+        TextButton(
+            onPressed: () {
+              FormWidgetTreeManagement formWidgetTreeManagement =
+                  formManagement2.formWidgetTreeManagement;
+              formWidgetTreeManagement.startEdit();
+              int rows = formWidgetTreeManagement.rows;
+              if (rows >= 2) {
+                formWidgetTreeManagement.removeAtPosition(rows - 2);
+              }
+              if (rows != formWidgetTreeManagement.rows)
+                formWidgetTreeManagement.apply();
+              else
+                formWidgetTreeManagement.cancel();
+            },
+            child: Text('delete last row before apply button')),
+      ],
+    );
   }
 
   Widget createForm() {
@@ -613,38 +707,6 @@ class Button extends CommonField {
                     highlightColor: Colors.transparent,
                     onTap: () {
                       FormManagement management = FormManagement.of(context);
-                      if (!management.hasControlKey('num0')) {
-                        FormWidgetTreeManagement editor = management
-                            .formLayoutManagement.formWidgetTreeManagement;
-                        editor.startEdit();
-                        editor.removeAtPosition(0);
-                        for (int i = 0; i <= 10; i++) {
-                          int row = editor.rows - 1;
-                          editor.insert(
-                              row: row,
-                              field: Label("new row"),
-                              inline: true,
-                              flex: 2,
-                              insertRow: true);
-                          editor.insert(
-                              row: row,
-                              inline: true,
-                              flex: 3,
-                              field: NumberFormField(
-                                initialValue: i,
-                              ),
-                              controlKey: 'num$i');
-                        }
-                        editor.apply();
-                        management.setValue('num0',
-                            123); //this will not work,because nums will be added to form at next frame
-
-                        WidgetsBinding.instance
-                            .addPostFrameCallback((timeStamp) {
-                          management.setValue('num0', 123);
-                        });
-                      }
-
                       Map<String, Widget> widgets =
                           management.data.map((key, value) => MapEntry(
                               key,

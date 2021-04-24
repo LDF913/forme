@@ -16,8 +16,8 @@ typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
-class _SelectorController extends ValueNotifier<List> {
-  _SelectorController({List value}) : super(value);
+class _SelectorFormValueNotifier extends ValueNotifier<List> {
+  _SelectorFormValueNotifier({List value}) : super(value);
   final UniqueKey key = UniqueKey();
   List<dynamic> get value => super.value == null ? [] : super.value;
   void set(List value) => super.value == null ? [] : List.from(value);
@@ -100,7 +100,7 @@ class SelectorFormField extends ValueField<List> {
       this.onTap,
       InputDecorationTheme inputDecorationTheme})
       : super(
-          () => _SelectorController(value: initialValue),
+          () => _SelectorFormValueNotifier(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -117,7 +117,7 @@ class SelectorFormField extends ValueField<List> {
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SelectorController controller = state.controller;
+            _SelectorFormValueNotifier controller = state.valueNotifier;
             FocusNode focusNode = state.focusNode;
             String labelText = stateMap['labelText'];
             String hintText = stateMap['hintText'];
@@ -251,7 +251,8 @@ class SelectorFormField extends ValueField<List> {
 }
 
 class _SelectorFormFieldState extends ValueFieldState<List> {
-  UniqueKey get dialogKey => (super.controller as _SelectorController).key;
+  UniqueKey get dialogKey =>
+      (super.valueNotifier as _SelectorFormValueNotifier).key;
 
   @override
   void didUpdateWidget(SelectorFormField oldWidget) {
