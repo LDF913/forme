@@ -48,54 +48,55 @@ class FormBuilder extends StatefulWidget {
   final FormThemeData _formThemeData;
   final FormManagement formManagement;
   final FormInitCallback initCallback;
-
-  FormBuilder nextLine() {
-    _formLayout.lastEmptyRow();
-    return this;
-  }
-
   FormBuilder(
       {bool readOnly,
       bool visible,
       FormThemeData formThemeData,
       FormManagement formManagement,
-      bool enableDebugPrint,
       this.initCallback})
       : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
         this.formManagement = formManagement ?? FormManagement();
 
+  FormBuilder nextLine() {
+    _formLayout.lastEmptyRow();
+    return this;
+  }
+
   /// append a number field to current row
-  FormBuilder numberField(
-      {String controlKey,
-      int flex,
-      String hintText,
-      String labelText,
-      EdgeInsets padding,
-      VoidCallback onTap,
-      Widget prefixIcon,
-      ValueChanged<num> onChanged,
-      FormFieldValidator<num> validator,
-      AutovalidateMode autovalidateMode,
-      double min,
-      double max,
-      bool clearable,
-      bool readOnly,
-      bool visible,
-      int decimal,
-      TextStyle style,
-      num initialValue,
-      List<Widget> suffixIcons,
-      VoidCallback onEditingComplete,
-      TextInputAction textInputAction,
-      InputDecorationTheme inputDecorationTheme}) {
+  FormBuilder numberField({
+    String controlKey,
+    int flex,
+    String hintText,
+    String labelText,
+    EdgeInsets padding,
+    VoidCallback onTap,
+    Widget prefixIcon,
+    ValueChanged<num> onChanged,
+    FormFieldValidator<num> validator,
+    AutovalidateMode autovalidateMode,
+    double min,
+    double max,
+    bool clearable,
+    bool readOnly,
+    bool visible,
+    int decimal,
+    TextStyle style,
+    num initialValue,
+    List<Widget> suffixIcons,
+    VoidCallback onEditingComplete,
+    TextInputAction textInputAction,
+    InputDecorationTheme inputDecorationTheme,
+    bool autofocus = false,
+  }) {
     _formLayout.lastStretchableRow().append(_FormItemBuilder(
         visible: visible,
         controlKey: controlKey,
         flex: flex,
         inline: true,
         child: NumberFormField(
+            autofocus: autofocus,
             onChanged: onChanged,
             key: key,
             decimal: decimal,
@@ -118,35 +119,37 @@ class FormBuilder extends StatefulWidget {
   }
 
   /// add a textfield to current row
-  FormBuilder textField(
-      {String controlKey,
-      String hintText,
-      String labelText,
-      VoidCallback onTap,
-      bool obscureText = false,
-      int flex,
-      int maxLines = 1,
-      Widget prefixIcon,
-      TextInputType keyboardType,
-      int maxLength,
-      ValueChanged<String> onChanged,
-      FormFieldValidator<String> validator,
-      AutovalidateMode autovalidateMode,
-      bool clearable = false,
-      bool passwordVisible = false,
-      bool readOnly = false,
-      bool visible = true,
-      List<TextInputFormatter> inputFormatters,
-      EdgeInsets padding,
-      TextStyle style,
-      String initialValue,
-      ToolbarOptions toolbarOptions,
-      bool selectAllOnFocus,
-      List<Widget> suffixIcons,
-      VoidCallback onEditingComplete,
-      TextInputAction textInputAction,
-      List<TextInputFormatter> textInputFormatters,
-      InputDecorationTheme inputDecorationTheme}) {
+  FormBuilder textField({
+    String controlKey,
+    String hintText,
+    String labelText,
+    VoidCallback onTap,
+    bool obscureText = false,
+    int flex,
+    int maxLines = 1,
+    Widget prefixIcon,
+    TextInputType keyboardType,
+    int maxLength,
+    ValueChanged<String> onChanged,
+    FormFieldValidator<String> validator,
+    AutovalidateMode autovalidateMode,
+    bool clearable = false,
+    bool passwordVisible = false,
+    bool readOnly = false,
+    bool visible = true,
+    List<TextInputFormatter> inputFormatters,
+    EdgeInsets padding,
+    TextStyle style,
+    String initialValue,
+    ToolbarOptions toolbarOptions,
+    bool selectAllOnFocus,
+    List<Widget> suffixIcons,
+    VoidCallback onEditingComplete,
+    TextInputAction textInputAction,
+    List<TextInputFormatter> textInputFormatters,
+    InputDecorationTheme inputDecorationTheme,
+    bool autofocus = false,
+  }) {
     _formLayout.lastStretchableRow().append(_FormItemBuilder(
         visible: visible,
         controlKey: controlKey,
@@ -154,6 +157,7 @@ class FormBuilder extends StatefulWidget {
         inline: true,
         child: ClearableTextFormField(
             key: key,
+            autofocus: autofocus,
             hintText: hintText,
             labelText: labelText,
             maxLength: maxLength,
@@ -1667,11 +1671,11 @@ class FormManagement {
   }
 }
 
-abstract class _AbstractFormFieldManagement {
+class FormFieldManagement {
   final String _controlKey;
   final _FormResourceManagement _formResourceManagement;
 
-  _AbstractFormFieldManagement(this._controlKey, this._formResourceManagement);
+  FormFieldManagement._(this._controlKey, this._formResourceManagement);
 
   bool get isValueField => _baseFieldState is ValueFieldState;
 
@@ -1782,13 +1786,6 @@ abstract class _AbstractFormFieldManagement {
       _formResourceManagement.getValueNotifier(_controlKey);
 }
 
-/// used to control form field which has a controlKey
-class FormFieldManagement extends _AbstractFormFieldManagement {
-  FormFieldManagement._(
-      String controlKey, _FormResourceManagement formResourceManagement)
-      : super(controlKey, formResourceManagement);
-}
-
 /// used to control form  field by it's position of layout
 ///
 /// if your form field has a controlKey,use [FormManagement] first if it meet you needs!
@@ -1808,14 +1805,23 @@ class FormLayoutManagement {
     return FormLayoutRowManagement._(row, _formResourceManagement);
   }
 
-  FormLayoutFieldManagement getFormLayoutFieldManagement(int row, int column) {
+  FormFieldManagement getFormFieldManagement(int row, int column) {
     assert(_formResourceManagement != null);
     assert(row >= 0 && row < rows);
     assert(column >= 0 &&
         column <
             _formResourceManagement
                 .state._formLayout.rows[row].builders.length);
-    return FormLayoutFieldManagement._(row, column, _formResourceManagement);
+
+    List<_FormItemWidgetState> states =
+        _formResourceManagement.statesList.where((element) {
+      return element.widget.row == row && element.widget.column == column;
+    }).toList();
+
+    assert(states.length == 1);
+
+    return FormFieldManagement._(
+        states[0].widget.controlKey, _formResourceManagement);
   }
 }
 
@@ -1860,25 +1866,6 @@ class FormLayoutRowManagement {
     assert(states.isNotEmpty, 'no item states can be founded at row : $row');
     return states;
   }
-}
-
-class FormLayoutFieldManagement extends _AbstractFormFieldManagement {
-  final int row;
-  final int column;
-
-  FormLayoutFieldManagement._(
-      this.row, this.column, _FormResourceManagement _formResourceManagement)
-      : super(
-            _formResourceManagement.statesList
-                .where((element) {
-                  return element.widget.row == row &&
-                      element.widget.column == column;
-                })
-                .toList()
-                .first
-                .widget
-                .controlKey,
-            _formResourceManagement);
 }
 
 /// used to modify widget tree

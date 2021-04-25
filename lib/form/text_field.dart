@@ -41,7 +41,7 @@ class ClearableTextFormField extends ValueField<String> {
             'labelText': labelText,
             'hintText': hintText,
             'keyboardType': keyboardType,
-            'autofocus': autofocus,
+            'autofocus': autofocus ?? false,
             'maxLines': maxLines,
             'maxLength': maxLength,
             'clearable': clearable ?? true,
@@ -479,6 +479,7 @@ class _NumberValueNotifier extends ValueNotifier<num>
 class NumberFormField extends ValueField<num> {
   NumberFormField(
       {Key key,
+      bool autofocus,
       String labelText,
       String hintText,
       TextStyle style,
@@ -510,6 +511,7 @@ class NumberFormField extends ValueField<num> {
             'suffixIcons': suffixIcons,
             'textInputAction': textInputAction,
             'inputDecorationTheme': inputDecorationTheme,
+            'autofocus': autofocus ?? false,
           },
           key: key,
           onChanged: onChanged,
@@ -550,6 +552,7 @@ class NumberFormField extends ValueField<num> {
             int decimal = stateMap['decimal'];
             double max = stateMap['max'];
             double min = stateMap['min'];
+            bool autofocus = stateMap['autofocus'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
@@ -617,6 +620,7 @@ class NumberFormField extends ValueField<num> {
               focusNode: focusNode,
               controller: controller.controller,
               textInputAction: textInputAction,
+              autofocus: autofocus,
               decoration:
                   effectiveDecoration.copyWith(errorText: state.errorText),
               keyboardType: TextInputType.number,

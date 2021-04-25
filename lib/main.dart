@@ -376,7 +376,7 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement2.formLayoutManagement
-                  .getFormLayoutFieldManagement(0, 0)
+                  .getFormFieldManagement(0, 0)
                   .update({
                 'label': '123',
               });
@@ -385,7 +385,7 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement2.formLayoutManagement
-                  .getFormLayoutFieldManagement(0, 1)
+                  .getFormFieldManagement(0, 1)
                   .setValue('hello world');
             },
             child: Text('set value at position 0,1')),
