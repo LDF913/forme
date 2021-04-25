@@ -33,6 +33,9 @@ typedef NullValueReplace<T> = T Function();
 /// listen sub focusnodes change
 typedef SubFocusChanged = void Function(String key, bool hasFocus);
 
+/// callback after form initialled
+typedef FormInitCallback = void Function(FormManagement formManagement);
+
 class FormBuilder extends StatefulWidget {
   static final String readOnlyKey = 'readOnly';
   static final String visibleKey = 'visible';
@@ -44,6 +47,7 @@ class FormBuilder extends StatefulWidget {
   final bool _visible;
   final FormThemeData _formThemeData;
   final FormManagement formManagement;
+  final FormInitCallback initCallback;
 
   FormBuilder nextLine() {
     _formLayout.lastEmptyRow();
@@ -55,7 +59,8 @@ class FormBuilder extends StatefulWidget {
       bool visible,
       FormThemeData formThemeData,
       FormManagement formManagement,
-      bool enableDebugPrint})
+      bool enableDebugPrint,
+      this.initCallback})
       : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true,
@@ -575,13 +580,14 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder widget(
+  FormBuilder field(
       {String controlKey,
       int flex = 0,
       bool visible = true,
       EdgeInsets padding,
-      @required _BaseField field,
+      @required Widget field,
       bool inline}) {
+    assert(field is _BaseField, 'field must be ValueField|CommonField');
     inline ??= false;
     _FormRow row =
         inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
@@ -657,8 +663,9 @@ class _FormBuilderState extends State<FormBuilder> {
     _formThemeData = widget._formThemeData;
     formResourceManagement = _FormResourceManagement(this);
     widget.formManagement._formResourceManagement = formResourceManagement;
-    if (widget.formManagement._initCallback != null)
-      widget.formManagement._initCallback();
+    if (widget.initCallback != null) {
+      widget.initCallback(widget.formManagement);
+    }
   }
 
   set readOnly(bool readOnly) {
@@ -709,12 +716,13 @@ class _FormBuilderState extends State<FormBuilder> {
     if (oldWidget._formThemeData != widget._formThemeData) {
       _formThemeData = widget._formThemeData;
     }
-    _FormResourceManagement old = widget.formManagement._formResourceManagement;
-    if (old == null) {
+    _FormResourceManagement newManagement =
+        widget.formManagement._formResourceManagement;
+    if (newManagement == null) {
       widget.formManagement._formResourceManagement =
           formResourceManagement; // we do not call init again ! formManagement are always same!
     } else {
-      assert(old == formResourceManagement,
+      assert(newManagement == formResourceManagement,
           'this form management is used to control another form ,you can not use this form management to control this form ,try to create a new one!');
     }
   }
@@ -1566,19 +1574,17 @@ class _FormManagementData extends InheritedWidget {
 /// **a initCallback will only be called once in form state's lifecycle due to _FormManagement's instance won't change**
 class FormManagement {
   static FormManagement of(BuildContext context) {
-    return FormManagement._(_FormResourceManagement.of(context));
+    FormManagement formManagement = FormManagement();
+    formManagement._formResourceManagement =
+        _FormResourceManagement.of(context);
+    return formManagement;
   }
 
   _FormResourceManagement _formResourceManagement;
   FormLayoutManagement _formLayoutManagement;
   FormWidgetTreeManagement _formWidgetTreeManagement;
 
-  final VoidCallback _initCallback;
-
-  FormManagement._(this._formResourceManagement) : this._initCallback = null;
-  FormManagement({VoidCallback initCallback})
-      : this._formResourceManagement = null,
-        this._initCallback = initCallback;
+  FormManagement();
 
   bool get initialled => _formResourceManagement != null;
 

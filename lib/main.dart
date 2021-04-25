@@ -63,18 +63,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    formManagement = FormManagement(initCallback: () {
-      formManagement.onFocusChange('username',
-          FocusListener(rootChanged: (value) {
-        print('username focused: $value');
-      }));
-    });
-    formManagement2 = FormManagement(initCallback: () {
-      formManagement2.onFocusChange('username',
-          FocusListener(rootChanged: (value) {
-        print('username focused: $value');
-      }));
-    });
+    formManagement = FormManagement();
+    formManagement2 = FormManagement();
   }
 
   @override
@@ -315,14 +305,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget createForm2() {
     return FormBuilder(formManagement: formManagement2)
-        .widget(field: Label('username'), flex: 2, inline: true)
+        .field(field: Label('username'), flex: 2, inline: true)
         .textField(
             controlKey: 'username',
             hintText: 'username',
             flex: 3,
             clearable: true)
         .nextLine()
-        .widget(field: Label('password'), flex: 2, inline: true)
+        .field(field: Label('password'), flex: 2, inline: true)
         .textField(
             controlKey: 'password',
             hintText: 'password',
@@ -331,7 +321,7 @@ class _MyHomePageState extends State<MyHomePage> {
             passwordVisible: true,
             clearable: true)
         .nextLine()
-        .widget(field: Label('rememberMe'), flex: 2, inline: true)
+        .field(field: Label('rememberMe'), flex: 2, inline: true)
         .switchInline(
             controlKey: 'rememberMe',
             flex: 3,
@@ -339,7 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: EdgeInsets.symmetric(vertical: 10))
         .nextLine()
         .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
-        .widget(field: Label('sex'), flex: 2, inline: true)
+        .field(field: Label('sex'), flex: 2, inline: true)
         .checkboxGroup(
           FormBuilder.toCheckboxItems(['male', 'female'],
               padding: EdgeInsets.symmetric(horizontal: 4)),
@@ -348,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .nextLine()
         .divider(padding: EdgeInsets.only(top: 10))
-        .widget(field: Label('habbit'), flex: 2, inline: true)
+        .field(field: Label('habbit'), flex: 2, inline: true)
         .switchGroup(
             hasSelectAllSwitch: false,
             controlKey: 'habbit',
@@ -358,7 +348,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 3)
         .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
         .nextLine()
-        .widget(field: Label('age'), flex: 2, inline: true)
+        .field(field: Label('age'), flex: 2, inline: true)
         .slider(
           inline: true,
           flex: 3,
@@ -368,7 +358,7 @@ class _MyHomePageState extends State<MyHomePage> {
           padding: EdgeInsets.symmetric(horizontal: 4),
           subLabelRender: (value) => Text(value.round().toString()),
         )
-        .widget(
+        .field(
           field: Button(),
           flex: 1,
           inline: false,
@@ -469,7 +459,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget createForm() {
-    return FormBuilder(formManagement: formManagement)
+    return FormBuilder(
+      formManagement: formManagement,
+      initCallback: (formManagement) {
+        formManagement.onFocusChange('username', FocusListener(
+          rootChanged: (value) {
+            print('username focus changed :$value');
+          },
+        ));
+      },
+    )
         .textField(
             controlKey: 'username', labelText: 'username', clearable: true)
         .checkboxGroup([CheckboxItem('remember me')],
@@ -645,7 +644,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
         )
-        .widget(
+        .field(
             controlKey: 'commonField',
             field: CommonField(
               {'text': 'click me and change my text'},
@@ -682,7 +681,6 @@ class Label extends CommonField {
         );
 }
 
-// from
 class Button extends CommonField {
   Button()
       : super(
