@@ -8,20 +8,20 @@ class RadioItem extends SubControllableItem {
   final bool ignoreSplit;
   final bool readOnly;
   final bool visible;
-  final TextStyle textStyle;
-  final EdgeInsets padding;
+  final TextStyle? textStyle;
+  final EdgeInsets? padding;
 
   RadioItem(this.value, this.label,
-      {String controlKey,
+      {String? controlKey,
       this.ignoreSplit = false,
       this.readOnly = false,
       this.visible = true,
       this.padding,
       this.textStyle})
       : super(controlKey, {
-          'readOnly': readOnly ?? false,
-          'visible': visible ?? true,
-          'ignoreSplit': ignoreSplit ?? false,
+          'readOnly': readOnly,
+          'visible': visible,
+          'ignoreSplit': ignoreSplit,
           'label': label,
           'textStyle': textStyle,
           'padding': padding ?? EdgeInsets.all(8),
@@ -34,25 +34,23 @@ class _RadioGroupController extends SubController {
 
 class RadioGroup extends ValueField {
   RadioGroup(List<RadioItem> items,
-      {Key key,
-      String label,
-      ValueChanged onChanged,
-      FormFieldValidator validator,
-      AutovalidateMode autovalidateMode,
-      int split = 0,
+      {String? label,
+      ValueChanged? onChanged,
+      FormFieldValidator? validator,
+      AutovalidateMode? autovalidateMode,
+      int split = 2,
       bool readOnly = false,
       dynamic initialValue,
-      EdgeInsets errorTextPadding,
-      @required bool inline})
+      EdgeInsets? errorTextPadding,
+      bool inline = false})
       : super(
           () => _RadioGroupController(value: initialValue),
           {
             'label': label,
-            'split': split ?? 2,
+            'split': split,
             'items': items,
             'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
           },
-          key: key,
           readOnly: readOnly,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
@@ -60,8 +58,9 @@ class RadioGroup extends ValueField {
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _RadioGroupController controller = state.valueNotifier;
-            String label = inline ? null : stateMap['label'];
+            _RadioGroupController controller =
+                state.valueNotifier as _RadioGroupController;
+            String? label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioItem> items = stateMap['items'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
@@ -160,7 +159,7 @@ class RadioGroup extends ValueField {
             widgets.add(Wrap(children: wrapWidgets));
 
             if (state.hasError) {
-              Text text = Text(state.errorText,
+              Text text = Text(state.errorText!,
                   overflow: inline ? TextOverflow.ellipsis : null,
                   style: FormThemeData.getErrorStyle(themeData));
               widgets.add(Padding(

@@ -16,28 +16,23 @@ typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
-class _SelectorFormValueNotifier extends ValueNotifier<List> {
-  _SelectorFormValueNotifier({List value}) : super(value);
+class _SelectorFormValueNotifier extends NullableValueNotifier<List> {
+  _SelectorFormValueNotifier(List value) : super(value);
   final UniqueKey key = UniqueKey();
-  List<dynamic> get value => super.value == null ? [] : super.value;
+  List<dynamic> get value => super.value == null ? [] : super.value!;
   void set(List value) => super.value == null ? [] : List.from(value);
 }
 
 class SelectorFormField extends ValueField<List> {
-  final bool clearable;
-  final String labelText;
-  final String hintText;
-  final double iconSize;
-  final bool multi;
-  final SelectedChecker selectedChecker;
-  final SelectItemRender selectItemRender;
-  final SelectedItemRender selectedItemRender;
-  final SelectedSorter selectedSorter;
-  final SelectItemProvider selectItemProvider;
+  final SelectedChecker? selectedChecker;
+  final SelectItemRender? selectItemRender;
+  final SelectedItemRender? selectedItemRender;
+  final SelectedSorter? selectedSorter;
+  final SelectItemProvider? selectItemProvider;
   final SelectedItemLayoutType selectedItemLayoutType;
-  final QueryFormBuilder queryFormBuilder;
-  final OnSelectDialogShow onSelectDialogShow;
-  final VoidCallback onTap;
+  final QueryFormBuilder? queryFormBuilder;
+  final OnSelectDialogShow? onSelectDialogShow;
+  final VoidCallback? onTap;
 
   static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
       bool readOnly, ThemeData themeData, FormThemeData formThemeData) {
@@ -79,28 +74,27 @@ class SelectorFormField extends ValueField<List> {
   }
 
   SelectorFormField(this.selectItemProvider,
-      {Key key,
-      bool readOnly = false,
-      ValueChanged<List> onChanged,
-      this.clearable,
-      this.labelText,
-      this.hintText,
-      FormFieldValidator<List> validator,
-      AutovalidateMode autovalidateMode,
-      this.iconSize = 24,
-      this.multi = false,
-      List initialValue,
+      {bool readOnly = false,
+      ValueChanged<List>? onChanged,
+      bool clearable = true,
+      String? labelText,
+      String? hintText,
+      final double iconSize = 24,
+      bool multi = false,
+      NonnullFieldValidator<List>? validator,
+      AutovalidateMode? autovalidateMode,
+      List? initialValue,
       this.selectedChecker,
       this.selectItemRender,
       this.selectedItemRender,
       this.selectedSorter,
-      this.selectedItemLayoutType,
+      this.selectedItemLayoutType = SelectedItemLayoutType.wrap,
       this.queryFormBuilder,
       this.onSelectDialogShow,
       this.onTap,
-      InputDecorationTheme inputDecorationTheme})
+      InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _SelectorFormValueNotifier(value: initialValue),
+          () => _SelectorFormValueNotifier(initialValue ?? []),
           {
             'labelText': labelText,
             'hintText': hintText,
@@ -108,19 +102,19 @@ class SelectorFormField extends ValueField<List> {
             'clearable': clearable,
             'inputDecorationTheme': inputDecorationTheme,
           },
-          key: key,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onChanged: onChanged == null ? null : (value) => onChanged(value!),
           replace: () => [],
-          validator: validator,
+          validator: validator == null ? null : (value) => validator(value!),
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SelectorFormValueNotifier controller = state.valueNotifier;
+            _SelectorFormValueNotifier controller =
+                state.valueNotifier as _SelectorFormValueNotifier;
             FocusNode focusNode = state.focusNode;
-            String labelText = stateMap['labelText'];
-            String hintText = stateMap['hintText'];
+            String? labelText = stateMap['labelText'];
+            String? hintText = stateMap['hintText'];
             bool multi = stateMap['multi'];
             bool clearable = stateMap['clearable'];
             InputDecorationTheme inputDecorationTheme =
@@ -148,7 +142,7 @@ class SelectorFormField extends ValueField<List> {
               Icons.arrow_drop_down,
             ));
 
-            Widget widget;
+            Widget? widget;
 
             if (controller.value.isNotEmpty) {
               SelectedItemRender render =
@@ -159,8 +153,6 @@ class SelectorFormField extends ValueField<List> {
               } else {
                 List value = List.from(controller.value);
                 if (selectedSorter != null) selectedSorter(value);
-                SelectedItemLayoutType layoutType =
-                    selectedItemLayoutType ?? SelectedItemLayoutType.wrap;
 
                 List<Widget> itemWidgets = value.map((item) {
                   return InkWell(
@@ -178,7 +170,7 @@ class SelectorFormField extends ValueField<List> {
                   );
                 }).toList();
 
-                switch (layoutType) {
+                switch (selectedItemLayoutType) {
                   case SelectedItemLayoutType.scroll:
                     widget = SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -210,8 +202,7 @@ class SelectorFormField extends ValueField<List> {
                               ? null
                               : () async {
                                   focusNode.requestFocus();
-
-                                  List selected = await Navigator.of(context,
+                                  List? selected = await Navigator.of(context,
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(
                                           settings: RouteSettings(
@@ -258,13 +249,13 @@ class _SelectorFormFieldState extends ValueFieldState<List> {
   void didUpdateWidget(SelectorFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
       bool isClosed = false;
       Navigator.of(context).popUntil((route) {
         if (isClosed) return true;
         if (route is MaterialPageRoute) {
           RouteSettings settings = route.settings;
-          if (settings != null && settings.arguments == dialogKey) return false;
+          if (settings.arguments == dialogKey) return false;
         }
         isClosed = true;
         return true;
@@ -275,13 +266,13 @@ class _SelectorFormFieldState extends ValueFieldState<List> {
 
 class _SelectorDialog extends StatefulWidget {
   final FormManagement formManagement;
-  final SelectItemRender selectItemRender;
+  final SelectItemRender? selectItemRender;
   final SelectedChecker selectedChecker;
   final List selected;
   final SelectItemProvider selectItemProvider;
   final bool multi;
-  final QueryFormBuilder queryFormBuilder;
-  final OnSelectDialogShow onSelectDialogShow;
+  final QueryFormBuilder? queryFormBuilder;
+  final OnSelectDialogShow? onSelectDialogShow;
   final FormThemeData formThemeData;
   _SelectorDialog(
       this.formManagement,
@@ -292,15 +283,13 @@ class _SelectorDialog extends StatefulWidget {
       this.multi,
       this.queryFormBuilder,
       this.onSelectDialogShow,
-      this.formThemeData,
-      {Key key})
-      : super(key: key);
+      this.formThemeData);
   @override
   _SelectorDialogState createState() => _SelectorDialogState();
 }
 
 class _SelectorDialogState extends State<_SelectorDialog> {
-  List selected;
+  List? selected;
   bool loading = false;
   List items = [];
   int page = 1;
@@ -310,10 +299,10 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   int gen = 0;
 
-  FormManagement queryFormManagement;
+  FormManagement? queryFormManagement;
   Map<String, dynamic> params = {};
 
-  FormThemeData formThemeData;
+  FormThemeData? formThemeData;
 
   @override
   void initState() {
@@ -323,11 +312,11 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     formThemeData = widget.formThemeData;
 
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance?.addPostFrameCallback((_) {
         bool queryAfterLoadParams =
-            widget.onSelectDialogShow(queryFormManagement);
-        if (queryAfterLoadParams && queryFormManagement.validate()) {
-          params = queryFormManagement.data;
+            widget.onSelectDialogShow!(queryFormManagement!);
+        if (queryAfterLoadParams && queryFormManagement!.validate()) {
+          params = queryFormManagement!.data;
         }
         loadData(gen);
       });
@@ -339,11 +328,11 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   void toggle(dynamic value) {
     update(() {
       if (widget.multi) {
-        int len = selected.length;
-        selected
+        int len = selected!.length;
+        selected!
             .removeWhere((element) => widget.selectedChecker(value, element));
-        if (len == selected.length) {
-          selected.add(value);
+        if (len == selected!.length) {
+          selected!.add(value);
         }
       } else {
         selected = [value];
@@ -352,7 +341,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   }
 
   void query() {
-    if (!queryFormManagement.validate()) {
+    if (!queryFormManagement!.validate()) {
       return;
     }
     update(() {
@@ -363,13 +352,13 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       items = [];
       error = false;
       count = 0;
-      params = queryFormManagement.data;
+      params = queryFormManagement!.data;
     });
     loadData(gen);
   }
 
   bool isSelected(dynamic value) {
-    return selected.any((element) => widget.selectedChecker(value, element));
+    return selected!.any((element) => widget.selectedChecker(value, element));
   }
 
   void update(VoidCallback callback) {
@@ -402,7 +391,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         padding: EdgeInsets.all(4));
   }
 
-  Widget buildQueryForm() {
+  Widget? buildQueryForm() {
     if (widget.queryFormBuilder == null) {
       return null;
     }
@@ -410,7 +399,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       formManagement: queryFormManagement,
       formThemeData: formThemeData,
     );
-    widget.queryFormBuilder(form, query);
+    widget.queryFormBuilder!(form, query);
     return form;
   }
 
@@ -460,7 +449,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
                 widget.selectItemRender ?? renderSelectItems;
             return InkWell(
               child: render(item, widget.multi, selected,
-                  formThemeData.themeData, formThemeData),
+                  formThemeData!.themeData, formThemeData!),
               onTap: () {
                 toggle(item);
               },
@@ -474,7 +463,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   Widget build(BuildContext context) {
     List<Widget> columns = [];
 
-    Widget queryForm = buildQueryForm();
+    Widget? queryForm = buildQueryForm();
     if (queryForm != null) {
       columns.add(queryForm);
     }
@@ -489,7 +478,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
               child: error
                   ? Icon(
                       Icons.error,
-                      color: formThemeData.themeData.errorColor,
+                      color: formThemeData!.themeData.errorColor,
                       size: 50,
                     )
                   : empty
@@ -498,7 +487,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         ],
       )));
     } else {
-      columns.add(Expanded(child: buildView(formThemeData.themeData)));
+      columns.add(Expanded(child: buildView(formThemeData!.themeData)));
     }
 
     if ((loading || error) && items.isNotEmpty) {
@@ -510,7 +499,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
               ? CircularProgressIndicator()
               : Icon(
                   Icons.error,
-                  color: formThemeData.themeData.errorColor,
+                  color: formThemeData!.themeData.errorColor,
                   size: 50,
                 ),
         ),
@@ -533,7 +522,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
         ],
       ),
       body: Theme(
-          data: formThemeData.themeData,
+          data: formThemeData!.themeData,
           child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Column(

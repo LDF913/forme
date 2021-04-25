@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 
 class FormThemeData {
-  final EdgeInsets padding;
+  final EdgeInsets? padding;
   final ThemeData themeData;
-  final EdgeInsets labelPadding;
+  final EdgeInsets? labelPadding;
 
   FormThemeData(
       {this.padding = EdgeInsets.zero,
-      @required this.themeData,
+      required this.themeData,
       this.labelPadding});
 
   static TextStyle getErrorStyle(ThemeData themeData) {
     InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
     final Color color = themeData.errorColor;
-    return themeData.textTheme.caption
+    return themeData.textTheme.caption!
         .copyWith(color: color)
         .merge(inputDecorationTheme.errorStyle);
   }
 
   static TextStyle getLabelStyle(ThemeData themeData, bool hasError) {
     InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
-    TextStyle errorStyle = inputDecorationTheme.errorStyle;
-    return themeData.textTheme.subtitle1
+    TextStyle? errorStyle = inputDecorationTheme.errorStyle;
+    return themeData.textTheme.subtitle1!
         .copyWith(
             color: hasError
                 ? (errorStyle == null
@@ -57,19 +57,19 @@ class DefaultFormThemeData extends FormThemeData {
   static TextTheme _buildTextTheme(TextTheme base) {
     const String fontName = 'WorkSans';
     return base.copyWith(
-      headline1: base.headline1.copyWith(fontFamily: fontName),
-      headline2: base.headline2.copyWith(fontFamily: fontName),
-      headline3: base.headline3.copyWith(fontFamily: fontName),
-      headline4: base.headline4.copyWith(fontFamily: fontName),
-      headline5: base.headline5.copyWith(fontFamily: fontName),
-      headline6: base.headline6.copyWith(fontFamily: fontName),
-      button: base.button.copyWith(fontFamily: fontName),
-      caption: base.caption.copyWith(fontFamily: fontName),
-      bodyText1: base.bodyText1.copyWith(fontFamily: fontName),
-      bodyText2: base.bodyText2.copyWith(fontFamily: fontName),
-      subtitle1: base.subtitle1.copyWith(fontFamily: fontName),
-      subtitle2: base.subtitle2.copyWith(fontFamily: fontName),
-      overline: base.overline.copyWith(fontFamily: fontName),
+      headline1: base.headline1!.copyWith(fontFamily: fontName),
+      headline2: base.headline2!.copyWith(fontFamily: fontName),
+      headline3: base.headline3!.copyWith(fontFamily: fontName),
+      headline4: base.headline4!.copyWith(fontFamily: fontName),
+      headline5: base.headline5!.copyWith(fontFamily: fontName),
+      headline6: base.headline6!.copyWith(fontFamily: fontName),
+      button: base.button!.copyWith(fontFamily: fontName),
+      caption: base.caption!.copyWith(fontFamily: fontName),
+      bodyText1: base.bodyText1!.copyWith(fontFamily: fontName),
+      bodyText2: base.bodyText2!.copyWith(fontFamily: fontName),
+      subtitle1: base.subtitle1!.copyWith(fontFamily: fontName),
+      subtitle2: base.subtitle2!.copyWith(fontFamily: fontName),
+      overline: base.overline!.copyWith(fontFamily: fontName),
     );
   }
 
@@ -158,13 +158,13 @@ class _CustomRangeTrackShape extends RoundedRectRangeSliderTrackShape
 //copied from https://github.com/flutter/flutter/issues/37057
 mixin _TrackShapeMixin {
   Rect getPreferredRect({
-    @required RenderBox parentBox,
+    required RenderBox parentBox,
     Offset offset = Offset.zero,
-    @required SliderThemeData sliderTheme,
+    required SliderThemeData sliderTheme,
     bool isEnabled = false,
     bool isDiscrete = false,
   }) {
-    final double trackHeight = sliderTheme.trackHeight;
+    final double trackHeight = sliderTheme.trackHeight!;
     final double trackLeft = offset.dx;
     final double trackTop =
         offset.dy + (parentBox.size.height - trackHeight) / 2;
@@ -194,15 +194,15 @@ class _CustomRangeThumbShape extends RangeSliderThumbShape {
   void paint(
     PaintingContext context,
     Offset center, {
-    @required Animation<double> activationAnimation,
-    @required Animation<double> enableAnimation,
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
     bool isDiscrete = false,
     bool isEnabled = false,
-    bool isOnTop,
-    bool isPressed,
-    @required SliderThemeData sliderTheme,
-    TextDirection textDirection,
-    Thumb thumb,
+    bool isOnTop = false,
+    TextDirection textDirection = TextDirection.ltr,
+    required SliderThemeData sliderTheme,
+    Thumb thumb = Thumb.start,
+    bool isPressed = false,
   }) {
     final Canvas canvas = context.canvas;
     final ColorTween colorTween = ColorTween(
@@ -249,7 +249,7 @@ class _CustomRangeThumbShape extends RangeSliderThumbShape {
     cPaint..color = Colors.white;
     cPaint..strokeWidth = 14 / 2;
     canvas.drawCircle(Offset(center.dx, center.dy), 12, cPaint);
-    cPaint..color = colorTween.evaluate(enableAnimation);
+    cPaint..color = colorTween.evaluate(enableAnimation)!;
     canvas.drawCircle(Offset(center.dx, center.dy), 10, cPaint);
     canvas.drawPath(thumbPath, Paint()..color = Colors.white);
   }
@@ -288,16 +288,16 @@ class _CustomThumbShape extends SliderComponentShape {
   void paint(
     PaintingContext context,
     Offset thumbCenter, {
-    Animation<double> activationAnimation,
-    Animation<double> enableAnimation,
-    bool isDiscrete,
-    TextPainter labelPainter,
-    RenderBox parentBox,
-    Size sizeWithOverflow,
-    SliderThemeData sliderTheme,
-    TextDirection textDirection,
-    double textScaleFactor,
-    double value,
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
   }) {
     final Canvas canvas = context.canvas;
     final ColorTween colorTween = ColorTween(
@@ -319,7 +319,7 @@ class _CustomThumbShape extends SliderComponentShape {
     cPaint..color = Colors.white;
     cPaint..strokeWidth = 14 / 2;
     canvas.drawCircle(Offset(thumbCenter.dx, thumbCenter.dy), 12, cPaint);
-    cPaint..color = colorTween.evaluate(enableAnimation);
+    cPaint..color = colorTween.evaluate(enableAnimation)!;
     canvas.drawCircle(Offset(thumbCenter.dx, thumbCenter.dy), 10, cPaint);
   }
 

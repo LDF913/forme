@@ -5,50 +5,53 @@ import 'form_theme.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
-class _SliderValueNotifier extends ValueNotifier<double> {
-  _SliderValueNotifier({double value}) : super(value);
+class _SliderValueNotifier extends NullableValueNotifier<double> {
+  final double min;
+  _SliderValueNotifier(double value, this.min) : super(value);
+
+  @override
+  double get value => super.value == null ? min : super.value!;
 }
 
 class SliderFormField extends ValueField<double> {
   SliderFormField(
-      {Key key,
-      bool readOnly,
-      ValueChanged<double> onChanged,
-      FormFieldValidator<double> validator,
-      AutovalidateMode autovalidateMode,
-      double initialValue,
-      int divisions,
-      double max,
-      double min,
-      SubLabelRender subLabelRender,
-      String label,
+      {bool readOnly = false,
+      ValueChanged<double>? onChanged,
+      NonnullFieldValidator<double>? validator,
+      AutovalidateMode? autovalidateMode,
+      double? initialValue,
+      int? divisions,
+      required double max,
+      required double min,
+      SubLabelRender? subLabelRender,
+      String? label,
       bool inline = false,
-      EdgeInsets contentPadding})
+      EdgeInsets? contentPadding})
       : super(
-          () => _SliderValueNotifier(value: initialValue ?? min),
+          () => _SliderValueNotifier(initialValue ?? min, min),
           {
-            'divisions': divisions,
             'max': max,
             'min': min,
+            'divisions': divisions ?? (max - min).toInt(),
             'label': label,
             'contentPadding':
                 contentPadding ?? EdgeInsets.symmetric(horizontal: 10)
           },
-          key: key,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onChanged: onChanged == null ? null : (value) => onChanged(value!),
           replace: () => min,
-          validator: validator,
+          validator: validator == null ? null : (value) => validator(value!),
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SliderValueNotifier controller = state.valueNotifier;
+            _SliderValueNotifier controller =
+                state.valueNotifier as _SliderValueNotifier;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
-            String label = stateMap['label'];
+            String? label = stateMap['label'];
             EdgeInsets contentPadding = stateMap['contentPadding'];
 
             List<Widget> columns = [];
@@ -90,7 +93,7 @@ class SliderFormField extends ValueField<double> {
                 value: controller.value,
                 min: min,
                 max: max,
-                divisions: divisions ?? (max - min).toInt(),
+                divisions: divisions,
                 onChanged: readOnly
                     ? null
                     : (double value) {
@@ -107,8 +110,8 @@ class SliderFormField extends ValueField<double> {
             contentColumns.add(slider);
 
             if (state.hasError) {
-              TextOverflow overflow = inline ? TextOverflow.ellipsis : null;
-              Text error = Text(state.errorText,
+              TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
+              Text error = Text(state.errorText!,
                   overflow: overflow,
                   style: FormThemeData.getErrorStyle(themeData));
               contentColumns.add(error);
@@ -140,29 +143,35 @@ class _SliderFieldState extends ValueFieldState<double> {
   double get value => super.value == null ? getState('min') : super.value;
 }
 
-class _RangeSliderValueNotifier extends ValueNotifier<RangeValues> {
-  _RangeSliderValueNotifier({RangeValues value}) : super(value);
+class _RangeSliderValueNotifier extends NullableValueNotifier<RangeValues> {
+  final double min;
+  final double max;
+  _RangeSliderValueNotifier(RangeValues value, this.min, this.max)
+      : super(value);
+  @override
+  RangeValues get value =>
+      super.value == null ? RangeValues(min, max) : super.value!;
 }
 
 class RangeSliderFormField extends ValueField<RangeValues> {
   RangeSliderFormField(
-      {ValueChanged<RangeValues> onChanged,
-      FormFieldValidator<RangeValues> validator,
-      AutovalidateMode autovalidateMode,
-      bool readOnly,
-      double max,
-      double min,
-      String label,
-      bool inline,
-      int divisions,
-      RangeValues initialValue,
-      RangeSubLabelRender rangeSubLabelRender,
-      EdgeInsets contentPadding})
+      {ValueChanged<RangeValues>? onChanged,
+      NonnullFieldValidator<RangeValues>? validator,
+      AutovalidateMode? autovalidateMode,
+      bool readOnly = false,
+      required double max,
+      required double min,
+      String? label,
+      bool inline = false,
+      int? divisions,
+      RangeValues? initialValue,
+      RangeSubLabelRender? rangeSubLabelRender,
+      EdgeInsets? contentPadding})
       : super(
             () => _RangeSliderValueNotifier(
-                value: initialValue ?? RangeValues(min, max)),
+                initialValue ?? RangeValues(min, max), min, max),
             {
-              'divisions': divisions,
+              'divisions': divisions ?? (max - min).toInt(),
               'max': max,
               'min': min,
               'label': label,
@@ -170,18 +179,19 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                   contentPadding ?? EdgeInsets.symmetric(horizontal: 20)
             },
             readOnly: readOnly,
-            onChanged: onChanged,
-            validator: validator,
+            onChanged: onChanged == null ? null : (value) => onChanged(value!),
+            validator: validator == null ? null : (value) => validator(value!),
             initialValue: initialValue,
             replace: () => RangeValues(min, max),
             autovalidateMode: autovalidateMode,
             builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              _RangeSliderValueNotifier controller = state.valueNotifier;
+              _RangeSliderValueNotifier controller =
+                  state.valueNotifier as _RangeSliderValueNotifier;
               int divisions = stateMap['divisions'];
               double max = stateMap['max'];
               double min = stateMap['min'];
-              String label = stateMap['label'];
+              String? label = stateMap['label'];
               EdgeInsets contentPadding = stateMap['contentPadding'];
 
               List<Widget> columns = [];
@@ -247,7 +257,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                   values: controller.value,
                   min: min,
                   max: max,
-                  divisions: divisions ?? (max - min).toInt(),
+                  divisions: divisions,
                   onChanged: readOnly
                       ? null
                       : (RangeValues values) {
@@ -262,8 +272,8 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               contentColumns.add(slider);
 
               if (state.hasError) {
-                TextOverflow overflow = inline ? TextOverflow.ellipsis : null;
-                Text error = Text(state.errorText,
+                TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
+                Text error = Text(state.errorText!,
                     overflow: overflow,
                     style: FormThemeData.getErrorStyle(themeData));
                 contentColumns.add(error);

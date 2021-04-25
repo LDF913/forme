@@ -8,78 +8,76 @@ import 'form_builder.dart';
 class ClearableTextFormField extends ValueField<String> {
   final bool obscureText;
   ClearableTextFormField(
-      {String labelText,
-      String hintText,
-      Key key,
-      TextInputType keyboardType,
+      {String? labelText,
+      String? hintText,
+      TextInputType? keyboardType,
       bool autofocus = false,
       this.obscureText = false,
-      int maxLines = 1,
-      int minLines,
-      int maxLength,
-      ValueChanged<String> onChanged,
-      GestureTapCallback onTap,
-      FormFieldValidator<String> validator,
-      AutovalidateMode autovalidateMode,
-      ValueChanged<String> onFieldSubmitted,
-      bool clearable,
-      bool passwordVisible,
-      Widget prefixIcon,
-      List<TextInputFormatter> inputFormatters,
-      TextStyle style,
+      int? maxLines,
+      int? minLines,
+      int? maxLength,
+      ValueChanged<String>? onChanged,
+      GestureTapCallback? onTap,
+      NonnullFieldValidator<String>? validator,
+      AutovalidateMode? autovalidateMode,
+      ValueChanged<String>? onFieldSubmitted,
+      bool clearable = true,
+      bool passwordVisible = false,
+      Widget? prefixIcon,
+      List<TextInputFormatter>? inputFormatters,
+      TextStyle? style,
       bool readOnly = false,
-      String initialValue,
-      ToolbarOptions toolbarOptions,
+      String? initialValue,
+      ToolbarOptions? toolbarOptions,
       bool selectAllOnFocus = false,
-      List<Widget> suffixIcons,
-      VoidCallback onEditingComplete,
-      TextInputAction textInputAction,
-      InputDecorationTheme inputDecorationTheme})
+      List<Widget>? suffixIcons,
+      VoidCallback? onEditingComplete,
+      TextInputAction? textInputAction,
+      InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _TextValueNotifier(value: initialValue),
+          () => _TextValueNotifier(initialValue ?? ''),
           {
             'labelText': labelText,
             'hintText': hintText,
             'keyboardType': keyboardType,
-            'autofocus': autofocus ?? false,
+            'autofocus': autofocus,
             'maxLines': maxLines,
             'maxLength': maxLength,
-            'clearable': clearable ?? true,
+            'clearable': clearable,
             'prefixIcon': prefixIcon,
             'inputFormatters': inputFormatters,
             'style': style,
             'toolbarOptions': toolbarOptions,
-            'selectAllOnFocus': selectAllOnFocus ?? false,
+            'selectAllOnFocus': selectAllOnFocus,
             'suffixIcons': suffixIcons,
             'textInputAction': textInputAction,
             'inputDecorationTheme': inputDecorationTheme,
           },
-          key: key,
           replace: () => '',
-          onChanged: onChanged,
+          onChanged: onChanged == null ? null : (value) => onChanged(value!),
           initialValue: initialValue ?? '',
-          validator: validator,
+          validator: validator == null ? null : (value) => validator(value!),
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
+            _TextFormFieldState state = baseState as _TextFormFieldState;
             _TextValueNotifier controller = baseState.valueNotifier;
             FocusNode focusNode = baseState.focusNode;
-            final _TextFormFieldState state = baseState;
-            String labelText = stateMap['labelText'];
-            String hintText = stateMap['hintText'];
-            TextInputType keyboardType = stateMap['keyboardType'];
+            String? labelText = stateMap['labelText'];
+            String? hintText = stateMap['hintText'];
+            TextInputType? keyboardType = stateMap['keyboardType'];
             bool autofocus = stateMap['autofocus'];
-            int maxLines = stateMap['maxLines'];
-            int maxLength = stateMap['maxLength'];
+            int? maxLines = stateMap['maxLines'];
+            int? maxLength = stateMap['maxLength'];
             bool clearable = stateMap['clearable'];
-            Widget prefixIcon = stateMap['prefixIcon'];
-            List<TextInputFormatter> inputFormatters =
+            Widget? prefixIcon = stateMap['prefixIcon'];
+            List<TextInputFormatter>? inputFormatters =
                 stateMap['inputFormatters'];
-            TextStyle style = stateMap['style'];
-            ToolbarOptions toolbarOptions = stateMap['toolbarOptions'];
-            List<Widget> suffixIcons = stateMap['suffixIcons'];
-            TextInputAction textInputAction = stateMap['textInputAction'];
+            TextStyle? style = stateMap['style'];
+            ToolbarOptions? toolbarOptions = stateMap['toolbarOptions'];
+            List<Widget>? suffixIcons = stateMap['suffixIcons'];
+            TextInputAction? textInputAction = stateMap['textInputAction'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
@@ -111,7 +109,7 @@ class ClearableTextFormField extends ValueField<String> {
               suffixes.addAll(suffixIcons);
             }
 
-            Widget suffixIcon = suffixes.isEmpty
+            Widget? suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -127,7 +125,6 @@ class ClearableTextFormField extends ValueField<String> {
                 .applyDefaults(inputDecorationTheme);
 
             TextField textField = TextField(
-              key: key,
               style: style,
               textAlignVertical: TextAlignVertical.center,
               controller: controller.textEditingController,
@@ -139,7 +136,7 @@ class ClearableTextFormField extends ValueField<String> {
               autofocus: autofocus,
               obscureText: state.obscureText,
               toolbarOptions: toolbarOptions,
-              maxLines: maxLines,
+              maxLines: obscureText ? 1 : maxLines,
               minLines: minLines,
               maxLength: maxLength,
               onChanged: (value) => state.didChange(value),
@@ -158,10 +155,10 @@ class ClearableTextFormField extends ValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextValueNotifier extends ValueNotifier<String>
+class _TextValueNotifier extends NullableValueNotifier<String>
     with TextSelectionManagement {
   final TextEditingController textEditingController;
-  _TextValueNotifier({String value})
+  _TextValueNotifier(String value)
       : this.textEditingController = TextEditingController(text: value),
         super(value);
 
@@ -191,7 +188,8 @@ class _TextFormFieldState extends ValueFieldState<String> {
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
-  _TextValueNotifier get valueNotifier => super.valueNotifier;
+  _TextValueNotifier get valueNotifier =>
+      super.valueNotifier as _TextValueNotifier;
   TextEditingController get textEditingController =>
       valueNotifier.textEditingController;
 
@@ -241,12 +239,12 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void didChange(String value) {
+  void didChange(String? value) {
     super.didChange(value);
   }
 
   @override
-  void doChangeValue(String value, {bool trigger = true}) {
+  void doChangeValue(String? value, {bool trigger = true}) {
     super.doChangeValue(value, trigger: trigger);
     if (textEditingController.text != valueNotifier.value) {
       textEditingController.text = valueNotifier.value;
@@ -262,13 +260,14 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 }
 
-class _DateTimeValueNotifier extends ValueNotifier<DateTime> {
+class _DateTimeValueNotifier extends NullableValueNotifier<DateTime> {
   TextEditingController controller = new TextEditingController();
 
-  _DateTimeValueNotifier({DateTime value}) : super(value);
+  _DateTimeValueNotifier({DateTime? value}) : super(value);
 
-  TimeOfDay get timeOfDay =>
-      value == null ? null : TimeOfDay(hour: value.hour, minute: value.minute);
+  TimeOfDay? get timeOfDay => value == null
+      ? null
+      : TimeOfDay(hour: value!.hour, minute: value!.minute);
 
   @override
   void dispose() {
@@ -279,20 +278,19 @@ class _DateTimeValueNotifier extends ValueNotifier<DateTime> {
 
 class DateTimeFormField extends ValueField<DateTime> {
   DateTimeFormField(
-      {Key key,
-      String labelText,
-      String hintText,
-      TextStyle style,
-      bool readOnly,
-      DateTimeFormatter formatter,
-      Locale locale,
+      {String? labelText,
+      String? hintText,
+      TextStyle? style,
+      bool readOnly = false,
+      DateTimeFormatter? formatter,
+      Locale? locale,
       bool useTime = false,
-      ValueChanged<DateTime> onChanged,
-      FormFieldValidator<DateTime> validator,
-      AutovalidateMode autovalidateMode,
-      int maxLines,
-      DateTime initialValue,
-      InputDecorationTheme inputDecorationTheme})
+      ValueChanged<DateTime?>? onChanged,
+      FormFieldValidator<DateTime>? validator,
+      AutovalidateMode? autovalidateMode,
+      int? maxLines,
+      DateTime? initialValue,
+      InputDecorationTheme? inputDecorationTheme})
       : super(
           () => _DateTimeValueNotifier(value: initialValue),
           {
@@ -300,7 +298,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             'hintText': hintText,
             'style': style,
             'formatter': formatter,
-            'useTime': useTime ?? false,
+            'useTime': useTime,
             'maxLines': maxLines ?? 1,
             'inputDecorationTheme': inputDecorationTheme,
           },
@@ -309,14 +307,14 @@ class DateTimeFormField extends ValueField<DateTime> {
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
-          key: key,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _DateTimeValueNotifier controller = state.valueNotifier;
+            _DateTimeValueNotifier controller =
+                state.valueNotifier as _DateTimeValueNotifier;
             FocusNode focusNode = state.focusNode;
-            String labelText = stateMap['labelText'];
-            String hintText = stateMap['hintText'];
-            TextStyle style = stateMap['style'];
+            String? labelText = stateMap['labelText'];
+            String? hintText = stateMap['hintText'];
+            TextStyle? style = stateMap['style'];
             bool useTime = stateMap['useTime'];
             int maxLines = stateMap['maxLines'];
             InputDecorationTheme inputDecorationTheme =
@@ -338,7 +336,7 @@ class DateTimeFormField extends ValueField<DateTime> {
                       context: state.context,
                       initialTime: controller.timeOfDay ??
                           TimeOfDay(hour: value.hour, minute: value.minute),
-                      builder: (BuildContext context, Widget child) {
+                      builder: (BuildContext context, Widget? child) {
                         return Localizations.override(
                           context: context,
                           locale: locale ?? Locale('zh', 'CN'),
@@ -376,7 +374,7 @@ class DateTimeFormField extends ValueField<DateTime> {
               ),
             ));
 
-            Widget suffixIcon = suffixes.isEmpty
+            Widget? suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -436,11 +434,11 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   void initValueNotifier() {
     super.initValueNotifier();
     textEditingController.text =
-        widget.initialValue == null ? '' : _formatter(widget.initialValue);
+        widget.initialValue == null ? '' : _formatter(widget.initialValue!);
   }
 
   @override
-  void doChangeValue(DateTime value, {bool trigger = true}) {
+  void doChangeValue(DateTime? value, {bool trigger = true}) {
     super.doChangeValue(value, trigger: trigger);
     textEditingController.text = value == null ? '' : _formatter(value);
   }
@@ -449,14 +447,14 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
   void reset() {
     super.reset();
     textEditingController.text =
-        widget.initialValue == null ? '' : _formatter(widget.initialValue);
+        widget.initialValue == null ? '' : _formatter(widget.initialValue!);
   }
 }
 
-class _NumberValueNotifier extends ValueNotifier<num>
+class _NumberValueNotifier extends NullableValueNotifier<num>
     with TextSelectionManagement {
   TextEditingController controller = new TextEditingController();
-  _NumberValueNotifier({num value}) : super(value);
+  _NumberValueNotifier({num? value}) : super(value);
 
   @override
   void setSelection(int start, int end) {
@@ -478,51 +476,47 @@ class _NumberValueNotifier extends ValueNotifier<num>
 
 class NumberFormField extends ValueField<num> {
   NumberFormField(
-      {Key key,
-      bool autofocus,
-      String labelText,
-      String hintText,
-      TextStyle style,
-      bool readOnly,
-      ValueChanged<num> onChanged,
-      FormFieldValidator<num> validator,
-      AutovalidateMode autovalidateMode,
-      num initialValue,
-      int decimal,
-      double max,
-      double min,
-      bool clearable,
-      Widget prefixIcon,
-      List<Widget> suffixIcons,
-      VoidCallback onEditingComplete,
-      TextInputAction textInputAction,
-      InputDecorationTheme inputDecorationTheme})
+      {bool autofocus = false,
+      String? labelText,
+      String? hintText,
+      TextStyle? style,
+      bool readOnly = true,
+      ValueChanged<num?>? onChanged,
+      FormFieldValidator<num>? validator,
+      AutovalidateMode? autovalidateMode,
+      num? initialValue,
+      int decimal = 0,
+      double? max,
+      double? min,
+      bool clearable = true,
+      Widget? prefixIcon,
+      List<Widget>? suffixIcons,
+      VoidCallback? onEditingComplete,
+      TextInputAction? textInputAction,
+      InputDecorationTheme? inputDecorationTheme})
       : super(
           () => _NumberValueNotifier(value: initialValue),
           {
             'labelText': labelText,
             'hintText': hintText,
             'style': style,
-            'decimal': decimal ?? 0,
+            'decimal': decimal,
             'max': max,
             'min': min,
-            'clearable': clearable ?? true,
+            'clearable': clearable,
             'prefixIcon': prefixIcon,
             'suffixIcons': suffixIcons,
             'textInputAction': textInputAction,
             'inputDecorationTheme': inputDecorationTheme,
-            'autofocus': autofocus ?? false,
+            'autofocus': autofocus,
           },
-          key: key,
           onChanged: onChanged,
           validator: (value) {
+            if (validator == null) return null;
             if (value == null) {
               return validator(null);
             }
-            String msg;
-            if (validator != null) {
-              msg = validator(value);
-            }
+            String? msg = validator(value);
             if (msg != null) {
               return msg;
             }
@@ -539,19 +533,20 @@ class NumberFormField extends ValueField<num> {
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
-            _NumberValueNotifier controller = baseState.valueNotifier;
+            _NumberFieldState state = baseState as _NumberFieldState;
+            _NumberValueNotifier controller =
+                baseState.valueNotifier as _NumberValueNotifier;
             FocusNode focusNode = baseState.focusNode;
-            _NumberFieldState state = baseState;
-            String labelText = stateMap['labelText'];
-            String hintText = stateMap['hintText'];
+            String? labelText = stateMap['labelText'];
+            String? hintText = stateMap['hintText'];
             bool clearable = stateMap['clearable'];
-            Widget prefixIcon = stateMap['prefixIcon'];
-            TextStyle style = stateMap['style'];
-            List<Widget> suffixIcons = stateMap['suffixIcons'];
-            TextInputAction textInputAction = stateMap['textInputAction'];
+            Widget? prefixIcon = stateMap['prefixIcon'];
+            TextStyle? style = stateMap['style'];
+            List<Widget>? suffixIcons = stateMap['suffixIcons'];
+            TextInputAction? textInputAction = stateMap['textInputAction'];
             int decimal = stateMap['decimal'];
-            double max = stateMap['max'];
-            double min = stateMap['min'];
+            double? max = stateMap['max'];
+            double? min = stateMap['min'];
             bool autofocus = stateMap['autofocus'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
@@ -566,17 +561,15 @@ class NumberFormField extends ValueField<num> {
                 if (newValue.text == '') return newValue;
                 if ((min == null || min < 0) && newValue.text == '-')
                   return newValue;
-                double parsed = double.tryParse(newValue.text);
+                double? parsed = double.tryParse(newValue.text);
                 if (parsed == null) {
                   return oldValue;
                 }
-                if (decimal != null) {
-                  int indexOfPoint = newValue.text.indexOf(".");
-                  if (indexOfPoint != -1) {
-                    int decimalNum = newValue.text.length - (indexOfPoint + 1);
-                    if (decimalNum > decimal) {
-                      return oldValue;
-                    }
+                int indexOfPoint = newValue.text.indexOf(".");
+                if (indexOfPoint != -1) {
+                  int decimalNum = newValue.text.length - (indexOfPoint + 1);
+                  if (decimalNum > decimal) {
+                    return oldValue;
                   }
                 }
 
@@ -600,7 +593,7 @@ class NumberFormField extends ValueField<num> {
               suffixes.addAll(suffixIcons);
             }
 
-            Widget suffixIcon = suffixes.isEmpty
+            Widget? suffixIcon = suffixes.isEmpty
                 ? null
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -628,7 +621,7 @@ class NumberFormField extends ValueField<num> {
               maxLines: 1,
               onEditingComplete: onEditingComplete,
               onChanged: (value) {
-                num parsed = num.tryParse(value);
+                num? parsed = num.tryParse(value);
                 if (parsed != null) {
                   state.doChangeValue(parsed, updateText: false);
                 } else {
@@ -659,11 +652,11 @@ class _NumberFieldState extends ValueFieldState<num> {
   NumberFormField get widget => super.widget as NumberFormField;
 
   @override
-  num get value => super.value == null
+  num? get value => super.value == null
       ? null
       : getState('decimal') == 0
-          ? super.value.toInt()
-          : super.value.toDouble();
+          ? super.value!.toInt()
+          : super.value!.toDouble();
 
   @override
   void initValueNotifier() {
@@ -673,7 +666,8 @@ class _NumberFieldState extends ValueFieldState<num> {
   }
 
   @override
-  void doChangeValue(num value, {bool trigger = true, bool updateText = true}) {
+  void doChangeValue(num? value,
+      {bool trigger = true, bool updateText = true}) {
     super.doChangeValue(value, trigger: trigger);
     String str = super.value == null ? '' : value.toString();
     if (updateText && textEditingController.text != str) {

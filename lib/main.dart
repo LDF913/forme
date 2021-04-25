@@ -37,17 +37,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
+  MyHomePage({Key? key, required this.title}) : super(key: key);
   final String title;
 
   @override
@@ -57,33 +47,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int i = 1;
 
-  FormManagement formManagement;
-  FormManagement formManagement2;
-
-  @override
-  void initState() {
-    super.initState();
-    formManagement = FormManagement();
-    formManagement2 = FormManagement();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  FormManagement formManagement = FormManagement();
+  FormManagement formManagement2 = FormManagement();
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
         appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
         body: SingleChildScrollView(
@@ -194,50 +164,45 @@ class _MyHomePageState extends State<MyHomePage> {
               formManagement.reset();
             },
             child: Text('reset')),
-        /* Builder(
+        Builder(
           builder: (context) {
             SubControllerDelegate subController =
-                formManagement.getSubController('checkbox');
-            return subController == null
-                ? SizedBox()
-                : TextButton(
-                    onPressed: () {
-                      bool readOnly = subController.isReadOnly('male');
-                      subController.setReadOnly('male', !readOnly);
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text(subController.isReadOnly('male')
-                        ? 'set male editable'
-                        : 'set male readonly'));
+                formManagement.getFormFieldManagement('checkbox').subController;
+            return TextButton(
+                onPressed: () {
+                  bool readOnly = subController.isReadOnly('male');
+                  subController.setReadOnly('male', !readOnly);
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(subController.isReadOnly('male')
+                    ? 'set male editable'
+                    : 'set male readonly'));
           },
         ),
         Builder(
           builder: (context) {
-            SubControllerDelegate subController =
-                formManagement.getSubController('switchGroup');
-            return subController == null
-                ? SizedBox()
-                : TextButton(
-                    onPressed: () {
-                      bool visible =
-                          subController.getState('switch1', 'visible');
-                      bool readOnly =
-                          subController.getState('switch0', 'readOnly');
-                      subController.update({
-                        'switch0': {'readOnly': !readOnly},
-                        'switch1': {'visible': !visible}
-                      });
-                      (context as Element).markNeedsBuild();
-                    },
-                    child: Text((subController.getState('switch1', 'visible')
-                            ? 'hide'
-                            : 'show') +
-                        ' switch 2 & set switch 1 ' +
-                        (subController.getState('switch0', 'readOnly')
-                            ? 'editable'
-                            : 'readOnly')));
+            SubControllerDelegate subController = formManagement
+                .getFormFieldManagement('switchGroup')
+                .subController;
+            return TextButton(
+                onPressed: () {
+                  bool visible = subController.getState('switch1', 'visible');
+                  bool readOnly = subController.getState('switch0', 'readOnly');
+                  subController.update({
+                    'switch0': {'readOnly': !readOnly},
+                    'switch1': {'visible': !visible}
+                  });
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text((subController.getState('switch1', 'visible')
+                        ? 'hide'
+                        : 'show') +
+                    ' switch 2 & set switch 1 ' +
+                    (subController.getState('switch0', 'readOnly')
+                        ? 'editable'
+                        : 'readOnly')));
           },
-        ),*/
+        ),
         TextButton(
             onPressed: () {
               formManagement.getFormFieldManagement('switchGroup').update({
@@ -303,9 +268,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ])
       ],
     );
-    return Row(
-      children: [Expanded(child: buttons)],
-    );
+    return buttons;
   }
 
   Widget createForm2() {
@@ -517,8 +480,10 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
-        .radioGroup(FormBuilder.toRadioItems(['1', '2']),
-            controlKey: 'radioInline', inline: true)
+        .radioGroup(
+            items: FormBuilder.toRadioItems(['1', '2']),
+            controlKey: 'radioInline',
+            inline: true)
         .checkboxGroup(
           [CheckboxItem('male', controlKey: 'male'), CheckboxItem('female')],
           controlKey: 'checkbox',
@@ -529,7 +494,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .divider()
         .radioGroup(
-          [
+          items: [
             RadioItem('1', '1', controlKey: 'radio 1'),
             RadioItem('2', '2', controlKey: 'radio 2'),
           ],
@@ -647,7 +612,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (v) {
               formManagement
                   .getFormFieldManagement('sliderInlineText')
-                  .setValue(v == null ? 0.0 : v.toDouble(), trigger: false);
+                  .setValue(v.toDouble(), trigger: false);
             })
         .rangeSlider(
           controlKey: 'rangeSlider',
@@ -688,7 +653,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class Label extends CommonField {
   final String label;
-  Label(this.label, {Key key})
+  Label(this.label)
       : super(
           {'label': label},
           builder:
@@ -775,4 +740,21 @@ class Button extends CommonField {
             );
           },
         );
+}
+
+class TextButton extends StatelessWidget {
+  final Widget child;
+  final VoidCallback? onPressed;
+  TextButton({required this.child, this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(5),
+      child: ElevatedButton(
+        child: child,
+        onPressed: onPressed,
+      ),
+    );
+  }
 }

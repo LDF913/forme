@@ -5,9 +5,9 @@ import 'form_builder.dart';
 import 'form_theme.dart';
 
 class _SwitchGroupController extends SubController<List<int>> {
-  _SwitchGroupController({value}) : super(value);
-  List<int> get value => super.value == null ? [] : super.value;
-  void set(List<int> value) =>
+  _SwitchGroupController(value) : super(value);
+  List<int> get value => super.value == null ? [] : super.value!;
+  void set(List<int>? value) =>
       super.value = value == null ? [] : List.of(value);
 }
 
@@ -15,12 +15,12 @@ class SwitchGroupItem extends SubControllableItem {
   SwitchGroupItem(String label,
       {bool readOnly = false,
       bool visible = true,
-      String controlKey,
-      EdgeInsets padding,
-      TextStyle textStyle})
+      String? controlKey,
+      EdgeInsets? padding,
+      TextStyle? textStyle})
       : super(controlKey, {
-          'readOnly': readOnly ?? false,
-          'visible': visible ?? true,
+          'readOnly': readOnly,
+          'visible': visible,
           'label': label,
           'textStyle': textStyle,
           'padding': padding ?? EdgeInsets.all(4)
@@ -29,38 +29,37 @@ class SwitchGroupItem extends SubControllableItem {
 
 class SwitchGroupFormField extends ValueField<List<int>> {
   SwitchGroupFormField(
-      {Key key,
-      String label,
-      List<SwitchGroupItem> items,
+      {String? label,
+      required List<SwitchGroupItem> items,
       bool readOnly = false,
-      ValueChanged<List<int>> onChanged,
-      FormFieldValidator<List<int>> validator,
-      AutovalidateMode autovalidateMode,
+      ValueChanged<List<int>>? onChanged,
+      NonnullFieldValidator<List<int>>? validator,
+      AutovalidateMode? autovalidateMode,
       bool hasSelectAllSwitch = true,
-      List<int> initialValue,
-      EdgeInsets errorTextPadding,
-      EdgeInsets selectAllPadding})
+      List<int>? initialValue,
+      EdgeInsets? errorTextPadding,
+      EdgeInsets? selectAllPadding})
       : super(
-          () => _SwitchGroupController(value: initialValue),
+          () => _SwitchGroupController(initialValue ?? List<int>.empty()),
           {
             'label': label,
             'items': items,
             'hasSelectAllSwitch': hasSelectAllSwitch,
             'selectAllPadding':
-                selectAllPadding ?? EdgeInsets.symmetric(horizontal: 4),
-            'errorTextPadding': errorTextPadding ?? EdgeInsets.all(4)
+                selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4),
+            'errorTextPadding': errorTextPadding ?? const EdgeInsets.all(4)
           },
-          key: key,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onChanged: onChanged == null ? null : (value) => onChanged(value!),
           replace: () => [],
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
-          validator: validator,
+          validator: validator == null ? null : (value) => validator(value!),
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SwitchGroupController controller = state.valueNotifier;
-            String label = stateMap['label'];
+            _SwitchGroupController controller =
+                state.valueNotifier as _SwitchGroupController;
+            String? label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
             bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
@@ -109,7 +108,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                     .where((element) => !controllableItems.contains(element))
                     .toList());
               } else {
-                state.didChange(state.value
+                state.didChange(state.value!
                   ..addAll(controllableItems)
                   ..toSet()
                   ..toList());
@@ -158,7 +157,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
 
             for (int i = 0; i < items.length; i++) {
               SwitchGroupItem item = items[i];
-              var stateMap = statesMap[item];
+              var stateMap = statesMap[item]!;
               List<Widget> children = [];
               children.add(Expanded(
                   child: Text(
@@ -195,7 +194,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
             if (state.hasError) {
               columns.add(Padding(
                 padding: errorTextPadding,
-                child: Text(state.errorText,
+                child: Text(state.errorText!,
                     style: FormThemeData.getErrorStyle(themeData)),
               ));
             }
@@ -212,32 +211,31 @@ class SwitchGroupFormField extends ValueField<List<int>> {
   ValueFieldState<List<int>> createState() => ValueFieldState();
 }
 
-class _SwitchValueNotifier extends ValueNotifier<bool> {
-  _SwitchValueNotifier({value}) : super(value);
+class _SwitchValueNotifier extends NullableValueNotifier<bool> {
+  _SwitchValueNotifier(value) : super(value);
   bool get value => super.value ?? false;
 }
 
 class SwitchInlineFormField extends ValueField<bool> {
   SwitchInlineFormField(
-      {Key key,
-      bool readOnly = false,
-      ValueChanged<bool> onChanged,
-      FormFieldValidator<bool> validator,
-      AutovalidateMode autovalidateMode,
-      bool initialValue})
+      {bool readOnly = false,
+      ValueChanged<bool>? onChanged,
+      NonnullFieldValidator<bool>? validator,
+      AutovalidateMode? autovalidateMode,
+      bool initialValue = false})
       : super(
-          () => _SwitchValueNotifier(value: initialValue),
+          () => _SwitchValueNotifier(initialValue),
           {},
-          key: key,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onChanged: onChanged == null ? null : (value) => onChanged(value!),
           replace: () => false,
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue ?? false,
-          validator: validator,
+          initialValue: initialValue,
+          validator: validator == null ? null : (value) => validator(value!),
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SwitchValueNotifier controller = state.valueNotifier;
+            _SwitchValueNotifier controller =
+                state.valueNotifier as _SwitchValueNotifier;
             List<Widget> columns = [];
             columns.add(InkWell(
               child: Row(
@@ -261,7 +259,7 @@ class SwitchInlineFormField extends ValueField<bool> {
             ));
 
             if (state.hasError) {
-              columns.add(Text(state.errorText,
+              columns.add(Text(state.errorText!,
                   overflow: TextOverflow.ellipsis,
                   style: FormThemeData.getErrorStyle(themeData)));
             }

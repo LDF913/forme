@@ -8,19 +8,19 @@ class CheckboxItem extends SubControllableItem {
   final bool ignoreSplit;
   final bool readOnly;
   final bool visible;
-  final TextStyle textStyle;
-  final EdgeInsets padding;
+  final TextStyle? textStyle;
+  final EdgeInsets? padding;
   CheckboxItem(this.label,
       {this.ignoreSplit = false,
       this.readOnly = false,
       this.visible = true,
       this.textStyle,
       this.padding,
-      String controlKey})
+      String? controlKey})
       : super(controlKey, {
-          'readOnly': readOnly ?? false,
-          'visible': visible ?? true,
-          'ignoreSplit': ignoreSplit ?? false,
+          'readOnly': readOnly,
+          'visible': visible,
+          'ignoreSplit': ignoreSplit,
           'label': label,
           'textStyle': textStyle,
           'padding': padding ?? EdgeInsets.all(8),
@@ -28,43 +28,43 @@ class CheckboxItem extends SubControllableItem {
 }
 
 class _CheckboxGroupController extends SubController<List<int>> {
-  _CheckboxGroupController({List<int> value}) : super(value);
-  List<int> get value => super.value == null ? [] : super.value;
-  void set(List<int> value) =>
+  _CheckboxGroupController({List<int>? value}) : super(value);
+  List<int> get value => super.value == null ? [] : super.value!;
+  void set(List<int>? value) =>
       super.value = value == null ? [] : List.of(value);
 }
 
 class CheckboxGroup extends ValueField<List<int>> {
-  CheckboxGroup(List<CheckboxItem> items,
-      {Key key,
-      String label,
-      ValueChanged<List<int>> onChanged,
-      final bool readOnly,
-      int split,
-      FormFieldValidator<List<int>> validator,
-      AutovalidateMode autovalidateMode,
-      List<int> initialValue,
-      EdgeInsets errorTextPadding,
-      @required bool inline})
+  CheckboxGroup(
+      {required List<CheckboxItem> items,
+      String? label,
+      ValueChanged<List<int>>? onChanged,
+      bool readOnly = false,
+      int split = 2,
+      NonnullFieldValidator<List<int>>? validator,
+      AutovalidateMode? autovalidateMode,
+      List<int>? initialValue,
+      EdgeInsets? errorTextPadding,
+      bool inline = false})
       : super(
             () => _CheckboxGroupController(value: initialValue),
             {
               'label': label,
-              'split': split ?? 2,
+              'split': split,
               'items': items,
               'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
             },
-            key: key,
-            onChanged: onChanged,
+            onChanged: onChanged == null ? null : (value) => onChanged(value!),
             replace: () => [],
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
-            validator: validator,
+            validator: validator == null ? null : (value) => validator(value!),
             readOnly: readOnly,
             builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              _CheckboxGroupController controller = state.valueNotifier;
-              String label = inline ? null : stateMap['label'];
+              _CheckboxGroupController controller =
+                  state.valueNotifier as _CheckboxGroupController;
+              String? label = inline ? null : stateMap['label'];
               int split = inline ? 0 : stateMap['split'];
               List<CheckboxItem> items = stateMap['items'];
               EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
@@ -166,7 +166,7 @@ class CheckboxGroup extends ValueField<List<int>> {
               widgets.add(Wrap(children: wrapWidgets));
 
               if (state.hasError) {
-                Text text = Text(state.errorText,
+                Text text = Text(state.errorText!,
                     overflow: inline ? TextOverflow.ellipsis : null,
                     style: FormThemeData.getErrorStyle(themeData));
                 widgets.add(Padding(
