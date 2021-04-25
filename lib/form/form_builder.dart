@@ -939,7 +939,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   /// current widget whether is readonly or not
   ///
-  /// **call this method in initController()**
+  /// **call this method in [initFormResourceManagement]**
   bool get readOnly =>
       _formResourceManagement.state._readOnly ||
       (getState(FormBuilder.readOnlyKey) ?? false);
@@ -990,6 +990,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
     }
   }
 
+  @protected
   @mustCallSuper
   void initFormResourceManagement() {}
 
@@ -999,7 +1000,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   /// get state value
   ///
-  /// it's equals to build method's stateMap[stateKey]
+  /// it's equals to build method's stateMap\[stateKey\]
   getState(String stateKey) {
     return _state.containsKey(stateKey)
         ? _state[stateKey]
@@ -1040,7 +1041,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
 
   @override
   void dispose() {
-    if (focusNode != null) focusNode.dispose();
+    if (_focusNode != null) _focusNode.dispose();
     super.dispose();
   }
 }
@@ -1108,7 +1109,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
     });
   }
 
-  /// initController will  be  called immediately after new controller created via ControllerProvider
+  /// initValueNotifier will  be  called immediately after new valueNotifier created via [ValueNotifierProvider]
   @mustCallSuper
   void initValueNotifier() {}
 
@@ -1158,7 +1159,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   @override
   void dispose() {
-    if (valueNotifier != null) valueNotifier.dispose();
+    if (_valueNotifier != null) _valueNotifier.dispose();
     _formResourceManagement.valueFieldStatesList.remove(this);
     super.dispose();
   }
