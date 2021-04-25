@@ -1645,8 +1645,7 @@ class FormManagement {
   }
 
   bool hasControlKey(String controlKey) {
-    return _formResourceManagement.statesList
-        .any((element) => element.widget.controlKey == controlKey);
+    return _formResourceManagement.mapping.containsKey(controlKey);
   }
 
   FormLayoutManagement get formLayoutManagement {

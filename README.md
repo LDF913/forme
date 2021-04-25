@@ -4,11 +4,16 @@
 ## basic usage
 
 ``` dart
-FormManagement formManagement
+FormManagement formManagement = FormManagement();
 
-Widget form = FormBuilder(formManagement)
+Widget form = FormBuilder(
+      {bool readOnly,//set form's readonly state
+      bool visible, // set form's visible state
+      FormThemeData formThemeData, //set themedata of form 
+      FormManagement formManagement,
+      FormInitCallback initCallback})
 	.textField(
-	  'username',//control key ,used to get|set value and control readonly|visible  state
+	  controlKey:'username',//control key is optional,used to control form field and hold state 
 	  labelText: 'username',
 	  clearable: true,
 	  flex: 3,
@@ -16,199 +21,42 @@ Widget form = FormBuilder(formManagement)
 	);
 ```
 
-## form method
+## FormManagement
+
+### check whether form is initialled or not
+
+``` dart
+bool initialled = formManagement.initialled;
+```
+
+### check whether form is visible or not 
+
+``` dart
+bool visible = formManagement.visible;
+```
 
 ### hide|show form
 
 ``` dart
-formManagement.visible = !formManagement.visible;
+formManagement.visible = true|false;
+```
+
+### check whether form is readOnly or not 
+
+``` dart
+bool readOnly = formManagement.readOnly;
 ```
 
 ### set form readonly|editable
 
 ``` dart
-formManagement.readOnly = !formManagement.readOnly;
+formManagement.readOnly = true|false;
 ```
 
-### hide|show form field
+### get current form themedata
 
 ``` dart
-bool isVisible = formManagement.isVisible(controlKey);
-formManagement.setVisible(controlKey,!isVisible)
-```
-
-### set form field readonly|editable
-
-``` dart
-bool isReadOnly = formManagement.isReadOnly(controlKey);
-formManagement.setReadOnly(controlKey,!isReadOnly)
-```
-
-### sub controller
-
-if you want to control sub item's state (like radiogroup's radio item) ,you can use this method
-
-``` dart
-SubControllerDelegate subController = formManagement.getSubController(controlKey);
-subController.update1(String itemControlKey, Map<String, dynamic> state); //update sub item's state
-subController.update(Map<String, Map<String, dynamic>> states);//udpate multi sub items's state , for better performance,you should use this method to update multi items
-subController.getState(String itemControlKey, String key);//get sub item's state value
-subController.setVisible(String itemControlKey, bool visible);//equals to update(itemControlKey,{'visible':visible})
-subController.setReadOnly(String itemControlKey, bool readOnly);//equals to update(itemControlKey,{'readOnly':readOnly})
-bool subController.isVisible(String itemControlKey);//equals to getState(itemControlKey,'visible')
-bool subController.isReadOnly(String itemControlKey);//equals to getState(itemControlKey,'readOnly')
-bool subController.hasState(String itemControlKey);//check itemControlKey exists
-```
-
-**only SwitchGroup|RadioGroup|CheckboxGroup support these method **
-
-### validate form
-
-``` dart
-formManagement.validate();
-```
-
-### validate one field
-
-``` dart
-formManagement.validate1(controlKey);
-```
-
-### check form is valid
-
-**unlike validate method,this method won't display error msg**
-
-``` dart
-formManagement.isValid
-```
-
-### check field is valid
-
-**unlike validate1 method,this method won't display error msg**
-
-``` dart
-formManagement.isValid1(controlkey);
-```
-
-### reset form
-
-``` dart
-formManagement.reset();
-```
-
-### reset one field
-
-``` dart
-formManagement.reset1(controlKey);
-```
-
-
-### set autovalidatemode
-
-``` dart
-formManagement.setAutovalidateMode(controlKey,autovalidateMode);
-```
-
-### set initialValue
-
-``` dart
-formManagement.setInitialValue(controlKey,initialValue);
-```
-
-### focus form field
-```
-formManagement.requestFocus(controlKey);
-```
-
-### unfocus form field
-```
-formManagement.unFocus(controlKey);
-```
-
-### listen focus change
-
-``` dart
-onFocusChange(bool value){
-	print('username focused: $value');
-}
-
-FormManagement(initCallback:(){
-	formManagement.onFocusChange('username',onFocusChange);
-});
-```
-
-### stop listen focus change
-
-``` dart
-formManagement.offFocusChange('username',onFocusChange);
-```
-
-### update form field
-
-``` dart
-//update username's label
-formManagement.update(controlKey, {
-	'labelText': DateTime.now().toString(),
-});
-```
-
-``` dart
-//update selector's items
-formManagement.setValue('selector', null);
-formManagement.update('selector', {
-	'items': FormBuilder.toSelectorItems(
-		[Random().nextDouble().toString()])
-});
-```
-
-### rebuild form field's state
-
-``` dart
-formManagement.rebuild(controlKey,{});
-```
-
-### set form field's padding
-``` dart
-formManagement.setPadding(controlKey,padding);
-```
-
-### TextSelectionManagement
-
-``` dart
-TextSelectionManagement textSelectionManagement = formMangement.getTextSelectionManagement(controlKey);
-textSelectionManagement.setSelection(controlKey,start,end);
-textSelectionManagement.selectAll(controlKey);
-```
-
-** only works on textfield|numberfield **
-
-### set form field's value
- 
-``` dart
-formManagement.setValue('controlKey',value,trigger:false);
-```
-
-trigger: whether  trigger onChanged or not
-
-### get form field's value
-
-``` dart
-formManagement.getValue('controlKey');
-```
-
-### get form data
-
-``` dart
-formManagement.data; // auto remove null
-formManagement.getData({bool removeNull = false});
-```
-
-###  remove a from field 
-
-**not removed from widget tree**
-
-``` dart
-formManagement.remove(controlKey);
+FormThemeData formThemeData = formManagement.formThemeData;
 ```
 
 ### set form theme
@@ -218,54 +66,303 @@ formManagement.formThemeData = FormThemeData(themeData);// system theme
 formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
 ```
 
-### manage FormLayout
+### get form data
 
-#### get FormLayoutManagement
+``` dart
+formManagement.data; // auto remove null
+formManagement.getData({bool removeNull = false});
+```
+
+### reset form
+
+``` dart
+formManagement.reset();
+```
+
+### validate form
+
+``` dart
+formManagement.validate();
+```
+
+### check whether form is valid or not 
+
+**unlike validate method,this method won't display error msg**
+
+``` dart
+formManagement.isValid
+```
+
+### check whether form has a controlKey or not
+
+``` dart
+bool exists = formManagement.hasControlKey(String controlKey);
+```
+
+### get FormFieldManagement
+
+``` dart
+FormFieldManagement formFieldManagement = formManagement.getFormFieldManagement(String controlKey)
+```
+
+
+### get FormLayoutManagement
 
 ``` dart
 FormLayoutManagement formLayoutManagement = formManagement.formLayoutManagement;
 ```
 
-#### get rows
+### get FormWidgetTreeManagement
 
-``` dart
-int rows = formLayoutManagement.rows; 
+``` dart 
+FormWidgetTreeManagement formWidgetTreeManagement = formManagement.formWidgetTreeManagement
 ```
 
-#### get columns
+## FormFieldManagement
+
+
+### check whether a field is ValueField or not
 
 ``` dart
-int columns = formLayoutManagement.getColumns(row,{bool editing  false})
+bool isValueField = formFieldManagement.isValueField;
 ```
 
-#### check field at position is visible
+### check whether a field is readOnly or not
 
 ``` dart
-bool isVisible(int row, {int column})
+bool readOnly = formFieldManagement.readOnly;
 ```
 
-#### set field at position 
+### set readOnly on formFieldManagement
 
 ``` dart
-void setVisibleAtPosition(int row, bool visible, {int column})
+formFieldManagement.readOnly = true|false
 ```
 
-### remove field in widget tree
+### check whether a field is removed or not
 
 ``` dart
-formLayoutManagement.remove(controlKey);
+bool removed = formFieldManagement.removed;
 ```
 
-### remove field|row in widget tree by position
+### remove|unremove a form field
 
 ``` dart
-formLayoutManagement.removeAtPosition(int row,{int column})
+formFieldManagement.remove = true|false
 ```
 
-### insert a field
+### check whether a field is visible or not
 
 ``` dart
-formLayoutManagement.insert(
+bool visible = formFieldManagement.visible;
+```
+
+### set visible on form field
+
+``` dart
+formFieldManagement.visible = true|false
+```
+
+### set autovalidateMode on value field
+
+```
+formFieldManagement.autovalidateMode = AutovalidateMode;
+```
+
+### set initialValue on value field
+
+``` dart
+formFieldManagement.initialValue = value;
+```
+  
+### validate a value field
+
+```
+bool isValid = formFieldManagement.validate();
+```
+
+### check whether a value field is valid or not 
+
+**unlike validate method,this method won't display error msg**
+
+``` dart
+bool isValid = formFieldManagement.isValid;
+```
+
+### reset value field
+
+``` dart
+formFieldManagement.reset();
+```
+
+### get padding of a form field
+
+``` dart
+EdgeInsets padding = formFieldManagement.padding;
+```
+
+### set padding of a form field
+
+```
+formFieldManagement.padding = padding;
+```
+
+### check whether a value field is focused or not
+
+``` dart
+bool hasFocus = formFieldManagement.focus;
+```
+
+### focus|unfocus a form field
+
+``` dart
+formFieldManagement.focus = true|false
+```
+
+### get value of a value field
+
+``` dart
+dynamic value = formFieldManagement.value;
+```
+
+### set value on a value field
+
+``` dart
+formFieldManagement.setValue(dynamic value,{bool trigger = true});
+```
+
+**trigger** whether trigger  field's onChange callback or not
+ 
+### rebuild a form field's state
+
+``` dart
+formFieldManagement.state = {};
+```
+
+### update a form field's state
+
+``` dart
+formFieldManagement.update({});
+```
+
+### remove form field's states
+
+``` dart
+formFieldManagement.removeState(Set<String> keys); 
+```
+
+### get TextSelectionManagement
+
+``` dart
+TextSelectionManagement textSelectionManagement = formFieldManagement.textSelectionManagement;
+```
+
+**only textfield|numberfield support this method!**
+
+### get SubController
+
+``` dart
+SubControllerDelegate subController = formFieldManagement.subController;
+```
+
+**only checkboxGroup|switchGroup|radiogroup support this method**
+
+### set focuslistener on a form field`
+
+``` dart
+formFieldManagement.focusListener = FocusListener();
+```
+
+**you should call this method in FormBuilder's initCallback**
+
+## FormLayoutManagement 
+
+### get rows of a form
+
+```
+int rows = formLayoutManagement.rows;
+```
+
+### get FormLayoutRowManagement
+
+``` dart
+FormLayoutRowManagement formLayoutRowManagement = formLayoutManagement.getFormLayoutRowManagement(int row);
+```
+
+### get FormFieldManagement
+
+``` dart
+FormFieldManagement formFieldManagement = formLayoutManagement.getFormFieldManagement(int row,int column);
+```
+
+## FormLayoutRowManagement
+
+### get columns of a row
+
+``` dart
+int columns = formLayoutRowManagement.columns;
+```
+
+### check whether a row is visible or not
+
+``` dart
+bool visible = formLayoutRowManagement.visible;
+```
+
+### set visiable on a row
+
+``` dart
+formLayoutRowManagement.visible = true|false;
+```
+
+### set readOnly on a row
+
+``` dart
+formLayoutRowManagement.readOnly = true|false;
+```
+
+### remove|unremove a row
+
+```
+formLayoutRowManagement.remove = true|false;
+```
+
+## FormWidgetTreeManagement 
+
+### check whether a layout is editing or not 
+
+``` dart
+bool isEditing = formWidgetTreeManagement.isEditing;
+```
+
+### get rows of currrent editing layout
+
+``` dart
+int rows = formWidgetTreeManagement.rows;
+```
+
+### get columns of a row in current editing layout
+
+``` dart
+int columns = formWidgetTreeManagement.getColumns(int row);
+```
+
+### remove a field in widget tree
+
+``` dart
+formWidgetTreeManagement.remove(String controlKey);
+```
+
+### remove a row|field in widget tree
+
+``` dart
+formWidgetTreeManagement.removeAtPosition(int row,{int column});
+```
+
+### insert a row at position
+
+``` dart
+void insert(
       {int column,
       int row,
       String controlKey,
@@ -277,17 +374,30 @@ formLayoutManagement.insert(
       bool insertRow = false})
 ```
 
-#### apply
+### swap two rows
 
 ``` dart
-formLayoutManagement.apply();
+formWidgetTreeManagement.swapRow(int oldRow, int newRow)
 ```
 
-#### cancel
+### start edit current layout
 
 ``` dart
-formLayoutManagement.cancel();
+formWidgetTreeManagement.startEdit();
 ```
+
+### apply edited layout
+
+``` dart
+formWidgetTreeManagement.apply();
+```
+
+### cancel editing layout
+ 
+``` dart
+formWidgetTreeManagement.cancel();
+```
+
 
 ## currently support field
 
