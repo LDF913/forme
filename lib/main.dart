@@ -137,39 +137,41 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         Builder(
           builder: (context) {
+            FormFieldManagement username =
+                formManagement.getFormFieldManagement('username');
             return TextButton(
                 onPressed: () {
-                  formManagement.setVisible(
-                      'username', !formManagement.isVisible('username'));
+                  username.visible = !username.visible;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement.isVisible('username')
-                    ? 'hide username'
-                    : 'show username'));
+                child:
+                    Text(username.visible ? 'hide username' : 'show username'));
           },
         ),
         Builder(
           builder: (context) {
+            FormFieldManagement username =
+                formManagement.getFormFieldManagement('username');
             return TextButton(
                 onPressed: () {
-                  formManagement.setReadOnly(
-                      'username', !formManagement.isReadOnly('username'));
+                  username.readOnly = !username.readOnly;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement.isReadOnly('username')
+                child: Text(username.readOnly
                     ? 'set username editable'
                     : 'set username readonly'));
           },
         ),
         TextButton(
             onPressed: () {
-              formManagement.setAutovalidateMode(
-                  'username', AutovalidateMode.always);
+              formManagement
+                  .getFormFieldManagement('username')
+                  .autovalidateMode = AutovalidateMode.always;
             },
             child: Text('validate username always')),
         TextButton(
             onPressed: () {
-              formManagement.remove('username');
+              formManagement.getFormFieldManagement('username').remove = true;
             },
             child: Text('remove username completely')),
         TextButton(
@@ -184,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
-              formManagement.validate1('username');
+              formManagement.getFormFieldManagement('username').validate();
             },
             child: Text('validate username only')),
         TextButton(
@@ -192,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
               formManagement.reset();
             },
             child: Text('reset')),
-        Builder(
+        /* Builder(
           builder: (context) {
             SubControllerDelegate subController =
                 formManagement.getSubController('checkbox');
@@ -235,10 +237,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             ? 'editable'
                             : 'readOnly')));
           },
-        ),
+        ),*/
         TextButton(
             onPressed: () {
-              formManagement.update('switchGroup', {
+              formManagement.getFormFieldManagement('switchGroup').update({
                 'items': List<SwitchGroupItem>.generate(
                     5,
                     (index) => SwitchGroupItem((index + 5).toString(),
@@ -250,12 +252,12 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('set switch items')),
         TextButton(
             onPressed: () {
-              formManagement.requestFocus('age');
+              formManagement.getFormFieldManagement('age').focus = true;
             },
             child: Text('age focus')),
         TextButton(
             onPressed: () {
-              formManagement.update('username', {
+              formManagement.getFormFieldManagement('username').update({
                 'labelText': DateTime.now().toString(),
               });
             },
@@ -263,7 +265,8 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement
-                  .getTextSelectionManagement('age')
+                  .getFormFieldManagement('age')
+                  .textSelectionManagement
                   .setSelection(1, 1);
             },
             child: Text('set age\'s selection')),
@@ -275,7 +278,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         TextButton(
           onPressed: () {
-            formManagement.update('button', {'label': 'new Text'});
+            formManagement
+                .getFormFieldManagement('button')
+                .update({'label': 'new Text'});
           },
           child: Text('set button text'),
         ),
@@ -370,7 +375,9 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         TextButton(
             onPressed: () {
-              formManagement2.formLayoutManagement.updateAtPosition(0, 0, {
+              formManagement2.formLayoutManagement
+                  .getFormLayoutFieldManagement(0, 0)
+                  .update({
                 'label': '123',
               });
             },
@@ -378,28 +385,27 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement2.formLayoutManagement
-                  .setValueAtPosition(0, 1, 'hello world');
+                  .getFormLayoutFieldManagement(0, 1)
+                  .setValue('hello world');
             },
             child: Text('set value at position 0,1')),
         Builder(
           builder: (context) {
+            FormLayoutRowManagement row = formManagement2.formLayoutManagement
+                .getFormLayoutRowManagement(0);
             return TextButton(
                 onPressed: () {
-                  formManagement2.formLayoutManagement.setVisibleAtPosition(
-                      0, !formManagement2.formLayoutManagement.isVisible(0));
+                  row.visible = !row.visible;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement2.initialled
-                    ? formManagement2.formLayoutManagement.isVisible(0)
-                        ? 'hide first row'
-                        : 'show first row'
-                    : 'hide first row'));
+                child: Text(row.visible ? 'hide first row' : 'show first row'));
           },
         ),
         TextButton(
             onPressed: () {
-              formManagement2.formLayoutManagement
-                  .setReadOnlyAtPosition(0, true);
+              FormLayoutRowManagement row = formManagement2.formLayoutManagement
+                  .getFormLayoutRowManagement(0);
+              row.readOnly = true;
             },
             child: Text('set first row readonly')),
         TextButton(
@@ -462,15 +468,21 @@ class _MyHomePageState extends State<MyHomePage> {
     return FormBuilder(
       formManagement: formManagement,
       initCallback: (formManagement) {
-        formManagement.onFocusChange('username', FocusListener(
+        formManagement.getFormFieldManagement('username').focusListener =
+            FocusListener(
           rootChanged: (value) {
             print('username focus changed :$value');
           },
-        ));
+        );
       },
     )
         .textField(
-            controlKey: 'username', labelText: 'username', clearable: true)
+          controlKey: 'username',
+          labelText: 'username',
+          clearable: true,
+          validator: (value) =>
+              value.isEmpty ? 'username can not be empty !' : null,
+        )
         .checkboxGroup([CheckboxItem('remember me')],
             controlKey: 'rememberMe', inline: true)
         .switchInline(
@@ -488,7 +500,10 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (value) => print('password value changed $value'),
             flex: 1)
         .textButton((management) {
-          management.getTextSelectionManagement('password').selectAll();
+          management
+              .getFormFieldManagement('password')
+              .textSelectionManagement
+              .selectAll();
         }, label: 'button', controlKey: 'button')
         .nextLine()
         .numberField(
@@ -583,7 +598,9 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             onSelectDialogShow: (formManagement) {
               //use this formManagement to control query form on search dialog
-              formManagement.setValue('filter', RangeValues(20, 50));
+              formManagement
+                  .getFormFieldManagement('filter')
+                  .setValue(RangeValues(20, 50));
               return true; //return true will set params before query
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
@@ -618,9 +635,9 @@ class _MyHomePageState extends State<MyHomePage> {
             labelText: 'inline slider',
             flex: 2,
             initialValue: 0,
-            onChanged: (v) => formManagement.setValue(
-                'sliderInline', v == null ? 0.0 : v.toDouble(),
-                trigger: false))
+            onChanged: (v) => formManagement
+                .getFormFieldManagement('sliderInline')
+                .setValue(v == null ? 0.0 : v.toDouble(), trigger: false))
         .slider(
             controlKey: 'sliderInline',
             min: 0,
@@ -628,8 +645,9 @@ class _MyHomePageState extends State<MyHomePage> {
             initialValue: 10,
             inline: true,
             onChanged: (v) {
-              formManagement.setValue('sliderInlineText', v.round(),
-                  trigger: false);
+              formManagement
+                  .getFormFieldManagement('sliderInlineText')
+                  .setValue(v == null ? 0.0 : v.toDouble(), trigger: false);
             })
         .rangeSlider(
           controlKey: 'rangeSlider',
@@ -656,7 +674,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       ? null
                       : () {
                           FormManagement.of(context);
-                          formManagement.update('commonField', {
+                          formManagement
+                              .getFormFieldManagement('commonField')
+                              .update({
                             'text': Random.secure().nextDouble().toString()
                           });
                         },
