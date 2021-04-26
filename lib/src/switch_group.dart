@@ -19,11 +19,12 @@ class SwitchGroupItem extends SubControllableItem {
       EdgeInsets? padding,
       TextStyle? textStyle})
       : super(controlKey, {
-          'readOnly': readOnly,
-          'visible': visible,
-          'label': label,
-          'textStyle': textStyle,
-          'padding': padding ?? EdgeInsets.all(4)
+          'readOnly': TypedValue<bool>(readOnly, nullable: false),
+          'visible': TypedValue<bool>(visible, nullable: false),
+          'label': TypedValue<String>(label, nullable: false),
+          'textStyle': TypedValue<TextStyle>(textStyle),
+          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(4),
+              nullable: false),
         });
 }
 
@@ -42,12 +43,16 @@ class SwitchGroupFormField extends ValueField<List<int>> {
       : super(
           () => _SwitchGroupController(initialValue ?? List<int>.empty()),
           {
-            'label': label,
-            'items': items,
-            'hasSelectAllSwitch': hasSelectAllSwitch,
-            'selectAllPadding':
+            'label': TypedValue<String>(label),
+            'items': TypedValue<List<SwitchGroupItem>>(items, nullable: false),
+            'hasSelectAllSwitch':
+                TypedValue<bool>(hasSelectAllSwitch, nullable: false),
+            'selectAllPadding': TypedValue<EdgeInsets>(
                 selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4),
-            'errorTextPadding': errorTextPadding ?? const EdgeInsets.all(4)
+                nullable: false),
+            'errorTextPadding': TypedValue<EdgeInsets>(
+                errorTextPadding ?? const EdgeInsets.all(4),
+                nullable: false),
           },
           readOnly: readOnly,
           onChanged: onChanged == null ? null : (value) => onChanged(value!),

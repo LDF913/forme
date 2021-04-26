@@ -96,11 +96,12 @@ class SelectorFormField extends ValueField<List> {
       : super(
           () => _SelectorFormValueNotifier(initialValue ?? []),
           {
-            'labelText': labelText,
-            'hintText': hintText,
-            'multi': multi,
-            'clearable': clearable,
-            'inputDecorationTheme': inputDecorationTheme,
+            'labelText': TypedValue<String>(labelText),
+            'hintText': TypedValue<String>(hintText),
+            'multi': TypedValue<bool>(multi, nullable: false),
+            'clearable': TypedValue<bool>(clearable, nullable: false),
+            'inputDecorationTheme':
+                TypedValue<InputDecorationTheme>(inputDecorationTheme)
           },
           readOnly: readOnly,
           onChanged: onChanged == null ? null : (value) => onChanged(value!),
@@ -209,7 +210,6 @@ class SelectorFormField extends ValueField<List> {
                                               arguments: controller.key),
                                           builder: (BuildContext context) {
                                             return _SelectorDialog(
-                                                FormManagement(),
                                                 selectItemRender,
                                                 checker,
                                                 controller.value,
@@ -265,7 +265,6 @@ class _SelectorFormFieldState extends ValueFieldState<List> {
 }
 
 class _SelectorDialog extends StatefulWidget {
-  final FormManagement formManagement;
   final SelectItemRender? selectItemRender;
   final SelectedChecker selectedChecker;
   final List selected;
@@ -275,7 +274,6 @@ class _SelectorDialog extends StatefulWidget {
   final OnSelectDialogShow? onSelectDialogShow;
   final FormThemeData formThemeData;
   _SelectorDialog(
-      this.formManagement,
       this.selectItemRender,
       this.selectedChecker,
       this.selected,
@@ -308,7 +306,6 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   void initState() {
     super.initState();
     selected = List.from(widget.selected);
-    queryFormManagement = widget.formManagement;
     formThemeData = widget.formThemeData;
 
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
@@ -396,8 +393,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       return null;
     }
     FormBuilder form = FormBuilder(
-      formManagement: queryFormManagement,
       formThemeData: formThemeData,
+      initCallback: (formManagement) => queryFormManagement = formManagement,
     );
     widget.queryFormBuilder!(form, query);
     return form;

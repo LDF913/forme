@@ -17,12 +17,13 @@ class CheckboxItem extends SubControllableItem {
       this.padding,
       String? controlKey})
       : super(controlKey, {
-          'readOnly': readOnly,
-          'visible': visible,
-          'ignoreSplit': ignoreSplit,
-          'label': label,
-          'textStyle': textStyle,
-          'padding': padding ?? EdgeInsets.all(8),
+          'readOnly': TypedValue<bool>(readOnly, nullable: false),
+          'visible': TypedValue<bool>(visible, nullable: false),
+          'ignoreSplit': TypedValue<bool>(ignoreSplit, nullable: false),
+          'label': TypedValue<String>(label, nullable: false),
+          'textStyle': TypedValue<TextStyle>(textStyle),
+          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(8),
+              nullable: false),
         });
 }
 
@@ -48,10 +49,12 @@ class CheckboxGroup extends ValueField<List<int>> {
       : super(
             () => _CheckboxGroupController(value: initialValue),
             {
-              'label': label,
-              'split': split,
-              'items': items,
-              'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
+              'label': TypedValue<String>(label),
+              'split': TypedValue<int>(split, nullable: false),
+              'items': TypedValue<List<CheckboxItem>>(items, nullable: false),
+              'errorTextPadding': TypedValue<EdgeInsets>(
+                  errorTextPadding ?? const EdgeInsets.all(8),
+                  nullable: false)
             },
             onChanged: onChanged == null ? null : (value) => onChanged(value!),
             replace: () => [],

@@ -30,12 +30,14 @@ class SliderFormField extends ValueField<double> {
       : super(
           () => _SliderValueNotifier(initialValue ?? min, min),
           {
-            'max': max,
-            'min': min,
-            'divisions': divisions ?? (max - min).toInt(),
-            'label': label,
-            'contentPadding':
-                contentPadding ?? EdgeInsets.symmetric(horizontal: 10)
+            'label': TypedValue<String>(label),
+            'max': TypedValue<double>(max, nullable: false),
+            'min': TypedValue<double>(min, nullable: false),
+            'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
+                nullable: false),
+            'contentPadding': TypedValue<EdgeInsets>(
+                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10),
+                nullable: false)
           },
           readOnly: readOnly,
           onChanged: onChanged == null ? null : (value) => onChanged(value!),
@@ -171,12 +173,14 @@ class RangeSliderFormField extends ValueField<RangeValues> {
             () => _RangeSliderValueNotifier(
                 initialValue ?? RangeValues(min, max), min, max),
             {
-              'divisions': divisions ?? (max - min).toInt(),
-              'max': max,
-              'min': min,
-              'label': label,
-              'contentPadding':
-                  contentPadding ?? EdgeInsets.symmetric(horizontal: 20)
+              'label': TypedValue<String>(label),
+              'max': TypedValue<double>(max, nullable: false),
+              'min': TypedValue<double>(min, nullable: false),
+              'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
+                  nullable: false),
+              'contentPadding': TypedValue<EdgeInsets>(
+                  contentPadding ?? EdgeInsets.symmetric(horizontal: 20),
+                  nullable: false)
             },
             readOnly: readOnly,
             onChanged: onChanged == null ? null : (value) => onChanged(value!),

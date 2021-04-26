@@ -19,12 +19,13 @@ class RadioItem extends SubControllableItem {
       this.padding,
       this.textStyle})
       : super(controlKey, {
-          'readOnly': readOnly,
-          'visible': visible,
-          'ignoreSplit': ignoreSplit,
-          'label': label,
-          'textStyle': textStyle,
-          'padding': padding ?? EdgeInsets.all(8),
+          'readOnly': TypedValue<bool>(readOnly, nullable: false),
+          'visible': TypedValue<bool>(visible, nullable: false),
+          'ignoreSplit': TypedValue<bool>(ignoreSplit, nullable: false),
+          'label': TypedValue<String>(label, nullable: false),
+          'textStyle': TypedValue<TextStyle>(textStyle),
+          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(8),
+              nullable: false),
         });
 }
 
@@ -33,8 +34,9 @@ class _RadioGroupController extends SubController {
 }
 
 class RadioGroup extends ValueField {
-  RadioGroup(List<RadioItem> items,
-      {String? label,
+  RadioGroup(
+      {required List<RadioItem> items,
+      String? label,
       ValueChanged? onChanged,
       FormFieldValidator? validator,
       AutovalidateMode? autovalidateMode,
@@ -46,10 +48,12 @@ class RadioGroup extends ValueField {
       : super(
           () => _RadioGroupController(value: initialValue),
           {
-            'label': label,
-            'split': split,
-            'items': items,
-            'errorTextPadding': errorTextPadding ?? EdgeInsets.all(8)
+            'label': TypedValue<String>(label),
+            'split': TypedValue<int>(split, nullable: false),
+            'items': TypedValue<List<RadioItem>>(items, nullable: false),
+            'errorTextPadding': TypedValue<EdgeInsets>(
+                errorTextPadding ?? EdgeInsets.all(8),
+                nullable: false)
           },
           readOnly: readOnly,
           onChanged: onChanged,

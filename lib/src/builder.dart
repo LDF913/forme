@@ -14,8 +14,6 @@ import 'slider.dart';
 /// it's only create once and maintained in [_FormManagement]
 typedef ValueNotifierProvider<T> = NullableValueNotifier<T> Function();
 
-typedef OnPressed = void Function(FormManagement management);
-
 typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
   K state,
   BuildContext context,
@@ -48,18 +46,16 @@ class FormBuilder extends StatefulWidget {
   final bool _readOnly;
   final bool _visible;
   final FormThemeData _formThemeData;
-  final FormManagement formManagement;
+  final FormManagement formManagement = FormManagement._();
   final FormInitCallback? initCallback;
   FormBuilder(
       {bool? readOnly,
       bool? visible,
       FormThemeData? formThemeData,
-      FormManagement? formManagement,
       this.initCallback})
       : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
-        this._visible = visible ?? true,
-        this.formManagement = formManagement ?? FormManagement();
+        this._visible = visible ?? true;
 
   FormBuilder nextLine() {
     _formLayout.lastEmptyRow();
@@ -127,7 +123,7 @@ class FormBuilder extends StatefulWidget {
     VoidCallback? onTap,
     bool obscureText = false,
     int? flex,
-    int? maxLines,
+    int? maxLines = 1,
     Widget? prefixIcon,
     TextInputType? keyboardType,
     int? maxLength,
@@ -211,8 +207,8 @@ class FormBuilder extends StatefulWidget {
       flex: inline ? flex : 1,
       inline: inline,
       child: RadioGroup(
-        List.of(items),
         label: label,
+        items: List.of(items),
         validator: validator,
         autovalidateMode: autovalidateMode,
         onChanged: onChanged,
@@ -264,11 +260,12 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  FormBuilder textButton(OnPressed onPressed,
+  FormBuilder textButton(
       {String? controlKey,
       String? label,
       Widget? child,
       int? flex = 0,
+      required VoidCallback onPressed,
       VoidCallback? onLongPress,
       bool readOnly = false,
       bool visible = true,
@@ -282,18 +279,14 @@ class FormBuilder extends StatefulWidget {
               padding: padding,
               child: CommonField(
                 {
-                  'label': label,
-                  'child': child,
+                  'label': TypedValue<String>(label),
+                  'child': TypedValue<Widget>(child),
                 },
                 builder: (state, context, readOnly, stateMap, themeData,
                     formThemeData) {
                   Widget child = stateMap['child'] ?? Text(stateMap['label']);
                   return TextButton(
-                      onPressed: readOnly
-                          ? null
-                          : () {
-                              onPressed(formManagement);
-                            },
+                      onPressed: readOnly ? null : onPressed,
                       onLongPress: readOnly ? null : onLongPress,
                       child: child);
                 },
@@ -412,7 +405,7 @@ class FormBuilder extends StatefulWidget {
       inline: false,
       padding: padding,
       child: CommonField(
-        {'height': height ?? 1.0},
+        {'height': TypedValue<double>(height ?? 1.0)},
         readOnly: true,
         builder:
             (state, context, readOnly, stateMap, themeData, formThemeData) {
@@ -663,9 +656,7 @@ class _FormBuilderState extends State<FormBuilder> {
     formResourceManagement = _FormResourceManagement(this);
     widget.formManagement._formResourceManagement = formResourceManagement;
     if (widget.initCallback != null) {
-      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
-        widget.initCallback!(widget.formManagement);
-      });
+      widget.initCallback!(widget.formManagement);
     }
   }
 
@@ -900,9 +891,16 @@ class _FormItemWidgetState extends State<_FormItemWidget> {
   }
 }
 
+class TypedValue<T> {
+  final T? value;
+  final bool nullable;
+  T? _value;
+  TypedValue(this.value, {bool nullable = true}) : this.nullable = nullable;
+}
+
 abstract class _BaseField<T, K extends _BaseFieldState<T>>
     extends FormField<T> {
-  final Map<String, dynamic> _initStateMap;
+  final Map<String, TypedValue> _initStateMap;
   _BaseField(this._initStateMap,
       {Key? key,
       FormFieldValidator<T>? validator,
@@ -924,7 +922,8 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
-    _initStateMap[FormBuilder.readOnlyKey] = readOnly;
+    _initStateMap[FormBuilder.readOnlyKey] =
+        TypedValue<bool>(readOnly, nullable: false);
   }
 }
 
@@ -967,7 +966,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
       listener.subChanged!(key, hasFocus);
   }
 
-  Map<String, dynamic> get _initMap => (widget as _BaseField)._initStateMap;
+  Map<String, TypedValue> get _initMap => (widget as _BaseField)._initStateMap;
 
   @override
   void initState() {
@@ -997,33 +996,29 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   ///
   /// it's equals to build method's stateMap\[stateKey\]
   getState(String stateKey) {
-    if (!_initMap.containsKey(stateKey))
-      throw 'did you put key :$stateKey into your initMap';
+    _enableKeyExists(stateKey);
     return _state!.containsKey(stateKey)
         ? _state![stateKey]
-        : _initMap[stateKey];
+        : _initMap[stateKey]!.value;
   }
 
   Map<String, dynamic> get _stateMap {
     Map<String, dynamic> map = {};
     _initMap.forEach((key, value) {
-      map[key] = _state!.containsKey(key) ? _state![key] : value;
-    });
-    _state!.keys
-        .where((element) => !map.containsKey(element))
-        .forEach((element) {
-      map[element] = _state![element];
+      map[key] = _state!.containsKey(key) ? _state![key] : value.value;
     });
     return map;
   }
 
   void _rebuild(Map<String, dynamic> state) {
+    _checkState(state);
     setState(() {
       this._state = state;
     });
   }
 
   void _update(Map<String, dynamic> state) {
+    _checkState(state);
     setState(() {
       state.forEach((key, value) {
         _state![key] = value;
@@ -1038,6 +1033,26 @@ class _BaseFieldState<T> extends FormFieldState<T> {
         _state!.remove(element);
       });
     });
+  }
+
+  void _checkState(Map<String, dynamic> map) {
+    map.forEach((key, value) {
+      _enableKeyExists(key);
+      TypedValue typedValue = _initMap[key]!;
+      //check runtimetype here !
+      //we can't use `is` to check dynamic runtimetype
+      //so we try to set value to typedvalue._value field
+      //throw an error if convert failed
+      typedValue._value = value;
+      //used typedValue._value  to ignore unused warning
+      if (!typedValue.nullable && typedValue._value == null)
+        throw '$key\'s value can not be null!';
+    });
+  }
+
+  void _enableKeyExists(String stateKey) {
+    if (!_initMap.containsKey(stateKey))
+      throw 'did you put key :$stateKey into your initMap';
   }
 
   @override
@@ -1060,7 +1075,8 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
   T? get initialValue =>
       _initStateMap[FormBuilder.initialValueKey]?.value ?? super.initialValue;
 
-  ValueField(this.formValueNotifierProvider, Map<String, dynamic> initStateMap,
+  ValueField(
+      this.formValueNotifierProvider, Map<String, TypedValue> initStateMap,
       {Key? key,
       this.replace,
       this.onChanged,
@@ -1075,8 +1091,10 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue) {
-    super._initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
-    super._initStateMap[FormBuilder.initialValueKey] = initialValue;
+    super._initStateMap[FormBuilder.autovalidateModeKey] =
+        TypedValue<AutovalidateMode>(autovalidateMode, nullable: false);
+    super._initStateMap[FormBuilder.initialValueKey] =
+        TypedValue<T>(initialValue, nullable: true);
   }
 
   @override
@@ -1116,13 +1134,15 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 
   void _setAutoValidateMode(AutovalidateMode autovalidateMode) {
     setState(() {
-      widget._initStateMap[FormBuilder.autovalidateModeKey] = autovalidateMode;
+      widget._initStateMap[FormBuilder.autovalidateModeKey] =
+          TypedValue<AutovalidateMode>(autovalidateMode, nullable: false);
     });
   }
 
   void _setInitialValue(T initialValue) {
     setState(() {
-      widget._initStateMap[FormBuilder.initialValueKey] = initialValue;
+      widget._initStateMap[FormBuilder.initialValueKey] =
+          TypedValue<T>(initialValue, nullable: true);
     });
   }
 
@@ -1183,7 +1203,7 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 }
 
 class CommonField extends _BaseField<Null, CommonFieldState> {
-  CommonField(Map<String, dynamic> initStateMap,
+  CommonField(Map<String, TypedValue> initStateMap,
       {Key? key,
       required _FieldBuilder<Null, CommonFieldState> builder,
       bool readOnly = false})
@@ -1264,21 +1284,20 @@ class _InheritedControlKey extends InheritedWidget {
 
 abstract class SubControllableItem {
   final String? controlKey;
-  final Map<String, dynamic> initStateMap;
+  final Map<String, TypedValue> initStateMap;
   SubControllableItem(this.controlKey, this.initStateMap);
 }
 
 //used to control form field's item's state
-//TODO
 class SubController<T> extends NullableValueNotifier<T> {
   final Map<String, Map<String, dynamic>> states = {};
-  final Map<String, Map<String, dynamic>> _initStates = {};
+  final Map<String, Map<String, TypedValue>> _initStates = {};
 
   SubController(value) : super(value);
 
   void remove(String controlKey, Set<String> stateKeys) {
     var state = states[controlKey];
-    if (state == null) return;
+    if (state == null) throw 'did you init items?';
     if (stateKeys.isEmpty) return;
     stateKeys.forEach((element) {
       state.remove(element);
@@ -1298,23 +1317,27 @@ class SubController<T> extends NullableValueNotifier<T> {
     notifyListeners();
   }
 
+  bool hasControlKey(String controlKey) {
+    return states.containsKey(controlKey);
+  }
+
   dynamic getState(String controlKey, String key) {
     var state = states[controlKey];
-    return state == null
-        ? null
-        : state.containsKey(key)
-            ? state[key]
-            : _initStates[controlKey]![key];
+    if (state == null) throw '$controlKey is not exists , do you has this item';
+    return state.containsKey(key)
+        ? state[key]
+        : _initStates[controlKey]![key]!.value;
   }
 
   Map<String, dynamic> getUpdatedMap(SubControllableItem item) {
-    if (item.controlKey == null) return item.initStateMap;
+    if (item.controlKey == null)
+      return item.initStateMap.map((key, value) => MapEntry(key, value.value));
     var currentStateMap = states[item.controlKey];
-    if (currentStateMap == null) return _initStates[item.controlKey]!;
+    if (currentStateMap == null) throw 'did you init this item?';
     Map<String, dynamic> updated = {};
     _initStates[item.controlKey]!.forEach((key, value) {
       updated[key] =
-          currentStateMap.containsKey(key) ? currentStateMap[key] : value;
+          currentStateMap.containsKey(key) ? currentStateMap[key] : value.value;
     });
     return updated;
   }
@@ -1333,10 +1356,18 @@ class SubController<T> extends NullableValueNotifier<T> {
 
   void _doUpdate(String controlKey, Map<String, dynamic> state) {
     var oldState = states[controlKey];
-    if (oldState == null) return;
+    if (oldState == null) throw 'did you init items?';
     var initState = _initStates[controlKey]!;
+
     state.forEach((key, value) {
-      if (!initState.containsKey(key)) return;
+      TypedValue? typedValue = initState[key];
+      if (typedValue == null) throw 'did you put $key into your initMap?';
+      typedValue._value = value;
+      if (!typedValue.nullable && typedValue._value == null)
+        throw '$key\'s value can not be null';
+    });
+
+    state.forEach((key, value) {
       oldState[key] = value;
     });
   }
@@ -1353,6 +1384,9 @@ class SubControllerDelegate {
   final SubController _controller;
 
   SubControllerDelegate._(this._controller);
+
+  bool hasControlKey(String controlKey) =>
+      _controller.hasControlKey(controlKey);
 
   /// update sub item by it's controlkey
   ///
@@ -1568,7 +1602,7 @@ class _FormManagementData extends InheritedWidget {
 /// **a initCallback will only be called once in form state's lifecycle due to _FormManagement's instance won't change**
 class FormManagement {
   static FormManagement of(BuildContext context) {
-    FormManagement formManagement = FormManagement();
+    FormManagement formManagement = FormManagement._();
     formManagement._formResourceManagement =
         _FormResourceManagement.of(context);
     return formManagement;
@@ -1578,7 +1612,7 @@ class FormManagement {
   FormLayoutManagement? _formLayoutManagement;
   FormWidgetTreeManagement? _formWidgetTreeManagement;
 
-  FormManagement();
+  FormManagement._();
 
   bool get initialled => _formResourceManagement != null;
 
@@ -1754,7 +1788,7 @@ class FormFieldManagement {
   ///
   TextSelectionManagement get textSelectionManagement {
     var valueNotifier = _valueNotifier;
-    if (!(valueNotifier is TextSelectionManagement))
+    if (valueNotifier is! TextSelectionManagement)
       throw 'this field don\'t support TextSelectionManagement';
     return valueNotifier as TextSelectionManagement;
   }
@@ -1764,7 +1798,7 @@ class FormFieldManagement {
   /// used to control sub item's state (like radiogroup's radio item)
   SubControllerDelegate get subController {
     var valueNotifier = _valueNotifier;
-    if (!(valueNotifier is SubController))
+    if (valueNotifier is! SubController)
       throw 'this field don\'t support SubController';
     return SubControllerDelegate._(valueNotifier);
   }
