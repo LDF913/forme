@@ -297,7 +297,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
 
   int gen = 0;
 
-  FormManagement? queryFormManagement;
+  FormManagement queryFormManagement = FormManagement();
   Map<String, dynamic> params = {};
 
   FormThemeData? formThemeData;
@@ -311,9 +311,9 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
       WidgetsBinding.instance?.addPostFrameCallback((_) {
         bool queryAfterLoadParams =
-            widget.onSelectDialogShow!(queryFormManagement!);
-        if (queryAfterLoadParams && queryFormManagement!.validate()) {
-          params = queryFormManagement!.data;
+            widget.onSelectDialogShow!(queryFormManagement);
+        if (queryAfterLoadParams && queryFormManagement.validate()) {
+          params = queryFormManagement.data;
         }
         loadData(gen);
       });
@@ -338,7 +338,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   }
 
   void query() {
-    if (!queryFormManagement!.validate()) {
+    if (!queryFormManagement.validate()) {
       return;
     }
     update(() {
@@ -349,7 +349,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
       items = [];
       error = false;
       count = 0;
-      params = queryFormManagement!.data;
+      params = queryFormManagement.data;
     });
     loadData(gen);
   }
@@ -394,7 +394,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
     FormBuilder form = FormBuilder(
       formThemeData: formThemeData,
-      initCallback: (formManagement) => queryFormManagement = formManagement,
+      formManagement: queryFormManagement,
     );
     widget.queryFormBuilder!(form, query);
     return form;

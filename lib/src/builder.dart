@@ -31,9 +31,6 @@ typedef NullValueReplace<T> = T Function();
 /// listen sub focusnodes change
 typedef SubFocusChanged = void Function(String key, bool hasFocus);
 
-/// callback after form initialled
-typedef FormInitCallback = void Function(FormManagement formManagement);
-
 typedef NonnullFieldValidator<T> = String? Function(T t);
 
 class FormBuilder extends StatefulWidget {
@@ -46,13 +43,14 @@ class FormBuilder extends StatefulWidget {
   final bool _readOnly;
   final bool _visible;
   final FormThemeData _formThemeData;
-  final FormManagement formManagement = FormManagement._();
-  final FormInitCallback? initCallback;
+  final FormManagement formManagement;
+  final VoidCallback? initCallback;
   FormBuilder(
       {bool? readOnly,
       bool? visible,
       FormThemeData? formThemeData,
-      this.initCallback})
+      this.initCallback,
+      required this.formManagement})
       : this._formThemeData = formThemeData ?? FormThemeData.defaultTheme,
         this._readOnly = readOnly ?? false,
         this._visible = visible ?? true;
@@ -656,7 +654,9 @@ class _FormBuilderState extends State<FormBuilder> {
     formResourceManagement = _FormResourceManagement(this);
     widget.formManagement._formResourceManagement = formResourceManagement;
     if (widget.initCallback != null) {
-      widget.initCallback!(widget.formManagement);
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        widget.initCallback!();
+      });
     }
   }
 
@@ -1602,7 +1602,7 @@ class _FormManagementData extends InheritedWidget {
 /// **a initCallback will only be called once in form state's lifecycle due to _FormManagement's instance won't change**
 class FormManagement {
   static FormManagement of(BuildContext context) {
-    FormManagement formManagement = FormManagement._();
+    FormManagement formManagement = FormManagement();
     formManagement._formResourceManagement =
         _FormResourceManagement.of(context);
     return formManagement;
@@ -1612,7 +1612,7 @@ class FormManagement {
   FormLayoutManagement? _formLayoutManagement;
   FormWidgetTreeManagement? _formWidgetTreeManagement;
 
-  FormManagement._();
+  FormManagement();
 
   bool get initialled => _formResourceManagement != null;
 
