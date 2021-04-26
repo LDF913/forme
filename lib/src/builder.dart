@@ -585,9 +585,8 @@ class FormBuilder extends StatefulWidget {
       int? flex = 0,
       bool visible = true,
       EdgeInsets? padding,
-      required Widget field,
+      required _BaseField field,
       bool? inline}) {
-    assert(field is _BaseField, 'field must be ValueField|CommonField');
     inline ??= false;
     _FormRow row =
         inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
@@ -724,8 +723,8 @@ class _FormBuilderState extends State<FormBuilder> {
       widget.formManagement._formResourceManagement =
           formResourceManagement; // we do not call init again ! formManagement are always same!
     } else {
-      assert(newManagement == formResourceManagement,
-          'this form management is used to control another form ,you can not use this form management to control this form ,try to create a new one!');
+      if (newManagement != formResourceManagement)
+        throw 'this form management is used to control another form ,you can not use this form management to control this form ,try to create a new one!';
     }
   }
 
@@ -747,12 +746,12 @@ class _FormBuilderState extends State<FormBuilder> {
             key = UniqueKey();
           }
         } else {
-          assert(
-              !controlKey.contains(','), 'controlKey can not contains char , ');
+          if (controlKey.contains(','))
+            throw 'controlKey can not contains char , ';
           key = formResourceManagement!.newFieldKey(controlKey);
         }
-        assert(!controlKeys.contains(controlKey),
-            'controlkey must unique in a form');
+        if (controlKeys.contains(controlKey))
+          throw 'controlkey must unique in a form';
         controlKeys.add(controlKey);
         children.add(_FormItemWidget(builder, controlKey, key, row, column));
         column++;
@@ -908,7 +907,7 @@ abstract class _BaseField<T, K extends _BaseFieldState<T>>
       {Key? key,
       FormFieldValidator<T>? validator,
       AutovalidateMode? autovalidateMode,
-      bool? readOnly,
+      bool readOnly = false,
       required _FieldBuilder<T, K> builder,
       T? initialValue})
       : super(
@@ -950,15 +949,15 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   /// you need get focusNode in [initFormResourceManagement]
   FocusNodes get focusNode {
     if (_focusNode == null) {
-      _focusNode = FocusNodes._(subFocusChanged: notifyFocusChange);
+      _focusNode = FocusNodes._(subFocusChanged: _notifyFocusChange);
       _focusNode!.addListener(() {
-        notifyFocusChange(null, _focusNode!.hasFocus);
+        _notifyFocusChange(null, _focusNode!.hasFocus);
       });
     }
     return _focusNode!;
   }
 
-  void notifyFocusChange(String? key, bool hasFocus) {
+  void _notifyFocusChange(String? key, bool hasFocus) {
     FocusListener? listener =
         _formResourceManagement!.focusListenerMap[controlKey];
     if (listener == null) return;
@@ -968,8 +967,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
       listener.subChanged!(key, hasFocus);
   }
 
-  Map<String, dynamic> get _getInitStateMap =>
-      (widget as _BaseField)._initStateMap;
+  Map<String, dynamic> get _initMap => (widget as _BaseField)._initStateMap;
 
   @override
   void initState() {
@@ -999,15 +997,22 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   ///
   /// it's equals to build method's stateMap\[stateKey\]
   getState(String stateKey) {
+    if (!_initMap.containsKey(stateKey))
+      throw 'did you put key :$stateKey into your initMap';
     return _state!.containsKey(stateKey)
         ? _state![stateKey]
-        : _getInitStateMap[stateKey];
+        : _initMap[stateKey];
   }
 
   Map<String, dynamic> get _stateMap {
     Map<String, dynamic> map = {};
-    _getInitStateMap.forEach((key, value) {
+    _initMap.forEach((key, value) {
       map[key] = _state!.containsKey(key) ? _state![key] : value;
+    });
+    _state!.keys
+        .where((element) => !map.containsKey(element))
+        .forEach((element) {
+      map[element] = _state![element];
     });
     return map;
   }
@@ -1049,10 +1054,11 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
 
   @override
   AutovalidateMode get autovalidateMode =>
-      _initStateMap[FormBuilder.autovalidateModeKey] ?? super.autovalidateMode;
+      _initStateMap[FormBuilder.autovalidateModeKey]?.value ??
+      super.autovalidateMode;
   @override
   T? get initialValue =>
-      _initStateMap[FormBuilder.initialValueKey] ?? super.initialValue;
+      _initStateMap[FormBuilder.initialValueKey]?.value ?? super.initialValue;
 
   ValueField(this.formValueNotifierProvider, Map<String, dynamic> initStateMap,
       {Key? key,
@@ -1061,7 +1067,7 @@ class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
       required _FieldBuilder<T, ValueFieldState<T>> builder,
       FormFieldValidator<T>? validator,
       AutovalidateMode? autovalidateMode,
-      bool? readOnly,
+      bool readOnly = false,
       T? initialValue})
       : super(initStateMap,
             key: key,
@@ -1177,12 +1183,11 @@ class ValueFieldState<T> extends _BaseFieldState<T> {
 }
 
 class CommonField extends _BaseField<Null, CommonFieldState> {
-  CommonField(
-    Map<String, dynamic> initStateMap, {
-    Key? key,
-    required _FieldBuilder<Null, CommonFieldState> builder,
-    bool readOnly = false,
-  }) : super(initStateMap, key: key, readOnly: readOnly, builder: builder);
+  CommonField(Map<String, dynamic> initStateMap,
+      {Key? key,
+      required _FieldBuilder<Null, CommonFieldState> builder,
+      bool readOnly = false})
+      : super(initStateMap, key: key, readOnly: readOnly, builder: builder);
 
   @override
   CommonFieldState createState() => CommonFieldState();
@@ -1264,6 +1269,7 @@ abstract class SubControllableItem {
 }
 
 //used to control form field's item's state
+//TODO
 class SubController<T> extends NullableValueNotifier<T> {
   final Map<String, Map<String, dynamic>> states = {};
   final Map<String, Map<String, dynamic>> _initStates = {};
@@ -1293,7 +1299,6 @@ class SubController<T> extends NullableValueNotifier<T> {
   }
 
   dynamic getState(String controlKey, String key) {
-    assert(_initStates.containsKey(controlKey), 'did you init items?');
     var state = states[controlKey];
     return state == null
         ? null
@@ -1304,7 +1309,6 @@ class SubController<T> extends NullableValueNotifier<T> {
 
   Map<String, dynamic> getUpdatedMap(SubControllableItem item) {
     if (item.controlKey == null) return item.initStateMap;
-    assert(_initStates.containsKey(item.controlKey), 'did you init items?');
     var currentStateMap = states[item.controlKey];
     if (currentStateMap == null) return _initStates[item.controlKey]!;
     Map<String, dynamic> updated = {};
@@ -1328,7 +1332,6 @@ class SubController<T> extends NullableValueNotifier<T> {
   }
 
   void _doUpdate(String controlKey, Map<String, dynamic> state) {
-    assert(_initStates.containsKey(controlKey), 'did you init items?');
     var oldState = states[controlKey];
     if (oldState == null) return;
     var initState = _initStates[controlKey]!;
@@ -1506,9 +1509,9 @@ class _FormResourceManagement {
         if (commonFiledState.controlKey == controlKey) state = commonFiledState;
       }
     }
-    assert(
-        state != null, 'not field can be founded by controlKey : $controlKey');
-    return state!;
+    if (state == null)
+      throw 'not field can be founded by controlKey : $controlKey';
+    return state;
   }
 
   NullableValueNotifier getValueNotifier(String controlKey) {
@@ -1663,8 +1666,8 @@ class FormManagement {
   }
 
   FormFieldManagement getFormFieldManagement(String controlKey) {
-    assert(_formResourceManagement!.mapping.containsKey(controlKey),
-        'form field doesn\'t has a controlKey ! use FormLayoutManagement instead');
+    if (!_formResourceManagement!.mapping.containsKey(controlKey))
+      throw 'form field doesn\'t has a controlKey ! use FormLayoutManagement instead';
     return FormFieldManagement._(controlKey, _formResourceManagement!);
   }
 }
@@ -1751,8 +1754,8 @@ class FormFieldManagement {
   ///
   TextSelectionManagement get textSelectionManagement {
     var valueNotifier = _valueNotifier;
-    assert(valueNotifier is TextSelectionManagement,
-        'NullableValueNotifier is not implemented TextSelectionManagement');
+    if (!(valueNotifier is TextSelectionManagement))
+      throw 'this field don\'t support TextSelectionManagement';
     return valueNotifier as TextSelectionManagement;
   }
 
@@ -1761,9 +1764,9 @@ class FormFieldManagement {
   /// used to control sub item's state (like radiogroup's radio item)
   SubControllerDelegate get subController {
     var valueNotifier = _valueNotifier;
-    assert(valueNotifier is SubController,
-        'NullableValueNotifier is not implemented SubController');
-    return SubControllerDelegate._(valueNotifier as SubController);
+    if (!(valueNotifier is SubController))
+      throw 'this field don\'t support SubController';
+    return SubControllerDelegate._(valueNotifier);
   }
 
   set focusListener(FocusListener listener) =>
@@ -1798,26 +1801,33 @@ class FormLayoutManagement {
   int get rows => _formResourceManagement.state!._formLayout!.rows.length;
 
   FormLayoutRowManagement getFormLayoutRowManagement(int row) {
-    assert(row >= 0 && row < rows);
+    _rangeCheck(row);
     return FormLayoutRowManagement._(row, _formResourceManagement);
   }
 
   FormFieldManagement getFormFieldManagement(int row, int column) {
-    assert(row >= 0 && row < rows);
-    assert(column >= 0 &&
-        column <
-            _formResourceManagement
-                .state!._formLayout!.rows[row].builders.length);
-
+    _rangeCheck(row, column: column);
     List<_FormItemWidgetState> states =
         _formResourceManagement.statesList.where((element) {
       return element.widget.row == row && element.widget.column == column;
     }).toList();
 
-    assert(states.length == 1);
+    if (states.length != 1) {
+      throw 'no field can be founded at $row,$column';
+    }
 
     return FormFieldManagement._(
         states[0].widget.controlKey, _formResourceManagement);
+  }
+
+  void _rangeCheck(int row, {int? column}) {
+    if (row < 0 || row >= rows)
+      throw 'row is out of range,range is 0,${rows - 1}';
+    if (column != null) {
+      _FormRow _formRow = _formResourceManagement.state!._formLayout!.rows[row];
+      if (column < 0 || column >= _formRow.builders.length)
+        throw 'column is out of range,range is 0,${_formRow.builders.length - 1}';
+    }
   }
 }
 
@@ -1859,7 +1869,7 @@ class FormLayoutRowManagement {
         _formResourceManagement.statesList.where((element) {
       return element.widget.row == row;
     }).toList();
-    assert(states.isNotEmpty, 'no item states can be founded at row : $row');
+    if (states.isEmpty) throw 'no item states can be founded at row : $row';
     return states;
   }
 }
@@ -1880,21 +1890,21 @@ class FormWidgetTreeManagement {
 
   /// get editing layout rows
   int get rows {
-    assert(_formLayout != null, 'you should call startEdit first!');
     return _formLayout!.rows.length;
   }
 
   /// get columns of a row
   int getColumns(int row) {
-    assert(row >= 0);
-    assert(_formLayout != null, 'you should call startEdit first!');
+    _ensureStarted();
+    _rangeCheck(row);
     return _formLayout!.rows[row].builders.length;
   }
 
   // remove a field in widget tree
   // if row only has this field ,it will be also removed
   void remove(String controlKey) {
-    assert(_formLayout != null, 'you should call startEdit first!');
+    _ensureStarted();
+    if (!_formResourceManagement.mapping.containsKey(controlKey)) return;
     _formLayout!.rows.forEach((element) {
       element.builders
           .removeWhere((element) => element.controlKey == controlKey);
@@ -1906,13 +1916,12 @@ class FormWidgetTreeManagement {
   /// for better performance , you'd use [FormLayoutManagement.setVisibleAtPosition] rather than this method ,
   /// setVisibleAtPosition only affect one or several fields,but this method will rebuild form,
   void removeAtPosition(int row, {int? column}) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    assert(row >= 0 && row < _formLayout!.rows.length);
+    _ensureStarted();
+    _rangeCheck(row, column: column);
     if (column == null) {
       _formLayout!.rows.removeAt(row);
     } else {
       _FormRow formRow = _formLayout!.rows[row];
-      assert(column >= 0 && column < formRow.builders.length);
       formRow.builders.removeAt(column);
     }
   }
@@ -1925,16 +1934,11 @@ class FormWidgetTreeManagement {
       int? flex,
       bool visible = true,
       EdgeInsets? padding,
-      required Widget field,
+      required _BaseField field,
       bool inline = true,
       bool insertRow = false}) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    assert(field is ValueField || field is CommonField,
-        'field must valuefield or commonfield');
-    assert(row == null ||
-        (row >= 0 &&
-            ((row < _formLayout!.rows.length && !insertRow) ||
-                (row <= _formLayout!.rows.length && insertRow))));
+    _ensureStarted();
+    if (row != null) _rangeCheck(row, column: column);
     _FormRow formRow = row == null
         ? insertRow
             ? _formLayout!.append()
@@ -1956,32 +1960,46 @@ class FormWidgetTreeManagement {
   }
 
   void swapRow(int oldRow, int newRow) {
-    assert(_formLayout != null, 'you should call startEdit first!');
-    assert(oldRow != newRow);
-    int rows = _formLayout!.rows.length;
-    assert(oldRow >= 0 && oldRow < rows);
-    assert(newRow >= 0 && newRow < rows);
+    _ensureStarted();
+    _rangeCheck(oldRow);
+    _rangeCheck(newRow);
+    if (oldRow == newRow) throw 'oldRow must not equals newRow';
     _FormRow row = _formLayout!.rows.removeAt(oldRow);
     _formLayout!.rows.insert(newRow, row);
   }
 
   void startEdit() {
-    assert(_formLayout == null,
-        'call apply first before you call startEdit again');
+    if (_formLayout != null)
+      throw 'call apply or cancel first before you call startEdit again';
     _formLayout = _formResourceManagement.state!._formLayout!.copy();
     _formLayout!.removeEmptyRow();
   }
 
   void cancel() {
-    assert(_formLayout != null, 'call startEdit first before you cancel');
+    _ensureStarted();
     _formLayout = null;
   }
 
   void apply() {
-    assert(_formLayout != null, 'call startEdit first before you apply');
+    _ensureStarted();
     _formLayout!.removeEmptyRow();
     _formResourceManagement.state!.formLayout = _formLayout!;
     _formLayout = null;
+  }
+
+  void _ensureStarted() {
+    if (_formLayout == null) throw 'did you called startEdit?';
+  }
+
+  void _rangeCheck(int row, {int? column}) {
+    if (row < 0 || row >= _formLayout!.rows.length)
+      throw 'row is out of range ,range is 0,${_formLayout!.rows.length - 1}';
+    if (column != null) {
+      _FormRow formRow = _formLayout!.rows[row];
+      int maxColumn = formRow.builders.length - 1;
+      if (column < 0 || column > maxColumn)
+        throw 'column is out of range ,range is 0,$maxColumn';
+    }
   }
 }
 
@@ -1995,6 +2013,8 @@ class _FormLayout {
   }
 
   _FormRow insert(int index) {
+    if (index < 0 || index >= rows.length)
+      throw 'index out of range,range is 0,${rows.length - 1}';
     _FormRow row = _FormRow();
     rows.insert(index, row);
     return row;
@@ -2032,9 +2052,7 @@ class _FormRow {
   final List<_FormItemBuilder> builders = [];
 
   void append(_FormItemBuilder builder) {
-    assert(stretchable, 'row is not stretchable,can not append field again');
-    assert((!builder.inline && builders.isEmpty) || builder.inline,
-        'current field is not support inline mode,can not append');
+    enableInsertable(builder);
     if (!builder.inline) {
       stretchable = false;
     }
@@ -2042,21 +2060,21 @@ class _FormRow {
   }
 
   void insert(_FormItemBuilder builder, int index) {
+    rangeCheck(index);
     if (builders.isEmpty) {
-      assert(index == 0);
       if (!builder.inline) {
         stretchable = false;
       }
       builders.add(builder);
       return;
     }
-    assert(index >= 0 && index < builders.length);
-    assert((!builder.inline && builders.isEmpty) || builder.inline,
-        'current field is not support inline mode,can not insert');
-    if (index == builders.length)
-      append(builder);
-    else {
-      assert(stretchable, 'row is not stretchable,can not insert field');
+    enableInsertable(builder);
+    if (index == builders.length) {
+      if (!builder.inline) {
+        stretchable = false;
+      }
+      builders.add(builder);
+    } else {
       builders.insert(index, builder);
     }
   }
@@ -2066,5 +2084,18 @@ class _FormRow {
     row.builders.addAll(List.of(builders));
     row.stretchable = stretchable;
     return row;
+  }
+
+  void enableInsertable(_FormItemBuilder builder) {
+    if (!stretchable) throw 'row is not stretchable,can not insert field';
+    if (!builder.inline && builders.isNotEmpty)
+      throw 'current field is not support inline mode and one or more field at placed at row,can not insert';
+  }
+
+  void rangeCheck(int index) {
+    if (builders.isEmpty && index != 0)
+      throw 'index must be 0 due to current row is empty';
+    if (index < 0 || index > builders.length - 1)
+      throw 'index is out of range ,current range is 0,${builders.length - 1}';
   }
 }
