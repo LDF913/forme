@@ -1,3 +1,10 @@
+## 0.0.5
+
+1. add NonnullValueField
+2. Simplify value field
+3. CheckboxGroup will rendered as CheckboxListTile when split = 1
+4. RadioGroup will rendered as RadioListTile when split = 1
+
 ## 0.0.4 
 
 1. check state type
