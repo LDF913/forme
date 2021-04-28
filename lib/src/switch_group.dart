@@ -1,34 +1,25 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import '../form_builder.dart';
 import 'builder.dart';
 import 'form_theme.dart';
 
-class _SwitchGroupController extends SubController<List<int>> {
-  _SwitchGroupController(value) : super(value);
-  List<int> get value => super.value == null ? [] : super.value!;
-  void set(List<int>? value) =>
-      super.value = value == null ? [] : List.of(value);
+class SwitchGroupItem {
+  final String label;
+  final bool readOnly;
+  final bool visible;
+  final TextStyle? textStyle;
+  final EdgeInsets padding;
+  SwitchGroupItem(this.label,
+      {this.readOnly = false,
+      this.visible = true,
+      this.textStyle,
+      EdgeInsets? padding})
+      : this.padding = padding ?? EdgeInsets.all(4);
 }
 
-class SwitchGroupItem extends SubControllableItem {
-  SwitchGroupItem(String label,
-      {bool readOnly = false,
-      bool visible = true,
-      String? controlKey,
-      EdgeInsets? padding,
-      TextStyle? textStyle})
-      : super(controlKey, {
-          'readOnly': TypedValue<bool>(readOnly, nullable: false),
-          'visible': TypedValue<bool>(visible, nullable: false),
-          'label': TypedValue<String>(label, nullable: false),
-          'textStyle': TypedValue<TextStyle>(textStyle),
-          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(4),
-              nullable: false),
-        });
-}
-
-class SwitchGroupFormField extends ValueField<List<int>> {
+class SwitchGroupFormField extends NonnullValueField<List<int>> {
   SwitchGroupFormField(
       {String? label,
       required List<SwitchGroupItem> items,
@@ -41,7 +32,6 @@ class SwitchGroupFormField extends ValueField<List<int>> {
       EdgeInsets? errorTextPadding,
       EdgeInsets? selectAllPadding})
       : super(
-          () => _SwitchGroupController(initialValue ?? List<int>.empty()),
           {
             'label': TypedValue<String>(label),
             'items': TypedValue<List<SwitchGroupItem>>(items, nullable: false),
@@ -55,32 +45,26 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                 nullable: false),
           },
           readOnly: readOnly,
-          onChanged: onChanged == null ? null : (value) => onChanged(value!),
+          onChanged: onChanged,
           replace: () => [],
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue ?? [],
-          validator: validator == null ? null : (value) => validator(value!),
+          initialValue: initialValue ?? List<int>.empty(),
+          validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SwitchGroupController controller =
-                state.valueNotifier as _SwitchGroupController;
             String? label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
             bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
             EdgeInsets selectAllPadding = stateMap['selectAllPadding'];
 
-            controller.init(items);
-            Map<SwitchGroupItem, Map<String, dynamic>> statesMap = {};
-
             bool isAllReadOnly = true;
             bool isAllInvisible = true;
             List<int> controllableItems = [];
 
             items.asMap().forEach((index, element) {
-              Map<String, dynamic> stateMap = controller.getUpdatedMap(element);
-              bool readOnly = stateMap['readOnly'];
-              bool visible = stateMap['visible'];
+              bool readOnly = element.readOnly;
+              bool visible = element.visible;
               if (!readOnly) {
                 isAllReadOnly = false;
               }
@@ -90,10 +74,9 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               if (!readOnly && visible) {
                 controllableItems.add(index);
               }
-              statesMap[element] = stateMap;
             });
 
-            List<int> value = List.of(controller.value);
+            List<int> value = List.of(state.value!);
 
             bool selectAll = controllableItems.isNotEmpty &&
                 controllableItems.every((element) => value.contains(element));
@@ -113,7 +96,7 @@ class SwitchGroupFormField extends ValueField<List<int>> {
                     .where((element) => !controllableItems.contains(element))
                     .toList());
               } else {
-                state.didChange(state.value!
+                state.didChange(value
                   ..addAll(controllableItems)
                   ..toSet()
                   ..toList());
@@ -162,14 +145,13 @@ class SwitchGroupFormField extends ValueField<List<int>> {
 
             for (int i = 0; i < items.length; i++) {
               SwitchGroupItem item = items[i];
-              var stateMap = statesMap[item]!;
               List<Widget> children = [];
               children.add(Expanded(
                   child: Text(
-                stateMap['label'],
-                style: stateMap['textStyle'],
+                item.label,
+                style: item.textStyle,
               )));
-              bool isReadOnly = readOnly || stateMap['readOnly'];
+              bool isReadOnly = readOnly || item.readOnly;
               children.add(CupertinoSwitch(
                 value: value.contains(i),
                 onChanged: isReadOnly
@@ -182,18 +164,17 @@ class SwitchGroupFormField extends ValueField<List<int>> {
               columns.add(Visibility(
                 child: InkWell(
                   child: Padding(
-                    child: Row(
-                      children: children,
-                    ),
-                    padding: stateMap['padding'],
-                  ),
+                      child: Row(
+                        children: children,
+                      ),
+                      padding: item.padding),
                   onTap: isReadOnly
                       ? null
                       : () {
                           changeValue(i);
                         },
                 ),
-                visible: stateMap['visible'],
+                visible: item.visible,
               ));
             }
             if (state.hasError) {
@@ -213,15 +194,10 @@ class SwitchGroupFormField extends ValueField<List<int>> {
         );
 
   @override
-  ValueFieldState<List<int>> createState() => ValueFieldState();
+  NonnullValueFieldState<List<int>> createState() => NonnullValueFieldState();
 }
 
-class _SwitchValueNotifier extends NullableValueNotifier<bool> {
-  _SwitchValueNotifier(value) : super(value);
-  bool get value => super.value ?? false;
-}
-
-class SwitchInlineFormField extends ValueField<bool> {
+class SwitchInlineFormField extends NonnullValueField<bool> {
   SwitchInlineFormField(
       {bool readOnly = false,
       ValueChanged<bool>? onChanged,
@@ -229,28 +205,26 @@ class SwitchInlineFormField extends ValueField<bool> {
       AutovalidateMode? autovalidateMode,
       bool initialValue = false})
       : super(
-          () => _SwitchValueNotifier(initialValue),
           {},
           readOnly: readOnly,
-          onChanged: onChanged == null ? null : (value) => onChanged(value!),
+          onChanged: onChanged,
           replace: () => false,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          validator: validator == null ? null : (value) => validator(value!),
+          validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SwitchValueNotifier controller =
-                state.valueNotifier as _SwitchValueNotifier;
+            bool value = state.value!;
             List<Widget> columns = [];
             columns.add(InkWell(
               child: Row(
                 children: [
                   CupertinoSwitch(
-                    value: controller.value,
+                    value: value,
                     onChanged: readOnly
                         ? null
-                        : (value) {
-                            state.didChange(!controller.value);
+                        : (_) {
+                            state.didChange(!value);
                           },
                     activeColor: themeData.primaryColor,
                   )
@@ -259,7 +233,7 @@ class SwitchInlineFormField extends ValueField<bool> {
               onTap: readOnly
                   ? null
                   : () {
-                      state.didChange(!controller.value);
+                      state.didChange(!value);
                     },
             ));
 
@@ -278,5 +252,5 @@ class SwitchInlineFormField extends ValueField<bool> {
         );
 
   @override
-  ValueFieldState<bool> createState() => ValueFieldState();
+  NonnullValueFieldState<bool> createState() => NonnullValueFieldState();
 }

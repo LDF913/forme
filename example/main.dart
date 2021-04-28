@@ -96,11 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   formManagement.visible = !formManagement.visible;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement == null
-                    ? 'hide form'
-                    : formManagement.visible
-                        ? 'hide form'
-                        : 'show form'));
+                child:
+                    Text(formManagement.visible ? 'hide form' : 'show form'));
           },
         ),
         Builder(
@@ -110,11 +107,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   formManagement.readOnly = !formManagement.readOnly;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement == null
+                child: Text(formManagement.readOnly
                     ? 'set form editable'
-                    : formManagement.readOnly
-                        ? 'set form editable'
-                        : 'set form readonly'));
+                    : 'set form readonly'));
           },
         ),
         Builder(
@@ -164,6 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement.validate();
+              formManagement.focusOnFirstInvalidField();
             },
             child: Text('validate')),
         TextButton(
@@ -176,57 +172,6 @@ class _MyHomePageState extends State<MyHomePage> {
               formManagement.reset();
             },
             child: Text('reset')),
-        Builder(
-          builder: (context) {
-            SubControllerDelegate subController =
-                formManagement.getFormFieldManagement('checkbox').subController;
-            return TextButton(
-                onPressed: () {
-                  bool readOnly = subController.isReadOnly('male');
-                  subController.setReadOnly('male', !readOnly);
-                  (context as Element).markNeedsBuild();
-                },
-                child: Text(subController.isReadOnly('male')
-                    ? 'set male editable'
-                    : 'set male readonly'));
-          },
-        ),
-        Builder(
-          builder: (context) {
-            SubControllerDelegate subController = formManagement
-                .getFormFieldManagement('switchGroup')
-                .subController;
-            return TextButton(
-                onPressed: () {
-                  bool visible = subController.getState('switch1', 'visible');
-                  bool readOnly = subController.getState('switch0', 'readOnly');
-                  subController.update({
-                    'switch0': {'readOnly': !readOnly},
-                    'switch1': {'visible': !visible}
-                  });
-                  (context as Element).markNeedsBuild();
-                },
-                child: Text((subController.getState('switch1', 'visible')
-                        ? 'hide'
-                        : 'show') +
-                    ' switch 2 & set switch 1 ' +
-                    (subController.getState('switch0', 'readOnly')
-                        ? 'editable'
-                        : 'readOnly')));
-          },
-        ),
-        TextButton(
-            onPressed: () {
-              formManagement.getFormFieldManagement('switchGroup').update({
-                'items': List<SwitchGroupItem>.generate(
-                    5,
-                    (index) => SwitchGroupItem((index + 5).toString(),
-                        controlKey: 'switch$index',
-                        textStyle:
-                            TextStyle(color: Theme.of(context).primaryColor)))
-              });
-            },
-            child: Text('set switch items')),
         TextButton(
             onPressed: () {
               formManagement.getFormFieldManagement('age').focus = true;
@@ -313,7 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
         .field(field: Label('sex'), flex: 2, inline: true)
         .checkboxGroup(
-          FormBuilder.toCheckboxItems(['male', 'female'],
+          items: FormBuilder.toCheckboxGroupItems(['male', 'female'],
               padding: EdgeInsets.symmetric(horizontal: 4)),
           inline: true,
           flex: 3,
@@ -452,8 +397,6 @@ class _MyHomePageState extends State<MyHomePage> {
           validator: (value) =>
               value.isEmpty ? 'username can not be empty !' : null,
         )
-        .checkboxGroup([CheckboxItem('remember me')],
-            controlKey: 'rememberMe', inline: true)
         .switchInline(
           controlKey: 'switch1',
           onChanged: (value) => print('switch1 value changed $value'),
@@ -489,27 +432,34 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
-        .radioGroup(
-            items: FormBuilder.toRadioItems(['1', '2']),
-            controlKey: 'radioInline',
-            inline: true)
         .checkboxGroup(
-          [CheckboxItem('male', controlKey: 'male'), CheckboxItem('female')],
+          items: FormBuilder.toCheckboxGroupItems(['male', 'female']),
           controlKey: 'checkbox',
           split: 2,
           label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
+        .checkboxGroup(
+          items: FormBuilder.toCheckboxGroupItems(['male', 'female']),
+          split: 1,
+          label: 'checkboxlisttile',
+          onChanged: (value) => print('checkbox value changed $value'),
+          validator: (value) => value.isEmpty ? 'pls select sex' : null,
+        )
         .divider()
         .radioGroup(
-          items: [
-            RadioItem('1', '1', controlKey: 'radio 1'),
-            RadioItem('2', '2', controlKey: 'radio 2'),
-          ],
+          items: FormBuilder.toRadioGroupItems(['1', '2']),
           controlKey: 'radio',
           onChanged: (value) => print('radio value changed $value'),
           label: 'single choice',
+          validator: (value) => value == null ? 'select one !' : null,
+        )
+        .radioGroup<String>(
+          split: 1,
+          items: FormBuilder.toRadioGroupItems(['1', '2']),
+          onChanged: (value) => print('radio value changed $value'),
+          label: 'radiolisttile',
           validator: (value) => value == null ? 'select one !' : null,
         )
         .divider()
@@ -587,8 +537,7 @@ class _MyHomePageState extends State<MyHomePage> {
             items: List<SwitchGroupItem>.generate(
                 3,
                 (index) => SwitchGroupItem(index.toString(),
-                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    controlKey: 'switch$index')))
+                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8))))
         .slider(
           controlKey: 'slider',
           min: 0,
@@ -617,7 +566,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (v) {
               formManagement
                   .getFormFieldManagement('sliderInlineText')
-                  .setValue(v.toDouble(), trigger: false);
+                  .setValue(v.toDouble().toInt(), trigger: false);
             })
         .rangeSlider(
           controlKey: 'rangeSlider',

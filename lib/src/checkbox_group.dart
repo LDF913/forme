@@ -1,42 +1,33 @@
 import 'package:flutter/material.dart';
+import '../form_builder.dart';
 import 'builder.dart';
 import 'form_theme.dart';
 
-class CheckboxItem extends SubControllableItem {
-  final String label;
-  final bool ignoreSplit;
+class CheckboxGroupItem {
+  final Widget title;
   final bool readOnly;
   final bool visible;
-  final TextStyle? textStyle;
-  final EdgeInsets? padding;
-  CheckboxItem(this.label,
-      {this.ignoreSplit = false,
+  final EdgeInsets padding;
+  final Widget? secondary; // not worked when split != 1
+  final ListTileControlAffinity controlAffinity;
+  final bool ignoreSplit;
+  CheckboxGroupItem(
+      {String? label,
+      this.secondary,
+      Widget? title,
       this.readOnly = false,
       this.visible = true,
-      this.textStyle,
-      this.padding,
-      String? controlKey})
-      : super(controlKey, {
-          'readOnly': TypedValue<bool>(readOnly, nullable: false),
-          'visible': TypedValue<bool>(visible, nullable: false),
-          'ignoreSplit': TypedValue<bool>(ignoreSplit, nullable: false),
-          'label': TypedValue<String>(label, nullable: false),
-          'textStyle': TypedValue<TextStyle>(textStyle),
-          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(8),
-              nullable: false),
-        });
+      this.controlAffinity = ListTileControlAffinity.leading,
+      this.ignoreSplit = false,
+      EdgeInsets? padding})
+      : assert(label != null || title != null),
+        this.padding = padding ?? EdgeInsets.zero,
+        this.title = title == null ? Text(label!) : title;
 }
 
-class _CheckboxGroupController extends SubController<List<int>> {
-  _CheckboxGroupController({List<int>? value}) : super(value);
-  List<int> get value => super.value == null ? [] : super.value!;
-  void set(List<int>? value) =>
-      super.value = value == null ? [] : List.of(value);
-}
-
-class CheckboxGroup extends ValueField<List<int>> {
+class CheckboxGroup extends NonnullValueField<List<int>> {
   CheckboxGroup(
-      {required List<CheckboxItem> items,
+      {required List<CheckboxGroupItem> items,
       String? label,
       ValueChanged<List<int>>? onChanged,
       bool readOnly = false,
@@ -46,29 +37,26 @@ class CheckboxGroup extends ValueField<List<int>> {
       List<int>? initialValue,
       EdgeInsets? errorTextPadding,
       bool inline = false})
-      : super(
-            () => _CheckboxGroupController(value: initialValue),
-            {
-              'label': TypedValue<String>(label),
-              'split': TypedValue<int>(split, nullable: false),
-              'items': TypedValue<List<CheckboxItem>>(items, nullable: false),
-              'errorTextPadding': TypedValue<EdgeInsets>(
-                  errorTextPadding ?? const EdgeInsets.all(8),
-                  nullable: false)
-            },
-            onChanged: onChanged == null ? null : (value) => onChanged(value!),
+      : super({
+          'label': TypedValue<String>(label),
+          'split': TypedValue<int>(split, nullable: false),
+          'items': TypedValue<List<CheckboxGroupItem>>(items, nullable: false),
+          'errorTextPadding': TypedValue<EdgeInsets>(
+              errorTextPadding ??
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              nullable: false)
+        },
+            onChanged: onChanged,
             replace: () => [],
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
-            validator: validator == null ? null : (value) => validator(value!),
+            validator: validator,
             readOnly: readOnly,
             builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              _CheckboxGroupController controller =
-                  state.valueNotifier as _CheckboxGroupController;
               String? label = inline ? null : stateMap['label'];
               int split = inline ? 0 : stateMap['split'];
-              List<CheckboxItem> items = stateMap['items'];
+              List<CheckboxGroupItem> items = stateMap['items'];
               EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
 
               List<Widget> widgets = [];
@@ -83,26 +71,74 @@ class CheckboxGroup extends ValueField<List<int>> {
                 ));
               }
 
-              List<int> value = List.of(controller.value);
-
+              List<int> value = List.of(state.value!);
               List<Widget> wrapWidgets = [];
 
-              controller.init(items);
+              void changeValue(int i) {
+                if (value.contains(i))
+                  value.remove(i);
+                else
+                  value.add(i);
+                state.didChange(value);
+              }
 
               for (int i = 0; i < items.length; i++) {
-                CheckboxItem button = items[i];
-                var stateMap = controller.getUpdatedMap(button);
-                TextStyle labelStyle = stateMap['textStyle'] ?? TextStyle();
-                bool isReadOnly = readOnly || stateMap['readOnly'];
+                CheckboxGroupItem item = items[i];
+                bool isReadOnly = readOnly || item.readOnly;
 
-                Color color = isReadOnly
-                    ? themeData.disabledColor
-                    : value.contains(i)
-                        ? themeData.primaryColor
-                        : themeData.unselectedWidgetColor;
+                if (split > 0) {
+                  double factor = 1 / split;
+                  if (factor == 1) {
+                    wrapWidgets.add(CheckboxListTile(
+                      dense: true,
+                      contentPadding: item.padding,
+                      activeColor: themeData.primaryColor,
+                      controlAffinity: item.controlAffinity,
+                      secondary: item.secondary,
+                      value: value.contains(i),
+                      onChanged: isReadOnly
+                          ? null
+                          : (g) {
+                              changeValue(i);
+                            },
+                      title: item.title,
+                    ));
+                    continue;
+                  }
+                }
 
-                Widget checkbox = Padding(
-                  padding: stateMap['padding'],
+                Checkbox checkbox = Checkbox(
+                    activeColor: themeData.primaryColor,
+                    value: value.contains(i),
+                    onChanged: isReadOnly
+                        ? null
+                        : (v) {
+                            changeValue(i);
+                          });
+
+                Widget title = split == 0
+                    ? item.title
+                    : Flexible(
+                        child: item.title,
+                      );
+
+                List<Widget> children;
+                switch (item.controlAffinity) {
+                  case ListTileControlAffinity.leading:
+                    children = [checkbox, title];
+                    break;
+                  default:
+                    children = [title, checkbox];
+                    break;
+                }
+
+                Row checkBoxRow = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: children,
+                );
+
+                Widget groupItemWidget = Padding(
+                  padding: item.padding,
                   child: Material(
                     color: Colors.transparent,
                     child: InkWell(
@@ -111,43 +147,16 @@ class CheckboxGroup extends ValueField<List<int>> {
                         onTap: isReadOnly
                             ? null
                             : () {
-                                if (value.contains(i))
-                                  value.remove(i);
-                                else
-                                  value.add(i);
-                                state.didChange(value);
+                                changeValue(i);
                               },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            value.contains(i)
-                                ? Icon(Icons.check_box,
-                                    size: labelStyle.fontSize, color: color)
-                                : Icon(Icons.check_box_outline_blank,
-                                    size: labelStyle.fontSize, color: color),
-                            SizedBox(
-                              width: 4.0,
-                            ),
-                            split == 0
-                                ? Text(
-                                    stateMap['label'],
-                                    style: labelStyle,
-                                  )
-                                : Flexible(
-                                    child: Text(
-                                      stateMap['label'],
-                                      style: labelStyle,
-                                    ),
-                                  )
-                          ],
-                        )),
+                        child: checkBoxRow),
                   ),
                 );
 
-                bool visible = stateMap['visible'];
+                bool visible = item.visible;
                 if (split <= 0) {
                   wrapWidgets.add(Visibility(
-                    child: checkbox,
+                    child: groupItemWidget,
                     visible: visible,
                   ));
                   if (visible && i < items.length - 1)
@@ -155,10 +164,11 @@ class CheckboxGroup extends ValueField<List<int>> {
                       width: 8.0,
                     ));
                 } else {
+                  double factor = item.ignoreSplit ? 1 : 1 / split;
                   wrapWidgets.add(Visibility(
                     child: FractionallySizedBox(
-                      widthFactor: stateMap['ignoreSplit'] ? 1 : 1 / split,
-                      child: checkbox,
+                      widthFactor: factor,
+                      child: groupItemWidget,
                     ),
                     visible: visible,
                   ));
@@ -185,5 +195,5 @@ class CheckboxGroup extends ValueField<List<int>> {
             });
 
   @override
-  ValueFieldState<List<int>> createState() => ValueFieldState();
+  NonnullValueFieldState<List<int>> createState() => NonnullValueFieldState();
 }

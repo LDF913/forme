@@ -5,7 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'builder.dart';
 
-class ClearableTextFormField extends ValueField<String> {
+class ClearableTextFormField extends NonnullValueField<String> {
   final bool obscureText;
   ClearableTextFormField(
       {String? labelText,
@@ -35,7 +35,6 @@ class ClearableTextFormField extends ValueField<String> {
       TextInputAction? textInputAction,
       InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _TextValueNotifier(initialValue ?? ''),
           {
             'labelText': TypedValue<String>(labelText),
             'hintText': TypedValue<String>(hintText),
@@ -57,15 +56,14 @@ class ClearableTextFormField extends ValueField<String> {
                 TypedValue<InputDecorationTheme>(inputDecorationTheme),
           },
           replace: () => '',
-          onChanged: onChanged == null ? null : (value) => onChanged(value!),
+          onChanged: onChanged,
           initialValue: initialValue ?? '',
-          validator: validator == null ? null : (value) => validator(value!),
+          validator: validator,
           autovalidateMode: autovalidateMode,
           readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
             _TextFormFieldState state = baseState as _TextFormFieldState;
-            _TextValueNotifier controller = baseState.valueNotifier;
             FocusNode focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -86,9 +84,9 @@ class ClearableTextFormField extends ValueField<String> {
                     themeData.inputDecorationTheme;
 
             List<Widget> suffixes = [];
-            if (clearable && !readOnly && controller.value.length > 0) {
-              suffixes.add(
-                  ClearButton(controller.textEditingController, focusNode, () {
+            if (clearable && !readOnly && state.value!.length > 0) {
+              suffixes
+                  .add(ClearButton(state.textEditingController, focusNode, () {
                 state.didChange('');
               }));
             }
@@ -130,7 +128,7 @@ class ClearableTextFormField extends ValueField<String> {
             TextField textField = TextField(
               style: style,
               textAlignVertical: TextAlignVertical.center,
-              controller: controller.textEditingController,
+              controller: state.textEditingController,
               focusNode: focusNode,
               textInputAction: textInputAction,
               decoration:
@@ -158,49 +156,20 @@ class ClearableTextFormField extends ValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextValueNotifier extends NullableValueNotifier<String>
+class _TextFormFieldState extends NonnullValueFieldState<String>
     with TextSelectionManagement {
-  final TextEditingController textEditingController;
-  _TextValueNotifier(String value)
-      : this.textEditingController = TextEditingController(text: value),
-        super(value);
-
-  @override
-  String get value => super.value ?? '';
-
-  @override
-  void setSelection(int start, int end) {
-    TextSelectionManagement.setSelectionWithTextEditingController(
-        start, end, textEditingController);
-  }
-
-  @override
-  void selectAll() {
-    setSelection(0, textEditingController.text.length);
-  }
-
-  @override
-  void dispose() {
-    textEditingController.dispose();
-    super.dispose();
-  }
-}
-
-class _TextFormFieldState extends ValueFieldState<String> {
   bool obscureText = false;
+
+  late final TextEditingController textEditingController;
 
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
-  _TextValueNotifier get valueNotifier =>
-      super.valueNotifier as _TextValueNotifier;
-  TextEditingController get textEditingController =>
-      valueNotifier.textEditingController;
 
   bool get selectAllOnFocus => getState('selectAllOnFocus');
 
-  void selectAll() {
+  void doSelectAll() {
     if (focusNode.hasFocus) {
-      valueNotifier.selectAll();
+      selectAll();
     }
   }
 
@@ -208,21 +177,18 @@ class _TextFormFieldState extends ValueFieldState<String> {
   void initState() {
     super.initState();
     obscureText = widget.obscureText;
-  }
-
-  @override
-  void initValueNotifier() {
-    super.initValueNotifier();
+    textEditingController = TextEditingController();
     if (selectAllOnFocus) {
-      focusNode.addListener(selectAll);
+      focusNode.addListener(doSelectAll);
     }
   }
 
   @override
   void dispose() {
     if (selectAllOnFocus) {
-      focusNode.removeListener(selectAll);
+      focusNode.removeListener(doSelectAll);
     }
+    textEditingController.dispose();
     super.dispose();
   }
 
@@ -247,35 +213,14 @@ class _TextFormFieldState extends ValueFieldState<String> {
   }
 
   @override
-  void doChangeValue(String? value, {bool trigger = true}) {
-    super.doChangeValue(value, trigger: trigger);
-    if (textEditingController.text != valueNotifier.value) {
-      textEditingController.text = valueNotifier.value;
-    }
+  void setSelection(int start, int end) {
+    TextSelectionManagement.setSelectionWithTextEditingController(
+        start, end, textEditingController);
   }
 
   @override
-  void reset() {
-    super.reset();
-    if (textEditingController.text != valueNotifier.value) {
-      textEditingController.text = valueNotifier.value;
-    }
-  }
-}
-
-class _DateTimeValueNotifier extends NullableValueNotifier<DateTime> {
-  TextEditingController controller = new TextEditingController();
-
-  _DateTimeValueNotifier({DateTime? value}) : super(value);
-
-  TimeOfDay? get timeOfDay => value == null
-      ? null
-      : TimeOfDay(hour: value!.hour, minute: value!.minute);
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
+  void selectAll() {
+    setSelection(0, textEditingController.text.length);
   }
 }
 
@@ -295,7 +240,6 @@ class DateTimeFormField extends ValueField<DateTime> {
       DateTime? initialValue,
       InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _DateTimeValueNotifier(value: initialValue),
           {
             'labelText': TypedValue<String>(labelText),
             'hintText': TypedValue<String>(hintText),
@@ -313,8 +257,6 @@ class DateTimeFormField extends ValueField<DateTime> {
           readOnly: readOnly,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _DateTimeValueNotifier controller =
-                state.valueNotifier as _DateTimeValueNotifier;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -326,7 +268,10 @@ class DateTimeFormField extends ValueField<DateTime> {
                     themeData.inputDecorationTheme;
 
             void pickTime() {
-              DateTime value = controller.value ?? DateTime.now();
+              DateTime value = state.value ?? DateTime.now();
+              TimeOfDay? timeOfDay = state.value == null
+                  ? null
+                  : TimeOfDay(hour: value.hour, minute: value.minute);
               showDatePicker(
                       locale: locale ?? Locale('zh', 'CN'),
                       context: state.context,
@@ -338,7 +283,7 @@ class DateTimeFormField extends ValueField<DateTime> {
                   if (useTime)
                     showTimePicker(
                       context: state.context,
-                      initialTime: controller.timeOfDay ??
+                      initialTime: timeOfDay ??
                           TimeOfDay(hour: value.hour, minute: value.minute),
                       builder: (BuildContext context, Widget? child) {
                         return Localizations.override(
@@ -363,10 +308,13 @@ class DateTimeFormField extends ValueField<DateTime> {
               });
             }
 
+            TextEditingController controller =
+                (state as _DateTimeFormFieldState).textEditingController;
+
             List<Widget> suffixes = [];
 
             if (!readOnly) {
-              suffixes.add(ClearButton(controller.controller, focusNode, () {
+              suffixes.add(ClearButton(controller, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -395,7 +343,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: controller.controller,
+              controller: controller,
               decoration:
                   effectiveDecoration.copyWith(errorText: state.errorText),
               obscureText: false,
@@ -428,17 +376,18 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
           ? DateTimeFormField.defaultDateTimeFormatter
           : DateTimeFormField.defaultDateFormatter;
 
-  TextEditingController get textEditingController =>
-      (super.valueNotifier as _DateTimeValueNotifier).controller;
+  late final TextEditingController textEditingController;
 
   @override
   DateTimeFormField get widget => super.widget as DateTimeFormField;
 
   @override
-  void initValueNotifier() {
-    super.initValueNotifier();
-    textEditingController.text =
-        widget.initialValue == null ? '' : _formatter(widget.initialValue!);
+  void initState() {
+    super.initState();
+    textEditingController = TextEditingController(
+        text: widget.initialValue == null
+            ? ''
+            : _formatter(widget.initialValue!));
   }
 
   @override
@@ -453,27 +402,10 @@ class _DateTimeFormFieldState extends ValueFieldState<DateTime> {
     textEditingController.text =
         widget.initialValue == null ? '' : _formatter(widget.initialValue!);
   }
-}
-
-class _NumberValueNotifier extends NullableValueNotifier<num>
-    with TextSelectionManagement {
-  TextEditingController controller = new TextEditingController();
-  _NumberValueNotifier({num? value}) : super(value);
-
-  @override
-  void setSelection(int start, int end) {
-    TextSelectionManagement.setSelectionWithTextEditingController(
-        start, end, controller);
-  }
-
-  @override
-  void selectAll() {
-    setSelection(0, controller.text.length);
-  }
 
   @override
   void dispose() {
-    controller.dispose();
+    textEditingController.dispose();
     super.dispose();
   }
 }
@@ -499,7 +431,6 @@ class NumberFormField extends ValueField<num> {
       TextInputAction? textInputAction,
       InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _NumberValueNotifier(value: initialValue),
           {
             'labelText': TypedValue<String>(labelText),
             'hintText': TypedValue<String>(hintText),
@@ -539,8 +470,6 @@ class NumberFormField extends ValueField<num> {
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
             _NumberFieldState state = baseState as _NumberFieldState;
-            _NumberValueNotifier controller =
-                baseState.valueNotifier as _NumberValueNotifier;
             FocusNode focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -589,7 +518,8 @@ class NumberFormField extends ValueField<num> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
-              suffixes.add(ClearButton(controller.controller, focusNode, () {
+              suffixes
+                  .add(ClearButton(state.textEditingController, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -616,7 +546,7 @@ class NumberFormField extends ValueField<num> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: controller.controller,
+              controller: state.textEditingController,
               textInputAction: textInputAction,
               autofocus: autofocus,
               decoration:
@@ -649,10 +579,9 @@ class NumberFormField extends ValueField<num> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends ValueFieldState<num> {
-  TextEditingController get textEditingController =>
-      (super.valueNotifier as _NumberValueNotifier).controller;
-
+class _NumberFieldState extends ValueFieldState<num>
+    with TextSelectionManagement {
+  late final TextEditingController textEditingController;
   @override
   NumberFormField get widget => super.widget as NumberFormField;
 
@@ -664,10 +593,11 @@ class _NumberFieldState extends ValueFieldState<num> {
           : super.value!.toDouble();
 
   @override
-  void initValueNotifier() {
-    super.initValueNotifier();
-    textEditingController.text =
-        widget.initialValue == null ? '' : widget.initialValue.toString();
+  void initState() {
+    super.initState();
+    textEditingController = TextEditingController(
+        text:
+            widget.initialValue == null ? '' : widget.initialValue.toString());
   }
 
   @override
@@ -685,6 +615,23 @@ class _NumberFieldState extends ValueFieldState<num> {
     super.reset();
     textEditingController.text =
         widget.initialValue == null ? '' : widget.initialValue.toString();
+  }
+
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void selectAll() {
+    setSelection(0, textEditingController.text.length);
+  }
+
+  @override
+  void setSelection(int start, int end) {
+    TextSelectionManagement.setSelectionWithTextEditingController(
+        start, end, textEditingController);
   }
 }
 
@@ -743,7 +690,10 @@ class _ClearButtonState extends State<ClearButton> {
         child: InkWell(
           child: IconButton(
             icon: Icon(Icons.clear),
-            onPressed: widget.clear,
+            onPressed: () {
+              widget.controller.text = '';
+              widget.clear();
+            },
           ),
         ));
   }

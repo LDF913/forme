@@ -5,15 +5,7 @@ import 'form_theme.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
-class _SliderValueNotifier extends NullableValueNotifier<double> {
-  final double min;
-  _SliderValueNotifier(double value, this.min) : super(value);
-
-  @override
-  double get value => super.value == null ? min : super.value!;
-}
-
-class SliderFormField extends ValueField<double> {
+class SliderFormField extends NonnullValueField<double> {
   SliderFormField(
       {bool readOnly = false,
       ValueChanged<double>? onChanged,
@@ -28,7 +20,6 @@ class SliderFormField extends ValueField<double> {
       bool inline = false,
       EdgeInsets? contentPadding})
       : super(
-          () => _SliderValueNotifier(initialValue ?? min, min),
           {
             'label': TypedValue<String>(label),
             'max': TypedValue<double>(max, nullable: false),
@@ -40,15 +31,13 @@ class SliderFormField extends ValueField<double> {
                 nullable: false)
           },
           readOnly: readOnly,
-          onChanged: onChanged == null ? null : (value) => onChanged(value!),
+          onChanged: onChanged,
           replace: () => min,
-          validator: validator == null ? null : (value) => validator(value!),
+          validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SliderValueNotifier controller =
-                state.valueNotifier as _SliderValueNotifier;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
@@ -70,18 +59,18 @@ class SliderFormField extends ValueField<double> {
 
             List<Widget> contentColumns = [];
 
+            double value = state.value!;
+
             if (subLabelRender != null) {
               contentColumns.add(Row(
                 children: [
                   Expanded(
-                    flex:
-                        ((controller.value - min) * 100 / (max - min)).round(),
+                    flex: ((value - min) * 100 / (max - min)).round(),
                     child: const SizedBox(),
                   ),
-                  subLabelRender(controller.value),
+                  subLabelRender(value),
                   Expanded(
-                    flex:
-                        ((max - controller.value) * 100 / (max - min)).round(),
+                    flex: ((max - value) * 100 / (max - min)).round(),
                     child: const SizedBox(),
                   ),
                 ],
@@ -92,7 +81,7 @@ class SliderFormField extends ValueField<double> {
               data: SliderTheme.of(state.context),
               child: Slider(
                 focusNode: focusNode,
-                value: controller.value,
+                value: value,
                 min: min,
                 max: max,
                 divisions: divisions,
@@ -138,24 +127,14 @@ class SliderFormField extends ValueField<double> {
   _SliderFieldState createState() => _SliderFieldState();
 }
 
-class _SliderFieldState extends ValueFieldState<double> {
+class _SliderFieldState extends NonnullValueFieldState<double> {
   @override
   SliderFormField get widget => super.widget as SliderFormField;
   @override
   double get value => super.value == null ? getState('min') : super.value;
 }
 
-class _RangeSliderValueNotifier extends NullableValueNotifier<RangeValues> {
-  final double min;
-  final double max;
-  _RangeSliderValueNotifier(RangeValues value, this.min, this.max)
-      : super(value);
-  @override
-  RangeValues get value =>
-      super.value == null ? RangeValues(min, max) : super.value!;
-}
-
-class RangeSliderFormField extends ValueField<RangeValues> {
+class RangeSliderFormField extends NonnullValueField<RangeValues> {
   RangeSliderFormField(
       {ValueChanged<RangeValues>? onChanged,
       NonnullFieldValidator<RangeValues>? validator,
@@ -169,29 +148,24 @@ class RangeSliderFormField extends ValueField<RangeValues> {
       RangeValues? initialValue,
       RangeSubLabelRender? rangeSubLabelRender,
       EdgeInsets? contentPadding})
-      : super(
-            () => _RangeSliderValueNotifier(
-                initialValue ?? RangeValues(min, max), min, max),
-            {
-              'label': TypedValue<String>(label),
-              'max': TypedValue<double>(max, nullable: false),
-              'min': TypedValue<double>(min, nullable: false),
-              'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
-                  nullable: false),
-              'contentPadding': TypedValue<EdgeInsets>(
-                  contentPadding ?? EdgeInsets.symmetric(horizontal: 20),
-                  nullable: false)
-            },
+      : super({
+          'label': TypedValue<String>(label),
+          'max': TypedValue<double>(max, nullable: false),
+          'min': TypedValue<double>(min, nullable: false),
+          'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
+              nullable: false),
+          'contentPadding': TypedValue<EdgeInsets>(
+              contentPadding ?? EdgeInsets.symmetric(horizontal: 20),
+              nullable: false)
+        },
             readOnly: readOnly,
-            onChanged: onChanged == null ? null : (value) => onChanged(value!),
-            validator: validator == null ? null : (value) => validator(value!),
-            initialValue: initialValue,
+            onChanged: onChanged,
+            validator: validator,
+            initialValue: initialValue ?? RangeValues(min, max),
             replace: () => RangeValues(min, max),
             autovalidateMode: autovalidateMode,
             builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              _RangeSliderValueNotifier controller =
-                  state.valueNotifier as _RangeSliderValueNotifier;
               int divisions = stateMap['divisions'];
               double max = stateMap['max'];
               double min = stateMap['min'];
@@ -212,23 +186,21 @@ class RangeSliderFormField extends ValueField<RangeValues> {
 
               List<Widget> contentColumns = [];
 
+              RangeValues rangeValues = state.value!;
+
               if (rangeSubLabelRender != null) {
                 contentColumns.add(Stack(
                   children: [
                     Row(
                       children: [
                         Expanded(
-                          flex: ((controller.value.start - min) *
-                                  100 /
-                                  (max - min))
+                          flex: ((rangeValues.start - min) * 100 / (max - min))
                               .round(),
                           child: const SizedBox(),
                         ),
-                        rangeSubLabelRender.startRender(controller.value.start),
+                        rangeSubLabelRender.startRender(rangeValues.start),
                         Expanded(
-                          flex: ((max - controller.value.start) *
-                                  100 /
-                                  (max - min))
+                          flex: ((max - rangeValues.start) * 100 / (max - min))
                               .round(),
                           child: const SizedBox(),
                         ),
@@ -237,16 +209,14 @@ class RangeSliderFormField extends ValueField<RangeValues> {
                     Row(
                       children: [
                         Expanded(
-                          flex:
-                              ((controller.value.end - min) * 100 / (max - min))
-                                  .round(),
+                          flex: ((rangeValues.end - min) * 100 / (max - min))
+                              .round(),
                           child: const SizedBox(),
                         ),
-                        rangeSubLabelRender.startRender(controller.value.end),
+                        rangeSubLabelRender.startRender(rangeValues.end),
                         Expanded(
-                          flex:
-                              ((max - controller.value.end) * 100 / (max - min))
-                                  .round(),
+                          flex: ((max - rangeValues.end) * 100 / (max - min))
+                              .round(),
                           child: const SizedBox(),
                         ),
                       ],
@@ -258,7 +228,7 @@ class RangeSliderFormField extends ValueField<RangeValues> {
               Widget slider = SliderTheme(
                 data: SliderTheme.of(context),
                 child: RangeSlider(
-                  values: controller.value,
+                  values: rangeValues,
                   min: min,
                   max: max,
                   divisions: divisions,

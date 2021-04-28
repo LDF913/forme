@@ -1,41 +1,34 @@
 import 'package:flutter/material.dart';
+import '../form_builder.dart';
 import 'builder.dart';
 import 'form_theme.dart';
 
-class RadioItem extends SubControllableItem {
-  final dynamic value;
-  final String label;
-  final bool ignoreSplit;
-  final bool readOnly;
-  final bool visible;
-  final TextStyle? textStyle;
-  final EdgeInsets? padding;
+class RadioGroupItem<T> extends CheckboxGroupItem {
+  final T value;
 
-  RadioItem(this.value, this.label,
-      {String? controlKey,
-      this.ignoreSplit = false,
-      this.readOnly = false,
-      this.visible = true,
-      this.padding,
-      this.textStyle})
-      : super(controlKey, {
-          'readOnly': TypedValue<bool>(readOnly, nullable: false),
-          'visible': TypedValue<bool>(visible, nullable: false),
-          'ignoreSplit': TypedValue<bool>(ignoreSplit, nullable: false),
-          'label': TypedValue<String>(label, nullable: false),
-          'textStyle': TypedValue<TextStyle>(textStyle),
-          'padding': TypedValue<EdgeInsets>(padding ?? EdgeInsets.all(8),
-              nullable: false),
-        });
+  RadioGroupItem(
+      {String? label,
+      required this.value,
+      Widget? secondary,
+      Widget? title,
+      bool readOnly = false,
+      bool visible = true,
+      ListTileControlAffinity controlAffinity = ListTileControlAffinity.leading,
+      bool ignoreSplit = false,
+      EdgeInsets? padding})
+      : super(
+            secondary: secondary,
+            label: label,
+            title: title,
+            readOnly: readOnly,
+            visible: visible,
+            controlAffinity: controlAffinity,
+            ignoreSplit: ignoreSplit);
 }
 
-class _RadioGroupController extends SubController {
-  _RadioGroupController({value}) : super(value);
-}
-
-class RadioGroup extends ValueField {
+class RadioGroup<T> extends ValueField<T> {
   RadioGroup(
-      {required List<RadioItem> items,
+      {required List<RadioGroupItem<T>> items,
       String? label,
       ValueChanged? onChanged,
       FormFieldValidator? validator,
@@ -46,11 +39,10 @@ class RadioGroup extends ValueField {
       EdgeInsets? errorTextPadding,
       bool inline = false})
       : super(
-          () => _RadioGroupController(value: initialValue),
           {
             'label': TypedValue<String>(label),
             'split': TypedValue<int>(split, nullable: false),
-            'items': TypedValue<List<RadioItem>>(items, nullable: false),
+            'items': TypedValue<List<RadioGroupItem>>(items, nullable: false),
             'errorTextPadding': TypedValue<EdgeInsets>(
                 errorTextPadding ?? EdgeInsets.all(8),
                 nullable: false)
@@ -62,11 +54,9 @@ class RadioGroup extends ValueField {
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _RadioGroupController controller =
-                state.valueNotifier as _RadioGroupController;
             String? label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
-            List<RadioItem> items = stateMap['items'];
+            List<RadioGroupItem> items = stateMap['items'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
 
             List<Widget> widgets = [];
@@ -83,22 +73,71 @@ class RadioGroup extends ValueField {
 
             List<Widget> wrapWidgets = [];
 
-            controller.init(items);
+            void changeValue(dynamic value) {
+              if (value != state.value) {
+                state.didChange(value);
+              }
+            }
 
             for (int i = 0; i < items.length; i++) {
-              RadioItem button = items[i];
-              var stateMap = controller.getUpdatedMap(button);
-              TextStyle labelStyle = stateMap['labelStyle'] ?? TextStyle();
-              bool isReadOnly = readOnly || stateMap['readOnly'];
-              bool isSelected = button.value == controller.value;
-              Color color = isReadOnly
-                  ? themeData.disabledColor
-                  : isSelected
-                      ? themeData.primaryColor
-                      : themeData.unselectedWidgetColor;
+              RadioGroupItem item = items[i];
+              bool isReadOnly = readOnly || item.readOnly;
 
-              Widget radio = Padding(
-                padding: stateMap['padding'],
+              if (split > 0) {
+                double factor = 1 / split;
+                if (factor == 1) {
+                  wrapWidgets.add(RadioListTile<T>(
+                    dense: true,
+                    contentPadding: item.padding,
+                    activeColor: themeData.primaryColor,
+                    controlAffinity: item.controlAffinity,
+                    secondary: item.secondary,
+                    value: item.value,
+                    groupValue: state.value,
+                    onChanged: isReadOnly
+                        ? null
+                        : (g) {
+                            changeValue(item.value);
+                          },
+                    title: item.title,
+                  ));
+                  continue;
+                }
+              }
+
+              Radio radio = Radio<T>(
+                  activeColor: themeData.primaryColor,
+                  value: item.value,
+                  groupValue: state.value,
+                  onChanged: isReadOnly
+                      ? null
+                      : (v) {
+                          changeValue(item.value);
+                        });
+
+              Widget title = split == 0
+                  ? item.title
+                  : Flexible(
+                      child: item.title,
+                    );
+
+              List<Widget> children;
+              switch (item.controlAffinity) {
+                case ListTileControlAffinity.leading:
+                  children = [radio, title];
+                  break;
+                default:
+                  children = [title, radio];
+                  break;
+              }
+
+              Row radioRow = Row(
+                mainAxisSize: MainAxisSize.min,
+                children: children,
+              );
+
+              Widget groupItemWidget = Padding(
+                padding: item.padding,
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
@@ -107,55 +146,26 @@ class RadioGroup extends ValueField {
                       onTap: isReadOnly
                           ? null
                           : () {
-                              var value = button.value;
-                              if (value != controller.value) {
-                                state.didChange(value);
-                              }
+                              changeValue(i);
                             },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                              isSelected
-                                  ? Icons.radio_button_checked
-                                  : Icons.radio_button_off,
-                              size: labelStyle.fontSize,
-                              color: color),
-                          SizedBox(
-                            width: 4.0,
-                          ),
-                          split == 0
-                              ? Text(
-                                  stateMap['label'],
-                                  style: labelStyle,
-                                )
-                              : Flexible(
-                                  child: Text(
-                                    stateMap['label'],
-                                    style: labelStyle,
-                                  ),
-                                )
-                        ],
-                      )),
+                      child: radioRow),
                 ),
               );
 
               if (split <= 0) {
-                wrapWidgets.add(Visibility(
-                  child: radio,
-                  visible: stateMap['visible'],
-                ));
-                if (button.visible && i < items.length - 1)
+                wrapWidgets.add(
+                    Visibility(child: groupItemWidget, visible: item.visible));
+                if (item.visible && i < items.length - 1)
                   wrapWidgets.add(SizedBox(
                     width: 8.0,
                   ));
               } else {
                 wrapWidgets.add(Visibility(
                   child: FractionallySizedBox(
-                    widthFactor: button.ignoreSplit ? 1 : 1 / split,
-                    child: radio,
+                    widthFactor: item.ignoreSplit ? 1 : 1 / split,
+                    child: groupItemWidget,
                   ),
-                  visible: stateMap['visible'],
+                  visible: item.visible,
                 ));
               }
             }
@@ -181,5 +191,5 @@ class RadioGroup extends ValueField {
         );
 
   @override
-  ValueFieldState createState() => ValueFieldState();
+  ValueFieldState<T> createState() => ValueFieldState();
 }

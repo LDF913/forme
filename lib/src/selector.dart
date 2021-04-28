@@ -16,14 +16,7 @@ typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
-class _SelectorFormValueNotifier extends NullableValueNotifier<List> {
-  _SelectorFormValueNotifier(List value) : super(value);
-  final UniqueKey key = UniqueKey();
-  List<dynamic> get value => super.value == null ? [] : super.value!;
-  void set(List value) => super.value == null ? [] : List.from(value);
-}
-
-class SelectorFormField extends ValueField<List> {
+class SelectorFormField extends NonnullValueField<List> {
   final SelectedChecker? selectedChecker;
   final SelectItemRender? selectItemRender;
   final SelectedItemRender? selectedItemRender;
@@ -94,7 +87,6 @@ class SelectorFormField extends ValueField<List> {
       this.onTap,
       InputDecorationTheme? inputDecorationTheme})
       : super(
-          () => _SelectorFormValueNotifier(initialValue ?? []),
           {
             'labelText': TypedValue<String>(labelText),
             'hintText': TypedValue<String>(hintText),
@@ -104,15 +96,13 @@ class SelectorFormField extends ValueField<List> {
                 TypedValue<InputDecorationTheme>(inputDecorationTheme)
           },
           readOnly: readOnly,
-          onChanged: onChanged == null ? null : (value) => onChanged(value!),
+          onChanged: onChanged,
           replace: () => [],
-          validator: validator == null ? null : (value) => validator(value!),
+          validator: validator,
           initialValue: initialValue ?? [],
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            _SelectorFormValueNotifier controller =
-                state.valueNotifier as _SelectorFormValueNotifier;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -125,8 +115,10 @@ class SelectorFormField extends ValueField<List> {
             SelectedChecker checker =
                 selectedChecker ?? _defaultSelectedChecker;
 
+            List value = List.from(state.value!);
+
             List<Widget> icons = [];
-            if (clearable && !readOnly && controller.value.isNotEmpty) {
+            if (clearable && !readOnly && value.isNotEmpty) {
               icons.add(Padding(
                 padding: EdgeInsets.only(right: 10),
                 child: GestureDetector(
@@ -145,23 +137,21 @@ class SelectorFormField extends ValueField<List> {
 
             Widget? widget;
 
-            if (controller.value.isNotEmpty) {
+            if (value.isNotEmpty) {
               SelectedItemRender render =
                   selectedItemRender ?? _defaultSelectedItemRender;
               if (!multi) {
-                widget = render(controller.value[0], multi, readOnly, themeData,
-                    formThemeData);
+                widget =
+                    render(value[0], multi, readOnly, themeData, formThemeData);
               } else {
-                List value = List.from(controller.value);
                 if (selectedSorter != null) selectedSorter(value);
-
                 List<Widget> itemWidgets = value.map((item) {
                   return InkWell(
                     onTap: readOnly
                         ? null
                         : onTap ??
                             () {
-                              state.didChange(controller.value
+                              state.didChange(value
                                   .where((element) => !checker(item, element))
                                   .toList());
                               focusNode.requestFocus();
@@ -206,13 +196,11 @@ class SelectorFormField extends ValueField<List> {
                                   List? selected = await Navigator.of(context,
                                           rootNavigator: true)
                                       .push(MaterialPageRoute<List>(
-                                          settings: RouteSettings(
-                                              arguments: controller.key),
                                           builder: (BuildContext context) {
                                             return _SelectorDialog(
                                                 selectItemRender,
                                                 checker,
-                                                controller.value,
+                                                value,
                                                 selectItemProvider,
                                                 multi,
                                                 queryFormBuilder,
@@ -228,7 +216,7 @@ class SelectorFormField extends ValueField<List> {
                           child: InputDecorator(
                             decoration: effectiveDecoration.copyWith(
                                 errorText: state.errorText),
-                            isEmpty: controller.value.isEmpty,
+                            isEmpty: value.isEmpty,
                             isFocused: Focus.of(context).hasFocus,
                             child: widget,
                           ),
@@ -238,30 +226,7 @@ class SelectorFormField extends ValueField<List> {
         );
 
   @override
-  _SelectorFormFieldState createState() => _SelectorFormFieldState();
-}
-
-class _SelectorFormFieldState extends ValueFieldState<List> {
-  UniqueKey get dialogKey =>
-      (super.valueNotifier as _SelectorFormValueNotifier).key;
-
-  @override
-  void didUpdateWidget(SelectorFormField oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      bool isClosed = false;
-      Navigator.of(context).popUntil((route) {
-        if (isClosed) return true;
-        if (route is MaterialPageRoute) {
-          RouteSettings settings = route.settings;
-          if (settings.arguments == dialogKey) return false;
-        }
-        isClosed = true;
-        return true;
-      });
-    });
-  }
+  NonnullValueFieldState<List> createState() => NonnullValueFieldState();
 }
 
 class _SelectorDialog extends StatefulWidget {
