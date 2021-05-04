@@ -7,8 +7,7 @@ typedef SubLabelRender = Widget Function(double value);
 
 class SliderFormField extends NonnullValueField<double> {
   SliderFormField(
-      {bool readOnly = false,
-      ValueChanged<double>? onChanged,
+      {ValueChanged<double>? onChanged,
       NonnullFieldValidator<double>? validator,
       AutovalidateMode? autovalidateMode,
       double? initialValue,
@@ -17,22 +16,17 @@ class SliderFormField extends NonnullValueField<double> {
       required double min,
       SubLabelRender? subLabelRender,
       String? label,
-      bool inline = false,
       EdgeInsets? contentPadding})
       : super(
           {
-            'label': TypedValue<String>(label),
-            'max': TypedValue<double>(max, nullable: false),
-            'min': TypedValue<double>(min, nullable: false),
-            'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
-                nullable: false),
+            'label': TypedValue<String?>(label),
+            'max': TypedValue<double>(max),
+            'min': TypedValue<double>(min),
+            'divisions': TypedValue<int>(divisions ?? (max - min).toInt()),
             'contentPadding': TypedValue<EdgeInsets>(
-                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10),
-                nullable: false)
+                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10))
           },
-          readOnly: readOnly,
           onChanged: onChanged,
-          replace: () => min,
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
@@ -44,6 +38,7 @@ class SliderFormField extends NonnullValueField<double> {
             double min = stateMap['min'];
             String? label = stateMap['label'];
             EdgeInsets contentPadding = stateMap['contentPadding'];
+            bool inline = state.inline;
 
             List<Widget> columns = [];
             if (label != null) {
@@ -59,7 +54,7 @@ class SliderFormField extends NonnullValueField<double> {
 
             List<Widget> contentColumns = [];
 
-            double value = state.value!;
+            double value = state.value;
 
             if (subLabelRender != null) {
               contentColumns.add(Row(
@@ -124,14 +119,7 @@ class SliderFormField extends NonnullValueField<double> {
         );
 
   @override
-  _SliderFieldState createState() => _SliderFieldState();
-}
-
-class _SliderFieldState extends NonnullValueFieldState<double> {
-  @override
-  SliderFormField get widget => super.widget as SliderFormField;
-  @override
-  double get value => super.value == null ? getState('min') : super.value;
+  NonnullValueFieldState<double> createState() => NonnullValueFieldState();
 }
 
 class RangeSliderFormField extends NonnullValueField<RangeValues> {
@@ -139,135 +127,127 @@ class RangeSliderFormField extends NonnullValueField<RangeValues> {
       {ValueChanged<RangeValues>? onChanged,
       NonnullFieldValidator<RangeValues>? validator,
       AutovalidateMode? autovalidateMode,
-      bool readOnly = false,
       required double max,
       required double min,
       String? label,
-      bool inline = false,
       int? divisions,
       RangeValues? initialValue,
       RangeSubLabelRender? rangeSubLabelRender,
       EdgeInsets? contentPadding})
       : super({
-          'label': TypedValue<String>(label),
-          'max': TypedValue<double>(max, nullable: false),
-          'min': TypedValue<double>(min, nullable: false),
-          'divisions': TypedValue<int>(divisions ?? (max - min).toInt(),
-              nullable: false),
+          'label': TypedValue<String?>(label),
+          'max': TypedValue<double>(max),
+          'min': TypedValue<double>(min),
+          'divisions': TypedValue<int>(divisions ?? (max - min).toInt()),
           'contentPadding': TypedValue<EdgeInsets>(
-              contentPadding ?? EdgeInsets.symmetric(horizontal: 20),
-              nullable: false)
+              contentPadding ?? EdgeInsets.symmetric(horizontal: 20))
         },
-            readOnly: readOnly,
             onChanged: onChanged,
             validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
-            replace: () => RangeValues(min, max),
-            autovalidateMode: autovalidateMode,
-            builder:
+            autovalidateMode: autovalidateMode, builder:
                 (state, context, readOnly, stateMap, themeData, formThemeData) {
-              int divisions = stateMap['divisions'];
-              double max = stateMap['max'];
-              double min = stateMap['min'];
-              String? label = stateMap['label'];
-              EdgeInsets contentPadding = stateMap['contentPadding'];
+          int divisions = stateMap['divisions'];
+          double max = stateMap['max'];
+          double min = stateMap['min'];
+          String? label = stateMap['label'];
+          EdgeInsets contentPadding = stateMap['contentPadding'];
+          bool inline = state.inline;
 
-              List<Widget> columns = [];
-              if (label != null) {
-                Text text = Text(label,
-                    textAlign: TextAlign.left,
-                    style:
-                        FormThemeData.getLabelStyle(themeData, state.hasError));
-                columns.add(Padding(
-                  padding: formThemeData.labelPadding ?? EdgeInsets.zero,
-                  child: text,
-                ));
-              }
+          List<Widget> columns = [];
+          if (label != null) {
+            Text text = Text(label,
+                textAlign: TextAlign.left,
+                style: FormThemeData.getLabelStyle(themeData, state.hasError));
+            columns.add(Padding(
+              padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+              child: text,
+            ));
+          }
 
-              List<Widget> contentColumns = [];
+          List<Widget> contentColumns = [];
 
-              RangeValues rangeValues = state.value!;
+          RangeValues rangeValues = state.value;
 
-              if (rangeSubLabelRender != null) {
-                contentColumns.add(Stack(
+          if (rangeSubLabelRender != null) {
+            contentColumns.add(Stack(
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: ((rangeValues.start - min) * 100 / (max - min))
-                              .round(),
-                          child: const SizedBox(),
-                        ),
-                        rangeSubLabelRender.startRender(rangeValues.start),
-                        Expanded(
-                          flex: ((max - rangeValues.start) * 100 / (max - min))
-                              .round(),
-                          child: const SizedBox(),
-                        ),
-                      ],
+                    Expanded(
+                      flex: ((rangeValues.start - min) * 100 / (max - min))
+                          .round(),
+                      child: const SizedBox(),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: ((rangeValues.end - min) * 100 / (max - min))
-                              .round(),
-                          child: const SizedBox(),
-                        ),
-                        rangeSubLabelRender.startRender(rangeValues.end),
-                        Expanded(
-                          flex: ((max - rangeValues.end) * 100 / (max - min))
-                              .round(),
-                          child: const SizedBox(),
-                        ),
-                      ],
-                    )
+                    rangeSubLabelRender.startRender(rangeValues.start),
+                    Expanded(
+                      flex: ((max - rangeValues.start) * 100 / (max - min))
+                          .round(),
+                      child: const SizedBox(),
+                    ),
                   ],
-                ));
-              }
-
-              Widget slider = SliderTheme(
-                data: SliderTheme.of(context),
-                child: RangeSlider(
-                  values: rangeValues,
-                  min: min,
-                  max: max,
-                  divisions: divisions,
-                  onChanged: readOnly
-                      ? null
-                      : (RangeValues values) {
-                          state.didChange(values);
-                        },
-                  activeColor: themeData.primaryColor,
-                  inactiveColor:
-                      themeData.unselectedWidgetColor.withOpacity(0.4),
                 ),
-              );
+                Row(
+                  children: [
+                    Expanded(
+                      flex:
+                          ((rangeValues.end - min) * 100 / (max - min)).round(),
+                      child: const SizedBox(),
+                    ),
+                    rangeSubLabelRender.startRender(rangeValues.end),
+                    Expanded(
+                      flex:
+                          ((max - rangeValues.end) * 100 / (max - min)).round(),
+                      child: const SizedBox(),
+                    ),
+                  ],
+                )
+              ],
+            ));
+          }
 
-              contentColumns.add(slider);
+          Widget slider = SliderTheme(
+            data: SliderTheme.of(context),
+            child: RangeSlider(
+              values: rangeValues,
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: readOnly
+                  ? null
+                  : (RangeValues values) {
+                      state.didChange(values);
+                    },
+              activeColor: themeData.primaryColor,
+              inactiveColor: themeData.unselectedWidgetColor.withOpacity(0.4),
+            ),
+          );
 
-              if (state.hasError) {
-                TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
-                Text error = Text(state.errorText!,
-                    overflow: overflow,
-                    style: FormThemeData.getErrorStyle(themeData));
-                contentColumns.add(error);
-              }
+          contentColumns.add(slider);
 
-              columns.add(Padding(
-                padding: contentPadding,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: contentColumns,
-                ),
-              ));
+          if (state.hasError) {
+            TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
+            Text error = Text(state.errorText!,
+                overflow: overflow,
+                style: FormThemeData.getErrorStyle(themeData));
+            contentColumns.add(error);
+          }
 
-              return Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: columns,
-              );
-            });
+          columns.add(Padding(
+            padding: contentPadding,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: contentColumns,
+            ),
+          ));
+
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: columns,
+          );
+        });
 }
 
 class RangeSubLabelRender {

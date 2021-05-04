@@ -23,7 +23,6 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
   SwitchGroupFormField(
       {String? label,
       required List<SwitchGroupItem> items,
-      bool readOnly = false,
       ValueChanged<List<int>>? onChanged,
       NonnullFieldValidator<List<int>>? validator,
       AutovalidateMode? autovalidateMode,
@@ -33,22 +32,17 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
       EdgeInsets? selectAllPadding})
       : super(
           {
-            'label': TypedValue<String>(label),
-            'items': TypedValue<List<SwitchGroupItem>>(items, nullable: false),
-            'hasSelectAllSwitch':
-                TypedValue<bool>(hasSelectAllSwitch, nullable: false),
+            'label': TypedValue<String?>(label),
+            'items': TypedValue<List<SwitchGroupItem>>(items),
+            'hasSelectAllSwitch': TypedValue<bool>(hasSelectAllSwitch),
             'selectAllPadding': TypedValue<EdgeInsets>(
-                selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4),
-                nullable: false),
+                selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4)),
             'errorTextPadding': TypedValue<EdgeInsets>(
-                errorTextPadding ?? const EdgeInsets.all(4),
-                nullable: false),
+                errorTextPadding ?? const EdgeInsets.all(4)),
           },
-          readOnly: readOnly,
           onChanged: onChanged,
-          replace: () => [],
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue ?? List<int>.empty(),
+          initialValue: initialValue ?? List<int>.empty(growable: true),
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
@@ -76,27 +70,26 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
               }
             });
 
-            List<int> value = List.of(state.value!);
-
             bool selectAll = controllableItems.isNotEmpty &&
-                controllableItems.every((element) => value.contains(element));
+                controllableItems
+                    .every((element) => state.value.contains(element));
 
             void changeValue(int index) {
-              if (value.contains(index)) {
-                value.remove(index);
+              if (state.value.contains(index)) {
+                state.value.remove(index);
               } else {
-                value.add(index);
+                state.value.add(index);
               }
-              state.didChange(value);
+              state.didChange(state.value);
             }
 
             void toggleValues() {
               if (selectAll) {
-                state.didChange(value
+                state.didChange(state.value
                     .where((element) => !controllableItems.contains(element))
                     .toList());
               } else {
-                state.didChange(value
+                state.didChange(state.value
                   ..addAll(controllableItems)
                   ..toSet()
                   ..toList());
@@ -153,7 +146,7 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
               )));
               bool isReadOnly = readOnly || item.readOnly;
               children.add(CupertinoSwitch(
-                value: value.contains(i),
+                value: state.value.contains(i),
                 onChanged: isReadOnly
                     ? null
                     : (value) {
@@ -199,22 +192,19 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
 
 class SwitchInlineFormField extends NonnullValueField<bool> {
   SwitchInlineFormField(
-      {bool readOnly = false,
-      ValueChanged<bool>? onChanged,
+      {ValueChanged<bool>? onChanged,
       NonnullFieldValidator<bool>? validator,
       AutovalidateMode? autovalidateMode,
       bool initialValue = false})
       : super(
           {},
-          readOnly: readOnly,
           onChanged: onChanged,
-          replace: () => false,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
-            bool value = state.value!;
+            bool value = state.value;
             List<Widget> columns = [];
             columns.add(InkWell(
               child: Row(

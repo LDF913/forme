@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'builder.dart';
+import 'text_selection.dart';
 
 class ClearableTextFormField extends NonnullValueField<String> {
   final bool obscureText;
@@ -26,7 +27,6 @@ class ClearableTextFormField extends NonnullValueField<String> {
       Widget? prefixIcon,
       List<TextInputFormatter>? inputFormatters,
       TextStyle? style,
-      bool readOnly = false,
       String? initialValue,
       ToolbarOptions? toolbarOptions,
       bool selectAllOnFocus = false,
@@ -36,31 +36,28 @@ class ClearableTextFormField extends NonnullValueField<String> {
       InputDecorationTheme? inputDecorationTheme})
       : super(
           {
-            'labelText': TypedValue<String>(labelText),
-            'hintText': TypedValue<String>(hintText),
-            'keyboardType': TypedValue<TextInputType>(keyboardType),
-            'autofocus': TypedValue<bool>(autofocus, nullable: false),
-            'maxLines': TypedValue<int>(maxLines),
-            'maxLength': TypedValue<int>(maxLength),
-            'clearable': TypedValue<bool>(clearable, nullable: false),
-            'prefixIcon': TypedValue<Widget>(prefixIcon),
+            'labelText': TypedValue<String?>(labelText),
+            'hintText': TypedValue<String?>(hintText),
+            'keyboardType': TypedValue<TextInputType?>(keyboardType),
+            'autofocus': TypedValue<bool>(autofocus),
+            'maxLines': TypedValue<int?>(maxLines),
+            'maxLength': TypedValue<int?>(maxLength),
+            'clearable': TypedValue<bool>(clearable),
+            'prefixIcon': TypedValue<Widget?>(prefixIcon),
             'inputFormatters':
-                TypedValue<List<TextInputFormatter>>(inputFormatters),
-            'style': TypedValue<TextStyle>(style),
-            'toolbarOptions': TypedValue<ToolbarOptions>(toolbarOptions),
-            'selectAllOnFocus':
-                TypedValue<bool>(selectAllOnFocus, nullable: false),
-            'suffixIcons': TypedValue<List<Widget>>(suffixIcons),
-            'textInputAction': TypedValue<TextInputAction>(textInputAction),
+                TypedValue<List<TextInputFormatter>?>(inputFormatters),
+            'style': TypedValue<TextStyle?>(style),
+            'toolbarOptions': TypedValue<ToolbarOptions?>(toolbarOptions),
+            'selectAllOnFocus': TypedValue<bool>(selectAllOnFocus),
+            'suffixIcons': TypedValue<List<Widget>?>(suffixIcons),
+            'textInputAction': TypedValue<TextInputAction?>(textInputAction),
             'inputDecorationTheme':
-                TypedValue<InputDecorationTheme>(inputDecorationTheme),
+                TypedValue<InputDecorationTheme?>(inputDecorationTheme),
           },
-          replace: () => '',
           onChanged: onChanged,
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
-          readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
             _TextFormFieldState state = baseState as _TextFormFieldState;
@@ -84,7 +81,7 @@ class ClearableTextFormField extends NonnullValueField<String> {
                     themeData.inputDecorationTheme;
 
             List<Widget> suffixes = [];
-            if (clearable && !readOnly && state.value!.length > 0) {
+            if (clearable && !readOnly && state.value.length > 0) {
               suffixes
                   .add(ClearButton(state.textEditingController, focusNode, () {
                 state.didChange('');
@@ -174,10 +171,22 @@ class _TextFormFieldState extends NonnullValueFieldState<String>
   }
 
   @override
+  void doChangeValue(String? value, {bool trigger = true}) {
+    super.doChangeValue(value, trigger: trigger);
+    if (textEditingController.text != this.value)
+      textEditingController.text = this.value;
+  }
+
+  @override
   void initState() {
     super.initState();
     obscureText = widget.obscureText;
-    textEditingController = TextEditingController();
+    textEditingController = TextEditingController(text: widget.initialValue);
+  }
+
+  @override
+  void initFormManagement() {
+    super.initFormManagement();
     if (selectAllOnFocus) {
       focusNode.addListener(doSelectAll);
     }
@@ -195,9 +204,9 @@ class _TextFormFieldState extends NonnullValueFieldState<String>
   @override
   void didUpdateWidget(ClearableTextFormField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    focusNode.removeListener(selectAll);
+    focusNode.removeListener(doSelectAll);
     if (selectAllOnFocus) {
-      focusNode.addListener(selectAll);
+      focusNode.addListener(doSelectAll);
     }
   }
 
@@ -208,8 +217,10 @@ class _TextFormFieldState extends NonnullValueFieldState<String>
   }
 
   @override
-  void didChange(String? value) {
-    super.didChange(value);
+  void reset() {
+    super.reset();
+    if (textEditingController.text != widget.initialValue)
+      textEditingController.text = widget.initialValue;
   }
 
   @override
@@ -229,7 +240,6 @@ class DateTimeFormField extends ValueField<DateTime> {
       {String? labelText,
       String? hintText,
       TextStyle? style,
-      bool readOnly = false,
       DateTimeFormatter? formatter,
       Locale? locale,
       bool useTime = false,
@@ -241,20 +251,19 @@ class DateTimeFormField extends ValueField<DateTime> {
       InputDecorationTheme? inputDecorationTheme})
       : super(
           {
-            'labelText': TypedValue<String>(labelText),
-            'hintText': TypedValue<String>(hintText),
-            'maxLines': TypedValue<int>(maxLines ?? 1, nullable: false),
-            'useTime': TypedValue<bool>(useTime, nullable: false),
-            'formatter': TypedValue<DateTimeFormatter>(formatter),
-            'style': TypedValue<TextStyle>(style),
+            'labelText': TypedValue<String?>(labelText),
+            'hintText': TypedValue<String?>(hintText),
+            'maxLines': TypedValue<int>(maxLines ?? 1),
+            'useTime': TypedValue<bool>(useTime),
+            'formatter': TypedValue<DateTimeFormatter?>(formatter),
+            'style': TypedValue<TextStyle?>(style),
             'inputDecorationTheme':
-                TypedValue<InputDecorationTheme>(inputDecorationTheme),
+                TypedValue<InputDecorationTheme?>(inputDecorationTheme),
           },
           onChanged: onChanged,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          readOnly: readOnly,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
             FocusNode focusNode = state.focusNode;
@@ -416,7 +425,6 @@ class NumberFormField extends ValueField<num> {
       String? labelText,
       String? hintText,
       TextStyle? style,
-      bool readOnly = true,
       ValueChanged<num?>? onChanged,
       FormFieldValidator<num>? validator,
       AutovalidateMode? autovalidateMode,
@@ -432,19 +440,19 @@ class NumberFormField extends ValueField<num> {
       InputDecorationTheme? inputDecorationTheme})
       : super(
           {
-            'labelText': TypedValue<String>(labelText),
-            'hintText': TypedValue<String>(hintText),
-            'autofocus': TypedValue<bool>(autofocus, nullable: false),
-            'clearable': TypedValue<bool>(clearable, nullable: false),
-            'prefixIcon': TypedValue<Widget>(prefixIcon),
-            'style': TypedValue<TextStyle>(style),
-            'suffixIcons': TypedValue<List<Widget>>(suffixIcons),
-            'textInputAction': TypedValue<TextInputAction>(textInputAction),
+            'labelText': TypedValue<String?>(labelText),
+            'hintText': TypedValue<String?>(hintText),
+            'autofocus': TypedValue<bool>(autofocus),
+            'clearable': TypedValue<bool>(clearable),
+            'prefixIcon': TypedValue<Widget?>(prefixIcon),
+            'style': TypedValue<TextStyle?>(style),
+            'suffixIcons': TypedValue<List<Widget>?>(suffixIcons),
+            'textInputAction': TypedValue<TextInputAction?>(textInputAction),
             'inputDecorationTheme':
-                TypedValue<InputDecorationTheme>(inputDecorationTheme),
-            'decimal': TypedValue<int>(decimal, nullable: false),
-            'max': TypedValue<double>(max),
-            'min': TypedValue<double>(min),
+                TypedValue<InputDecorationTheme?>(inputDecorationTheme),
+            'decimal': TypedValue<int>(decimal),
+            'max': TypedValue<double?>(max),
+            'min': TypedValue<double?>(min),
           },
           onChanged: onChanged,
           validator: (value) {
@@ -466,7 +474,6 @@ class NumberFormField extends ValueField<num> {
           },
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          readOnly: readOnly,
           builder: (baseState, context, readOnly, stateMap, themeData,
               formThemeData) {
             _NumberFieldState state = baseState as _NumberFieldState;

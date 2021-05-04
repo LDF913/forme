@@ -8,3 +8,5 @@ export 'src/selector.dart';
 export 'src/slider.dart';
 export 'src/switch_group.dart';
 export 'src/text_field.dart';
+export 'src/filter_chip.dart';
+export 'src/text_selection.dart';

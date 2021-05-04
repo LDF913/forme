@@ -26,34 +26,31 @@ class RadioGroupItem<T> extends CheckboxGroupItem {
             ignoreSplit: ignoreSplit);
 }
 
-class RadioGroup<T> extends ValueField<T> {
-  RadioGroup(
+class RadioGroupFormField<T> extends ValueField<T> {
+  RadioGroupFormField(
       {required List<RadioGroupItem<T>> items,
       String? label,
       ValueChanged? onChanged,
       FormFieldValidator? validator,
       AutovalidateMode? autovalidateMode,
       int split = 2,
-      bool readOnly = false,
       dynamic initialValue,
-      EdgeInsets? errorTextPadding,
-      bool inline = false})
+      EdgeInsets? errorTextPadding})
       : super(
           {
-            'label': TypedValue<String>(label),
-            'split': TypedValue<int>(split, nullable: false),
-            'items': TypedValue<List<RadioGroupItem>>(items, nullable: false),
-            'errorTextPadding': TypedValue<EdgeInsets>(
-                errorTextPadding ?? EdgeInsets.all(8),
-                nullable: false)
+            'label': TypedValue<String?>(label),
+            'split': TypedValue<int>(split),
+            'items': TypedValue<List<RadioGroupItem>>(items),
+            'errorTextPadding':
+                TypedValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8))
           },
-          readOnly: readOnly,
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
+            bool inline = state.inline;
             String? label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioGroupItem> items = stateMap['items'];

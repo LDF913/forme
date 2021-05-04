@@ -4,31 +4,29 @@ import 'package:flutter/material.dart';
 import 'builder.dart';
 import 'form_theme.dart';
 
-typedef SelectedChecker = bool Function(dynamic value, dynamic selectedValue);
-typedef SelectItemRender = Widget Function(dynamic item, bool multiSelect,
+typedef SelectItemRender<T> = Widget Function(T item, bool multiSelect,
     bool isSelected, ThemeData themeData, FormThemeData formThemeData);
-typedef SelectedItemRender = Widget Function(dynamic item, bool multiSelect,
+typedef SelectedItemRender<T> = Widget Function(T item, bool multiSelect,
     bool readOnly, ThemeData themeData, FormThemeData formThemeData);
-typedef SelectedSorter = void Function(List selected);
-typedef SelectItemProvider = Future<SelectItemPage> Function(
+typedef SelectedSorter<T> = void Function(List<T> selected);
+typedef SelectItemProvider<T> = Future<SelectItemPage<T>> Function(
     int page, Map<String, dynamic> params);
 typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
-class SelectorFormField extends NonnullValueField<List> {
-  final SelectedChecker? selectedChecker;
-  final SelectItemRender? selectItemRender;
-  final SelectedItemRender? selectedItemRender;
-  final SelectedSorter? selectedSorter;
-  final SelectItemProvider? selectItemProvider;
+class SelectorFormField<T> extends NonnullValueField<List<T>> {
+  final SelectItemRender<T>? selectItemRender;
+  final SelectedItemRender<T>? selectedItemRender;
+  final SelectedSorter<T>? selectedSorter;
+  final SelectItemProvider<T>? selectItemProvider;
   final SelectedItemLayoutType selectedItemLayoutType;
   final QueryFormBuilder? queryFormBuilder;
   final OnSelectDialogShow? onSelectDialogShow;
   final VoidCallback? onTap;
 
-  static Widget _defaultSelectedItemRender(dynamic item, bool multiSelect,
-      bool readOnly, ThemeData themeData, FormThemeData formThemeData) {
+  Widget _defaultSelectedItemRender<T>(T item, bool multiSelect, bool readOnly,
+      ThemeData themeData, FormThemeData formThemeData) {
     if (!multiSelect) {
       return Padding(
         child: Text(item.toString()),
@@ -62,10 +60,6 @@ class SelectorFormField extends NonnullValueField<List> {
             )));
   }
 
-  static bool _defaultSelectedChecker(dynamic v1, dynamic v2) {
-    return v1 == v2;
-  }
-
   SelectorFormField(this.selectItemProvider,
       {bool readOnly = false,
       ValueChanged<List>? onChanged,
@@ -76,8 +70,7 @@ class SelectorFormField extends NonnullValueField<List> {
       bool multi = false,
       NonnullFieldValidator<List>? validator,
       AutovalidateMode? autovalidateMode,
-      List? initialValue,
-      this.selectedChecker,
+      List<T>? initialValue,
       this.selectItemRender,
       this.selectedItemRender,
       this.selectedSorter,
@@ -88,18 +81,16 @@ class SelectorFormField extends NonnullValueField<List> {
       InputDecorationTheme? inputDecorationTheme})
       : super(
           {
-            'labelText': TypedValue<String>(labelText),
-            'hintText': TypedValue<String>(hintText),
-            'multi': TypedValue<bool>(multi, nullable: false),
-            'clearable': TypedValue<bool>(clearable, nullable: false),
+            'labelText': TypedValue<String?>(labelText),
+            'hintText': TypedValue<String?>(hintText),
+            'multi': TypedValue<bool>(multi),
+            'clearable': TypedValue<bool>(clearable),
             'inputDecorationTheme':
-                TypedValue<InputDecorationTheme>(inputDecorationTheme)
+                TypedValue<InputDecorationTheme?>(inputDecorationTheme)
           },
-          readOnly: readOnly,
           onChanged: onChanged,
-          replace: () => [],
           validator: validator,
-          initialValue: initialValue ?? [],
+          initialValue: initialValue ?? List<T>.empty(growable: true),
           autovalidateMode: autovalidateMode,
           builder:
               (state, context, readOnly, stateMap, themeData, formThemeData) {
@@ -112,13 +103,8 @@ class SelectorFormField extends NonnullValueField<List> {
                 stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
 
-            SelectedChecker checker =
-                selectedChecker ?? _defaultSelectedChecker;
-
-            List value = List.from(state.value!);
-
             List<Widget> icons = [];
-            if (clearable && !readOnly && value.isNotEmpty) {
+            if (clearable && !readOnly && state.value.isNotEmpty) {
               icons.add(Padding(
                 padding: EdgeInsets.only(right: 10),
                 child: GestureDetector(
@@ -137,23 +123,23 @@ class SelectorFormField extends NonnullValueField<List> {
 
             Widget? widget;
 
-            if (value.isNotEmpty) {
-              SelectedItemRender render =
-                  selectedItemRender ?? _defaultSelectedItemRender;
+            if (state.value.isNotEmpty) {
+              SelectedItemRender<T> render = selectedItemRender ??
+                  (state.widget as SelectorFormField)
+                      ._defaultSelectedItemRender;
               if (!multi) {
-                widget =
-                    render(value[0], multi, readOnly, themeData, formThemeData);
+                widget = render(
+                    state.value[0], multi, readOnly, themeData, formThemeData);
               } else {
-                if (selectedSorter != null) selectedSorter(value);
-                List<Widget> itemWidgets = value.map((item) {
+                if (selectedSorter != null) selectedSorter(state.value);
+                List<Widget> itemWidgets = state.value.map((item) {
                   return InkWell(
                     onTap: readOnly
                         ? null
                         : onTap ??
                             () {
-                              state.didChange(value
-                                  .where((element) => !checker(item, element))
-                                  .toList());
+                              state.didChange(state.value
+                                ..removeWhere((element) => element == item));
                               focusNode.requestFocus();
                             },
                     child:
@@ -193,14 +179,14 @@ class SelectorFormField extends NonnullValueField<List> {
                               ? null
                               : () async {
                                   focusNode.requestFocus();
-                                  List? selected = await Navigator.of(context,
+                                  List<T>? selected = await Navigator.of(
+                                          context,
                                           rootNavigator: true)
-                                      .push(MaterialPageRoute<List>(
+                                      .push(MaterialPageRoute<List<T>>(
                                           builder: (BuildContext context) {
-                                            return _SelectorDialog(
+                                            return _SelectorDialog<T>(
                                                 selectItemRender,
-                                                checker,
-                                                value,
+                                                state.value,
                                                 selectItemProvider,
                                                 multi,
                                                 queryFormBuilder,
@@ -209,6 +195,10 @@ class SelectorFormField extends NonnullValueField<List> {
                                           },
                                           fullscreenDialog: true));
                                   if (selected != null) {
+                                    if (compare<T>(state.value, selected))
+                                      return;
+                                    if (selectedSorter != null)
+                                      selectedSorter(selected);
                                     state.didChange(selected);
                                     focusNode.requestFocus();
                                   }
@@ -216,7 +206,7 @@ class SelectorFormField extends NonnullValueField<List> {
                           child: InputDecorator(
                             decoration: effectiveDecoration.copyWith(
                                 errorText: state.errorText),
-                            isEmpty: value.isEmpty,
+                            isEmpty: state.value.isEmpty,
                             isFocused: Focus.of(context).hasFocus,
                             child: widget,
                           ),
@@ -226,21 +216,24 @@ class SelectorFormField extends NonnullValueField<List> {
         );
 
   @override
-  NonnullValueFieldState<List> createState() => NonnullValueFieldState();
+  NonnullValueFieldState<List<T>> createState() => NonnullValueFieldState();
+
+  static bool compare<T>(List<T> old, List<T> selected) {
+    if (old.length != selected.length) return false;
+    return old.every((element) => selected.contains(element));
+  }
 }
 
-class _SelectorDialog extends StatefulWidget {
-  final SelectItemRender? selectItemRender;
-  final SelectedChecker selectedChecker;
-  final List selected;
-  final SelectItemProvider selectItemProvider;
+class _SelectorDialog<T> extends StatefulWidget {
+  final SelectItemRender<T>? selectItemRender;
+  final List<T> selected;
+  final SelectItemProvider<T> selectItemProvider;
   final bool multi;
   final QueryFormBuilder? queryFormBuilder;
   final OnSelectDialogShow? onSelectDialogShow;
   final FormThemeData formThemeData;
   _SelectorDialog(
       this.selectItemRender,
-      this.selectedChecker,
       this.selected,
       this.selectItemProvider,
       this.multi,
@@ -248,11 +241,11 @@ class _SelectorDialog extends StatefulWidget {
       this.onSelectDialogShow,
       this.formThemeData);
   @override
-  _SelectorDialogState createState() => _SelectorDialogState();
+  _SelectorDialogState<T> createState() => _SelectorDialogState();
 }
 
-class _SelectorDialogState extends State<_SelectorDialog> {
-  List? selected;
+class _SelectorDialogState<T> extends State<_SelectorDialog> {
+  List<T>? selected;
   bool loading = false;
   List items = [];
   int page = 1;
@@ -287,12 +280,11 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
   }
 
-  void toggle(dynamic value) {
+  void toggle(T value) {
     update(() {
       if (widget.multi) {
         int len = selected!.length;
-        selected!
-            .removeWhere((element) => widget.selectedChecker(value, element));
+        selected!.removeWhere((element) => value == element);
         if (len == selected!.length) {
           selected!.add(value);
         }
@@ -319,8 +311,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     loadData(gen);
   }
 
-  bool isSelected(dynamic value) {
-    return selected!.any((element) => widget.selectedChecker(value, element));
+  bool isSelected(T value) {
+    return selected!.any((element) => value == element);
   }
 
   void update(VoidCallback callback) {
@@ -329,7 +321,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
     }
   }
 
-  Widget renderSelectItems(dynamic item, bool multiSelect, bool isSelected,
+  Widget renderSelectItems(T item, bool multiSelect, bool isSelected,
       ThemeData themeData, FormThemeData formThemeData) {
     Color color = isSelected
         ? formThemeData.themeData.primaryColor
@@ -407,7 +399,7 @@ class _SelectorDialogState extends State<_SelectorDialog> {
           itemBuilder: (context, index) {
             var item = items[index];
             bool selected = isSelected(item);
-            SelectItemRender render =
+            SelectItemRender<T> render =
                 widget.selectItemRender ?? renderSelectItems;
             return InkWell(
               child: render(item, widget.multi, selected,
@@ -494,8 +486,8 @@ class _SelectorDialogState extends State<_SelectorDialog> {
   }
 }
 
-class SelectItemPage {
-  final List items; //current page items loaded from storage
+class SelectItemPage<T> {
+  final List<T> items; //current page items loaded from storage
   final int count;
 
   SelectItemPage(this.items, this.count); //total record counts;
