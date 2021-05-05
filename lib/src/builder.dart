@@ -1552,15 +1552,14 @@ class FormManagement {
 
   /// get all invalid & focusable field
   Iterable<FocusableInvalidField> getFocusableInvalidFields() {
-    return (this
-        ._valueFieldStatesList
-        ..sort((a, b) {
-          FieldKey aKey = a._fieldInfo.fieldKey;
-          FieldKey bKey = b._fieldInfo.fieldKey;
-          int compareRow = aKey.row.compareTo(bKey.row);
-          if (compareRow == 0) return aKey.column.compareTo(bKey.column);
-          return compareRow;
-        }))
+    return (this._valueFieldStatesList
+          ..sort((a, b) {
+            FieldKey aKey = a._fieldInfo.fieldKey;
+            FieldKey bKey = b._fieldInfo.fieldKey;
+            int compareRow = aKey.row.compareTo(bKey.row);
+            if (compareRow == 0) return aKey.column.compareTo(bKey.column);
+            return compareRow;
+          }))
         .where((element) =>
             element.hasError &&
             element._focusNode != null &&
@@ -1572,12 +1571,14 @@ class FormManagement {
     _FormFieldModel fieldModel = _formFieldModels.lastWhere(
         (element) => element.fieldKey == fieldKey,
         orElse: () => throw 'no field can be founded ');
-    ValueFieldState? state = 
-        .lastWhereOrNull(_valueFieldStatesList,(element) => element._fieldInfo.fieldKey == fieldKey);
-    TextSelectionManagement? textSelectionManagement = 
-        .lastWhereOrNull(_textSelectionManagements,(element) => element.fieldKey == fieldKey);
+    ValueFieldState? state = lastWhereOrNull(_valueFieldStatesList,
+        (element) => element._fieldInfo.fieldKey == fieldKey);
+    TextSelectionManagement? textSelectionManagement =
+        lastWhereOrNull<TextSelectionManagementDelegate>(
+            _textSelectionManagements,
+            (element) => element.fieldKey == fieldKey);
     FocusNodes? focusNode =
-        lastWhereOrNull(_focusNodes,(element) => element.fieldKey == fieldKey);
+        lastWhereOrNull(_focusNodes, (element) => element.fieldKey == fieldKey);
     return FormFieldManagement._(
         fieldModel, state, textSelectionManagement, focusNode);
   }
