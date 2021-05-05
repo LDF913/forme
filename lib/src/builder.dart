@@ -11,7 +11,6 @@ import 'field/text_field.dart';
 import 'field/radio_group.dart';
 import 'field/slider.dart';
 import 'text_selection.dart';
-import 'package:collection/collection.dart';
 
 /// listen  focusnode change
 ///
@@ -1553,15 +1552,15 @@ class FormManagement {
 
   /// get all invalid & focusable field
   Iterable<FocusableInvalidField> getFocusableInvalidFields() {
-    return this
+    return (this
         ._valueFieldStatesList
-        .sorted((a, b) {
+        ..sort((a, b) {
           FieldKey aKey = a._fieldInfo.fieldKey;
           FieldKey bKey = b._fieldInfo.fieldKey;
           int compareRow = aKey.row.compareTo(bKey.row);
           if (compareRow == 0) return aKey.column.compareTo(bKey.column);
           return compareRow;
-        })
+        }))
         .where((element) =>
             element.hasError &&
             element._focusNode != null &&
@@ -1573,12 +1572,12 @@ class FormManagement {
     _FormFieldModel fieldModel = _formFieldModels.lastWhere(
         (element) => element.fieldKey == fieldKey,
         orElse: () => throw 'no field can be founded ');
-    ValueFieldState? state = _valueFieldStatesList
-        .lastWhereOrNull((element) => element._fieldInfo.fieldKey == fieldKey);
-    TextSelectionManagement? textSelectionManagement = _textSelectionManagements
-        .lastWhereOrNull((element) => element.fieldKey == fieldKey);
+    ValueFieldState? state = 
+        .lastWhereOrNull(_valueFieldStatesList,(element) => element._fieldInfo.fieldKey == fieldKey);
+    TextSelectionManagement? textSelectionManagement = 
+        .lastWhereOrNull(_textSelectionManagements,(element) => element.fieldKey == fieldKey);
     FocusNodes? focusNode =
-        _focusNodes.lastWhereOrNull((element) => element.fieldKey == fieldKey);
+        lastWhereOrNull(_focusNodes,(element) => element.fieldKey == fieldKey);
     return FormFieldManagement._(
         fieldModel, state, textSelectionManagement, focusNode);
   }
@@ -1653,6 +1652,14 @@ class FormManagement {
     if (!formModel.enableLayoutManagement)
       throw 'you should set enableLayoutManagement to true before you call this method';
     return FormLayoutManagement._(formModel);
+  }
+
+  T? lastWhereOrNull<T>(Iterable<T> collection, bool Function(T element) test) {
+    T? result;
+    for (var element in collection) {
+      if (test(element)) result = element;
+    }
+    return result;
   }
 
   Key _newFieldKey(String controlKey) {
