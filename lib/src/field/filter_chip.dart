@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/form_builder.dart';
+
+import '../builder.dart';
+import '../form_theme.dart';
 
 class FilterChipItem<T> {
   final Widget label;

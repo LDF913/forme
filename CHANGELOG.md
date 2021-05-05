@@ -1,3 +1,7 @@
+## 0.1.0
+
+1. support StatelessField
+
 ## 0.0.5
 
 1. add NonnullValueField

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/form_builder.dart';
 import 'field/filter_chip.dart';
 import 'form_key.dart';
 import 'field/selector.dart';
