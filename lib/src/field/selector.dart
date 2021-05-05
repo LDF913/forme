@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-import 'builder.dart';
-import 'form_theme.dart';
+import '../builder.dart';
+import '../form_theme.dart';
 
 typedef SelectItemRender<T> = Widget Function(T item, bool multiSelect,
     bool isSelected, ThemeData themeData, FormThemeData formThemeData);
@@ -92,8 +91,8 @@ class SelectorFormField<T> extends NonnullValueField<List<T>> {
           validator: validator,
           initialValue: initialValue ?? List<T>.empty(growable: true),
           autovalidateMode: autovalidateMode,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];

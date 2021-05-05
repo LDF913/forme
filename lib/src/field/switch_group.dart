@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../form_builder.dart';
-import 'builder.dart';
-import 'form_theme.dart';
+import '../../form_builder.dart';
+import '../builder.dart';
+import '../form_theme.dart';
 
 class SwitchGroupItem {
   final String label;
@@ -44,8 +44,8 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? List<int>.empty(growable: true),
           validator: validator,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             String? label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
             bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
@@ -202,8 +202,8 @@ class SwitchInlineFormField extends NonnullValueField<bool> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             bool value = state.value;
             List<Widget> columns = [];
             columns.add(InkWell(

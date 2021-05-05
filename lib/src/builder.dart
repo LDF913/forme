@@ -1,25 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'filter_chip.dart';
-import 'selector.dart';
-import 'switch_group.dart';
-import 'checkbox_group.dart';
+import 'package:flutter_application_1/form_builder.dart';
+import 'field/filter_chip.dart';
+import 'form_key.dart';
+import 'field/selector.dart';
+import 'field/switch_group.dart';
+import 'field/checkbox_group.dart';
 import 'form_theme.dart';
-import 'text_field.dart';
-import 'radio_group.dart';
-import 'slider.dart';
+import 'field/text_field.dart';
+import 'field/radio_group.dart';
+import 'field/slider.dart';
 import 'text_selection.dart';
 import 'package:collection/collection.dart';
-
-typedef _FieldBuilder<T, K extends _BaseFieldState<T>> = Widget Function(
-  K state,
-  BuildContext context,
-  bool readOnly,
-  Map<String, dynamic> stateMap,
-  ThemeData themeData,
-  FormThemeData formThemeData,
-);
 
 /// listen  focusnode change
 ///
@@ -29,7 +22,7 @@ typedef FocusListener = void Function(String? key, bool hasFocus);
 
 typedef NonnullFieldValidator<T> = String? Function(T t);
 
-class FormBuilder extends StatefulWidget {
+class FormBuilder extends StatefulWidget with AbstractFormField {
   static final String readOnlyKey = 'readOnly';
   static final String visibleKey = 'visible';
 
@@ -276,8 +269,7 @@ class FormBuilder extends StatefulWidget {
                   'label': TypedValue<String?>(label),
                   'child': TypedValue<Widget?>(child),
                 },
-                builder: (state, context, readOnly, stateMap, themeData,
-                    formThemeData) {
+                builder: (state, stateMap, readOnly, formThemeData) {
                   Widget child = stateMap['child'] ?? Text(stateMap['label']);
                   return TextButton(
                       onPressed: readOnly ? null : onPressed,
@@ -397,8 +389,7 @@ class FormBuilder extends StatefulWidget {
       readOnly: true,
       child: CommonField(
         {'height': TypedValue<double>(height ?? 1.0)},
-        builder:
-            (state, context, readOnly, stateMap, themeData, formThemeData) {
+        builder: (state, stateMap, readOnly, formThemeData) {
           return Divider(
             height: stateMap['height'],
           );
@@ -594,7 +585,7 @@ class FormBuilder extends StatefulWidget {
       int? flex = 0,
       bool visible = true,
       EdgeInsets? padding,
-      required _BaseField field,
+      required AbstractFormField field,
       bool inline = false}) {
     _FormRow row =
         inline ? _formLayout.lastStretchableRow() : _formLayout.lastEmptyRow();
@@ -615,10 +606,6 @@ class FormBuilder extends StatefulWidget {
     if (a is Set && b is Set) return setEquals(a, b);
     if (a is Map && b is Map) return mapEquals(a, b);
     return a == b;
-  }
-
-  static String _createControlKeyByPosition(int row, int column) {
-    return '$row,$column';
   }
 
   static List<CheckboxGroupItem> toCheckboxGroupItems(List<String> items,
@@ -686,7 +673,7 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void didUpdateWidget(FormBuilder oldWidget) {
     super.didUpdateWidget(oldWidget);
-    model.updateInitMap(widget._initStateMap);
+    model.updateInitStateMap(oldWidget, widget);
   }
 
   @override
@@ -714,8 +701,6 @@ class _FormBuilderState extends State<FormBuilder> {
         Key? key;
         String? controlKey = builder.controlKey;
         if (controlKey == null) {
-          controlKey = FormBuilder._createControlKeyByPosition(
-              row, column); //use location as it's control key
           if (model.rebuildLayout) {
             key = UniqueKey();
           }
@@ -727,7 +712,7 @@ class _FormBuilderState extends State<FormBuilder> {
             throw 'controlkey must unique in a form';
           controlKeys.add(controlKey);
         }
-        children.add(_FormBuilderField(builder, controlKey, key, row, column));
+        children.add(_FormBuilderField(builder, key, row, column));
         column++;
       }
       rows.add(Row(
@@ -753,27 +738,52 @@ class _FormBuilderState extends State<FormBuilder> {
   }
 }
 
-class _FormBuilderField extends StatefulWidget {
-  final String controlKey;
-  final _BaseField child;
-  final int row;
-  final int column;
+mixin AbstractFormField on Widget {
+  Map<String, TypedValue> get _initStateMap => {};
+}
+
+class BuilderInfo {
+  final FieldKey fieldKey;
+  final Map<String, dynamic> stateMap;
+  final bool readOnly;
+  final int flex;
   final bool inline;
-  final Map<String, TypedValue> initStateMap;
-  _FormBuilderField(_FormBuilderFieldBuilder builder, this.controlKey, Key? key,
-      this.row, this.column)
+  final FormThemeData formThemeData;
+
+  factory BuilderInfo.of(BuildContext context) {
+    FieldInfo fieldInfo = FieldInfo.of(context);
+    FormManagement formManagement = FormManagement.of(context);
+    bool readOnly = formManagement.readOnly || fieldInfo.model.readOnly;
+    FormThemeData formThemeData = formManagement._formModel.formThemeData;
+    return BuilderInfo._(fieldInfo.fieldKey, fieldInfo.model.currentMap,
+        readOnly, fieldInfo.flex, fieldInfo.inline, formThemeData);
+  }
+
+  BuilderInfo._(this.fieldKey, this.stateMap, this.readOnly, this.flex,
+      this.inline, this.formThemeData);
+}
+
+class _FormBuilderField extends StatefulWidget with AbstractFormField {
+  final AbstractFormField child;
+  final FieldKey fieldKey;
+  final bool inline;
+  final _FormBuilderFieldBuilder builder;
+  _FormBuilderField(this.builder, Key? key, int row, int column)
       : this.child = builder.child,
         this.inline = builder.inline,
-        this.initStateMap = builder.child._initStateMap
-          ..addAll({
-            'readOnly': TypedValue<bool>(builder.readOnly),
-            'visible': TypedValue<bool>(builder.visible),
-            'flex': TypedValue<int>(builder.flex),
-            'padding': TypedValue<EdgeInsets?>(builder.padding),
-          }),
+        this.fieldKey =
+            FieldKey(column: column, row: row, controlKey: builder.controlKey),
         super(key: key);
   @override
   State<StatefulWidget> createState() => _FormBuilderFieldState();
+
+  @override
+  Map<String, TypedValue> get _initStateMap => {
+        'readOnly': TypedValue<bool>(builder.readOnly),
+        'visible': TypedValue<bool>(builder.visible),
+        'flex': TypedValue<int>(builder.flex),
+        'padding': TypedValue<EdgeInsets?>(builder.padding),
+      };
 }
 
 class _FormBuilderFieldState extends State<_FormBuilderField> {
@@ -785,22 +795,23 @@ class _FormBuilderFieldState extends State<_FormBuilderField> {
   @override
   void didUpdateWidget(_FormBuilderField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    model.updateInitMap(widget.initStateMap);
+    model.updateInitStateMap(oldWidget, widget);
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (!_init) {
-      _init = true;
-      formManagement = FormManagement.of(context);
-      model = _FormFieldModel(
-          widget.controlKey, widget.initStateMap, widget.row, widget.column);
-      model.addListener(() {
-        setState(() {});
-      });
-      formManagement._formFieldModels.add(model);
-    }
+    if (_init) return;
+    _init = true;
+    formManagement = FormManagement.of(context);
+    model = _FormFieldModel(
+      widget.fieldKey,
+      widget._initStateMap,
+    );
+    model.addListener(() {
+      setState(() {});
+    });
+    formManagement._formFieldModels.add(model);
   }
 
   @override
@@ -825,8 +836,7 @@ class _FormBuilderFieldState extends State<_FormBuilderField> {
           child: widget.child,
         ));
     return _InheritedFieldInfo(
-      FieldInfo._(widget.controlKey, widget.row, widget.column, widget.inline,
-          model.flex, model.gen, model),
+      FieldInfo._(widget.fieldKey, widget.inline, model.flex, model.gen, model),
       Flexible(
         fit: visible ? FlexFit.tight : FlexFit.loose,
         child: child,
@@ -837,41 +847,40 @@ class _FormBuilderFieldState extends State<_FormBuilderField> {
 }
 
 class FieldInfo {
-  final String controlKey;
-  final int row;
-  final int column;
+  final FieldKey fieldKey;
   final bool inline;
   final int flex;
   final int gen;
   final _FormFieldModel model;
 
-  FieldInfo._(this.controlKey, this.row, this.column, this.inline, this.flex,
-      this.gen, this.model);
+  FieldInfo._(this.fieldKey, this.inline, this.flex, this.gen, this.model);
 
   bool operator ==(Object other) =>
       (other is FieldInfo) &&
-      other.controlKey == controlKey &&
-      other.row == row &&
-      other.column == column &&
+      other.fieldKey.controlKey == fieldKey.controlKey &&
+      other.fieldKey.row == fieldKey.row &&
+      other.fieldKey.column == fieldKey.column &&
       other.inline == inline &&
       other.gen == gen;
 
   @override
-  int get hashCode => hashValues(controlKey, row, column, inline);
+  int get hashCode => hashValues(fieldKey, inline);
+
+  static FieldInfo of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_InheritedFieldInfo>()!
+        .fieldInfo;
+  }
 }
 
 class _InheritedFieldInfo extends InheritedWidget {
-  final FieldInfo layoutInfo;
+  final FieldInfo fieldInfo;
 
-  _InheritedFieldInfo(this.layoutInfo, Widget child) : super(child: child);
-
-  static _InheritedFieldInfo of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_InheritedFieldInfo>()!;
-  }
+  _InheritedFieldInfo(this.fieldInfo, Widget child) : super(child: child);
 
   @override
   bool updateShouldNotify(covariant _InheritedFieldInfo oldWidget) {
-    return layoutInfo != oldWidget.layoutInfo;
+    return fieldInfo != oldWidget.fieldInfo;
   }
 }
 
@@ -890,48 +899,28 @@ class TypedValue<T> {
   const TypedValue(this.value);
 }
 
-abstract class _BaseField<T, K extends _BaseFieldState<T>>
-    extends FormField<T> {
-  final Map<String, TypedValue> _initStateMap;
-  _BaseField(this._initStateMap,
-      {Key? key,
-      FormFieldValidator<T>? validator,
-      AutovalidateMode? autovalidateMode,
-      bool? enabled = true,
-      required _FieldBuilder<T, K> builder,
-      T? initialValue})
-      : super(
-            enabled: enabled ?? true,
-            key: key,
-            builder: (field) {
-              K state = field as K;
-              FormManagement formManagement = FormManagement.of(state.context);
-              FormThemeData formThemeData = formManagement.formThemeData;
-              _FormFieldModel model = state._fieldInfo!.model;
-              bool readOnly = formManagement.readOnly || model.readOnly;
-              return builder(state, state.context, readOnly, model.currentMap,
-                  formThemeData.themeData, formThemeData);
-            },
-            validator: validator,
-            autovalidateMode: autovalidateMode,
-            initialValue: initialValue);
-}
-
-class _BaseFieldState<T> extends FormFieldState<T> {
+mixin AbstractFormFieldState<T extends StatefulWidget> on State<T> {
   bool _init = false;
   late final FormManagement _formManagement;
 
-  FieldInfo? _fieldInfo;
+  late FieldInfo _fieldInfo;
 
-  String? get controlKey =>
-      _formManagement._mappings.containsKey(_fieldInfo!.controlKey)
-          ? _fieldInfo!.controlKey
-          : null;
+  /// get controlKey
+  ///
+  /// maybe null if not specified
+  String? get controlKey => _fieldInfo.fieldKey.controlKey;
 
-  bool get inline => _fieldInfo!.inline;
-  int get row => _fieldInfo!.row;
-  int get column => _fieldInfo!.column;
-  int get flex => _fieldInfo!.flex;
+  /// check current field is display inline
+  bool get inline => _fieldInfo.inline;
+
+  /// get row of field
+  int get row => _fieldInfo.fieldKey.row;
+
+  /// get column of field
+  int get column => _fieldInfo.fieldKey.column;
+
+  /// get flex of field
+  int get flex => _fieldInfo.flex;
 
   FocusNodes? _focusNode;
   TextSelectionManagementDelegate? _textSelectionManagementDelegate;
@@ -943,31 +932,46 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   /// you need get focusNode in [initFormManagement]
   FocusNodes get focusNode {
     if (_focusNode == null) {
-      _focusNode = FocusNodes._(_fieldInfo!.controlKey);
+      _focusNode = FocusNodes._(_fieldInfo.fieldKey);
       _formManagement._focusNodes.add(_focusNode!);
     }
     return _focusNode!;
   }
 
   @protected
-  dynamic getState(String stateKey) => _fieldInfo!.model.getState(stateKey);
+  dynamic getState(String stateKey) {
+    return _fieldInfo.model.getState(stateKey);
+  }
 
   @override
+  void didUpdateWidget(T oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    AbstractFormField? old;
+    AbstractFormField? current;
+    if (oldWidget is AbstractFormField) old = oldWidget as AbstractFormField;
+    if (widget is AbstractFormField) current = widget as AbstractFormField;
+    _fieldInfo.model.updateInitStateMap(old, current);
+  }
+
+  @protected
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _fieldInfo = _InheritedFieldInfo.of(context).layoutInfo;
-    if (!_init) {
-      _init = true;
-      _formManagement = FormManagement.of(context);
-
-      if (this is TextSelectionManagement) {
-        _textSelectionManagementDelegate = TextSelectionManagementDelegate._(
-            this as TextSelectionManagement, _fieldInfo!.controlKey);
-        _formManagement._textSelectionManagements
-            .add(_textSelectionManagementDelegate!);
-      }
-      initFormManagement();
+    _fieldInfo = FieldInfo.of(context);
+    if (widget is AbstractFormField) {
+      _fieldInfo.model.initStateMap
+          .addAll(Map.of((widget as AbstractFormField)._initStateMap));
     }
+    if (_init) return;
+    _init = true;
+    _formManagement = FormManagement.of(context);
+
+    if (this is TextSelectionManagement) {
+      _textSelectionManagementDelegate = TextSelectionManagementDelegate._(
+          this as TextSelectionManagement, _fieldInfo.fieldKey);
+      _formManagement._textSelectionManagements
+          .add(_textSelectionManagementDelegate!);
+    }
+    initFormManagement();
   }
 
   /// this method will be called immediately after initState
@@ -978,7 +982,7 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   @mustCallSuper
   void initFormManagement() {}
 
-  @override
+  @protected
   void dispose() {
     if (_textSelectionManagementDelegate != null)
       _formManagement._textSelectionManagements
@@ -989,33 +993,77 @@ class _BaseFieldState<T> extends FormFieldState<T> {
   }
 }
 
-class ValueField<T> extends _BaseField<T, ValueFieldState<T>> {
-  final ValueChanged<T?>? onChanged;
+typedef FieldContentBuilder<T extends AbstractFormFieldState> = Widget Function(
+    T state,
+    Map<String, dynamic> stateMap,
+    bool readOnly,
+    FormThemeData formThemeData);
 
-  ValueField(Map<String, TypedValue> initStateMap,
+class StatelessField extends StatelessWidget with AbstractFormField {
+  final WidgetBuilder builder;
+  StatelessField({required this.builder});
+  @override
+  Widget build(BuildContext context) => builder(context);
+}
+
+class CommonField extends StatefulWidget with AbstractFormField {
+  final Map<String, TypedValue> _initStateMap;
+  final FieldContentBuilder<CommonFieldState> builder;
+  CommonField(this._initStateMap, {required this.builder});
+
+  @override
+  CommonFieldState createState() => CommonFieldState();
+}
+
+class CommonFieldState extends State<CommonField> with AbstractFormFieldState {
+  @override
+  Widget build(BuildContext context) {
+    _FormFieldModel model = _fieldInfo.model;
+    bool readOnly = _formManagement.readOnly || model.readOnly;
+    return widget.builder(
+        this, model.currentMap, readOnly, _formManagement.formThemeData);
+  }
+}
+
+class ValueField<T> extends FormField<T> with AbstractFormField {
+  final ValueChanged<T?>? onChanged;
+  final Map<String, TypedValue> _initStateMap;
+
+  ValueField(this._initStateMap,
       {Key? key,
       this.onChanged,
-      required _FieldBuilder<T, ValueFieldState<T>> builder,
+      required FieldContentBuilder<ValueFieldState<T>> builder,
       FormFieldValidator<T>? validator,
       AutovalidateMode? autovalidateMode,
       T? initialValue,
       bool enabled = true})
-      : super(initStateMap,
+      : super(
             key: key,
             enabled: enabled,
-            builder: builder,
+            builder: (field) {
+              ValueFieldState<T> state = field as ValueFieldState<T>;
+              _FormFieldModel model = state._fieldInfo.model;
+              bool readOnly = state._formManagement.readOnly || model.readOnly;
+              return builder(state, model.currentMap, readOnly,
+                  state._formManagement.formThemeData);
+            },
             validator: validator,
             autovalidateMode: autovalidateMode,
-            initialValue: initialValue);
+            initialValue: initialValue) {
+    this._initStateMap.addAll({
+      'initialValue': TypedValue<T?>(initialValue),
+      'enabled': TypedValue<bool>(enabled),
+      'autovalidateMode': TypedValue<AutovalidateMode?>(autovalidateMode),
+    });
+  }
 
   @override
   ValueFieldState<T> createState() => ValueFieldState<T>();
 }
 
-class ValueFieldState<T> extends _BaseFieldState<T> {
-  ValueField<T> get widget => super.widget as ValueField<T>;
-
-  ValueChanged<T?>? get onChanged => widget.onChanged;
+class ValueFieldState<T> extends FormFieldState<T>
+    with AbstractFormFieldState<FormField<T>> {
+  ValueChanged<T?>? get onChanged => (super.widget as ValueField<T>).onChanged;
 
   @override
   void didChange(T? value) {
@@ -1059,7 +1107,7 @@ class NonnullValueField<T> extends ValueField<T> {
 
   NonnullValueField(Map<String, TypedValue> initStateMap,
       {Key? key,
-      required _FieldBuilder<T, NonnullValueFieldState<T>> builder,
+      required FieldContentBuilder<NonnullValueFieldState<T>> builder,
       ValueChanged<T>? onChanged,
       NonnullFieldValidator<T>? validator,
       AutovalidateMode? autovalidateMode,
@@ -1067,13 +1115,18 @@ class NonnullValueField<T> extends ValueField<T> {
       : super(initStateMap,
             key: key,
             onChanged: onChanged == null ? null : (value) => onChanged(value!),
-            builder: (state, context, readOnly, stateMap, themeData,
-                    formThemeData) =>
-                builder(state as NonnullValueFieldState<T>, context, readOnly,
-                    stateMap, themeData, formThemeData),
+            builder: (state, readOnly, stateMap, formThemeData) => builder(
+                state as NonnullValueFieldState<T>,
+                readOnly,
+                stateMap,
+                formThemeData),
             validator: validator == null ? null : (value) => validator(value!),
             autovalidateMode: autovalidateMode,
-            initialValue: initialValue);
+            initialValue: initialValue) {
+    this._initStateMap.addAll({
+      'initialValue': TypedValue<T>(initialValue),
+    });
+  }
 
   @override
   NonnullValueFieldState<T> createState() => NonnullValueFieldState<T>();
@@ -1098,22 +1151,13 @@ class NonnullValueFieldState<T> extends ValueFieldState<T> {
   }
 }
 
-class CommonField extends _BaseField<Null, CommonFieldState> {
-  CommonField(Map<String, TypedValue> initStateMap,
-      {Key? key, required _FieldBuilder<Null, CommonFieldState> builder})
-      : super(initStateMap, key: key, builder: builder);
-
-  @override
-  CommonFieldState createState() => CommonFieldState();
-}
-
-class CommonFieldState extends _BaseFieldState<Null> {}
-
 class TextSelectionManagementDelegate extends TextSelectionManagement {
   final TextSelectionManagement _management;
-  final String _controlKey;
+  final FieldKey fieldKey;
 
-  TextSelectionManagementDelegate._(this._management, this._controlKey);
+  TextSelectionManagementDelegate._(this._management, this.fieldKey);
+
+  String? get controlKey => fieldKey.controlKey;
 
   @override
   void selectAll() {
@@ -1127,11 +1171,13 @@ class TextSelectionManagementDelegate extends TextSelectionManagement {
 }
 
 class FocusNodes extends FocusNode {
-  final String _controlKey;
+  final FieldKey fieldKey;
   final Map<String, FocusNode> _nodes = {};
   FocusListener? _focusListener;
 
-  FocusNodes._(this._controlKey) {
+  String? get controlKey => fieldKey.controlKey;
+
+  FocusNodes._(this.fieldKey) {
     this.addListener(() {
       if (_focusListener != null) _focusListener!(null, this.hasFocus);
     });
@@ -1169,7 +1215,7 @@ class _FormBuilderFieldBuilder {
   final String? controlKey;
   final int flex;
   final bool visible;
-  final _BaseField child;
+  final AbstractFormField child;
   final EdgeInsets? padding;
   final bool inline;
   final bool readOnly;
@@ -1294,11 +1340,6 @@ class _AbstractFormModel extends ChangeNotifier {
   _AbstractFormModel(Map<String, TypedValue> initStateMap)
       : this.initStateMap = Map.of(initStateMap);
 
-  void updateInitMap(Map<String, TypedValue> t) {
-    initStateMap.clear();
-    initStateMap.addAll(Map.of(t));
-  }
-
   /// get state value
   ///
   /// it's equals to build method's stateMap\[stateKey\]
@@ -1359,6 +1400,16 @@ class _AbstractFormModel extends ChangeNotifier {
     }
   }
 
+  void updateInitStateMap(AbstractFormField? old, AbstractFormField? current) {
+    if (old != null) {
+      Iterable<String> keys = old._initStateMap.keys;
+      initStateMap.removeWhere((key, value) => keys.contains(key));
+    }
+    if (current != null) {
+      initStateMap.addAll(Map.of(current._initStateMap));
+    }
+  }
+
   @protected
   void enableKeyExists(String stateKey) {
     if (!initStateMap.containsKey(stateKey))
@@ -1384,11 +1435,8 @@ class _AbstractFormModel extends ChangeNotifier {
 }
 
 abstract class _AbstractFormFieldModel extends _AbstractFormModel {
-  final String controlKey;
-  final int row;
-  final int column;
-  _AbstractFormFieldModel(
-      this.controlKey, Map<String, TypedValue> value, this.row, this.column)
+  final FieldKey fieldKey;
+  _AbstractFormFieldModel(this.fieldKey, Map<String, TypedValue> value)
       : super(value);
 }
 
@@ -1418,8 +1466,14 @@ class _FormModel extends _AbstractFormModel {
 
 class _FormFieldModel extends _AbstractFormFieldModel {
   _FormFieldModel(
-      String controlKey, Map<String, TypedValue> value, int row, int column)
-      : super(controlKey, value, row, column);
+    FieldKey fieldKey,
+    Map<String, TypedValue> value,
+  ) : super(
+          fieldKey,
+          value,
+        );
+
+  String? get controlKey => fieldKey.controlKey;
 
   bool get visible => getState('visible');
   set visible(bool visible) => update1('visible', visible);
@@ -1477,33 +1531,57 @@ class FormManagement {
   /// get rows of form
   int get rows => _formModel.formLayout.rows.length;
 
+  /// whether enableLayoutManagement or not
+  bool get enableLayoutManagement => _formModel.enableLayoutManagement;
+
   /// get a new formfieldManagement by controlKey
   ///
   /// if you don't know controlKey,you can use [newFormFieldManagementByPosition] instead
-  ///
-  /// if field is value field , will return [ValueFormFieldManagement]
   FormFieldManagement newFormFieldManagement(String controlKey) {
-    _FormFieldModel fieldModel = _formFieldModels.lastWhere(
-        (element) => element.controlKey == controlKey,
-        orElse: () =>
-            throw 'no field can be founded by controlKey :$controlKey');
-    ValueFieldState? state = _valueFieldStatesList
-        .lastWhereOrNull((element) => element.controlKey == controlKey);
-    TextSelectionManagement? textSelectionManagement = _textSelectionManagements
-        .lastWhereOrNull((element) => element._controlKey == controlKey);
-    FocusNodes? focusNode = _focusNodes
-        .lastWhereOrNull((element) => element._controlKey == controlKey);
-    return FormFieldManagement._(
-        fieldModel, state, textSelectionManagement, focusNode);
+    //fast check
+    if (!_mappings.containsKey(controlKey)) {
+      throw 'no field can be found ,may be you need newFormFieldManagementByPosition';
+    }
+    return _newFormFieldManagement(
+        FieldKey(row: -1, column: -1, controlKey: controlKey));
   }
 
   /// create a formfieldmanagement by field's position
   FormFieldManagement newFormFieldManagementByPosition(int row, int column) {
     _rangeCheck(row, column: column);
-    String controlKey = _formFieldModels
-        .lastWhere((element) => element.row == row && element.column == column)
-        .controlKey;
-    return newFormFieldManagement(controlKey);
+    return _newFormFieldManagement(FieldKey(row: row, column: column));
+  }
+
+  /// get all invalid & focusable field
+  Iterable<FocusableInvalidField> getFocusableInvalidFields() {
+    return this
+        ._valueFieldStatesList
+        .sorted((a, b) {
+          FieldKey aKey = a._fieldInfo.fieldKey;
+          FieldKey bKey = b._fieldInfo.fieldKey;
+          int compareRow = aKey.row.compareTo(bKey.row);
+          if (compareRow == 0) return aKey.column.compareTo(bKey.column);
+          return compareRow;
+        })
+        .where((element) =>
+            element.hasError &&
+            element._focusNode != null &&
+            element._focusNode!.canRequestFocus)
+        .map((e) => FocusableInvalidField._(e.errorText!, e.focusNode));
+  }
+
+  FormFieldManagement _newFormFieldManagement(FieldKey fieldKey) {
+    _FormFieldModel fieldModel = _formFieldModels.lastWhere(
+        (element) => element.fieldKey == fieldKey,
+        orElse: () => throw 'no field can be founded ');
+    ValueFieldState? state = _valueFieldStatesList
+        .lastWhereOrNull((element) => element._fieldInfo.fieldKey == fieldKey);
+    TextSelectionManagement? textSelectionManagement = _textSelectionManagements
+        .lastWhereOrNull((element) => element.fieldKey == fieldKey);
+    FocusNodes? focusNode =
+        _focusNodes.lastWhereOrNull((element) => element.fieldKey == fieldKey);
+    return FormFieldManagement._(
+        fieldModel, state, textSelectionManagement, focusNode);
   }
 
   /// get form data
@@ -1552,11 +1630,11 @@ class FormManagement {
   /// get all validate error msgs
   ///
   /// key is controlKey ,value is error message
-  Map<String, String> get error {
-    Map<String, String> errorMap = {};
+  Map<FieldKey, String> get error {
+    Map<FieldKey, String> errorMap = {};
     _valueFieldStatesList.forEach((element) {
       String? error = element.errorText;
-      if (error != null) errorMap[element._fieldInfo!.controlKey] = error;
+      if (error != null) errorMap[element._fieldInfo.fieldKey] = error;
     });
     return errorMap;
   }
@@ -1565,7 +1643,7 @@ class FormManagement {
   FormRowManagement newFormRowManagement(int row) {
     _rangeCheck(row);
     return FormRowManagement._(
-        _formFieldModels.where((element) => element.row == row));
+        _formFieldModels.where((element) => element.fieldKey.row == row));
   }
 
   /// create a new layout management
@@ -1593,7 +1671,7 @@ class FormManagement {
         assert(_formFieldModels.isEmpty,
             'FormFieldModel is not all disposed, may cause a memory leak');
         assert(_valueFieldStatesList.isEmpty,
-            'ValueFieldState is not all disposed,may cause a memory leaks :${_valueFieldStatesList.map((e) => e._fieldInfo!.controlKey)}');
+            'ValueFieldState is not all disposed,may cause a memory leaks');
         assert(_formModels.isEmpty,
             'FormModel is not all disposed, may cause a memory leak');
       });
@@ -1821,7 +1899,7 @@ class FormLayoutManagement {
       int? flex,
       bool visible = true,
       EdgeInsets? padding,
-      required _BaseField field,
+      required AbstractFormField field,
       bool inline = true,
       bool insertRow = false}) {
     _ensureStarted();
@@ -1887,5 +1965,16 @@ class FormLayoutManagement {
       if (column < 0 || column > maxColumn)
         throw 'column is out of range ,range is 0,$maxColumn';
     }
+  }
+}
+
+class FocusableInvalidField {
+  final String errorText;
+  final FocusNode _node;
+
+  FocusableInvalidField._(this.errorText, this._node);
+
+  void requestFocus() {
+    _node.requestFocus();
   }
 }

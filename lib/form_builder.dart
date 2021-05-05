@@ -1,12 +1,12 @@
 library form_builder;
 
 export 'src/builder.dart';
-export 'src/checkbox_group.dart';
+export 'src/field/checkbox_group.dart';
 export 'src/form_theme.dart';
-export 'src/radio_group.dart';
-export 'src/selector.dart';
-export 'src/slider.dart';
-export 'src/switch_group.dart';
-export 'src/text_field.dart';
-export 'src/filter_chip.dart';
+export 'src/field/radio_group.dart';
+export 'src/field/selector.dart';
+export 'src/field/slider.dart';
+export 'src/field/switch_group.dart';
+export 'src/field/text_field.dart';
+export 'src/field/filter_chip.dart';
 export 'src/text_selection.dart';

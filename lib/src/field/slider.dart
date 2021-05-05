@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'builder.dart';
-import 'form_theme.dart';
+import '../builder.dart';
+import '../form_theme.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
@@ -30,8 +30,8 @@ class SliderFormField extends NonnullValueField<double> {
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
@@ -145,8 +145,9 @@ class RangeSliderFormField extends NonnullValueField<RangeValues> {
             onChanged: onChanged,
             validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
-            autovalidateMode: autovalidateMode, builder:
-                (state, context, readOnly, stateMap, themeData, formThemeData) {
+            autovalidateMode: autovalidateMode,
+            builder: (state, stateMap, readOnly, formThemeData) {
+          ThemeData themeData = formThemeData.themeData;
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];
           double min = stateMap['min'];
@@ -207,7 +208,7 @@ class RangeSliderFormField extends NonnullValueField<RangeValues> {
           }
 
           Widget slider = SliderTheme(
-            data: SliderTheme.of(context),
+            data: SliderTheme.of(state.context),
             child: RangeSlider(
               values: rangeValues,
               min: min,

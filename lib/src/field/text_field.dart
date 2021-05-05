@@ -3,8 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'builder.dart';
-import 'text_selection.dart';
+import '../builder.dart';
+import '../text_selection.dart';
 
 class ClearableTextFormField extends NonnullValueField<String> {
   final bool obscureText;
@@ -58,8 +58,8 @@ class ClearableTextFormField extends NonnullValueField<String> {
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
-          builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData) {
+          builder: (baseState, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             _TextFormFieldState state = baseState as _TextFormFieldState;
             FocusNode focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
@@ -264,14 +264,16 @@ class DateTimeFormField extends ValueField<DateTime> {
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
-            FocusNode focusNode = state.focusNode;
+          builder: (baseState, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
+            FocusNode focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
             TextStyle? style = stateMap['style'];
             bool useTime = stateMap['useTime'];
             int maxLines = stateMap['maxLines'];
+            _DateTimeFormFieldState state =
+                baseState as _DateTimeFormFieldState;
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
@@ -317,13 +319,11 @@ class DateTimeFormField extends ValueField<DateTime> {
               });
             }
 
-            TextEditingController controller =
-                (state as _DateTimeFormFieldState).textEditingController;
-
             List<Widget> suffixes = [];
 
             if (!readOnly) {
-              suffixes.add(ClearButton(controller, focusNode, () {
+              suffixes
+                  .add(ClearButton(state.textEditingController, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -352,7 +352,7 @@ class DateTimeFormField extends ValueField<DateTime> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: controller,
+              controller: state.textEditingController,
               decoration:
                   effectiveDecoration.copyWith(errorText: state.errorText),
               obscureText: false,
@@ -474,10 +474,10 @@ class NumberFormField extends ValueField<num> {
           },
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          builder: (baseState, context, readOnly, stateMap, themeData,
-              formThemeData) {
+          builder: (baseState, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             _NumberFieldState state = baseState as _NumberFieldState;
-            FocusNode focusNode = baseState.focusNode;
+            FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
             bool clearable = stateMap['clearable'];
@@ -525,8 +525,8 @@ class NumberFormField extends ValueField<num> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
-              suffixes
-                  .add(ClearButton(state.textEditingController, focusNode, () {
+              suffixes.add(
+                  ClearButton(baseState.textEditingController, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -553,7 +553,7 @@ class NumberFormField extends ValueField<num> {
             TextField textField = TextField(
               textAlignVertical: TextAlignVertical.center,
               focusNode: focusNode,
-              controller: state.textEditingController,
+              controller: baseState.textEditingController,
               textInputAction: textInputAction,
               autofocus: autofocus,
               decoration:

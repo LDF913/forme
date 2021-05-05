@@ -10,7 +10,7 @@ Widget form = FormBuilder(
       bool visible, // set form's visible state
       FormThemeData? formThemeData, //set themedata of form 
       this.formManagement,
-      FormInitCallback? initCallback})
+      bool enableLayoutManagement// when you really want to use FormLayoutManagement,you should set this property to true,otherwise set to false for performance improve})
 	.textField(
           controlKey: 'username',
           labelText: 'username',
@@ -63,17 +63,38 @@ Widget form = FormBuilder(
         );
 ```
 
+## form layout
+
+Column 
+  Row
+    Flexible(FlexFit.tight)
+      Padding 
+       FormField 
+
 ## methods
 
 ### FormManagement
 
-#### check whether form is initialled or not
+#### get FormThemeData
 
 ``` dart
-bool initialled = formManagement.initialled;
+FormThemeData formThemeData => formManagement.formThemeData
 ```
 
-#### check whether form is visible or not 
+#### set FormThemeData
+
+``` dart
+formManagement.formThemeData = FormThemeData(themeData);// system theme
+formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+```
+
+#### has controlKey
+
+``` dart
+bool hasControlKey => formManagement.hasControlKey(String controlKey);
+```
+
+####  whether form is visible
 
 ``` dart
 bool visible = formManagement.visible;
@@ -85,7 +106,7 @@ bool visible = formManagement.visible;
 formManagement.visible = true|false;
 ```
 
-#### check whether form is readOnly or not 
+#### whether form is readOnly 
 
 ``` dart
 bool readOnly = formManagement.readOnly;
@@ -97,24 +118,40 @@ bool readOnly = formManagement.readOnly;
 formManagement.readOnly = true|false;
 ```
 
-#### get current form themedata
+#### get rows of form
 
 ``` dart
-FormThemeData formThemeData = formManagement.formThemeData;
+int rows = formManagement.rows;
 ```
 
-#### set form theme
+#### whether enableLayoutManagement 
 
 ``` dart
-formManagement.formThemeData = FormThemeData(themeData);// system theme
-formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
+bool enableLayoutManagement = formManagement.enableLayoutManagement;
+```
+
+#### create FormFieldManagement
+
+**if your field does not has a controlKey use newFormFieldManagementByPosition instead**
+
+``` dart
+FormFieldManagement formFieldManagement =  newFormFieldManagement(String controlKey);
+```
+
+#### create FormFieldManagement by position
+
+**if field at position has a controlKey, you should use newFormFieldManagement rather than this method!**
+
+``` dart
+FormFieldManagement formFieldManagement =  newFormFieldManagementByPosition(int row,int column);
 ```
 
 #### get form data
 
+**only contains field which has a controlKey**
+
 ``` dart
-formManagement.data; // auto remove null
-formManagement.getData({bool removeNull = false});
+Map<String,dynamic> dataMap = formManagement.data;
 ```
 
 #### reset form
@@ -129,13 +166,7 @@ formManagement.reset();
 formManagement.validate();
 ```
 
-#### request focus on first invalid field
-
-``` dart
-formManagement.focusOnFirstInvalidField()
-```
-
-#### check whether form is valid or not 
+#### whether form is valid 
 
 **unlike validate method, this method won't display error msg**
 
@@ -143,152 +174,128 @@ formManagement.focusOnFirstInvalidField()
 formManagement.isValid
 ```
 
-#### check whether form has a controlKey or not
+#### get error
 
 ``` dart
-bool exists = formManagement.hasControlKey(String controlKey);
+Map<FieldKey, String> errorMap = formManagement.error;
 ```
 
-#### get FormFieldManagement
+#### get focusable & invalid fields
+
+**has been sorted by row & column**
 
 ``` dart
-FormFieldManagement formFieldManagement = formManagement.getFormFieldManagement(String controlKey)
+Iterable<FocusableInvalidField> fields = focusManagement.getFocusableInvalidFields();
 ```
 
-#### get FormLayoutManagement
-
-``` dart
-FormLayoutManagement formLayoutManagement = formManagement.formLayoutManagement;
-```
-
-#### get FormWidgetTreeManagement
+#### create FormRowManagement
 
 ``` dart 
-FormWidgetTreeManagement formWidgetTreeManagement = formManagement.formWidgetTreeManagement
-
+FormRowManagement formRowManagement = formManagement.newFormRowManagement(int row);
 ``` 
+
+#### create FormLayoutManagement
+
+``` dart
+FormLayoutManagement formLayoutManagement = newFormLayoutManagement()
+```
 
 ### FormFieldManagement
 
-#### check whether a field is ValueField or not
+#### whether field is focusable
 
 ``` dart
-bool isValueField = formFieldManagement.isValueField;
+bool focusable => formFieldManagement.focusable
 ```
 
-#### check whether a field is readOnly or not
+#### whether field is focused
 
 ``` dart
-bool readOnly = formFieldManagement.readOnly;
+bool focused => formFieldManagement.hasFocus
 ```
 
-#### set readOnly on formFieldManagement
-
-``` dart
-formFieldManagement.readOnly = true|false
-```
-
-#### check whether a field is removed or not
-
-``` dart
-bool removed = formFieldManagement.removed;
-```
-
-#### remove|unremove a form field
-
-``` dart
-formFieldManagement.remove = true|false
-```
-
-#### check whether a field is visible or not
-
-``` dart
-bool visible = formFieldManagement.visible;
-```
-
-#### set visible on form field
-
-``` dart
-formFieldManagement.visible = true|false
-```
-
-#### set autovalidateMode on value field
-
-``` 
-
-formFieldManagement.autovalidateMode = AutovalidateMode;
-```
-
-#### set initialValue on value field
-
-``` dart
-formFieldManagement.initialValue = value;
-```
-
-  
-
-#### validate a value field
-
-``` 
-
-bool isValid = formFieldManagement.validate();
-```
-
-#### check whether a value field is valid or not 
-
-**unlike validate method, this method won't display error msg**
-
-``` dart
-bool isValid = formFieldManagement.isValid;
-```
-
-#### reset value field
-
-``` dart
-formFieldManagement.reset();
-```
-
-#### get padding of a form field
-
-``` dart
-EdgeInsets padding = formFieldManagement.padding;
-```
-
-#### set padding of a form field
-
-``` 
-
-formFieldManagement.padding = padding;
-```
-
-#### check whether a value field is focused or not
-
-``` dart
-bool hasFocus = formFieldManagement.focus;
-```
-
-#### Focus|unfocus a form field
+#### focus|unfocus field
 
 ``` dart
 formFieldManagement.focus = true|false
 ```
 
-#### get value of a value field
+#### set focuslistener
+
+**call this method in WidgetsBinding.instance!.addPostFrameCallback**
 
 ``` dart
-dynamic value = formFieldManagement.value;
+formFieldManagement.focusListener = (key,hasFocus){
+  // when key is null, root node focused
+  // otherwise sub node focused
+}
 ```
 
-#### set value on a value field
+#### get ValueFieldManagement 
+
+**field must be a valuefield ,otherwise an error will be throw**
 
 ``` dart
-formFieldManagement.setValue(dynamic value,{bool trigger = true});
+ValueFieldManagement ValueFieldManagement  = formFieldManagement.valueFieldManagement 
 ```
 
-**trigger** whether trigger  field's onChange callback or not
- 
+#### whether field is ValueField
 
-#### rebuild a form field's state
+``` dart
+bool isValueField = formFieldManagement.isValueField;
+```
+
+#### whether field support textSelection
+
+``` dart
+bool supportTextSelection = formFieldManagement.supportTextSelection
+```
+
+#### get TextSelectionManagement
+
+**if field don't support textSelection ,an error will be throw**
+
+``` dart
+TextSelectionManagement  textSelectionManagement = formFieldManagement.textSelectionManagement
+```
+
+#### whether field is readOnly
+
+``` dart
+bool readOnly = formFieldManagement.readOnly;
+```
+
+#### set readOnly 
+
+``` dart
+formFieldManagement.readOnly = true|false
+```
+
+#### whether field is visible
+
+``` dart
+bool visible = formFieldManagement.visible;
+```
+
+#### set visible
+
+``` dart
+formFieldManagement.visible = true|false
+```
+
+#### get padding
+
+``` dart
+EdgeInsets? padding = formFieldManagement.padding;
+```
+
+#### set padding
+
+``` dart
+formFieldManagement.padding = padding;
+```
+
+#### rebuild field's state
 
 **see supported states for every field <a href="#field-states">here</a>**
 
@@ -296,7 +303,7 @@ formFieldManagement.setValue(dynamic value,{bool trigger = true});
 formFieldManagement.state = {};
 ```
 
-#### update a form field's state
+#### update field's state
 
 **see supported states for every field <a href="#field-states">here</a>**
 
@@ -304,125 +311,128 @@ formFieldManagement.state = {};
 formFieldManagement.update({});
 ```
 
-#### remove form field's states
+#### update one field state
 
 **see supported states for every field <a href="#field-states">here</a>**
 
 ``` dart
-formFieldManagement.removeState(Set<String> keys); 
+formFieldManagement.update1(String key,dynamic value);
 ```
 
-#### get TextSelectionManagement
+#### remove field's states
+
+**see supported states for every field <a href="#field-states">here</a>**
 
 ``` dart
-TextSelectionManagement textSelectionManagement = formFieldManagement.textSelectionManagement;
+formFieldManagement.removeStateKey(Set<String> keys); 
 ```
 
-#### set focuslistener on a form field`
+### ValueFieldManagement
+
+#### get value
 
 ``` dart
-formFieldManagement.focusListener = FocusListener();
+dynamic value => valueFieldManagement.value
 ```
 
-**you should call this method in FormBuilder's initCallback**
+#### set value
+
+``` dart
+valueFieldManagement.value = value;//will trigger onChanged
+valueFieldManagement.setValue(dynamic value,{bool trigger})
+```
+
+#### whether field is valid
+
+**this method won't display error msg**
+
+``` dart
+bool isValid = valueFieldManagement.isValid;
+```
+
+#### validate field
+
+**this method will display error and return whether field is valid**
+
+``` dart
+bool isValid = valueFieldManagement.validate();
+```
+
+#### reset field
+
+``` dart
+valueFieldManagement.reset();
+```
+
+#### get error
+
+``` dart
+String? error = valueFieldManagement.error;
+```
+
+### FormRowManagement 
+
+#### get columns
+
+``` dart
+int columns = formRowManagement.rows;
+```
+
+#### whether row is visible
+
+``` dart
+bool visible = formRowManagement.visible;
+```
+
+#### set visible
+
+``` dart
+formRowManagement.visible = true|false;
+```
+
+#### set readOnly
+
+``` dart
+formManagement.readOnly = true|false;
+```
 
 ### FormLayoutManagement 
 
-#### get rows of form
-
-``` 
-
-int rows = formLayoutManagement.rows;
-```
-
-#### get FormLayoutRowManagement
+#### whether a layout is editing 
 
 ``` dart
-FormLayoutRowManagement formLayoutRowManagement = formLayoutManagement.getFormLayoutRowManagement(int row);
-```
-
-#### get FormFieldManagement
-
-``` dart
-FormFieldManagement formFieldManagement = formLayoutManagement.getFormFieldManagement(int row,int column);
-```
-
-### FormLayoutRowManagement
-
-#### get columns of a row
-
-``` dart
-int columns = formLayoutRowManagement.columns;
-```
-
-#### check whether a row is visible or not
-
-``` dart
-bool visible = formLayoutRowManagement.visible;
-```
-
-#### set visiable on a row
-
-``` dart
-formLayoutRowManagement.visible = true|false;
-```
-
-#### set readOnly on a row
-
-``` dart
-formLayoutRowManagement.readOnly = true|false;
-```
-
-#### remove|unremove a row
-
-``` 
-
-formLayoutRowManagement.remove = true|false;
-```
-
-### FormWidgetTreeManagement 
-
-#### check whether a layout is editing or not 
-
-``` dart
-bool isEditing = formWidgetTreeManagement.isEditing;
+bool isEditing = formLayoutManagement.isEditing;
 ```
 
 #### get rows of currrent editing layout
 
 ``` dart
-int rows = formWidgetTreeManagement.rows;
+int rows = formLayoutManagement.rows;
 ```
 
 #### get columns of a row in current editing layout
 
 ``` dart
-int columns = formWidgetTreeManagement.getColumns(int row);
+int columns = formLayoutManagement.getColumns(int row);
 ```
 
-#### remove a field in widget tree
+#### remove a row|field in layout
 
 ``` dart
-formWidgetTreeManagement.remove(String controlKey);
+formLayoutManagement.remove(int row,{int column});
 ```
 
-#### remove a row|field in widget tree
-
-``` dart
-formWidgetTreeManagement.removeAtPosition(int row,{int column});
-```
-
-#### insert a row at position
+#### insert field at position
 
 ``` dart
 void insert(
-      {int column,
-      int row,
-      String controlKey,
-      int flex = 1,
+      {int? column,
+      int? row,
+      String? controlKey,
+      int? flex,
       bool visible = true,
-      EdgeInsets padding,
-      @required Widget field,
+      EdgeInsets? padding,
+      required AbstractFormField field,
       bool inline = true,
       bool insertRow = false})
 ```
@@ -430,25 +440,25 @@ void insert(
 #### swap two rows
 
 ``` dart
-formWidgetTreeManagement.swapRow(int oldRow, int newRow)
+formLayoutManagement.swapRow(int oldRow, int newRow)
 ```
 
 #### start edit current layout
 
 ``` dart
-formWidgetTreeManagement.startEdit();
+formLayoutManagement.startEdit();
 ```
 
 #### apply edited layout
 
 ``` dart
-formWidgetTreeManagement.apply();
+formLayoutManagement.apply();
 ```
 
 #### cancel editing layout
 
 ``` dart
-formWidgetTreeManagement.cancel();
+formLayoutManagement.cancel();
 ```
 
 ## field states
@@ -502,7 +512,7 @@ formWidgetTreeManagement.cancel();
 |  max  |  max |       true        |
 |  min  |  min |       true        |
 
-### CheckboxGroup
+### CheckboxGroupFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -511,7 +521,7 @@ formWidgetTreeManagement.cancel();
 |  items  |  List&lt; CheckboxGroupItem&gt; |       false        |
 |  errorTextPadding  | EdgeInsets   |       false        |
 
-### RadioGroup
+### RadioGroupFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -520,7 +530,7 @@ formWidgetTreeManagement.cancel();
 |  items  |  List&lt; RadioGroupItem&gt; |       false        |
 |  errorTextPadding  | EdgeInsets   |       false        |
 
-### Selector
+### SelectorFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -530,7 +540,7 @@ formWidgetTreeManagement.cancel();
 |  clearable  |  bool  |       false        |
 |  inputDecorationTheme  | InputDecorationTheme   |       true     |
 
-### Slider
+### SliderFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -540,7 +550,7 @@ formWidgetTreeManagement.cancel();
 |  divisions  |  int  |       false        |
 |  contentPadding  | EdgeInsets   |       false     |
 
-### RangeSlider
+### RangeSliderFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -550,7 +560,7 @@ formWidgetTreeManagement.cancel();
 |  divisions  |  int  |       false        |
 |  contentPadding  | EdgeInsets   |       false     |
 
-### SwitchGroup
+### SwitchGroupFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
@@ -560,26 +570,237 @@ formWidgetTreeManagement.cancel();
 |  selectAllPadding  |  EdgeInsets  |       false        |
 |  errorTextPadding  | EdgeInsets   |       false     |
 
+### FilterChipFormField
+
+|     name       |        Type     |       nullable    |
+|     --         |        --       |       ---         |
+|     label  |        String   |       true        |
+|     items  |        List&lt; FilterChipItem&lt;T&gt;&gt; |       false        |
+|  pressElevation  |  double  |       true        |
+|  errorTextPadding  | EdgeInsets   |       false     |
+
+
 ## currently support fields
 
 | field | return value | nullable|
 | ---| ---| --- |
-| TextField|  string | false |
-| CheckboxGroup|  List&lt; int&gt; | false |
-| RadioGroup&lt; T&gt; |  &lt; T&gt; | true |
-| DateTimeField|  DateTime | true |
-| Selector|  List | false |
-| SwitchGroup|  List&lt; int&gt; | false |
-| SwitchInline|  bool | false |
-| NumberField|  num | true |
-| Slider|  double | false |
-| RangeSlider|  RangeValues | false|
+| ClearableTextFormField|  string | false |
+| CheckboxGroupFormField|  List&lt; int&gt; | false |
+| RadioGroupFormField|  T | true |
+| DateTimeFormField|  DateTime | true |
+| SelectorFormField|  List&lt; T&gt; | false |
+| SwitchGroupFormField|  List&lt; int&gt; | false |
+| SwitchInlineFormField|  bool | false |
+| NumberFormField|  num | true |
+| SliderFormField|  double | false |
+| RangeSliderFormField|  RangeValues | false|
+| FilterChipFormField|  List&lt; T&gt; | false |
 
 ## build your own form field
 
-TODO
+### build a value field
 
-developing
+if you want to build a nullable value field ,just extends ValueField
+
+this is an example:
+
+``` dart
+class CustomNullableValueField<T> extends ValueField<T> {
+  CustomNullableValueField({
+    required T value,
+    String? label,
+    TextStyle? textStyle,
+    T? initialValue,
+    ValueChanged<T?>? onChanged,
+    FormFieldValidator<T>? validator,
+  }) : super(
+          {
+            'label': TypedValue<String?>(label),
+            'textStyle': TypedValue<TextStyle?>(textStyle),
+          }, //this is a initStateMap
+          initialValue: initialValue,
+          validator: validator,
+          onChanged: onChanged,
+          builder: (state, stateMap, readOnly, formThemeData) {
+            // state is ValueFieldState<T>,if you override ValueFieldState,you can cast it as your custom ValueFieldState,in this example you can cast it to _CustomNullableValueFieldState,you can get controlKey via state.controlKey(nullable),you can also get row|column|flex|inline to help you building your widget
+            // readOnly : this field should readOnly
+            // stateMap : can be regarded as the lastest initStateMap , user can change stateMap var FormFieldManagement's update|removeState|directly set state, in this example ,you should get label&textStyle form stateMap rather than directly use them
+            // formThemeData : FormThemeData
+            return Row(
+              children: [
+                Text(
+                  stateMap['label'] ??
+                      'radio', //don't use just label here,you should get lastest label from stateMap,the key is initStateMap's label key
+                  style: stateMap['textStye'],
+                ),
+                Radio<T>(
+                  focusNode: state
+                      .focusNode, //state has prepared a focusnode for you,just use it rather than create a new one
+                  activeColor: formThemeData.themeData.primaryColor,
+                  groupValue: state.value,
+                  value: value,
+                  onChanged:
+                      readOnly ? null : (value) => state.didChange(value),
+                )
+              ],
+            );
+          },
+        );
+
+  @override
+  _CustomNullableValueFieldState<T> createState() =>
+      _CustomNullableValueFieldState();
+}
+```
+
+if you also want to build custom ValueFieldState,extends it !
+
+``` dart
+class _CustomNullableValueFieldState<T> extends ValueFieldState<T>
+    with TextSelectionManagement // if you form field support textselection
+{
+  late final TextEditingController
+      textEditingController; //just an example here !
+
+  @override
+  void initState() {
+    super.initState();
+    textEditingController = TextEditingController(
+        text:
+            widget.initialValue == null ? '' : widget.initialValue.toString());
+  }
+
+  @override
+  void reset() {
+    super.reset();
+    textEditingController.text =
+        widget.initialValue == null ? '' : widget.initialValue.toString();
+  }
+
+  @override
+  void dispose() {
+    textEditingController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void selectAll() {
+    setSelection(0, textEditingController.text.length);
+  }
+
+  @override
+  void setSelection(int start, int end) {
+    TextSelectionManagement.setSelectionWithTextEditingController(
+        start, end, textEditingController);
+  }
+}
+```
+
+the last step is insert your field 
+
+``` dart
+.field(
+    controlKey:'test',//important !,used to maintain state and used as a key when you get data via FormManagement.data
+    field: CustomNullableValueField<String>(
+        onChanged: (value) => print(value), value: '123'),
+    flex: 1,
+    inline: true),//if inline is false,the field will hole whole column,otherwise flex will work
+```
+
+build a nonnull value field is almost the same,just extends NonnullValueField
+
+this is an example:
+
+``` dart
+class CustomNonnullableValueField extends NonnullValueField<bool> {
+  CustomNonnullableValueField({
+    String? label,
+    TextStyle? textStyle,
+    required bool initialValue,
+    ValueChanged<bool>? onChanged,
+    NonnullFieldValidator<bool>? validator,
+  }) : super(
+          {
+            'label': TypedValue<String?>(label),
+            'textStyle': TypedValue<TextStyle?>(textStyle),
+          },
+          initialValue: initialValue,
+          validator: validator,
+          onChanged: onChanged,
+          builder: (state, stateMap, readOnly, formThemeData) {
+            return Row(
+              children: [
+                Text(
+                  stateMap['label'] ?? 'checkbox',
+                  style: stateMap['textStye'],
+                ),
+                Checkbox(
+                  activeColor: formThemeData.themeData.primaryColor,
+                  value: state.value,
+                  onChanged: (value) => state.didChange(value),
+                )
+              ],
+            );
+          },
+        );
+}
+```
+
+### build a commonfield
+
+``` dart
+class Label extends CommonField {
+  final String label;
+  Label(this.label)
+      : super(
+          {'label': TypedValue<String>(label)},
+          builder: (state, stateMap, readOnly, formThemeData) {
+            return Text(
+              stateMap['label'],
+              style: TextStyle(
+                  fontSize: 18, color: formThemeData.themeData.primaryColor),
+            );
+          },
+        );
+}
+```
+
+### build a StatelessField
+
+``` dart
+StatelessField field = StatelessField(builder: (context) {
+    BuilderInfo info = BuilderInfo.of(context);
+    FieldKey fieldKey = info.fieldKey;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'I\'m a custom field',
+          style: TextStyle(fontSize: 20),
+        ),
+        Container(
+          color: info.formThemeData.themeData.primaryColor
+              .withOpacity(0.3),
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              createRow('row', '${fieldKey.row}'),
+              createRow('column', '${fieldKey.column}'),
+              createRow('controlKey', '${fieldKey.controlKey ?? ''}'),
+              createRow('flex', '${info.flex}'),
+              createRow('inline', '${info.inline}'),
+              createRow('readOnly', '${info.readOnly}'),
+            ],
+          ),
+        )
+      ],
+    );
+  });
+```
+
+## project status
+
+beta
 
 ## develop plan
 

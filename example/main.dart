@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import '../form_builder.dart';
+import 'package:form_builder/form_builder.dart';
 
 void main() {
   runApp(MyApp());
@@ -46,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      formManagement2.newFormFieldManagement('username').focusListener =
+      formManagement2.newFormFieldManagementByPosition(0, 1).focusListener =
           (key, hasFocus) {
         if (key == null) print('username focus changed:$hasFocus');
       };
@@ -143,6 +143,9 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement.validate();
+              formManagement.getFocusableInvalidFields().forEach((element) {
+                print(element.errorText);
+              });
             },
             child: Text('validate')),
         TextButton(
@@ -214,6 +217,16 @@ class _MyHomePageState extends State<MyHomePage> {
     return buttons;
   }
 
+  static Row createRow(String key, String value) {
+    return Row(
+      children: [
+        Expanded(child: Text(key)),
+        Spacer(),
+        Expanded(child: Text(value))
+      ],
+    );
+  }
+
   Widget createForm2() {
     return FormBuilder(
       formManagement: formManagement2,
@@ -221,7 +234,6 @@ class _MyHomePageState extends State<MyHomePage> {
     )
         .field(field: Label('username'), flex: 2, inline: true)
         .textField(
-            controlKey: 'username',
             hintText: 'username',
             flex: 3,
             autovalidateMode: AutovalidateMode.always,
@@ -454,14 +466,14 @@ class _MyHomePageState extends State<MyHomePage> {
           useTime: true,
           hintText: 'startTime',
           onChanged: (value) => print('startTime value changed $value'),
-          validator: (value) => value == null ? 'not empty' : null,
+          validator: (value) => value == null ? 'not empty1' : null,
         )
         .datetimeField(
           controlKey: 'endTime',
           useTime: true,
           hintText: 'endTime',
           onChanged: (value) => print('endTime value changed $value'),
-          validator: (value) => value == null ? 'not empty' : null,
+          validator: (value) => value == null ? 'not empty2' : null,
         )
         .nextLine()
         .textField(
@@ -585,7 +597,60 @@ class _MyHomePageState extends State<MyHomePage> {
               'C#',
               'swift',
               'object-c'
-            ]));
+            ]))
+        .field(
+            flex: 1,
+            inline: false,
+            controlKey: '123',
+            field: StatelessField(builder: (context) {
+              BuilderInfo info = BuilderInfo.of(context);
+              return Column(
+                children: [
+                  ClearableTextFormField(
+                    autovalidateMode: info.stateMap['autovalidateMode'],
+                    validator: (t) => 'always validate',
+                  ),
+                  TextButton(
+                      onPressed: () {
+                        formManagement.newFormFieldManagement('123').update1(
+                            'autovalidateMode', AutovalidateMode.always);
+                      },
+                      child: Text('set always validate'))
+                ],
+              );
+            }))
+        .nextLine()
+        .field(
+            field: StatelessField(builder: (context) {
+              BuilderInfo info = BuilderInfo.of(context);
+              FieldKey fieldKey = info.fieldKey;
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'I\'m a custom field',
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  Container(
+                    color: info.formThemeData.themeData.primaryColor
+                        .withOpacity(0.3),
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        createRow('row', '${fieldKey.row}'),
+                        createRow('column', '${fieldKey.column}'),
+                        createRow('controlKey', '${fieldKey.controlKey ?? ''}'),
+                        createRow('flex', '${info.flex}'),
+                        createRow('inline', '${info.inline}'),
+                        createRow('readOnly', '${info.readOnly}'),
+                      ],
+                    ),
+                  )
+                ],
+              );
+            }),
+            flex: 2,
+            inline: false);
   }
 }
 
@@ -594,11 +659,11 @@ class Label extends CommonField {
   Label(this.label)
       : super(
           {'label': TypedValue<String>(label)},
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
             return Text(
               stateMap['label'],
-              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
+              style: TextStyle(
+                  fontSize: 18, color: formThemeData.themeData.primaryColor),
             );
           },
         );
@@ -608,15 +673,14 @@ class Button extends CommonField {
   Button()
       : super(
           {},
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
             return Padding(
               padding: const EdgeInsets.only(
                   left: 16, right: 16, bottom: 16, top: 8),
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: themeData.primaryColor,
+                  color: formThemeData.themeData.primaryColor,
                   borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
@@ -632,7 +696,8 @@ class Button extends CommonField {
                     borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                     highlightColor: Colors.transparent,
                     onTap: () {
-                      FormManagement management = FormManagement.of(context);
+                      FormManagement management =
+                          FormManagement.of(state.context);
                       Map<String, Widget> widgets =
                           management.data.map((key, value) => MapEntry(
                               key,
@@ -649,7 +714,7 @@ class Button extends CommonField {
                                 ],
                               )));
                       showDialog(
-                          context: context,
+                          context: state.context,
                           builder: (BuildContext context) {
                             return AlertDialog(
                               content: Container(

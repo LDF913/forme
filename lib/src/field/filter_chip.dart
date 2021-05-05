@@ -1,8 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import 'builder.dart';
-import 'form_theme.dart';
+import 'package:flutter_application_1/form_builder.dart';
 
 class FilterChipItem<T> {
   final Widget label;
@@ -48,8 +46,8 @@ class FilterChipFormField<T> extends NonnullValueField<List<T>> {
           onChanged: onChanged,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
-          builder:
-              (state, context, readOnly, stateMap, themeData, formThemeData) {
+          builder: (state, stateMap, readOnly, formThemeData) {
+            ThemeData themeData = formThemeData.themeData;
             List<FilterChipItem<T>> items = stateMap['items'];
             String? label = stateMap['label'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];

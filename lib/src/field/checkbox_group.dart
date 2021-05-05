@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../form_builder.dart';
-import 'builder.dart';
-import 'form_theme.dart';
+import '../../form_builder.dart';
+import '../builder.dart';
+import '../form_theme.dart';
 
 class CheckboxGroupItem {
   final Widget title;
@@ -45,9 +45,10 @@ class CheckboxGroupFormField extends NonnullValueField<List<int>> {
             onChanged: onChanged,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
-            validator: validator, builder:
-                (state, context, readOnly, stateMap, themeData, formThemeData) {
+            validator: validator,
+            builder: (state, stateMap, readOnly, formThemeData) {
           bool inline = state.inline;
+          ThemeData themeData = formThemeData.themeData;
           String? label = inline ? null : stateMap['label'];
           int split = inline ? 0 : stateMap['split'];
           List<CheckboxGroupItem> items = stateMap['items'];
