@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/form_builder.dart';
-import 'package:flutter_application_1/src/state_model.dart';
 import 'field/filter_chip.dart';
 import 'focus_node.dart';
 import 'form_builder_utils.dart';
@@ -16,6 +14,7 @@ import 'form_theme.dart';
 import 'field/text_field.dart';
 import 'field/radio_group.dart';
 import 'field/slider.dart';
+import 'state_model.dart';
 import 'text_selection.dart';
 
 class FormBuilder extends StatefulWidget {
