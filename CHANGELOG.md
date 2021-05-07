@@ -1,4 +1,4 @@
-## 1.0.0.beta1
+## 1.0.0-beta.2
 
 1. bug fix
 2. remove StatelessFied
