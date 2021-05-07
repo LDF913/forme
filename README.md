@@ -65,11 +65,13 @@ Widget form = FormBuilder(
 
 ## form layout
 
+```
 Column 
   Row
     Flexible(FlexFit.tight)
       Padding 
-       FormField 
+       FormField
+``` 
 
 ## methods
 
