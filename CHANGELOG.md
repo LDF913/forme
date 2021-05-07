@@ -1,8 +1,13 @@
-# 0.1.1
+## 1.0.0.beta1
+
+1. bug fix
+2. remove StatelessFied
+
+## 0.1.1
 
 1. bug fix
 
-# 0.1.0
+## 0.1.0
 
 1. support StatelessField
 

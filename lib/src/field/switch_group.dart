@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../form_builder.dart';
-import '../builder.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
+import '../form_field.dart';
 
 class SwitchGroupItem {
   final String label;
@@ -19,32 +20,37 @@ class SwitchGroupItem {
       : this.padding = padding ?? EdgeInsets.all(4);
 }
 
-class SwitchGroupFormField extends NonnullValueField<List<int>> {
-  SwitchGroupFormField(
-      {String? label,
-      required List<SwitchGroupItem> items,
-      ValueChanged<List<int>>? onChanged,
-      NonnullFieldValidator<List<int>>? validator,
-      AutovalidateMode? autovalidateMode,
-      bool hasSelectAllSwitch = true,
-      List<int>? initialValue,
-      EdgeInsets? errorTextPadding,
-      EdgeInsets? selectAllPadding})
-      : super(
+class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
+  SwitchGroupFormField({
+    String? label,
+    required List<SwitchGroupItem> items,
+    ValueChanged<List<int>>? onChanged,
+    NonnullFieldValidator<List<int>>? validator,
+    AutovalidateMode? autovalidateMode,
+    bool hasSelectAllSwitch = true,
+    List<int>? initialValue,
+    EdgeInsets? errorTextPadding,
+    EdgeInsets? selectAllPadding,
+    NonnullFormFieldSetter<List<int>>? onSaved,
+  }) : super(
           {
-            'label': TypedValue<String?>(label),
-            'items': TypedValue<List<SwitchGroupItem>>(items),
-            'hasSelectAllSwitch': TypedValue<bool>(hasSelectAllSwitch),
-            'selectAllPadding': TypedValue<EdgeInsets>(
+            'label': StateValue<String?>(label),
+            'items': StateValue<List<SwitchGroupItem>>(items),
+            'hasSelectAllSwitch': StateValue<bool>(hasSelectAllSwitch),
+            'selectAllPadding': StateValue<EdgeInsets>(
                 selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4)),
-            'errorTextPadding': TypedValue<EdgeInsets>(
+            'errorTextPadding': StateValue<EdgeInsets>(
                 errorTextPadding ?? const EdgeInsets.all(4)),
           },
           onChanged: onChanged,
+          onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? List<int>.empty(growable: true),
           validator: validator,
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
+            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = formThemeData.themeData;
             String? label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
@@ -185,24 +191,25 @@ class SwitchGroupFormField extends NonnullValueField<List<int>> {
             );
           },
         );
-
-  @override
-  NonnullValueFieldState<List<int>> createState() => NonnullValueFieldState();
 }
 
-class SwitchInlineFormField extends NonnullValueField<bool> {
+class SwitchInlineFormField extends BaseNonnullValueField<bool> {
   SwitchInlineFormField(
       {ValueChanged<bool>? onChanged,
       NonnullFieldValidator<bool>? validator,
       AutovalidateMode? autovalidateMode,
-      bool initialValue = false})
+      bool initialValue = false,
+      NonnullFormFieldSetter<bool>? onSaved})
       : super(
           {},
           onChanged: onChanged,
+          onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
             ThemeData themeData = formThemeData.themeData;
             bool value = state.value;
             List<Widget> columns = [];
@@ -240,7 +247,4 @@ class SwitchInlineFormField extends NonnullValueField<bool> {
             );
           },
         );
-
-  @override
-  NonnullValueFieldState<bool> createState() => NonnullValueFieldState();
 }

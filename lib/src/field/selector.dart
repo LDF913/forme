@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../builder.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
+import '../form_field.dart';
 
 typedef SelectItemRender<T> = Widget Function(T item, bool multiSelect,
     bool isSelected, ThemeData themeData, FormThemeData formThemeData);
@@ -14,7 +16,7 @@ typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
 
-class SelectorFormField<T> extends NonnullValueField<List<T>> {
+class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
   final SelectItemRender<T>? selectItemRender;
   final SelectedItemRender<T>? selectedItemRender;
   final SelectedSorter<T>? selectedSorter;
@@ -59,39 +61,44 @@ class SelectorFormField<T> extends NonnullValueField<List<T>> {
             )));
   }
 
-  SelectorFormField(this.selectItemProvider,
-      {bool readOnly = false,
-      ValueChanged<List>? onChanged,
-      bool clearable = true,
-      String? labelText,
-      String? hintText,
-      final double iconSize = 24,
-      bool multi = false,
-      NonnullFieldValidator<List>? validator,
-      AutovalidateMode? autovalidateMode,
-      List<T>? initialValue,
-      this.selectItemRender,
-      this.selectedItemRender,
-      this.selectedSorter,
-      this.selectedItemLayoutType = SelectedItemLayoutType.wrap,
-      this.queryFormBuilder,
-      this.onSelectDialogShow,
-      this.onTap,
-      InputDecorationTheme? inputDecorationTheme})
-      : super(
+  SelectorFormField(
+    this.selectItemProvider, {
+    ValueChanged<List<T>>? onChanged,
+    bool clearable = true,
+    String? labelText,
+    String? hintText,
+    final double iconSize = 24,
+    bool multi = false,
+    NonnullFieldValidator<List<T>>? validator,
+    AutovalidateMode? autovalidateMode,
+    List<T>? initialValue,
+    this.selectItemRender,
+    this.selectedItemRender,
+    this.selectedSorter,
+    this.selectedItemLayoutType = SelectedItemLayoutType.wrap,
+    this.queryFormBuilder,
+    this.onSelectDialogShow,
+    this.onTap,
+    InputDecorationTheme? inputDecorationTheme,
+    NonnullFormFieldSetter<List<T>>? onSaved,
+  }) : super(
           {
-            'labelText': TypedValue<String?>(labelText),
-            'hintText': TypedValue<String?>(hintText),
-            'multi': TypedValue<bool>(multi),
-            'clearable': TypedValue<bool>(clearable),
+            'labelText': StateValue<String?>(labelText),
+            'hintText': StateValue<String?>(hintText),
+            'multi': StateValue<bool>(multi),
+            'clearable': StateValue<bool>(clearable),
             'inputDecorationTheme':
-                TypedValue<InputDecorationTheme?>(inputDecorationTheme)
+                StateValue<InputDecorationTheme?>(inputDecorationTheme)
           },
           onChanged: onChanged,
+          onSaved: onSaved,
           validator: validator,
           initialValue: initialValue ?? List<T>.empty(growable: true),
           autovalidateMode: autovalidateMode,
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
+            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = formThemeData.themeData;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
@@ -213,9 +220,6 @@ class SelectorFormField<T> extends NonnullValueField<List<T>> {
             return child;
           },
         );
-
-  @override
-  NonnullValueFieldState<List<T>> createState() => NonnullValueFieldState();
 
   static bool compare<T>(List<T> old, List<T> selected) {
     if (old.length != selected.length) return false;

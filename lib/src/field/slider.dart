@@ -1,36 +1,42 @@
 import 'package:flutter/material.dart';
 
-import '../builder.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
+import '../form_field.dart';
 
 typedef SubLabelRender = Widget Function(double value);
 
-class SliderFormField extends NonnullValueField<double> {
-  SliderFormField(
-      {ValueChanged<double>? onChanged,
-      NonnullFieldValidator<double>? validator,
-      AutovalidateMode? autovalidateMode,
-      double? initialValue,
-      int? divisions,
-      required double max,
-      required double min,
-      SubLabelRender? subLabelRender,
-      String? label,
-      EdgeInsets? contentPadding})
-      : super(
+class SliderFormField extends BaseNonnullValueField<double> {
+  SliderFormField({
+    ValueChanged<double>? onChanged,
+    NonnullFieldValidator<double>? validator,
+    AutovalidateMode? autovalidateMode,
+    double? initialValue,
+    int? divisions,
+    required double max,
+    required double min,
+    SubLabelRender? subLabelRender,
+    String? label,
+    EdgeInsets? contentPadding,
+    NonnullFormFieldSetter<double>? onSaved,
+  }) : super(
           {
-            'label': TypedValue<String?>(label),
-            'max': TypedValue<double>(max),
-            'min': TypedValue<double>(min),
-            'divisions': TypedValue<int>(divisions ?? (max - min).toInt()),
-            'contentPadding': TypedValue<EdgeInsets>(
+            'label': StateValue<String?>(label),
+            'max': StateValue<double>(max),
+            'min': StateValue<double>(min),
+            'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
+            'contentPadding': StateValue<EdgeInsets>(
                 contentPadding ?? const EdgeInsets.symmetric(horizontal: 10))
           },
           onChanged: onChanged,
+          onSaved: onSaved,
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
+            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = formThemeData.themeData;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
@@ -117,36 +123,37 @@ class SliderFormField extends NonnullValueField<double> {
             );
           },
         );
-
-  @override
-  NonnullValueFieldState<double> createState() => NonnullValueFieldState();
 }
 
-class RangeSliderFormField extends NonnullValueField<RangeValues> {
-  RangeSliderFormField(
-      {ValueChanged<RangeValues>? onChanged,
-      NonnullFieldValidator<RangeValues>? validator,
-      AutovalidateMode? autovalidateMode,
-      required double max,
-      required double min,
-      String? label,
-      int? divisions,
-      RangeValues? initialValue,
-      RangeSubLabelRender? rangeSubLabelRender,
-      EdgeInsets? contentPadding})
-      : super({
-          'label': TypedValue<String?>(label),
-          'max': TypedValue<double>(max),
-          'min': TypedValue<double>(min),
-          'divisions': TypedValue<int>(divisions ?? (max - min).toInt()),
-          'contentPadding': TypedValue<EdgeInsets>(
+class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
+  RangeSliderFormField({
+    ValueChanged<RangeValues>? onChanged,
+    NonnullFieldValidator<RangeValues>? validator,
+    AutovalidateMode? autovalidateMode,
+    required double max,
+    required double min,
+    String? label,
+    int? divisions,
+    RangeValues? initialValue,
+    RangeSubLabelRender? rangeSubLabelRender,
+    EdgeInsets? contentPadding,
+    NonnullFormFieldSetter<RangeValues>? onSaved,
+  }) : super({
+          'label': StateValue<String?>(label),
+          'max': StateValue<double>(max),
+          'min': StateValue<double>(min),
+          'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
+          'contentPadding': StateValue<EdgeInsets>(
               contentPadding ?? EdgeInsets.symmetric(horizontal: 20))
         },
             onChanged: onChanged,
+            onSaved: onSaved,
             validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
-            autovalidateMode: autovalidateMode,
-            builder: (state, stateMap, readOnly, formThemeData) {
+            autovalidateMode: autovalidateMode, builder: (state) {
+          bool readOnly = state.readOnly;
+          FormThemeData formThemeData = state.formThemeData;
+          Map<String, dynamic> stateMap = state.currentMap;
           ThemeData themeData = formThemeData.themeData;
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];

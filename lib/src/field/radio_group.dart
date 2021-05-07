@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../form_builder.dart';
-import '../builder.dart';
+import '../form_field.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
 
 class RadioGroupItem<T> extends CheckboxGroupItem {
   final T value;
@@ -26,29 +27,34 @@ class RadioGroupItem<T> extends CheckboxGroupItem {
             ignoreSplit: ignoreSplit);
 }
 
-class RadioGroupFormField<T> extends ValueField<T> {
-  RadioGroupFormField(
-      {required List<RadioGroupItem<T>> items,
-      String? label,
-      ValueChanged? onChanged,
-      FormFieldValidator? validator,
-      AutovalidateMode? autovalidateMode,
-      int split = 2,
-      dynamic initialValue,
-      EdgeInsets? errorTextPadding})
-      : super(
+class RadioGroupFormField<T> extends BaseValueField<T> {
+  RadioGroupFormField({
+    required List<RadioGroupItem<T>> items,
+    String? label,
+    ValueChanged<T?>? onChanged,
+    FormFieldValidator? validator,
+    AutovalidateMode? autovalidateMode,
+    int split = 2,
+    dynamic initialValue,
+    EdgeInsets? errorTextPadding,
+    FormFieldSetter<T>? onSaved,
+  }) : super(
           {
-            'label': TypedValue<String?>(label),
-            'split': TypedValue<int>(split),
-            'items': TypedValue<List<RadioGroupItem>>(items),
+            'label': StateValue<String?>(label),
+            'split': StateValue<int>(split),
+            'items': StateValue<List<RadioGroupItem>>(items),
             'errorTextPadding':
-                TypedValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8))
+                StateValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8))
           },
           onChanged: onChanged,
+          onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
+            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = formThemeData.themeData;
             bool inline = state.inline;
             String? label = inline ? null : stateMap['label'];
@@ -186,7 +192,4 @@ class RadioGroupFormField<T> extends ValueField<T> {
             );
           },
         );
-
-  @override
-  ValueFieldState<T> createState() => ValueFieldState();
 }

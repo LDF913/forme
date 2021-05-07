@@ -7,22 +7,30 @@ class FieldKey {
   /// column of field
   final int column;
 
-  /// controlKey of field
-  final String? controlKey;
+  /// name of field
+  final String? name;
 
-  FieldKey({required this.row, required this.column, this.controlKey});
+  FieldKey({required this.row, required this.column, this.name});
+
+  static FieldKey of(String name) {
+    return FieldKey(row: -1, column: -1, name: name);
+  }
+
+  static FieldKey atPosition(int row, int column) {
+    return FieldKey(row: row, column: column);
+  }
 
   @override
   bool operator ==(other) {
     if (other is! FieldKey) return false;
-    if (controlKey != null) {
-      return controlKey == other.controlKey;
+    if (name != null) {
+      return name == other.name;
     } else {
-      if (other.controlKey != null) return false;
+      if (other.name != null) return false;
       return row == other.row && column == other.column;
     }
   }
 
   @override
-  int get hashCode => hashValues(controlKey, row, column);
+  int get hashCode => hashValues(name, row, column);
 }

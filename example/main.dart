@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/src/form_key.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:form_builder/form_builder.dart';
+import 'form_builder.dart';
 
 void main() {
   runApp(MyApp());
@@ -41,16 +42,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   FormManagement formManagement = FormManagement();
   FormManagement formManagement2 = FormManagement();
+  late FormFieldManagement username;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      formManagement2.newFormFieldManagementByPosition(0, 1).focusListener =
-          (key, hasFocus) {
-        if (key == null) print('username focus changed:$hasFocus');
-      };
-    });
+    username = formManagement.newFormFieldManagement('username');
   }
 
   @override
@@ -77,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm2(),
             ),
-            createButtons2(),
+            createButtons2()
           ]),
         ));
   }
@@ -110,8 +107,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         Builder(
           builder: (context) {
-            FormFieldManagement username =
-                formManagement.newFormFieldManagement('username');
             return TextButton(
                 onPressed: () {
                   username.visible = !username.visible;
@@ -123,8 +118,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         Builder(
           builder: (context) {
-            FormFieldManagement username =
-                formManagement.newFormFieldManagement('username');
             return TextButton(
                 onPressed: () {
                   username.readOnly = !username.readOnly;
@@ -150,10 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
-              formManagement
-                  .newFormFieldManagement('username')
-                  .valueFieldManagement
-                  .validate();
+              username.valueFieldManagement.validate();
             },
             child: Text('validate username only')),
         TextButton(
@@ -166,13 +156,15 @@ class _MyHomePageState extends State<MyHomePage> {
               formManagement.newFormFieldManagement('age').focus = true;
             },
             child: Text('age focus')),
-        TextButton(
-            onPressed: () {
-              formManagement.newFormFieldManagement('username').update({
-                'labelText': DateTime.now().toString(),
-              });
-            },
-            child: Text('change username\'s label')),
+        Builder(builder: (context) {
+          return TextButton(
+              onPressed: () {
+                username.update({
+                  'labelText': DateTime.now().toString(),
+                });
+              },
+              child: Text('change username\'s label'));
+        }),
         TextButton(
             onPressed: () {
               formManagement
@@ -241,7 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .field(field: Label('password'), flex: 2, inline: true)
         .textField(
-            controlKey: 'password',
+            name: 'password',
             hintText: 'password',
             flex: 3,
             obscureText: true,
@@ -250,7 +242,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .nextLine()
         .field(field: Label('rememberMe'), flex: 2, inline: true)
         .switchInline(
-            controlKey: 'rememberMe',
+            name: 'rememberMe',
             flex: 3,
             initialValue: true,
             padding: EdgeInsets.symmetric(vertical: 10))
@@ -258,7 +250,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
         .field(field: Label('sex'), flex: 2, inline: true)
         .checkboxGroup(
-          items: FormBuilder.toCheckboxGroupItems(['male', 'female'],
+          items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female'],
               padding: EdgeInsets.symmetric(horizontal: 4)),
           inline: true,
           flex: 3,
@@ -268,8 +260,9 @@ class _MyHomePageState extends State<MyHomePage> {
         .field(field: Label('habbit'), flex: 2, inline: true)
         .switchGroup(
             hasSelectAllSwitch: false,
-            controlKey: 'habbit',
-            items: FormBuilder.toSwitchGroupItems(['sport', 'film', 'sleep']),
+            name: 'habbit',
+            items:
+                FormBuilderUtils.toSwitchGroupItems(['sport', 'film', 'sleep']),
             padding: EdgeInsets.only(top: 2, bottom: 2),
             inline: true,
             flex: 3)
@@ -279,7 +272,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .slider(
           inline: true,
           flex: 3,
-          controlKey: 'age',
+          name: 'age',
           max: 100,
           min: 14,
           padding: EdgeInsets.symmetric(horizontal: 4),
@@ -340,7 +333,7 @@ class _MyHomePageState extends State<MyHomePage> {
               FormLayoutManagement formLayoutManagement =
                   formManagement2.newFormLayoutManagement();
 
-              if (!formManagement2.hasControlKey('num0')) {
+              if (!formManagement2.hasField('num0')) {
                 formLayoutManagement.startEdit();
                 for (int i = 0; i <= 10; i++) {
                   int row = formLayoutManagement.rows - 1;
@@ -357,7 +350,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       field: NumberFormField(
                         initialValue: i,
                       ),
-                      controlKey: 'num$i');
+                      name: 'num$i');
                 }
                 formLayoutManagement.apply();
               }
@@ -376,6 +369,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 formLayoutManagement.apply();
               else
                 formLayoutManagement.cancel();
+
+              formManagement2.newFormFieldManagement('password');
             },
             child: Text('delete last row before apply button')),
       ],
@@ -387,7 +382,7 @@ class _MyHomePageState extends State<MyHomePage> {
       formManagement: formManagement,
     )
         .textField(
-          controlKey: 'username',
+          name: 'username',
           labelText: 'username',
           clearable: true,
           selectAllOnFocus: true,
@@ -395,12 +390,12 @@ class _MyHomePageState extends State<MyHomePage> {
               value.isEmpty ? 'username can not be empty !' : null,
         )
         .switchInline(
-          controlKey: 'switch1',
+          name: 'switch1',
           onChanged: (value) => print('switch1 value changed $value'),
         )
         .nextLine()
         .textField(
-            controlKey: 'password',
+            name: 'password',
             hintText: 'password',
             obscureText: true,
             passwordVisible: true,
@@ -416,29 +411,29 @@ class _MyHomePageState extends State<MyHomePage> {
                   .selectAll();
             },
             label: 'button',
-            controlKey: 'button')
+            name: 'button')
         .nextLine()
         .numberField(
-          controlKey: 'age',
+          name: 'age',
           hintText: 'age',
           clearable: true,
           flex: 3,
-          min: -18,
+          min: 18,
           max: 99,
           decimal: 0,
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
         .checkboxGroup(
-          items: FormBuilder.toCheckboxGroupItems(['male', 'female']),
-          controlKey: 'checkbox',
+          items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
+          name: 'checkbox',
           split: 2,
           label: 'sex',
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
         .checkboxGroup(
-          items: FormBuilder.toCheckboxGroupItems(['male', 'female']),
+          items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
           split: 1,
           label: 'checkboxlisttile',
           onChanged: (value) => print('checkbox value changed $value'),
@@ -446,15 +441,15 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .divider()
         .radioGroup(
-          items: FormBuilder.toRadioGroupItems(['1', '2']),
-          controlKey: 'radio',
+          items: FormBuilderUtils.toRadioGroupItems(['1', '2']),
+          name: 'radio',
           onChanged: (value) => print('radio value changed $value'),
           label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
         .radioGroup<String>(
           split: 1,
-          items: FormBuilder.toRadioGroupItems(['1', '2']),
+          items: FormBuilderUtils.toRadioGroupItems(['1', '2']),
           onChanged: (value) => print('radio value changed $value'),
           label: 'radiolisttile',
           validator: (value) => value == null ? 'select one !' : null,
@@ -462,14 +457,14 @@ class _MyHomePageState extends State<MyHomePage> {
         .divider()
         .nextLine()
         .datetimeField(
-          controlKey: 'startTime',
+          name: 'startTime',
           useTime: true,
           hintText: 'startTime',
           onChanged: (value) => print('startTime value changed $value'),
           validator: (value) => value == null ? 'not empty1' : null,
         )
         .datetimeField(
-          controlKey: 'endTime',
+          name: 'endTime',
           useTime: true,
           hintText: 'endTime',
           onChanged: (value) => print('endTime value changed $value'),
@@ -477,7 +472,7 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .nextLine()
         .textField(
-            controlKey: 'remark',
+            name: 'remark',
             hintText: 'remark',
             maxLines: 5,
             flex: 1,
@@ -485,7 +480,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
         .selector<int>(
-            controlKey: 'selector',
+            name: 'selector',
             labelText: 'selector',
             multi: true,
             selectItemProvider: (page, params) {
@@ -506,7 +501,7 @@ class _MyHomePageState extends State<MyHomePage> {
             queryFormBuilder: (builder, query) {
               builder
                   .rangeSlider(
-                      controlKey: 'filter',
+                      name: 'filter',
                       min: 1,
                       max: 100,
                       inline: true,
@@ -527,7 +522,7 @@ class _MyHomePageState extends State<MyHomePage> {
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
         .switchGroup(
-            controlKey: 'switchGroup',
+            name: 'switchGroup',
             label: 'switch',
             onChanged: (value) => print('switchGroup value changed $value'),
             validator: (value) => value.isEmpty ? 'select one pls !' : null,
@@ -537,7 +532,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 (index) => SwitchGroupItem(index.toString(),
                     padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8))))
         .slider(
-          controlKey: 'slider',
+          name: 'slider',
           min: 0,
           max: 100,
           label: 'age slider',
@@ -548,7 +543,7 @@ class _MyHomePageState extends State<MyHomePage> {
               print('age slider value changed ' + value.toStringAsFixed(0)),
         )
         .numberField(
-            controlKey: 'sliderInlineText',
+            name: 'sliderInlineText',
             min: 0,
             max: 100,
             labelText: 'inline slider',
@@ -558,7 +553,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 .valueFieldManagement
                 .setValue(v == null ? 0.0 : v.toDouble(), trigger: false))
         .slider(
-            controlKey: 'sliderInline',
+            name: 'sliderInline',
             min: 0,
             max: 100,
             inline: true,
@@ -569,7 +564,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   .setValue(v.toDouble().toInt(), trigger: false);
             })
         .rangeSlider(
-          controlKey: 'rangeSlider',
+          name: 'rangeSlider',
           min: 0,
           max: 100,
           label: 'range slider',
@@ -583,11 +578,11 @@ class _MyHomePageState extends State<MyHomePage> {
         )
         .filterChip<String>(
             label: 'Filter Chip',
-            controlKey: 'commonField',
+            name: 'commonField',
             onChanged: (value) => print('Filter Chip Changed: $value'),
             validator: (t) =>
                 t.length < 3 ? 'at least three items  must be selected ' : null,
-            items: FormBuilder.toFilterChipItems([
+            items: FormBuilderUtils.toFilterChipItems([
               'java',
               'android',
               'flutter',
@@ -598,37 +593,33 @@ class _MyHomePageState extends State<MyHomePage> {
               'swift',
               'object-c'
             ]))
-        .field(
-            flex: 1,
-            inline: false,
-            controlKey: '123',
-            field: StatelessField(builder: (context) {
-              BuilderInfo info = BuilderInfo.of(context);
-              return Column(
-                children: [
-                  ClearableTextFormField(
-                    autovalidateMode: info.stateMap['autovalidateMode'],
-                    validator: (t) => 'always validate',
-                  ),
-                  TextButton(
-                      onPressed: () {
-                        formManagement.newFormFieldManagement('123').update1(
-                            'autovalidateMode', AutovalidateMode.always);
-                      },
-                      child: Text('set always validate'))
-                ],
-              );
-            }))
         .nextLine()
         .field(
-            field: StatelessField(builder: (context) {
+            field: Builder(builder: (context) {
+              return Row(
+                children: [
+                  Expanded(
+                    child: ClearableTextFormField(),
+                    flex: 1,
+                  ),
+                  Expanded(
+                    child: ClearableTextFormField(),
+                    flex: 1,
+                  ),
+                ],
+              );
+            }),
+            name: '123')
+        .nextLine()
+        .field(
+            field: Builder(builder: (context) {
               BuilderInfo info = BuilderInfo.of(context);
               FieldKey fieldKey = info.fieldKey;
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'I\'m a custom field',
+                    'I\'m a stateless field',
                     style: TextStyle(fontSize: 20),
                   ),
                   Container(
@@ -639,7 +630,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       children: [
                         createRow('row', '${fieldKey.row}'),
                         createRow('column', '${fieldKey.column}'),
-                        createRow('controlKey', '${fieldKey.controlKey ?? ''}'),
+                        createRow('name', '${fieldKey.name ?? ''}'),
                         createRow('flex', '${info.flex}'),
                         createRow('inline', '${info.inline}'),
                         createRow('readOnly', '${info.readOnly}'),
@@ -654,33 +645,34 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class Label extends CommonField {
+class Label extends BaseCommonField {
   final String label;
   Label(this.label)
       : super(
-          {'label': TypedValue<String>(label)},
-          builder: (state, stateMap, readOnly, formThemeData) {
+          {'label': StateValue<String>(label)},
+          builder: (state) {
             return Text(
-              stateMap['label'],
+              state.currentMap['label'],
               style: TextStyle(
-                  fontSize: 18, color: formThemeData.themeData.primaryColor),
+                  fontSize: 18,
+                  color: state.formThemeData.themeData.primaryColor),
             );
           },
         );
 }
 
-class Button extends CommonField {
+class Button extends Builder {
   Button()
       : super(
-          {},
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (context) {
+            BuilderInfo info = BuilderInfo.of(context);
             return Padding(
               padding: const EdgeInsets.only(
                   left: 16, right: 16, bottom: 16, top: 8),
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: formThemeData.themeData.primaryColor,
+                  color: info.formThemeData.themeData.primaryColor,
                   borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                   boxShadow: <BoxShadow>[
                     BoxShadow(
@@ -696,8 +688,7 @@ class Button extends CommonField {
                     borderRadius: const BorderRadius.all(Radius.circular(24.0)),
                     highlightColor: Colors.transparent,
                     onTap: () {
-                      FormManagement management =
-                          FormManagement.of(state.context);
+                      FormManagement management = FormManagement.of(context);
                       Map<String, Widget> widgets =
                           management.data.map((key, value) => MapEntry(
                               key,
@@ -714,7 +705,7 @@ class Button extends CommonField {
                                 ],
                               )));
                       showDialog(
-                          context: state.context,
+                          context: context,
                           builder: (BuildContext context) {
                             return AlertDialog(
                               content: Container(

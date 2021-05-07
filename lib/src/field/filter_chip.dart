@@ -1,8 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../builder.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
+import '../form_field.dart';
 
 class FilterChipItem<T> {
   final Widget label;
@@ -26,29 +27,34 @@ class FilterChipItem<T> {
       : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
 }
 
-class FilterChipFormField<T> extends NonnullValueField<List<T>> {
-  FilterChipFormField(
-      {required List<FilterChipItem<T>> items,
-      List<T>? initialValue,
-      AutovalidateMode? autovalidateMode,
-      NonnullFieldValidator<List<T>>? validator,
-      ValueChanged<List<T>>? onChanged,
-      double? pressElevation,
-      String? label,
-      EdgeInsets? errorTextPadding})
-      : super(
+class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
+  FilterChipFormField({
+    required List<FilterChipItem<T>> items,
+    List<T>? initialValue,
+    AutovalidateMode? autovalidateMode,
+    NonnullFieldValidator<List<T>>? validator,
+    ValueChanged<List<T>>? onChanged,
+    double? pressElevation,
+    String? label,
+    EdgeInsets? errorTextPadding,
+    NonnullFormFieldSetter<List<T>>? onSaved,
+  }) : super(
           {
-            'items': TypedValue<List<FilterChipItem<T>>>(items),
-            'label': TypedValue<String?>(label),
-            'errorTextPadding': TypedValue<EdgeInsets>(errorTextPadding ??
+            'items': StateValue<List<FilterChipItem<T>>>(items),
+            'label': StateValue<String?>(label),
+            'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
-            'pressElevation': TypedValue<double?>(pressElevation)
+            'pressElevation': StateValue<double?>(pressElevation)
           },
           validator: validator,
           onChanged: onChanged,
+          onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue ?? [],
-          builder: (state, stateMap, readOnly, formThemeData) {
+          builder: (state) {
+            bool readOnly = state.readOnly;
+            FormThemeData formThemeData = state.formThemeData;
+            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = formThemeData.themeData;
             List<FilterChipItem<T>> items = stateMap['items'];
             String? label = stateMap['label'];

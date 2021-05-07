@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../form_builder.dart';
-import '../builder.dart';
+import '../form_field.dart';
 import '../form_theme.dart';
+import '../state_model.dart';
 
 class CheckboxGroupItem {
   final Widget title;
   final bool readOnly;
   final bool visible;
   final EdgeInsets padding;
-  final Widget? secondary; // not worked when split != 1
+
+  /// not worked when split != 1
+  final Widget? secondary;
   final ListTileControlAffinity controlAffinity;
   final bool ignoreSplit;
   CheckboxGroupItem(
@@ -25,28 +28,32 @@ class CheckboxGroupItem {
         this.title = title == null ? Text(label!) : title;
 }
 
-class CheckboxGroupFormField extends NonnullValueField<List<int>> {
-  CheckboxGroupFormField(
-      {required List<CheckboxGroupItem> items,
-      String? label,
-      ValueChanged<List<int>>? onChanged,
-      int split = 2,
-      NonnullFieldValidator<List<int>>? validator,
-      AutovalidateMode? autovalidateMode,
-      List<int>? initialValue,
-      EdgeInsets? errorTextPadding})
-      : super({
-          'label': TypedValue<String?>(label),
-          'split': TypedValue<int>(split),
-          'items': TypedValue<List<CheckboxGroupItem>>(items),
-          'errorTextPadding': TypedValue<EdgeInsets>(errorTextPadding ??
+class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
+  CheckboxGroupFormField({
+    required List<CheckboxGroupItem> items,
+    String? label,
+    ValueChanged<List<int>>? onChanged,
+    int split = 2,
+    NonnullFieldValidator<List<int>>? validator,
+    AutovalidateMode? autovalidateMode,
+    List<int>? initialValue,
+    EdgeInsets? errorTextPadding,
+    NonnullFormFieldSetter<List<int>>? onSaved,
+  }) : super({
+          'label': StateValue<String?>(label),
+          'split': StateValue<int>(split),
+          'items': StateValue<List<CheckboxGroupItem>>(items),
+          'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
               const EdgeInsets.symmetric(horizontal: 16, vertical: 8))
         },
             onChanged: onChanged,
+            onSaved: onSaved,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
-            validator: validator,
-            builder: (state, stateMap, readOnly, formThemeData) {
+            validator: validator, builder: (state) {
+          bool readOnly = state.readOnly;
+          FormThemeData formThemeData = state.formThemeData;
+          Map<String, dynamic> stateMap = state.currentMap;
           bool inline = state.inline;
           ThemeData themeData = formThemeData.themeData;
           String? label = inline ? null : stateMap['label'];
@@ -185,7 +192,4 @@ class CheckboxGroupFormField extends NonnullValueField<List<int>> {
             children: widgets,
           );
         });
-
-  @override
-  NonnullValueFieldState<List<int>> createState() => NonnullValueFieldState();
 }
