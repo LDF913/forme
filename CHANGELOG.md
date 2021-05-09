@@ -1,3 +1,10 @@
+## 1.0.0-beta.3
+
+1. remove FormRowManagement
+2. remove FormLayoutManagement
+3. add FormPositionManagement
+4. add BaseCommonField,BaseValueField and BaseNonnullValueField
+
 ## 1.0.0-beta.2
 
 1. bug fix
