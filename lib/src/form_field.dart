@@ -15,6 +15,9 @@ typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
 class BuilderInfo {
   final Position position;
   final bool inline;
+
+  /// whether form is readOnly
+  final bool readOnly;
   final ThemeData formThemeData;
 
   static BuilderInfo of(BuildContext context) {
@@ -24,7 +27,8 @@ class BuilderInfo {
 
   BuilderInfo._(this.formThemeData, FieldInfo fieldInfo)
       : this.inline = fieldInfo.inline,
-        this.position = fieldInfo.position;
+        this.position = fieldInfo.position,
+        this.readOnly = fieldInfo.readOnly;
 }
 
 mixin StatefulField<T extends AbstractFieldState> on StatefulWidget {

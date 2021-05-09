@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 class FormLayout {
-  final MainAxisAlignment mainAxisAlignment;
-  final MainAxisSize mainAxisSize;
-  final CrossAxisAlignment crossAxisAlignment;
-  final TextDirection? textDirection;
-  final VerticalDirection verticalDirection;
-  final TextBaseline? textBaseline;
-  final List<FormRow> rows = [];
+  MainAxisAlignment mainAxisAlignment;
+  MainAxisSize mainAxisSize;
+  CrossAxisAlignment crossAxisAlignment;
+  TextDirection? textDirection;
+  VerticalDirection verticalDirection;
+  TextBaseline? textBaseline;
+  List<FormRow> rows = [];
   _Index _index = _Index();
 
   int get rowCount => rows.length;
@@ -25,6 +25,20 @@ class FormLayout {
             crossAxisAlignment ?? CrossAxisAlignment.center,
         this.verticalDirection = verticalDirection ?? VerticalDirection.down {
     rows.add(FormRow(_index));
+  }
+
+  customize({
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  }) {
+    this.mainAxisAlignment = mainAxisAlignment ?? MainAxisAlignment.start;
+    this.mainAxisSize = mainAxisSize ?? MainAxisSize.max;
+    this.crossAxisAlignment = crossAxisAlignment ?? CrossAxisAlignment.center;
+    this.verticalDirection = verticalDirection ?? VerticalDirection.down;
   }
 
   FormRow append() {
@@ -59,6 +73,13 @@ class FormLayout {
 
   FormLayout copy() {
     FormLayout formLayout = FormLayout();
+    formLayout.customize(
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textBaseline: textBaseline,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection);
     formLayout._index = _index;
     formLayout.rows.addAll(rows.map((e) => e.copy()).toList());
     return formLayout;
@@ -123,6 +144,13 @@ class FormRow {
 
   FormRow copy() {
     FormRow row = FormRow(_index);
+    row.customize(
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textBaseline: textBaseline,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection);
     row.columns.addAll(List.of(columns));
     return row;
   }

@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_application_1/form_builder.dart';
 import 'field/filter_chip.dart';
 import 'focus_node.dart';
 import 'form_builder_utils.dart';
@@ -27,6 +26,9 @@ class FormBuilder extends StatefulWidget {
   ///
   /// **enable it when you really need modify form layout at runtime,otherwise disable it for performance improve,
   /// this flag should not be changed at runtime**
+  ///
+  ///
+  /// **@experimental**
   final bool enableLayoutManagement;
 
   FormBuilder({
@@ -692,6 +694,7 @@ class _FormBuilderState extends State<FormBuilder> {
   @override
   void dispose() {
     resourceManagement.unregisterFormModel(model);
+    resourceManagement.dispose();
     super.dispose();
   }
 
@@ -762,7 +765,8 @@ class _FormBuilderFieldState extends State<_FormBuilderField> {
   @override
   Widget build(BuildContext context) {
     return _InheritedFieldInfo(
-        FieldInfo._(widget.position, widget.inline, _FormData.of(context)),
+        FieldInfo._(
+            widget.position, widget.inline, _FormData.of(context).readOnly),
         widget.child);
   }
 }
@@ -870,6 +874,10 @@ class _ResourceManagement {
 
   bool hasName(String name) =>
       fieldModelList.where((element) => element.name == name).isNotEmpty;
+
+  void dispose() {
+    keys.clear();
+  }
 }
 
 /// a management used to control a form
@@ -927,8 +935,9 @@ class FormManagement {
   FormPositionManagement newFormPositionManagement(int row, {int? column}) =>
       FormPositionManagement._(_resourceManagement, row, column: column);
 
-  /// create a form position management used to control visible|readOnly state of all
-  /// fields at this position
+  /// create a form layout management used to modify layout of form
+  ///
+  /// **@experimental**
   FormLayoutManagement newFormLayoutManagement() =>
       FormLayoutManagement._(_resourceManagement);
 
@@ -1189,16 +1198,62 @@ class ValueFieldManagement {
   }
 }
 
+/// used to modify layout of form
+///
+/// **you should use it when you  really need modify form layout at runtime**
+///
+/// **@experimental**
 class FormLayoutManagement {
   final _ResourceManagement _resourceManagement;
   FormLayoutManagement._(this._resourceManagement);
 
   FormLayout? _formLayout;
 
+  /// is editing
   bool get isEditing => _formLayout != null;
 
   /// get editing layout rows
   int get rows => _formLayout!.rowCount;
+
+  void customizeColumn({
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  }) {
+    _ensureStarted();
+    _formLayout!.customize(
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textBaseline: textBaseline,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection);
+  }
+
+  void customizeRow({
+    int? row,
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  }) {
+    _ensureStarted();
+    if (row != null) _rangeCheck(row);
+    FormRow formRow =
+        row == null ? _formLayout!.lastRow() : _formLayout!.rows[row];
+    formRow.customize(
+        mainAxisAlignment: mainAxisAlignment,
+        mainAxisSize: mainAxisSize,
+        crossAxisAlignment: crossAxisAlignment,
+        textBaseline: textBaseline,
+        textDirection: textDirection,
+        verticalDirection: verticalDirection);
+  }
 
   /// get columns of a row
   int getColumns(int row) {
@@ -1237,6 +1292,7 @@ class FormLayoutManagement {
       formRow.insert(field, column);
   }
 
+  /// swap two row
   void swapRow(int oldRow, int newRow) {
     _ensureStarted();
     _rangeCheck(oldRow);
@@ -1246,6 +1302,13 @@ class FormLayoutManagement {
     _formLayout!.rows.insert(newRow, row);
   }
 
+  /// start edit
+  ///
+  /// when you want to modify layout,you should call this method first
+  /// and do what you want (remove|insert|swap) ,finally you should call
+  /// apply to commit and rebuild form
+  ///
+  /// **if layoutmanagement is disabled,an error will be throw**
   void startEdit() {
     _ensureEnabled();
     if (_formLayout != null)
@@ -1253,11 +1316,13 @@ class FormLayoutManagement {
     _formLayout = _formModel.formLayout.copy()..removeEmptyRow();
   }
 
+  /// cancel edit
   void cancel() {
     _ensureStarted();
     _formLayout = null;
   }
 
+  /// apply edit
   void apply() {
     _ensureStarted();
     _formLayout!.removeEmptyRow();
@@ -1267,6 +1332,11 @@ class FormLayoutManagement {
 
   void _ensureStarted() {
     if (_formLayout == null) throw 'did you called startEdit?';
+  }
+
+  void _ensureEnabled() {
+    if (!_formModel.enableLayoutManagement)
+      throw 'layoutManagement is disabled!';
   }
 
   void _rangeCheck(int row, {int? column}) {
@@ -1281,10 +1351,6 @@ class FormLayoutManagement {
   }
 
   _FormModel get _formModel => _resourceManagement.formModel!;
-  void _ensureEnabled() {
-    if (!_formModel.enableLayoutManagement)
-      throw 'layoutManagement is disabled!';
-  }
 }
 
 /// state for all stateful form field
@@ -1425,14 +1491,15 @@ abstract class ValueFieldState<T> extends FormFieldState<T>
 class FieldInfo {
   final Position position;
   final bool inline;
-  final _FormData _formData;
+  final bool readOnly;
 
-  FieldInfo._(this.position, this.inline, this._formData);
+  FieldInfo._(this.position, this.inline, this.readOnly);
 
   bool operator ==(Object other) =>
       (other is FieldInfo) &&
       other.position == position &&
-      other.inline == inline;
+      other.inline == inline &&
+      other.readOnly == readOnly;
 
   @override
   int get hashCode => hashValues(position, inline);
@@ -1451,7 +1518,6 @@ class _InheritedFieldInfo extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant _InheritedFieldInfo oldWidget) {
-    return fieldInfo != oldWidget.fieldInfo ||
-        fieldInfo._formData.updateShouldNotify(oldWidget.fieldInfo._formData);
+    return fieldInfo != oldWidget.fieldInfo;
   }
 }

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:form_builder/form_builder.dart';
 
-import 'form_builder.dart';
-import 'src/form_layout.dart';
 
 void main() {
   runApp(MyApp());

@@ -9,6 +9,21 @@ Widget form = FormBuilder(
       {bool readOnly,//set form's readonly state
       bool visible, // set form's visible state
       FormThemeData? formThemeData, //set themedata of form 
+      MainAxisAlignment? mainAxisAlignment, // customize column 
+      MainAxisSize? mainAxisSize,
+      CrossAxisAlignment? crossAxisAlignment,
+      TextDirection? textDirection,
+      VerticalDirection? verticalDirection,
+      TextBaseline? textBaseline,
+      /// whether enableLayoutManagement
+      ///
+      /// if enabled , global key will be used for every field (root of form field)
+      ///
+      /// **enable it when you really need modify form layout at runtime,otherwise disable it for performance improve,
+      /// this flag should not be changed at runtime**
+      ///
+      /// **experimental**
+      bool enableLayoutFormManagement = false,
       this.formManagement,
 	.textField(
           name: 'username',
@@ -144,13 +159,19 @@ int rows = formManagement.rows;
 #### create FormFieldManagement
 
 ``` dart
-FormFieldManagement formFieldManagement =  newFormFieldManagement(String name);
+FormFieldManagement formFieldManagement = formManagement.newFormFieldManagement(String name);
 ```
 
 #### create FormPositionManagement
 
 ``` dart
-FormPositionManagement formPositionManagement =  newFormPositionManagement(int row,{int? column});
+FormPositionManagement formPositionManagement = formManagement.newFormPositionManagement(int row,{int? column});
+```
+
+#### create FormLayoutManagement
+
+``` dart
+FormLayoutManagement formLayoutManagement = formManagement.newFormLayoutManagement()
 ```
 
 #### get form data
@@ -366,6 +387,97 @@ bool visible = formPositionManagement.visible;
 formPositionManagement.visible = true|false;
 ```
 
+
+### FormLayoutManagement 
+
+#### whether a layout is editing 
+
+``` dart
+bool isEditing = formLayoutManagement.isEditing;
+```
+
+#### get rows of currrent editing layout
+
+``` dart
+int rows = formLayoutManagement.rows;
+```
+
+#### get columns of a row in current editing layout
+
+``` dart
+int columns = formLayoutManagement.getColumns(int row);
+```
+
+#### customize column
+
+``` dart
+void customizeColumn({
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  })
+```
+
+#### customize row
+
+``` dart
+void customizeRow({
+    int? row,
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  })
+```
+
+#### remove in layout
+
+``` dart
+formLayoutManagement.remove(int row,{int column});
+```
+
+#### insert field at position
+
+``` dart
+void insert(
+    {int? column,
+    int? row, //if row is null,append after last row
+    required Widget field, 
+    bool newRow = false,//whether create a new row
+    })
+```
+
+#### swap two rows
+
+``` dart
+formLayoutManagement.swapRow(int oldRow, int newRow)
+```
+
+#### start edit current layout
+
+**you should enableLayoutFormManagement**
+
+``` dart
+formLayoutManagement.startEdit();
+```
+
+#### apply edited layout
+
+``` dart
+formLayoutManagement.apply();
+```
+
+#### cancel editing layout
+
+``` dart
+formLayoutManagement.cancel();
+```
+
 ## field states
 
 ### ClearableTextFormField
@@ -489,6 +601,7 @@ formPositionManagement.visible = true|false;
 |  pressElevation  |  double  |       true        |
 |  errorTextPadding  | EdgeInsets   |       false     |
 |  labelPadding  | EdgeInsets   |       false        |
+|  count  | int   |       true        |
 
 
 ## currently support fields
