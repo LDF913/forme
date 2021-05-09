@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:form_builder/form_builder.dart';
+
+import 'form_builder.dart';
+import 'src/form_layout.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,12 +19,6 @@ class MyApp extends StatelessWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      theme: ThemeData(
-          backgroundColor: Colors.white,
-          primarySwatch: Colors.blue,
-          checkboxTheme: CheckboxThemeData()
-              .copyWith(checkColor: MaterialStateProperty.all(Colors.red)),
-          inputDecorationTheme: InputDecorationTheme().copyWith()),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
@@ -38,16 +34,19 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int i = 1;
+  int j = 1;
 
   FormManagement formManagement = FormManagement();
   late FormFieldManagement username;
   late FormPositionManagement positionManagement;
+  late FormLayoutManagement formLayoutManagement;
 
   @override
   void initState() {
     super.initState();
     username = formManagement.newFormFieldManagement('username');
     positionManagement = formManagement.newFormPositionManagement(0);
+    formLayoutManagement = formManagement.newFormLayoutManagement();
   }
 
   @override
@@ -217,6 +216,36 @@ class _MyHomePageState extends State<MyHomePage> {
                     : 'set first row readOnly'));
           },
         ),
+        TextButton(
+            onPressed: () {
+              formManagement.setData({
+                'username': 'user name',
+                'password': 'password',
+                'checkbox': [0],
+                'age': 38,
+                'radio': '1',
+                'startTime': DateTime.now(),
+                'switchGroup': [0, 1],
+                'sliderInline': 50,
+                'filterChip': ['java', 'C#', 'flutter'],
+                'rangeSlider': RangeValues(10, 100)
+              });
+            },
+            child: Text('set form data')),
+        TextButton(
+            onPressed: () {
+              formLayoutManagement.startEdit();
+              formLayoutManagement.swapRow(0, 1);
+              formLayoutManagement.apply();
+            },
+            child: Text('swap first and second row')),
+        TextButton(
+            onPressed: () {
+              formLayoutManagement.startEdit();
+              formLayoutManagement.remove(2);
+              formLayoutManagement.apply();
+            },
+            child: Text('remove age')),
       ],
     );
     return buttons;
@@ -235,7 +264,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     return FormBuilder(
       formManagement: formManagement,
+      enableLayoutManagement: true,
     )
+        //    .customize(crossAxisAlignment: CrossAxisAlignment.start)
         .textField(
           name: 'username',
           labelText: 'username',
@@ -245,10 +276,43 @@ class _MyHomePageState extends State<MyHomePage> {
               value.isEmpty ? 'username can not be empty !' : null,
         )
         .switchInline(
-          name: 'switch12',
+          name: 'switch1',
           onChanged: (value) => print('switch1 value changed $value'),
         )
-        .nextLine()
+        .newRow()
+        .field(field: Builder(builder: (context) {
+          return TextButton(
+              onPressed: () {
+                j++;
+                int row = BuilderInfo.of(context).position.row;
+                formLayoutManagement.startEdit();
+                formLayoutManagement.insert(
+                    field: Label("new row"), newRow: true, row: row);
+                formLayoutManagement.insert(
+                    field: NumberFormField(
+                      initialValue: j,
+                      name: 'num$j',
+                      flex: 2,
+                    ),
+                    row: row);
+                formLayoutManagement.insert(
+                    field: Builder(builder: (context) {
+                      int row = BuilderInfo.of(context).position.row;
+                      return TextButton.icon(
+                          onPressed: () {
+                            formLayoutManagement.startEdit();
+                            formLayoutManagement.remove(row);
+                            formLayoutManagement.apply();
+                          },
+                          icon: Icon(Icons.delete),
+                          label: Text('delete'));
+                    }),
+                    row: row);
+                formLayoutManagement.apply();
+              },
+              child: Text('append a new row before this button'));
+        }))
+        .newRow()
         .textField(
             name: 'password',
             hintText: 'password',
@@ -265,9 +329,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   .textSelectionManagement
                   .selectAll();
             },
-            label: 'button',
+            label: 'select all',
             name: 'button')
-        .nextLine()
+        .newRow()
         .numberField(
           name: 'age',
           hintText: 'age',
@@ -279,7 +343,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
-        .nextLine()
+        .newRow()
         .checkboxGroup(
           items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
           name: 'checkbox',
@@ -288,7 +352,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
-        .nextLine()
+        .newRow()
         .checkboxGroup(
           name: 'checkbox2',
           items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
@@ -297,7 +361,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
-        .divider()
+        .newRow()
         .radioGroup(
           items: FormBuilderUtils.toRadioGroupItems(['1', '2']),
           name: 'radio',
@@ -305,7 +369,7 @@ class _MyHomePageState extends State<MyHomePage> {
           label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
-        .nextLine()
+        .newRow()
         .radioGroup<String>(
           split: 1,
           items: FormBuilderUtils.toRadioGroupItems(['1', '2']),
@@ -313,7 +377,7 @@ class _MyHomePageState extends State<MyHomePage> {
           label: 'radiolisttile',
           validator: (value) => value == null ? 'select one !' : null,
         )
-        .divider()
+        .newRow()
         .datetimeField(
           name: 'startTime',
           useTime: true,
@@ -328,7 +392,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('endTime value changed $value'),
           validator: (value) => value == null ? 'not empty2' : null,
         )
-        .nextLine()
+        .newRow()
         .textField(
             name: 'remark',
             hintText: 'remark',
@@ -337,14 +401,13 @@ class _MyHomePageState extends State<MyHomePage> {
             clearable: true,
             onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
-        .nextLine()
+        .newRow()
         .selector<int>(
             name: 'selector',
             labelText: 'selector',
             multi: true,
             selectItemProvider: (page, params) {
               RangeValues filter = params['filter'];
-              print(filter);
               List<int> items = List<int>.generate(100, (i) => i + 1)
                   .where((element) =>
                       element >= filter.start.round() &&
@@ -380,7 +443,7 @@ class _MyHomePageState extends State<MyHomePage> {
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
-        .nextLine()
+        .newRow()
         .switchGroup(
             name: 'switchGroup',
             label: 'switch',
@@ -391,7 +454,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 3,
                 (index) => SwitchGroupItem(index.toString(),
                     padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8))))
-        .nextLine()
+        .newRow()
         .slider(
           name: 'slider',
           min: 0,
@@ -403,7 +466,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('age slider value changed ' + value.toStringAsFixed(0)),
         )
-        .nextLine()
+        .newRow()
         .numberField(
             name: 'sliderInlineText',
             min: 0,
@@ -425,7 +488,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   .valueFieldManagement
                   .setValue(v.toDouble().toInt(), trigger: false);
             })
-        .nextLine()
+        .newRow()
         .rangeSlider(
           name: 'rangeSlider',
           min: 0,
@@ -439,10 +502,12 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
         )
-        .nextLine()
+        .newRow()
         .filterChip<String>(
             label: 'Filter Chip',
-            name: 'commonField',
+            name: 'filterChip',
+            count: 3,
+            exceedCallback: () => print('max 3 items can be selected'),
             onChanged: (value) => print('Filter Chip Changed: $value'),
             validator: (t) =>
                 t.length < 3 ? 'at least three items  must be selected ' : null,
@@ -457,7 +522,7 @@ class _MyHomePageState extends State<MyHomePage> {
               'swift',
               'object-c'
             ]))
-        .nextLine()
+        .newRow()
         .field(field: Builder(builder: (context) {
           BuilderInfo info = BuilderInfo.of(context);
           Position position = info.position;
@@ -485,7 +550,7 @@ class _MyHomePageState extends State<MyHomePage> {
             flex: 1,
           );
         }))
-        .nextLine()
+        .newRow()
         .field(
             field: Padding(
           padding: EdgeInsets.symmetric(vertical: 20),
@@ -494,7 +559,7 @@ class _MyHomePageState extends State<MyHomePage> {
             style: TextStyle(fontSize: 20),
           ),
         ))
-        .nextLine()
+        .newRow()
         .field(field: Builder(builder: (context) {
           return Expanded(
               child: Row(
@@ -509,6 +574,81 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ],
           ));
-        }));
+        }))
+        .newRow()
+        .field(
+            field: Label(
+          'username',
+          flex: 1,
+        ))
+        .textField(hintText: 'username', flex: 2)
+        .newRow()
+        .field(
+            field: Label(
+          'password',
+          flex: 1,
+        ))
+        .textField(hintText: 'password', flex: 2, obscureText: true)
+        .newRow()
+        .field(
+            field: Label(
+          'sex',
+          flex: 1,
+        ))
+        .radioGroup<String>(
+            flex: 2,
+            items: FormBuilderUtils.toRadioGroupItems(['male', 'female'],
+                padding: EdgeInsets.zero))
+        .newRow()
+        .field(
+            field: Label(
+          'habbit',
+          flex: 1,
+        ))
+        .switchGroup(
+            flex: 2,
+            hasSelectAllSwitch: false,
+            items: FormBuilderUtils.toSwitchGroupItems(
+                ['basketball', 'football', 'pingpong']))
+        .newRow()
+        .field(
+            field: Label(
+          'age',
+          flex: 1,
+        ))
+        .slider(
+          min: 18,
+          max: 99,
+          flex: 2,
+          subLabelRender: (value) => Text(value.round().toString()),
+        )
+        .newRow()
+        .field(
+            field: Label(
+          'skill',
+          flex: 1,
+        ))
+        .filterChip<String>(
+            flex: 2,
+            items: FormBuilderUtils.toFilterChipItems(
+                ['java', 'c#', 'object-c', 'html5', 'css', 'android', 'iOS'],
+                padding: EdgeInsets.all(5)));
   }
+}
+
+class Label extends BaseCommonField {
+  final String label;
+  Label(this.label, {int flex = 1})
+      : super(
+          {'label': StateValue<String>(label)},
+          flex: flex,
+          builder: (state) {
+            Map<String, dynamic> stateMap = state.currentMap;
+            ThemeData themeData = state.formThemeData;
+            return Text(
+              stateMap['label'],
+              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
+            );
+          },
+        );
 }

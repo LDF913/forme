@@ -44,6 +44,8 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
     bool readOnly = false,
     EdgeInsets? padding,
     EdgeInsets? labelPadding,
+    int? count,
+    VoidCallback? exceedCallback,
   }) : super(
           {
             'items': StateValue<List<FilterChipItem<T>>>(items),
@@ -52,7 +54,8 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
             'pressElevation': StateValue<double?>(pressElevation),
             'labelPadding': StateValue<EdgeInsets>(
-                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
+                labelPadding ?? const EdgeInsets.symmetric(vertical: 10)),
+            'count': StateValue<int?>(count)
           },
           visible: visible,
           readOnly: readOnly,
@@ -73,6 +76,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
             double? pressElevation = stateMap['pressElevation'];
             EdgeInsets labelPadding = stateMap['labelPadding'];
+            int? count = stateMap['count'];
 
             List<Widget> widgets = [];
             if (label != null) {
@@ -100,9 +104,13 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
-                        if (selected)
+                        if (selected) {
+                          if (count != null && state.value.length >= count) {
+                            if (exceedCallback != null) exceedCallback();
+                            return;
+                          }
                           state.didChange(state.value..add(item.data));
-                        else
+                        } else
                           state.didChange(state.value..remove(item.data));
                       },
               );

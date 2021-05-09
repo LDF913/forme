@@ -68,7 +68,7 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
           Map<String, dynamic> stateMap = state.currentMap;
           bool inline = state.inline;
           String? label = inline ? null : stateMap['label'];
-          int split = inline ? 0 : stateMap['split'];
+          int split = stateMap['split'];
           List<CheckboxGroupItem> items = stateMap['items'];
           EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
           EdgeInsets labelPadding = stateMap['labelPadding'];

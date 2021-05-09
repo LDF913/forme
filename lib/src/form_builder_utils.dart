@@ -8,6 +8,7 @@ import 'field/selector.dart';
 import 'field/switch_group.dart';
 
 class FormBuilderUtils {
+  FormBuilderUtils._();
   static bool compare(dynamic a, dynamic b) {
     if (a is List && b is List) return listEquals(a, b);
     if (a is Set && b is Set) return setEquals(a, b);

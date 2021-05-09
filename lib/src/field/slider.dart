@@ -4,12 +4,12 @@ import '../form_theme.dart';
 import '../state_model.dart';
 import '../form_field.dart';
 
-typedef SubLabelRender = Widget Function(double value);
+typedef SubLabelRender = Widget Function(num value);
 
-class SliderFormField extends BaseNonnullValueField<double> {
+class SliderFormField extends BaseNonnullValueField<num> {
   SliderFormField({
-    ValueChanged<double>? onChanged,
-    NonnullFieldValidator<double>? validator,
+    ValueChanged<num>? onChanged,
+    NonnullFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
     int? divisions,
@@ -18,7 +18,7 @@ class SliderFormField extends BaseNonnullValueField<double> {
     SubLabelRender? subLabelRender,
     String? label,
     EdgeInsets? contentPadding,
-    NonnullFormFieldSetter<double>? onSaved,
+    NonnullFormFieldSetter<num>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
@@ -72,7 +72,7 @@ class SliderFormField extends BaseNonnullValueField<double> {
 
             List<Widget> contentColumns = [];
 
-            double value = state.value;
+            num value = state.value;
 
             if (subLabelRender != null) {
               contentColumns.add(Row(
@@ -94,7 +94,7 @@ class SliderFormField extends BaseNonnullValueField<double> {
               data: SliderTheme.of(state.context),
               child: Slider(
                 focusNode: focusNode,
-                value: value,
+                value: value.toDouble(),
                 min: min,
                 max: max,
                 divisions: divisions,

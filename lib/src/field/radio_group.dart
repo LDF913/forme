@@ -48,7 +48,7 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
           {
             'label': StateValue<String?>(label),
             'split': StateValue<int>(split),
-            'items': StateValue<List<RadioGroupItem>>(items),
+            'items': StateValue<List<RadioGroupItem<T>>>(items),
             'errorTextPadding':
                 StateValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8)),
             'labelPadding': StateValue<EdgeInsets>(
@@ -70,8 +70,8 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
             ThemeData themeData = state.formThemeData;
             bool inline = state.inline;
             String? label = inline ? null : stateMap['label'];
-            int split = inline ? 0 : stateMap['split'];
-            List<RadioGroupItem> items = stateMap['items'];
+            int split = stateMap['split'];
+            List<RadioGroupItem<T>> items = stateMap['items'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
             EdgeInsets labelPadding = stateMap['labelPadding'];
 
@@ -88,14 +88,14 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
 
             List<Widget> wrapWidgets = [];
 
-            void changeValue(dynamic value) {
+            void changeValue(T value) {
               if (value != state.value) {
                 state.didChange(value);
               }
             }
 
             for (int i = 0; i < items.length; i++) {
-              RadioGroupItem item = items[i];
+              RadioGroupItem<T> item = items[i];
               bool isReadOnly = readOnly || item.readOnly;
 
               if (split > 0) {
@@ -161,7 +161,7 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
                       onTap: isReadOnly
                           ? null
                           : () {
-                              changeValue(i);
+                              changeValue(item.value);
                             },
                       child: radioRow),
                 ),
