@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../form_builder.dart';
 import '../form_field.dart';
 import '../form_theme.dart';
 import '../state_model.dart';
@@ -39,35 +38,48 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
     List<int>? initialValue,
     EdgeInsets? errorTextPadding,
     NonnullFormFieldSetter<List<int>>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super({
           'label': StateValue<String?>(label),
           'split': StateValue<int>(split),
           'items': StateValue<List<CheckboxGroupItem>>(items),
           'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8))
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
+          'labelPadding': StateValue<EdgeInsets>(
+              labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
         },
+            visible: visible,
+            readOnly: readOnly,
+            flex: flex,
+            padding: padding,
+            name: name,
             onChanged: onChanged,
             onSaved: onSaved,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue ?? [],
             validator: validator, builder: (state) {
           bool readOnly = state.readOnly;
-          FormThemeData formThemeData = state.formThemeData;
+          ThemeData formThemeData = state.formThemeData;
           Map<String, dynamic> stateMap = state.currentMap;
           bool inline = state.inline;
-          ThemeData themeData = formThemeData.themeData;
           String? label = inline ? null : stateMap['label'];
           int split = inline ? 0 : stateMap['split'];
           List<CheckboxGroupItem> items = stateMap['items'];
           EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
+          EdgeInsets labelPadding = stateMap['labelPadding'];
 
           List<Widget> widgets = [];
           if (label != null) {
             Text text = Text(label,
                 textAlign: TextAlign.left,
-                style: FormThemeData.getLabelStyle(themeData, state.hasError));
+                style: ThemeUtil.getLabelStyle(formThemeData, state.hasError));
             widgets.add(Padding(
-              padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+              padding: labelPadding,
               child: text,
             ));
           }
@@ -92,7 +104,7 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
                 wrapWidgets.add(CheckboxListTile(
                   dense: true,
                   contentPadding: item.padding,
-                  activeColor: themeData.primaryColor,
+                  activeColor: formThemeData.primaryColor,
                   controlAffinity: item.controlAffinity,
                   secondary: item.secondary,
                   value: state.value.contains(i),
@@ -108,7 +120,7 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
             }
 
             Checkbox checkbox = Checkbox(
-                activeColor: themeData.primaryColor,
+                activeColor: formThemeData.primaryColor,
                 value: state.value.contains(i),
                 onChanged: isReadOnly
                     ? null
@@ -179,7 +191,7 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
           if (state.hasError) {
             Text text = Text(state.errorText!,
                 overflow: inline ? TextOverflow.ellipsis : null,
-                style: FormThemeData.getErrorStyle(themeData));
+                style: ThemeUtil.getErrorStyle(formThemeData));
             widgets.add(Padding(
               padding: errorTextPadding,
               child: text,

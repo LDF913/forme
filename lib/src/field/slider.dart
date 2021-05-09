@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/form_builder.dart';
 
-import '../form_theme.dart';
 import '../state_model.dart';
 import '../form_field.dart';
 
@@ -19,6 +19,12 @@ class SliderFormField extends BaseNonnullValueField<double> {
     String? label,
     EdgeInsets? contentPadding,
     NonnullFormFieldSetter<double>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super(
           {
             'label': StateValue<String?>(label),
@@ -26,8 +32,15 @@ class SliderFormField extends BaseNonnullValueField<double> {
             'min': StateValue<double>(min),
             'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
             'contentPadding': StateValue<EdgeInsets>(
-                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10))
+                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10)),
+            'labelPadding': StateValue<EdgeInsets>(
+                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
@@ -35,25 +48,24 @@ class SliderFormField extends BaseNonnullValueField<double> {
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             FocusNode focusNode = state.focusNode;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
             String? label = stateMap['label'];
             EdgeInsets contentPadding = stateMap['contentPadding'];
+            EdgeInsets labelPadding = stateMap['labelPadding'];
             bool inline = state.inline;
 
             List<Widget> columns = [];
             if (label != null) {
               Text text = Text(label,
                   textAlign: TextAlign.left,
-                  style:
-                      FormThemeData.getLabelStyle(themeData, state.hasError));
+                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
               columns.add(Padding(
-                padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+                padding: labelPadding,
                 child: text,
               ));
             }
@@ -105,7 +117,7 @@ class SliderFormField extends BaseNonnullValueField<double> {
               TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
               Text error = Text(state.errorText!,
                   overflow: overflow,
-                  style: FormThemeData.getErrorStyle(themeData));
+                  style: ThemeUtil.getErrorStyle(themeData));
               contentColumns.add(error);
             }
 
@@ -138,37 +150,50 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
     RangeSubLabelRender? rangeSubLabelRender,
     EdgeInsets? contentPadding,
     NonnullFormFieldSetter<RangeValues>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super({
           'label': StateValue<String?>(label),
           'max': StateValue<double>(max),
           'min': StateValue<double>(min),
           'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
           'contentPadding': StateValue<EdgeInsets>(
-              contentPadding ?? EdgeInsets.symmetric(horizontal: 20))
+              contentPadding ?? EdgeInsets.symmetric(horizontal: 20)),
+          'labelPadding': StateValue<EdgeInsets>(
+              labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
         },
+            visible: visible,
+            readOnly: readOnly,
+            flex: flex,
+            padding: padding,
+            name: name,
             onChanged: onChanged,
             onSaved: onSaved,
             validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
             autovalidateMode: autovalidateMode, builder: (state) {
           bool readOnly = state.readOnly;
-          FormThemeData formThemeData = state.formThemeData;
           Map<String, dynamic> stateMap = state.currentMap;
-          ThemeData themeData = formThemeData.themeData;
+          ThemeData themeData = state.formThemeData;
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];
           double min = stateMap['min'];
           String? label = stateMap['label'];
           EdgeInsets contentPadding = stateMap['contentPadding'];
+          EdgeInsets labelPadding = stateMap['labelPadding'];
           bool inline = state.inline;
 
           List<Widget> columns = [];
           if (label != null) {
             Text text = Text(label,
                 textAlign: TextAlign.left,
-                style: FormThemeData.getLabelStyle(themeData, state.hasError));
+                style: ThemeUtil.getLabelStyle(themeData, state.hasError));
             columns.add(Padding(
-              padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+              padding: labelPadding,
               child: text,
             ));
           }
@@ -236,8 +261,7 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
           if (state.hasError) {
             TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
             Text error = Text(state.errorText!,
-                overflow: overflow,
-                style: FormThemeData.getErrorStyle(themeData));
+                overflow: overflow, style: ThemeUtil.getErrorStyle(themeData));
             contentColumns.add(error);
           }
 

@@ -1,4 +1,4 @@
-import '../form_builder.dart';
+import 'package:flutter/material.dart';
 
 class FormLayout {
   final List<FormRow> rows = [FormRow()];
@@ -19,24 +19,18 @@ class FormLayout {
     return row;
   }
 
-  FormRow lastStretchableRow() {
-    FormRow lastRow = rows[rows.length - 1];
-    if (lastRow.stretchable) {
-      return lastRow;
-    }
-    return append();
+  FormRow lastRow() {
+    return rows[rows.length - 1];
   }
 
   FormRow lastEmptyRow() {
-    FormRow lastRow = rows[rows.length - 1];
-    if (lastRow.builders.isEmpty) {
-      return lastRow;
-    }
+    FormRow last = lastRow();
+    if (last.children.isEmpty) return last;
     return append();
   }
 
   void removeEmptyRow() {
-    rows.removeWhere((element) => element.builders.isEmpty);
+    rows.removeWhere((element) => element.children.isEmpty);
   }
 
   FormLayout copy() {
@@ -47,56 +41,60 @@ class FormLayout {
 }
 
 class FormRow {
-  bool stretchable = true;
-  final List<FormBuilderFieldBuilder> builders = [];
+  final List<Widget> children = [];
 
   FormRow();
 
-  void append(FormBuilderFieldBuilder builder) {
-    enableInsertable(builder);
-    if (!builder.inline) {
-      stretchable = false;
-    }
-    builders.add(builder);
+  void append(Widget child) {
+    children.add(child);
   }
 
-  void insert(FormBuilderFieldBuilder builder, int index) {
+  void insert(Widget child, int index) {
     rangeCheck(index);
-    if (builders.isEmpty) {
-      if (!builder.inline) {
-        stretchable = false;
-      }
-      builders.add(builder);
+    if (children.isEmpty) {
+      children.add(child);
       return;
     }
-    enableInsertable(builder);
-    if (index == builders.length) {
-      if (!builder.inline) {
-        stretchable = false;
-      }
-      builders.add(builder);
+    if (index == children.length) {
+      children.add(child);
     } else {
-      builders.insert(index, builder);
+      children.insert(index, child);
     }
   }
 
   FormRow copy() {
     FormRow row = FormRow();
-    row.builders.addAll(List.of(builders));
-    row.stretchable = stretchable;
+    row.children.addAll(List.of(children));
     return row;
   }
 
-  void enableInsertable(FormBuilderFieldBuilder builder) {
-    if (!stretchable) throw 'row is not stretchable,can not insert field';
-    if (!builder.inline && builders.isNotEmpty)
-      throw 'current field is not support inline mode and one or more field at placed at row,can not insert';
+  void rangeCheck(int index) {
+    if (children.isEmpty && index != 0)
+      throw 'index must be 0 due to current row is empty';
+    if (index < 0 || index > children.length - 1)
+      throw 'index is out of range ,current range is 0,${children.length - 1}';
+  }
+}
+
+/// field's position
+///
+/// one position may contain multi fields
+class Position {
+  /// row of field
+  final int row;
+
+  /// column of field
+  final int column;
+
+  Position({required this.row, required this.column});
+
+  @override
+  bool operator ==(other) {
+    if (other is! Position) return false;
+    if (row == other.row && column == other.column) return true;
+    return false;
   }
 
-  void rangeCheck(int index) {
-    if (builders.isEmpty && index != 0)
-      throw 'index must be 0 due to current row is empty';
-    if (index < 0 || index > builders.length - 1)
-      throw 'index is out of range ,current range is 0,${builders.length - 1}';
-  }
+  @override
+  int get hashCode => hashValues(row, column);
 }

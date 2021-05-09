@@ -1,9 +1,7 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import '../form_theme.dart';
 import '../state_model.dart';
 import '../text_selection.dart';
 import '../form_field.dart';
@@ -37,6 +35,11 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
     TextInputAction? textInputAction,
     InputDecorationTheme? inputDecorationTheme,
     NonnullFormFieldSetter<String>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
   }) : super(
           {
             'labelText': StateValue<String?>(labelText),
@@ -57,6 +60,11 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
           },
+          name: name,
+          flex: flex,
+          visible: visible,
+          readOnly: readOnly,
+          padding: padding,
           onChanged: onChanged,
           onSaved: onSaved,
           initialValue: initialValue ?? '',
@@ -66,8 +74,8 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             bool readOnly = baseState.readOnly;
             _TextFormFieldState state = baseState as _TextFormFieldState;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData.themeData;
-            FocusNode focusNode = baseState.focusNode;
+            ThemeData themeData = state.formThemeData;
+            FocusNode? focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
             TextInputType? keyboardType = stateMap['keyboardType'];
@@ -242,21 +250,26 @@ class _TextFormFieldState extends BaseNonnullValueFieldState<String>
 }
 
 class DateTimeFormField extends BaseValueField<DateTime> {
-  DateTimeFormField(
-      {String? labelText,
-      String? hintText,
-      TextStyle? style,
-      DateTimeFormatter? formatter,
-      Locale? locale,
-      bool useTime = false,
-      ValueChanged<DateTime?>? onChanged,
-      FormFieldValidator<DateTime>? validator,
-      AutovalidateMode? autovalidateMode,
-      int? maxLines,
-      DateTime? initialValue,
-      InputDecorationTheme? inputDecorationTheme,
-      FormFieldSetter<DateTime>? onSaved})
-      : super(
+  DateTimeFormField({
+    String? labelText,
+    String? hintText,
+    TextStyle? style,
+    DateTimeFormatter? formatter,
+    Locale? locale,
+    bool useTime = false,
+    ValueChanged<DateTime?>? onChanged,
+    FormFieldValidator<DateTime>? validator,
+    AutovalidateMode? autovalidateMode,
+    int? maxLines,
+    DateTime? initialValue,
+    InputDecorationTheme? inputDecorationTheme,
+    FormFieldSetter<DateTime>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+  }) : super(
           {
             'labelText': StateValue<String?>(labelText),
             'hintText': StateValue<String?>(hintText),
@@ -267,6 +280,10 @@ class DateTimeFormField extends BaseValueField<DateTime> {
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
           },
+          name: name,
+          flex: flex,
+          visible: visible,
+          padding: padding,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
@@ -275,7 +292,7 @@ class DateTimeFormField extends BaseValueField<DateTime> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -429,26 +446,31 @@ class _DateTimeFormFieldState extends BaseValueFieldState<DateTime> {
 }
 
 class NumberFormField extends BaseValueField<num> {
-  NumberFormField(
-      {bool autofocus = false,
-      String? labelText,
-      String? hintText,
-      TextStyle? style,
-      ValueChanged<num?>? onChanged,
-      FormFieldValidator<num>? validator,
-      AutovalidateMode? autovalidateMode,
-      num? initialValue,
-      int decimal = 0,
-      double? max,
-      double? min,
-      bool clearable = true,
-      Widget? prefixIcon,
-      List<Widget>? suffixIcons,
-      VoidCallback? onEditingComplete,
-      TextInputAction? textInputAction,
-      InputDecorationTheme? inputDecorationTheme,
-      FormFieldSetter<num>? onSaved})
-      : super(
+  NumberFormField({
+    bool autofocus = false,
+    String? labelText,
+    String? hintText,
+    TextStyle? style,
+    ValueChanged<num?>? onChanged,
+    FormFieldValidator<num>? validator,
+    AutovalidateMode? autovalidateMode,
+    num? initialValue,
+    int decimal = 0,
+    double? max,
+    double? min,
+    bool clearable = true,
+    Widget? prefixIcon,
+    List<Widget>? suffixIcons,
+    VoidCallback? onEditingComplete,
+    TextInputAction? textInputAction,
+    InputDecorationTheme? inputDecorationTheme,
+    FormFieldSetter<num>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+  }) : super(
           {
             'labelText': StateValue<String?>(labelText),
             'hintText': StateValue<String?>(hintText),
@@ -464,6 +486,11 @@ class NumberFormField extends BaseValueField<num> {
             'max': StateValue<double?>(max),
             'min': StateValue<double?>(min),
           },
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           onSaved: onSaved,
           onChanged: onChanged,
           validator: (value) {
@@ -487,7 +514,6 @@ class NumberFormField extends BaseValueField<num> {
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
             Map<String, dynamic> stateMap = state.currentMap;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
@@ -503,7 +529,7 @@ class NumberFormField extends BaseValueField<num> {
             bool autofocus = stateMap['autofocus'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
-                    formThemeData.themeData.inputDecorationTheme;
+                    state.formThemeData.inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
 

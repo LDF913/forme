@@ -1,8 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../form_builder.dart';
-import '../form_theme.dart';
+import 'package:flutter_application_1/form_builder.dart';
 import '../state_model.dart';
 import '../form_field.dart';
 
@@ -32,6 +31,12 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
     EdgeInsets? errorTextPadding,
     EdgeInsets? selectAllPadding,
     NonnullFormFieldSetter<List<int>>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super(
           {
             'label': StateValue<String?>(label),
@@ -41,7 +46,14 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
                 selectAllPadding ?? const EdgeInsets.symmetric(horizontal: 4)),
             'errorTextPadding': StateValue<EdgeInsets>(
                 errorTextPadding ?? const EdgeInsets.all(4)),
+            'labelPadding': StateValue<EdgeInsets>(
+                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
@@ -49,14 +61,14 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             String? label = stateMap['label'];
             List<SwitchGroupItem> items = stateMap['items'];
             bool hasSelectAllSwitch = stateMap['hasSelectAllSwitch'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
             EdgeInsets selectAllPadding = stateMap['selectAllPadding'];
+            EdgeInsets labelPadding = stateMap['labelPadding'];
 
             bool isAllReadOnly = true;
             bool isAllInvisible = true;
@@ -109,10 +121,9 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
             if (label != null) {
               Text text = Text(label,
                   textAlign: TextAlign.left,
-                  style:
-                      FormThemeData.getLabelStyle(themeData, state.hasError));
+                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
               headerRow.add(Padding(
-                padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+                padding: labelPadding,
                 child: text,
               ));
             }
@@ -180,7 +191,7 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
               columns.add(Padding(
                 padding: errorTextPadding,
                 child: Text(state.errorText!,
-                    style: FormThemeData.getErrorStyle(themeData)),
+                    style: ThemeUtil.getErrorStyle(themeData)),
               ));
             }
 
@@ -194,14 +205,24 @@ class SwitchGroupFormField extends BaseNonnullValueField<List<int>> {
 }
 
 class SwitchInlineFormField extends BaseNonnullValueField<bool> {
-  SwitchInlineFormField(
-      {ValueChanged<bool>? onChanged,
-      NonnullFieldValidator<bool>? validator,
-      AutovalidateMode? autovalidateMode,
-      bool initialValue = false,
-      NonnullFormFieldSetter<bool>? onSaved})
-      : super(
+  SwitchInlineFormField({
+    ValueChanged<bool>? onChanged,
+    NonnullFieldValidator<bool>? validator,
+    AutovalidateMode? autovalidateMode,
+    bool initialValue = false,
+    NonnullFormFieldSetter<bool>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+  }) : super(
           {},
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
@@ -209,8 +230,7 @@ class SwitchInlineFormField extends BaseNonnullValueField<bool> {
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
-            ThemeData themeData = formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             bool value = state.value;
             List<Widget> columns = [];
             columns.add(InkWell(
@@ -237,7 +257,7 @@ class SwitchInlineFormField extends BaseNonnullValueField<bool> {
             if (state.hasError) {
               columns.add(Text(state.errorText!,
                   overflow: TextOverflow.ellipsis,
-                  style: FormThemeData.getErrorStyle(themeData)));
+                  style: ThemeUtil.getErrorStyle(themeData)));
             }
 
             return Column(

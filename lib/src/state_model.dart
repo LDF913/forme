@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import '../form_builder.dart';
 import 'form_builder_utils.dart';
 import 'form_layout.dart';
 
@@ -23,6 +22,7 @@ class StateValue<T> {
 mixin AbstractStateModel {
   void update(Map<String, dynamic> stateMap);
   void dispose();
+  T? getState<T>(String key);
 }
 
 /// an base state model implement [AbstractStateModel]
@@ -33,7 +33,7 @@ mixin AbstractStateModel {
 /// state are allowed null values which determined by StateValue
 ///
 /// **do not change initStateMap at runtime! they should be regarded as immutable!
-/// the only time you should change it is in didUpdateWidget, call updateInitStateMap**
+/// the only time you should change it is in didUpdateWidget, call didUpdateModel**
 class BaseStateModel with AbstractStateModel, ChangeNotifier {
   final Map<String, StateValue> _initStateMap;
   final Map<String, dynamic> _state = {};
@@ -45,8 +45,9 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
 
   /// get state value
   ///
-  /// it's equals to build method's stateMap\[stateKey\]
-  getState(String stateKey) {
+  /// it's equals to  currentMap\[stateKey\]
+  @override
+  T? getState<T>(String stateKey) {
     enableKeyExists(stateKey);
     return _state.containsKey(stateKey)
         ? _state[stateKey]
@@ -67,11 +68,10 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     _state
       ..clear()
       ..addAll(state);
-    gen++;
-    beforeNotifyListeners(state.keys);
-    notifyListeners();
+    doNotifyListeners(state.keys);
   }
 
+  @override
   void update(Map<String, dynamic> state) {
     checkState(state);
     List<String> keys = [];
@@ -106,7 +106,7 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   /// [old] from oldWidget
   ///
   /// [current] from current widget
-  void updateInitStateMap(
+  void didUpdateModel(
       Map<String, StateValue>? old, Map<String, StateValue>? current) {
     if (old != null) {
       Iterable<String> keys = old.keys;
@@ -166,59 +166,69 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   void beforeNotifyListeners(Iterable<String> keys) {}
 }
 
+/// when you want to create a stateful field,your custom field state must
+/// create an AbstractFieldStateModel,which used to contorl field's state
+///
+/// **some times,name of field will changed,at this time,you should clear state of this field,
+/// do that in state's didUpdateWidget method**
 mixin AbstractFieldStateModel on AbstractStateModel {
-  FieldKey get fieldKey;
+  /// get name of field
+  String? get name;
+
+  /// get position of field
+  Position get position;
+
+  /// get readOnly state
+  bool get readOnly;
+
+  /// set readOnly on field
+  ///
+  /// **maybe won't work if field not implement !**
+  set readOnly(bool readOnly);
+
+  /// get visible state
+  bool get visible;
+
+  /// set visible on field
+  ///
+  /// **maybe won't work if field not implement !**
+  set visible(bool visible);
 }
 
+/// a base field state model created by BaseFormField
 class BaseFieldStateModel extends BaseStateModel with AbstractFieldStateModel {
-  final FieldKey fieldKey;
-  BaseFieldStateModel(Map<String, StateValue> initStateMap,
-      {required this.fieldKey})
+  String? _name;
+  Position position;
+  BaseFieldStateModel(
+      Map<String, StateValue> initStateMap, this.position, this._name)
       : super(initStateMap);
-}
 
-class FormModel extends BaseStateModel {
-  final bool enableLayoutManagement;
-  FormModel(Map<String, StateValue> value, this.enableLayoutManagement)
-      : super(value);
-
-  bool rebuildLayout = false;
-
-  FormLayout get formLayout => getState('formLayout');
-  set formLayout(FormLayout formLayout) => update1('formLayout', formLayout);
-
-  FormThemeData get formThemeData => getState('formThemeData');
-  set formThemeData(FormThemeData formThemeData) =>
-      update1('formThemeData', formThemeData);
-
-  bool get visible => getState('visible');
-  set visible(bool visible) => update1('visible', visible);
-
-  bool get readOnly => getState('readOnly');
-  set readOnly(bool readOnly) => update1('readOnly', readOnly);
-
-  @override
-  void beforeNotifyListeners(Iterable<String> keys) {
-    if (keys.contains('formLayout')) rebuildLayout = true;
-  }
-}
-
-class FormBuilderFieldModel extends BaseStateModel {
-  final FieldKey fieldKey;
-  FormBuilderFieldModel(this.fieldKey, Map<String, StateValue> value)
-      : super(value);
-
-  String? get name => fieldKey.name;
-
-  bool get visible => getState('visible');
-  set visible(bool visible) => update1('visible', visible);
-
-  int get flex => getState('flex');
-  set flex(int flex) => update1('flex', flex);
-
+  /// get padding state
   EdgeInsets? get padding => getState('padding');
+
+  /// set padding
   set padding(EdgeInsets? padding) => update1('padding', padding);
 
+  /// get flex state
+  int get flex => getState('flex');
+
+  ///set flex
+  set flex(int flex) => update1('flex', padding);
+
+  @override
   bool get readOnly => getState('readOnly');
+  @override
   set readOnly(bool readOnly) => update1('readOnly', readOnly);
+  @override
+  bool get visible => getState('visible');
+  @override
+  set visible(bool visible) => update1('visible', visible);
+
+  String? get name => _name;
+  set name(String? name) {
+    if (name != _name) {
+      _name = name;
+      _state.clear();
+    }
+  }
 }

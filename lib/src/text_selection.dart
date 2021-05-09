@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'form_key.dart';
-
 // make your form field state implement this class if you want to support textselection
 abstract class TextSelectionManagement {
-  FieldKey get fieldKey;
+  String? get name;
   void setSelection(int start, int end);
   void selectAll();
 

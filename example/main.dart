@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:form_builder/form_builder.dart';
+
+import 'form_builder.dart';
+import 'src/form_layout.dart';
 
 void main() {
   runApp(MyApp());
@@ -40,13 +42,14 @@ class _MyHomePageState extends State<MyHomePage> {
   int i = 1;
 
   FormManagement formManagement = FormManagement();
-  FormManagement formManagement2 = FormManagement();
   late FormFieldManagement username;
+  late FormPositionManagement positionManagement;
 
   @override
   void initState() {
     super.initState();
     username = formManagement.newFormFieldManagement('username');
+    positionManagement = formManagement.newFormPositionManagement(0);
   }
 
   @override
@@ -69,11 +72,6 @@ class _MyHomePageState extends State<MyHomePage> {
               child: createForm(),
             ),
             createButtons(),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: createForm2(),
-            ),
-            createButtons2()
           ]),
         ));
   }
@@ -107,7 +105,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Builder(
           builder: (context) {
             return TextButton(
-                onPressed: () {
+                onPressed: () async {
                   username.visible = !username.visible;
                   (context as Element).markNeedsBuild();
                 },
@@ -135,9 +133,6 @@ class _MyHomePageState extends State<MyHomePage> {
         TextButton(
             onPressed: () {
               formManagement.validate();
-              formManagement.getFocusableInvalidFields().forEach((element) {
-                print(element.errorText);
-              });
             },
             child: Text('validate')),
         TextButton(
@@ -188,21 +183,42 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         TextButton(
           onPressed: () {
-            formManagement.formThemeData = (++i) % 2 == 0
-                ? FormThemeData(themeData: Theme.of(context))
-                : FormThemeData.defaultTheme;
+            formManagement.formThemeData =
+                (++i) % 2 == 0 ? Theme.of(context) : ThemeUtil.defaultTheme();
           },
           child: Text('change theme'),
         ),
-        Row(children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'form2',
-              style: TextStyle(fontSize: 30),
-            ),
-          ),
-        ])
+        TextButton(
+          onPressed: () {
+            formManagement.newFormFieldManagement('checkbox2').update1('items',
+                FormBuilderUtils.toCheckboxGroupItems(['male1', 'female1']));
+          },
+          child: Text('change checkboxlisttile\'s items'),
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  positionManagement.visible = !positionManagement.visible;
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(positionManagement.visible
+                    ? 'hide first row'
+                    : 'show first row'));
+          },
+        ),
+        Builder(
+          builder: (context) {
+            return TextButton(
+                onPressed: () {
+                  positionManagement.readOnly = !positionManagement.readOnly;
+                  (context as Element).markNeedsBuild();
+                },
+                child: Text(positionManagement.readOnly
+                    ? 'set first row editable'
+                    : 'set first row readOnly'));
+          },
+        ),
       ],
     );
     return buttons;
@@ -214,164 +230,6 @@ class _MyHomePageState extends State<MyHomePage> {
         Expanded(child: Text(key)),
         Spacer(),
         Expanded(child: Text(value))
-      ],
-    );
-  }
-
-  Widget createForm2() {
-    return FormBuilder(
-      formManagement: formManagement2,
-      enableLayoutManagement: true,
-    )
-        .field(field: Label('username'), flex: 2, inline: true)
-        .textField(
-            hintText: 'username',
-            flex: 3,
-            autovalidateMode: AutovalidateMode.always,
-            clearable: true)
-        .nextLine()
-        .field(field: Label('password'), flex: 2, inline: true)
-        .textField(
-            name: 'password',
-            hintText: 'password',
-            flex: 3,
-            obscureText: true,
-            passwordVisible: true,
-            clearable: true)
-        .nextLine()
-        .field(field: Label('rememberMe'), flex: 2, inline: true)
-        .switchInline(
-            name: 'rememberMe',
-            flex: 3,
-            initialValue: true,
-            padding: EdgeInsets.symmetric(vertical: 10))
-        .nextLine()
-        .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
-        .field(field: Label('sex'), flex: 2, inline: true)
-        .checkboxGroup(
-          items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female'],
-              padding: EdgeInsets.symmetric(horizontal: 4)),
-          inline: true,
-          flex: 3,
-        )
-        .nextLine()
-        .divider(padding: EdgeInsets.only(top: 10))
-        .field(field: Label('habbit'), flex: 2, inline: true)
-        .switchGroup(
-            hasSelectAllSwitch: false,
-            name: 'habbit',
-            items:
-                FormBuilderUtils.toSwitchGroupItems(['sport', 'film', 'sleep']),
-            padding: EdgeInsets.only(top: 2, bottom: 2),
-            inline: true,
-            flex: 3)
-        .divider(padding: EdgeInsets.only(top: 10, bottom: 10))
-        .nextLine()
-        .field(field: Label('age'), flex: 2, inline: true)
-        .slider(
-          inline: true,
-          flex: 3,
-          name: 'age',
-          max: 100,
-          min: 14,
-          padding: EdgeInsets.symmetric(horizontal: 4),
-          subLabelRender: (value) => Text(value.round().toString()),
-        )
-        .field(
-          field: Button(),
-          flex: 1,
-          inline: false,
-        );
-  }
-
-  Widget createButtons2() {
-    return Wrap(
-      children: [
-        TextButton(
-            onPressed: () {
-              formManagement2.newFormFieldManagementByPosition(0, 0).update({
-                'label': '123',
-              });
-            },
-            child: Text('change label at position 0,0')),
-        TextButton(
-            onPressed: () {
-              formManagement2
-                  .newFormFieldManagementByPosition(0, 1)
-                  .valueFieldManagement
-                  .value = 'hello world';
-            },
-            child: Text('set value at position 0,1')),
-        Builder(
-          builder: (context) {
-            FormRowManagement row = formManagement2.newFormRowManagement(0);
-            return TextButton(
-                onPressed: () {
-                  row.visible = !row.visible;
-                  (context as Element).markNeedsBuild();
-                },
-                child: Text(row.visible ? 'hide first row' : 'show first row'));
-          },
-        ),
-        TextButton(
-            onPressed: () {
-              formManagement2.newFormRowManagement(0).readOnly = true;
-            },
-            child: Text('set first row readonly')),
-        TextButton(
-            onPressed: () {
-              FormLayoutManagement formLayoutManagement =
-                  formManagement2.newFormLayoutManagement();
-              formLayoutManagement.startEdit();
-              formLayoutManagement.swapRow(0, 1);
-              formLayoutManagement.apply();
-            },
-            child: Text('swap first row and second row')),
-        TextButton(
-            onPressed: () {
-              FormLayoutManagement formLayoutManagement =
-                  formManagement2.newFormLayoutManagement();
-
-              if (!formManagement2.hasField('num0')) {
-                formLayoutManagement.startEdit();
-                for (int i = 0; i <= 10; i++) {
-                  int row = formLayoutManagement.rows - 1;
-                  formLayoutManagement.insert(
-                      row: row,
-                      field: Label("new row"),
-                      inline: true,
-                      flex: 2,
-                      insertRow: true);
-                  formLayoutManagement.insert(
-                      row: row,
-                      inline: true,
-                      flex: 3,
-                      field: NumberFormField(
-                        initialValue: i,
-                      ),
-                      name: 'num$i');
-                }
-                formLayoutManagement.apply();
-              }
-            },
-            child: Text('append 10 numberfield rows before apply button')),
-        TextButton(
-            onPressed: () {
-              FormLayoutManagement formLayoutManagement =
-                  formManagement2.newFormLayoutManagement();
-              formLayoutManagement.startEdit();
-              int rows = formLayoutManagement.rows;
-              if (rows >= 2) {
-                formLayoutManagement.remove(rows - 2);
-              }
-              if (rows != formLayoutManagement.rows)
-                formLayoutManagement.apply();
-              else
-                formLayoutManagement.cancel();
-
-              formManagement2.newFormFieldManagement('password');
-            },
-            child: Text('delete last row before apply button')),
       ],
     );
   }
@@ -389,7 +247,7 @@ class _MyHomePageState extends State<MyHomePage> {
               value.isEmpty ? 'username can not be empty !' : null,
         )
         .switchInline(
-          name: 'switch1',
+          name: 'switch12',
           onChanged: (value) => print('switch1 value changed $value'),
         )
         .nextLine()
@@ -423,6 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('age value changed $value'),
           validator: (value) => value == null ? 'not empty' : null,
         )
+        .nextLine()
         .checkboxGroup(
           items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
           name: 'checkbox',
@@ -431,7 +290,9 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) => print('checkbox value changed $value'),
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         )
+        .nextLine()
         .checkboxGroup(
+          name: 'checkbox2',
           items: FormBuilderUtils.toCheckboxGroupItems(['male', 'female']),
           split: 1,
           label: 'checkboxlisttile',
@@ -446,6 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
           label: 'single choice',
           validator: (value) => value == null ? 'select one !' : null,
         )
+        .nextLine()
         .radioGroup<String>(
           split: 1,
           items: FormBuilderUtils.toRadioGroupItems(['1', '2']),
@@ -454,7 +316,6 @@ class _MyHomePageState extends State<MyHomePage> {
           validator: (value) => value == null ? 'select one !' : null,
         )
         .divider()
-        .nextLine()
         .datetimeField(
           name: 'startTime',
           useTime: true,
@@ -478,6 +339,7 @@ class _MyHomePageState extends State<MyHomePage> {
             clearable: true,
             onChanged: (value) => print('remark value changed $value'),
             maxLength: 500)
+        .nextLine()
         .selector<int>(
             name: 'selector',
             labelText: 'selector',
@@ -520,6 +382,7 @@ class _MyHomePageState extends State<MyHomePage> {
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
             onChanged: (value) => print('selector value changed $value'),
             validator: (value) => value.isEmpty ? 'select something !' : null)
+        .nextLine()
         .switchGroup(
             name: 'switchGroup',
             label: 'switch',
@@ -530,6 +393,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 3,
                 (index) => SwitchGroupItem(index.toString(),
                     padding: EdgeInsets.symmetric(vertical: 4, horizontal: 8))))
+        .nextLine()
         .slider(
           name: 'slider',
           min: 0,
@@ -541,6 +405,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('age slider value changed ' + value.toStringAsFixed(0)),
         )
+        .nextLine()
         .numberField(
             name: 'sliderInlineText',
             min: 0,
@@ -562,6 +427,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   .valueFieldManagement
                   .setValue(v.toDouble().toInt(), trigger: false);
             })
+        .nextLine()
         .rangeSlider(
           name: 'rangeSlider',
           min: 0,
@@ -575,6 +441,7 @@ class _MyHomePageState extends State<MyHomePage> {
           onChanged: (value) =>
               print('range slider value changed ' + value.toString()),
         )
+        .nextLine()
         .filterChip<String>(
             label: 'Filter Chip',
             name: 'commonField',
@@ -593,144 +460,57 @@ class _MyHomePageState extends State<MyHomePage> {
               'object-c'
             ]))
         .nextLine()
-        .field(
-            field: Builder(builder: (context) {
-              return Row(
-                children: [
-                  Expanded(
-                    child: ClearableTextFormField(),
-                    flex: 1,
+        .field(field: Builder(builder: (context) {
+          BuilderInfo info = BuilderInfo.of(context);
+          Position position = info.position;
+          return Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'I\'m a stateless field',
+                  style: TextStyle(fontSize: 20),
+                ),
+                Container(
+                  color: info.formThemeData.primaryColor.withOpacity(0.3),
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      createRow('row', '${position.row}'),
+                      createRow('column', '${position.column}'),
+                      createRow('inline', '${info.inline}'),
+                    ],
                   ),
-                  Expanded(
-                    child: ClearableTextFormField(),
-                    flex: 1,
-                  ),
-                ],
-              );
-            }),
-            name: '123')
+                )
+              ],
+            ),
+            flex: 1,
+          );
+        }))
         .nextLine()
         .field(
-            field: Builder(builder: (context) {
-              BuilderInfo info = BuilderInfo.of(context);
-              FieldKey fieldKey = info.fieldKey;
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'I\'m a stateless field',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                  Container(
-                    color: info.formThemeData.themeData.primaryColor
-                        .withOpacity(0.3),
-                    child: ListView(
-                      shrinkWrap: true,
-                      children: [
-                        createRow('row', '${fieldKey.row}'),
-                        createRow('column', '${fieldKey.column}'),
-                        createRow('name', '${fieldKey.name ?? ''}'),
-                        createRow('flex', '${info.flex}'),
-                        createRow('inline', '${info.inline}'),
-                        createRow('readOnly', '${info.readOnly}'),
-                      ],
-                    ),
-                  )
-                ],
-              );
-            }),
-            flex: 2,
-            inline: false);
-  }
-}
-
-class Label extends BaseCommonField {
-  final String label;
-  Label(this.label)
-      : super(
-          {'label': StateValue<String>(label)},
-          builder: (state) {
-            return Text(
-              state.currentMap['label'],
-              style: TextStyle(
-                  fontSize: 18,
-                  color: state.formThemeData.themeData.primaryColor),
-            );
-          },
-        );
-}
-
-class Button extends Builder {
-  Button()
-      : super(
-          builder: (context) {
-            BuilderInfo info = BuilderInfo.of(context);
-            return Padding(
-              padding: const EdgeInsets.only(
-                  left: 16, right: 16, bottom: 16, top: 8),
-              child: Container(
-                height: 48,
-                decoration: BoxDecoration(
-                  color: info.formThemeData.themeData.primaryColor,
-                  borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.6),
-                      blurRadius: 8,
-                      offset: const Offset(4, 4),
-                    ),
-                  ],
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-                    highlightColor: Colors.transparent,
-                    onTap: () {
-                      FormManagement management = FormManagement.of(context);
-                      Map<String, Widget> widgets =
-                          management.data.map((key, value) => MapEntry(
-                              key,
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(key),
-                                    flex: 1,
-                                  ),
-                                  Expanded(
-                                    child: Text(value.toString()),
-                                    flex: 1,
-                                  ),
-                                ],
-                              )));
-                      showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              content: Container(
-                                width: double.maxFinite,
-                                child: SingleChildScrollView(
-                                  child: Column(
-                                    children: List.from(widgets.values),
-                                  ),
-                                ),
-                              ),
-                            );
-                          });
-                    },
-                    child: Center(
-                      child: Text(
-                        'Apply',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 18,
-                            color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
+            field: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            'a custom field with two value fields',
+            style: TextStyle(fontSize: 20),
+          ),
+        ))
+        .nextLine()
+        .field(field: Builder(builder: (context) {
+          return Expanded(
+              child: Row(
+            children: [
+              ClearableTextFormField(
+                name: 'value1',
+                hintText: 'value1',
               ),
-            );
-          },
-        );
+              ClearableTextFormField(
+                name: 'value2',
+                hintText: 'value2',
+              ),
+            ],
+          ));
+        }));
+  }
 }

@@ -1,79 +1,10 @@
 import 'package:flutter/material.dart';
 
-class FormThemeData {
-  final EdgeInsets? padding;
-  final ThemeData themeData;
-  final EdgeInsets? labelPadding;
+class ThemeUtil {
+  ThemeUtil._();
 
-  FormThemeData(
-      {this.padding = EdgeInsets.zero,
-      required this.themeData,
-      this.labelPadding});
-
-  static TextStyle getErrorStyle(ThemeData themeData) {
-    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
-    final Color color = themeData.errorColor;
-    return themeData.textTheme.caption!
-        .copyWith(color: color)
-        .merge(inputDecorationTheme.errorStyle);
-  }
-
-  static TextStyle getLabelStyle(ThemeData themeData, bool hasError) {
-    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
-    TextStyle? errorStyle = inputDecorationTheme.errorStyle;
-    return themeData.textTheme.subtitle1!
-        .copyWith(
-            color: hasError
-                ? (errorStyle == null
-                    ? themeData.errorColor
-                    : errorStyle.color ?? themeData.errorColor)
-                : themeData.hintColor)
-        .merge(inputDecorationTheme.labelStyle);
-  }
-
-  static final defaultTheme = DefaultFormThemeData._();
-}
-
-class HexColor extends Color {
-  HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
-
-  static int _getColorFromHex(String hexColor) {
-    hexColor = hexColor.toUpperCase().replaceAll('#', '');
-    if (hexColor.length == 6) {
-      hexColor = 'FF' + hexColor;
-    }
-    return int.parse(hexColor, radix: 16);
-  }
-}
-
-//copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
-class DefaultFormThemeData extends FormThemeData {
-  DefaultFormThemeData._()
-      : super(
-            themeData: _buildLightTheme(),
-            padding: EdgeInsets.all(5),
-            labelPadding: const EdgeInsets.symmetric(vertical: 10));
-
-  static TextTheme _buildTextTheme(TextTheme base) {
-    const String fontName = 'WorkSans';
-    return base.copyWith(
-      headline1: base.headline1!.copyWith(fontFamily: fontName),
-      headline2: base.headline2!.copyWith(fontFamily: fontName),
-      headline3: base.headline3!.copyWith(fontFamily: fontName),
-      headline4: base.headline4!.copyWith(fontFamily: fontName),
-      headline5: base.headline5!.copyWith(fontFamily: fontName),
-      headline6: base.headline6!.copyWith(fontFamily: fontName),
-      button: base.button!.copyWith(fontFamily: fontName),
-      caption: base.caption!.copyWith(fontFamily: fontName),
-      bodyText1: base.bodyText1!.copyWith(fontFamily: fontName),
-      bodyText2: base.bodyText2!.copyWith(fontFamily: fontName),
-      subtitle1: base.subtitle1!.copyWith(fontFamily: fontName),
-      subtitle2: base.subtitle2!.copyWith(fontFamily: fontName),
-      overline: base.overline!.copyWith(fontFamily: fontName),
-    );
-  }
-
-  static ThemeData _buildLightTheme() {
+  /// default theme copied from https://github.com/mitesh77/Best-Flutter-UI-Templates
+  static ThemeData defaultTheme() {
     final Color primaryColor = HexColor('#54D3C2');
     final Color secondaryColor = HexColor('#54D3C2');
     final Color dividerColor = Color(0x1f000000);
@@ -146,6 +77,58 @@ class DefaultFormThemeData extends FormThemeData {
       primaryTextTheme: _buildTextTheme(base.primaryTextTheme),
       accentTextTheme: _buildTextTheme(base.accentTextTheme),
     );
+  }
+
+  static TextTheme _buildTextTheme(TextTheme base) {
+    const String fontName = 'WorkSans';
+    return base.copyWith(
+      headline1: base.headline1!.copyWith(fontFamily: fontName),
+      headline2: base.headline2!.copyWith(fontFamily: fontName),
+      headline3: base.headline3!.copyWith(fontFamily: fontName),
+      headline4: base.headline4!.copyWith(fontFamily: fontName),
+      headline5: base.headline5!.copyWith(fontFamily: fontName),
+      headline6: base.headline6!.copyWith(fontFamily: fontName),
+      button: base.button!.copyWith(fontFamily: fontName),
+      caption: base.caption!.copyWith(fontFamily: fontName),
+      bodyText1: base.bodyText1!.copyWith(fontFamily: fontName),
+      bodyText2: base.bodyText2!.copyWith(fontFamily: fontName),
+      subtitle1: base.subtitle1!.copyWith(fontFamily: fontName),
+      subtitle2: base.subtitle2!.copyWith(fontFamily: fontName),
+      overline: base.overline!.copyWith(fontFamily: fontName),
+    );
+  }
+
+  static TextStyle getErrorStyle(ThemeData themeData) {
+    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
+    final Color color = themeData.errorColor;
+    return themeData.textTheme.caption!
+        .copyWith(color: color)
+        .merge(inputDecorationTheme.errorStyle);
+  }
+
+  static TextStyle getLabelStyle(ThemeData themeData, bool hasError) {
+    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
+    TextStyle? errorStyle = inputDecorationTheme.errorStyle;
+    return themeData.textTheme.subtitle1!
+        .copyWith(
+            color: hasError
+                ? (errorStyle == null
+                    ? themeData.errorColor
+                    : errorStyle.color ?? themeData.errorColor)
+                : themeData.hintColor)
+        .merge(inputDecorationTheme.labelStyle);
+  }
+}
+
+class HexColor extends Color {
+  HexColor(final String hexColor) : super(_getColorFromHex(hexColor));
+
+  static int _getColorFromHex(String hexColor) {
+    hexColor = hexColor.toUpperCase().replaceAll('#', '');
+    if (hexColor.length == 6) {
+      hexColor = 'FF' + hexColor;
+    }
+    return int.parse(hexColor, radix: 16);
   }
 }
 

@@ -38,14 +38,27 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
     String? label,
     EdgeInsets? errorTextPadding,
     NonnullFormFieldSetter<List<T>>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super(
           {
             'items': StateValue<List<FilterChipItem<T>>>(items),
             'label': StateValue<String?>(label),
             'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
-            'pressElevation': StateValue<double?>(pressElevation)
+            'pressElevation': StateValue<double?>(pressElevation),
+            'labelPadding': StateValue<EdgeInsets>(
+                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           validator: validator,
           onChanged: onChanged,
           onSaved: onSaved,
@@ -53,22 +66,21 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
           initialValue: initialValue ?? [],
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             List<FilterChipItem<T>> items = stateMap['items'];
             String? label = stateMap['label'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
             double? pressElevation = stateMap['pressElevation'];
+            EdgeInsets labelPadding = stateMap['labelPadding'];
 
             List<Widget> widgets = [];
             if (label != null) {
               Text text = Text(label,
                   textAlign: TextAlign.left,
-                  style:
-                      FormThemeData.getLabelStyle(themeData, state.hasError));
+                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
               widgets.add(Padding(
-                padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+                padding: labelPadding,
                 child: text,
               ));
             }
@@ -108,7 +120,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
 
             if (state.hasError) {
               Text text = Text(state.errorText!,
-                  style: FormThemeData.getErrorStyle(themeData));
+                  style: ThemeUtil.getErrorStyle(themeData));
               widgets.add(Padding(
                 padding: errorTextPadding,
                 child: text,

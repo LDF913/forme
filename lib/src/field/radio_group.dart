@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../form_builder.dart';
 import '../form_field.dart';
 import '../form_theme.dart';
 import '../state_model.dart';
+import 'checkbox_group.dart';
 
 class RadioGroupItem<T> extends CheckboxGroupItem {
   final T value;
@@ -38,14 +38,27 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
     dynamic initialValue,
     EdgeInsets? errorTextPadding,
     FormFieldSetter<T>? onSaved,
+    String? name,
+    int flex = 1,
+    bool visible = true,
+    bool readOnly = false,
+    EdgeInsets? padding,
+    EdgeInsets? labelPadding,
   }) : super(
           {
             'label': StateValue<String?>(label),
             'split': StateValue<int>(split),
             'items': StateValue<List<RadioGroupItem>>(items),
             'errorTextPadding':
-                StateValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8))
+                StateValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8)),
+            'labelPadding': StateValue<EdgeInsets>(
+                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
+          visible: visible,
+          readOnly: readOnly,
+          flex: flex,
+          padding: padding,
+          name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
@@ -53,23 +66,22 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            FormThemeData formThemeData = state.formThemeData;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = formThemeData.themeData;
+            ThemeData themeData = state.formThemeData;
             bool inline = state.inline;
             String? label = inline ? null : stateMap['label'];
             int split = inline ? 0 : stateMap['split'];
             List<RadioGroupItem> items = stateMap['items'];
             EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
+            EdgeInsets labelPadding = stateMap['labelPadding'];
 
             List<Widget> widgets = [];
             if (label != null) {
               Text text = Text(label,
                   textAlign: TextAlign.left,
-                  style:
-                      FormThemeData.getLabelStyle(themeData, state.hasError));
+                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
               widgets.add(Padding(
-                padding: formThemeData.labelPadding ?? EdgeInsets.zero,
+                padding: labelPadding,
                 child: text,
               ));
             }
@@ -178,7 +190,7 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
             if (state.hasError) {
               Text text = Text(state.errorText!,
                   overflow: inline ? TextOverflow.ellipsis : null,
-                  style: FormThemeData.getErrorStyle(themeData));
+                  style: ThemeUtil.getErrorStyle(themeData));
               widgets.add(Padding(
                 padding: errorTextPadding,
                 child: text,
