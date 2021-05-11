@@ -74,7 +74,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             bool readOnly = baseState.readOnly;
             _TextFormFieldState state = baseState as _TextFormFieldState;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
+            ThemeData themeData = state.themeData;
             FocusNode? focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -255,7 +255,6 @@ class DateTimeFormField extends BaseValueField<DateTime> {
     String? hintText,
     TextStyle? style,
     DateTimeFormatter? formatter,
-    Locale? locale,
     bool useTime = false,
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
@@ -269,6 +268,8 @@ class DateTimeFormField extends BaseValueField<DateTime> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
+    DateTime? firstDate,
+    DateTime? lastDate,
   }) : super(
           {
             'labelText': StateValue<String?>(labelText),
@@ -277,6 +278,8 @@ class DateTimeFormField extends BaseValueField<DateTime> {
             'useTime': StateValue<bool>(useTime),
             'formatter': StateValue<DateTimeFormatter?>(formatter),
             'style': StateValue<TextStyle?>(style),
+            'firstDate': StateValue<DateTime>(firstDate ?? DateTime(2000)),
+            'lastDate': StateValue<DateTime>(lastDate ?? DateTime(2099)),
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
           },
@@ -292,7 +295,7 @@ class DateTimeFormField extends BaseValueField<DateTime> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
+            ThemeData themeData = state.themeData;
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -304,6 +307,8 @@ class DateTimeFormField extends BaseValueField<DateTime> {
                     themeData.inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _DateTimeFormFieldState).textEditingController;
+            DateTime firstDate = stateMap['firstDate'];
+            DateTime lastDate = stateMap['lastDate'];
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
@@ -311,11 +316,11 @@ class DateTimeFormField extends BaseValueField<DateTime> {
                   ? null
                   : TimeOfDay(hour: value.hour, minute: value.minute);
               showDatePicker(
-                      locale: locale ?? Locale('zh', 'CN'),
+                      locale: Localizations.localeOf(state.context),
                       context: state.context,
                       initialDate: value,
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2099))
+                      firstDate: firstDate,
+                      lastDate: lastDate)
                   .then((date) {
                 if (date != null) {
                   if (useTime)
@@ -323,24 +328,15 @@ class DateTimeFormField extends BaseValueField<DateTime> {
                       context: state.context,
                       initialTime: timeOfDay ??
                           TimeOfDay(hour: value.hour, minute: value.minute),
-                      builder: (BuildContext context, Widget? child) {
-                        return Localizations.override(
-                          context: context,
-                          locale: locale ?? Locale('zh', 'CN'),
-                          child: child,
-                        );
-                      },
                     ).then((value) {
                       if (value != null) {
                         DateTime dateTime = DateTime(date.year, date.month,
                             date.day, value.hour, value.minute);
                         state.didChange(dateTime);
-                        focusNode.requestFocus();
                       }
                     });
                   else {
                     state.didChange(date);
-                    focusNode.requestFocus();
                   }
                 }
               });
@@ -457,7 +453,7 @@ class NumberFormField extends BaseValueField<num> {
     num? initialValue,
     int decimal = 0,
     double? max,
-    double? min,
+    bool allowNegative = false,
     bool clearable = true,
     Widget? prefixIcon,
     List<Widget>? suffixIcons,
@@ -483,8 +479,7 @@ class NumberFormField extends BaseValueField<num> {
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
             'decimal': StateValue<int>(decimal),
-            'max': StateValue<double?>(max),
-            'min': StateValue<double?>(min),
+            'allowNegative': StateValue<bool>(allowNegative),
           },
           visible: visible,
           readOnly: readOnly,
@@ -493,23 +488,7 @@ class NumberFormField extends BaseValueField<num> {
           name: name,
           onSaved: onSaved,
           onChanged: onChanged,
-          validator: (value) {
-            if (validator == null) return null;
-            if (value == null) {
-              return validator(null);
-            }
-            String? msg = validator(value);
-            if (msg != null) {
-              return msg;
-            }
-            if (min != null && min > value) {
-              return '必须大于:$min';
-            }
-            if (max != null && max < value) {
-              return '必须小于:$max';
-            }
-            return null;
-          },
+          validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           builder: (state) {
@@ -524,24 +503,22 @@ class NumberFormField extends BaseValueField<num> {
             List<Widget>? suffixIcons = stateMap['suffixIcons'];
             TextInputAction? textInputAction = stateMap['textInputAction'];
             int decimal = stateMap['decimal'];
-            double? max = stateMap['max'];
-            double? min = stateMap['min'];
+            bool allowNegative = stateMap['allowNegative'];
             bool autofocus = stateMap['autofocus'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
-                    state.formThemeData.inputDecorationTheme;
+                    state.themeData.inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
 
             String regex = r'[0-9' +
                 (decimal > 0 ? '.' : '') +
-                (min != null && min > 0 ? '' : '-') +
+                (allowNegative ? '-' : '') +
                 ']';
             List<TextInputFormatter> formatters = [
               TextInputFormatter.withFunction((oldValue, newValue) {
                 if (newValue.text == '') return newValue;
-                if ((min == null || min < 0) && newValue.text == '-')
-                  return newValue;
+                if (allowNegative && newValue.text == '-') return newValue;
                 double? parsed = double.tryParse(newValue.text);
                 if (parsed == null) {
                   return oldValue;

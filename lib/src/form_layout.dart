@@ -81,6 +81,7 @@ class FormLayout {
         textDirection: textDirection,
         verticalDirection: verticalDirection);
     formLayout._index = _index;
+    formLayout.rows.clear(); //remove first empty row!
     formLayout.rows.addAll(rows.map((e) => e.copy()).toList());
     return formLayout;
   }

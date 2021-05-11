@@ -58,11 +58,4 @@ class FormBuilderUtils {
         .map((e) => SwitchGroupItem(e, padding: padding, textStyle: style))
         .toList();
   }
-
-  static T? firstWhereOrNull<T>(
-      Iterable<T> collection, bool Function(T element) test) {
-    for (var element in collection) {
-      if (test(element)) return element;
-    }
-  }
 }

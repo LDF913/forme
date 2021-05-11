@@ -14,20 +14,18 @@ typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
 /// you can use [BuilderInfo.of(context)] to help you
 class BuilderInfo {
   final Position position;
-  final bool inline;
 
   /// whether form is readOnly
   final bool readOnly;
-  final ThemeData formThemeData;
+  final ThemeData themeData;
 
   static BuilderInfo of(BuildContext context) {
     FieldInfo fieldInfo = FieldInfo.of(context);
     return BuilderInfo._(Theme.of(context), fieldInfo);
   }
 
-  BuilderInfo._(this.formThemeData, FieldInfo fieldInfo)
-      : this.inline = fieldInfo.inline,
-        this.position = fieldInfo.position,
+  BuilderInfo._(this.themeData, FieldInfo fieldInfo)
+      : this.position = fieldInfo.position,
         this.readOnly = fieldInfo.readOnly;
 }
 
@@ -152,13 +150,8 @@ abstract class AbstractCommonFieldState extends State<AbstractCommonField>
 ///
 /// **do not used this state unless your custom field is [BaseCommonField] [BaseValueField] [BaseNonnullValueField]**
 mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
-  EdgeInsets? get padding => _baseFieldStateModel.padding;
-  bool get visible => _baseFieldStateModel.visible;
-
   @override
   bool get readOnly => super.readOnly || _baseFieldStateModel.readOnly;
-
-  int get flex => _baseFieldStateModel.flex;
 
   @protected
   T? getState<T>(String stateKey) => _baseFieldStateModel.getState<T>(stateKey);
@@ -178,14 +171,19 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _baseFieldStateModel.name = name;
+    _baseFieldStateModel.position = position;
+  }
+
+  @override
   void didUpdateWidget(T oldWidget) {
     super.didUpdateWidget(oldWidget);
     Map<String, StateValue>? old = _getInitStateField(oldWidget)?._initStateMap;
     Map<String, StateValue>? current =
         _getInitStateField(widget)?._initStateMap;
     _baseFieldStateModel.didUpdateModel(old, current);
-    _baseFieldStateModel.name = name;
-    _baseFieldStateModel.position = position;
   }
 
   Map<String, dynamic> get currentMap => _baseFieldStateModel.currentMap;
@@ -194,6 +192,38 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
       t is BaseStatefulField ? t as BaseStatefulField : null;
 
   BaseFieldStateModel get _baseFieldStateModel => model as BaseFieldStateModel;
+
+  /// used to build default field widget
+  Widget get _child;
+
+  @override
+  void dispose() {
+    _baseFieldStateModel.dispose();
+    super.dispose();
+  }
+
+  /// used to wrap default field  to flexible
+  ///
+  /// override this if you do not need flexible
+  @override
+  Widget build(BuildContext context) {
+    bool visible = model.visible;
+    EdgeInsets? padding = _baseFieldStateModel.padding;
+    Widget child = Padding(
+      padding:
+          padding ?? const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+      child: Visibility(
+        maintainState: true,
+        child: _child,
+        visible: visible,
+      ),
+    );
+    return Flexible(
+      fit: visible ? FlexFit.tight : FlexFit.loose,
+      child: child,
+      flex: _baseFieldStateModel.flex,
+    );
+  }
 }
 
 class BaseCommonField extends CommonField<BaseCommonFieldState>
@@ -207,10 +237,7 @@ class BaseCommonField extends CommonField<BaseCommonFieldState>
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-  }) : super(
-            builder: (state) =>
-                _BaseFieldUtil.build<BaseCommonFieldState>(state, builder),
-            name: name) {
+  }) : super(builder: builder, name: name) {
     _initStateMap.addAll({
       'flex': StateValue<int>(flex),
       'padding': StateValue<EdgeInsets?>(padding),
@@ -240,8 +267,7 @@ class BaseValueField<T> extends ValueField<T, BaseValueFieldState<T>>
       EdgeInsets? padding,
       String? name})
       : super(
-            builder: (state) =>
-                _BaseFieldUtil.build<BaseValueFieldState<T>>(state, builder),
+            builder: builder,
             onChanged: onChanged,
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -280,9 +306,7 @@ class BaseNonnullValueField<T>
     EdgeInsets? padding,
   }) : super(
             name: name,
-            builder: (state) =>
-                _BaseFieldUtil.build<BaseNonnullValueFieldState<T>>(
-                    state, builder),
+            builder: builder,
             onChanged: onChanged,
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -301,28 +325,24 @@ class BaseNonnullValueField<T>
 }
 
 class BaseCommonFieldState extends AbstractCommonFieldState
-    with BaseFieldState {}
+    with BaseFieldState {
+  @override
+  Widget get _child {
+    return widget.builder(this);
+  }
+}
 
-class BaseValueFieldState<T> extends ValueFieldState<T> with BaseFieldState {}
+class BaseValueFieldState<T> extends ValueFieldState<T> with BaseFieldState {
+  @override
+  Widget get _child {
+    return widget.builder(this);
+  }
+}
 
 class BaseNonnullValueFieldState<T> extends NonnullValueFieldState<T>
-    with BaseFieldState {}
-
-class _BaseFieldUtil {
-  static Widget build<T extends BaseFieldState>(
-      T state, FieldContentBuilder<T> builder) {
-    Widget child = Padding(
-      padding: state.padding ?? const EdgeInsets.all(5),
-      child: Visibility(
-        maintainState: true,
-        child: builder(state),
-        visible: state.visible,
-      ),
-    );
-    return Flexible(
-      fit: state.visible ? FlexFit.tight : FlexFit.loose,
-      child: child,
-      flex: state.flex,
-    );
+    with BaseFieldState {
+  @override
+  Widget get _child {
+    return widget.builder(this);
   }
 }

@@ -1,6 +1,6 @@
 name: form_builder
 description: flutter row-column based form builder, build form quickly,create field fast,less code,more powerful
-version: 1.0.0-beta.3
+version: 1.0.0-beta.4
 homepage: https://github.com/wwwqyhme/flutter-form-builder
 
 environment:
@@ -13,9 +13,6 @@ dependencies:
 
 dev_dependencies:
   flutter_test:
-    sdk: flutter
-    
-  flutter_localizations: 
     sdk: flutter
 
 # For information on the generic Dart part of this file, see the

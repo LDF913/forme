@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../form_theme.dart';
 import '../state_model.dart';
 import '../form_field.dart';
+import 'decoration_field.dart';
 
 class FilterChipItem<T> {
   final Widget label;
@@ -24,8 +24,11 @@ class FilterChipItem<T> {
       this.visible = true,
       this.contentPadding = const EdgeInsets.all(10),
       this.labelPadding})
-      : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
+      : this.padding =
+            padding ?? EdgeInsets.symmetric(horizontal: 10, vertical: 5);
 }
+
+enum ChipLayoutType { wrap, scroll }
 
 class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
   FilterChipFormField({
@@ -35,27 +38,23 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
     NonnullFieldValidator<List<T>>? validator,
     ValueChanged<List<T>>? onChanged,
     double? pressElevation,
-    String? label,
-    EdgeInsets? errorTextPadding,
+    String? labelText,
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    EdgeInsets? labelPadding,
     int? count,
     VoidCallback? exceedCallback,
+    ChipLayoutType layoutType = ChipLayoutType.wrap,
   }) : super(
           {
             'items': StateValue<List<FilterChipItem<T>>>(items),
-            'label': StateValue<String?>(label),
-            'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 5)),
+            'labelText': StateValue<String?>(labelText),
             'pressElevation': StateValue<double?>(pressElevation),
-            'labelPadding': StateValue<EdgeInsets>(
-                labelPadding ?? const EdgeInsets.symmetric(vertical: 10)),
-            'count': StateValue<int?>(count)
+            'count': StateValue<int?>(count),
+            'layoutType': StateValue<ChipLayoutType>(layoutType),
           },
           visible: visible,
           readOnly: readOnly,
@@ -70,24 +69,12 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
+            ThemeData themeData = state.themeData;
             List<FilterChipItem<T>> items = stateMap['items'];
-            String? label = stateMap['label'];
-            EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
+            String? labelText = stateMap['labelText'];
             double? pressElevation = stateMap['pressElevation'];
-            EdgeInsets labelPadding = stateMap['labelPadding'];
+            ChipLayoutType layoutType = stateMap['layoutType'];
             int? count = stateMap['count'];
-
-            List<Widget> widgets = [];
-            if (label != null) {
-              Text text = Text(label,
-                  textAlign: TextAlign.left,
-                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
-              widgets.add(Padding(
-                padding: labelPadding,
-                child: text,
-              ));
-            }
 
             List<Widget> chips = [];
             for (FilterChipItem<T> item in items) {
@@ -109,9 +96,11 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                             if (exceedCallback != null) exceedCallback();
                             return;
                           }
-                          state.didChange(state.value..add(item.data));
-                        } else
-                          state.didChange(state.value..remove(item.data));
+                          state.didChange(List.of(state.value)..add(item.data));
+                        } else {
+                          state.didChange(
+                              List.of(state.value)..remove(item.data));
+                        }
                       },
               );
               chips.add(Visibility(
@@ -122,23 +111,27 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                   visible: item.visible));
             }
 
-            widgets.add(Wrap(
-              children: chips,
-            ));
+            Widget chipWidget;
 
-            if (state.hasError) {
-              Text text = Text(state.errorText!,
-                  style: ThemeUtil.getErrorStyle(themeData));
-              widgets.add(Padding(
-                padding: errorTextPadding,
-                child: text,
-              ));
+            switch (layoutType) {
+              case ChipLayoutType.wrap:
+                chipWidget = Wrap(
+                  children: chips,
+                );
+                break;
+              case ChipLayoutType.scroll:
+                chipWidget = SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(children: chips));
+                break;
             }
 
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widgets,
+            return DecorationField(
+              child: chipWidget,
+              focusNode: state.focusNode,
+              errorText: state.errorText,
+              readOnly: readOnly,
+              labelText: labelText,
             );
           },
         );

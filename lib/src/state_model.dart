@@ -21,8 +21,6 @@ class StateValue<T> {
 /// used to update state
 mixin AbstractStateModel {
   void update(Map<String, dynamic> stateMap);
-  void dispose();
-  T? getState<T>(String key);
 }
 
 /// an base state model implement [AbstractStateModel]
@@ -38,17 +36,19 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   final Map<String, StateValue> _initStateMap;
   final Map<String, dynamic> _state = {};
 
-  int gen = 0;
+  int _gen = 0;
 
   BaseStateModel(Map<String, StateValue> initStateMap)
       : this._initStateMap = Map.of(initStateMap);
 
+  /// used to check whether model's state has been changed
+  int get gen => _gen;
+
   /// get state value
   ///
   /// it's equals to  currentMap\[stateKey\]
-  @override
   T? getState<T>(String stateKey) {
-    enableKeyExists(stateKey);
+    _enableKeyExists(stateKey);
     return _state.containsKey(stateKey)
         ? _state[stateKey]
         : _initStateMap[stateKey]!.value;
@@ -62,22 +62,13 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     return Map.unmodifiable(map);
   }
 
-  void rebuild(Map<String, dynamic> state) {
-    checkState(state);
-    if (mapEquals(state, _state)) return;
-    _state
-      ..clear()
-      ..addAll(state);
-    doNotifyListeners(state.keys);
-  }
-
   @override
   void update(Map<String, dynamic> state) {
     checkState(state);
     List<String> keys = [];
     state.forEach((key, value) {
       dynamic currentValue = _state[key];
-      if (!FormBuilderUtils.compare(value, currentValue)) {
+      if (!compare(key, value, currentValue)) {
         _state[key] = value;
         keys.add(key);
       }
@@ -89,19 +80,11 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     update({key: value});
   }
 
-  void remove(Set<String> stateKeys) {
-    if (stateKeys.isEmpty) return;
-    Set<String> keys = {};
-    stateKeys.forEach((element) {
-      if (_state.containsKey(element)) {
-        keys.add(element);
-        _state.remove(element);
-      }
-    });
-    doNotifyListeners(keys);
-  }
-
   /// can this method in [didUpdateWidget]
+  ///
+  /// **this method will remove old's initStateMap and add new initStatMap,
+  /// if old state not exists in new initState or it's value can't be checked by new initState,
+  /// will also be removed**
   ///
   /// [old] from oldWidget
   ///
@@ -123,8 +106,7 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     });
   }
 
-  @protected
-  void enableKeyExists(String stateKey) {
+  void _enableKeyExists(String stateKey) {
     if (!_initStateMap.containsKey(stateKey))
       throw 'did you put key :$stateKey into your initMap';
   }
@@ -132,14 +114,14 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   @protected
   void checkState(Map<String, dynamic> map) {
     map.forEach((key, value) {
-      enableKeyExists(key);
+      _enableKeyExists(key);
       StateValue stateValue = _initStateMap[key]!;
       String? error = stateValue._check(value);
       if (error != null) throw 'key: $key\'s value error :' + error;
     });
   }
 
-  @mustCallSuper
+  @override
   void dispose() {
     _initStateMap.clear();
     _state.clear();
@@ -152,7 +134,7 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     try {
       beforeNotifyListeners(keys);
     } finally {
-      gen++;
+      _gen++;
       notifyListeners();
     }
   }
@@ -164,6 +146,15 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   /// [keys] updated|removed keys
   @protected
   void beforeNotifyListeners(Iterable<String> keys) {}
+
+  /// used to compare state value
+  ///
+  /// if [FormBuilderUtils.compare] can't meet your needs,
+  /// override this method
+  @protected
+  bool compare(String key, value1, value2) {
+    return FormBuilderUtils.compare(value1, value2);
+  }
 }
 
 /// when you want to create a stateful field,your custom field state must

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../form_field.dart';
 import '../form_theme.dart';
 import '../state_model.dart';
+import 'decoration_field.dart';
 
 class CheckboxGroupItem {
   final Widget title;
@@ -30,28 +31,22 @@ class CheckboxGroupItem {
 class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
   CheckboxGroupFormField({
     required List<CheckboxGroupItem> items,
-    String? label,
+    String? labelText,
     ValueChanged<List<int>>? onChanged,
     int split = 2,
     NonnullFieldValidator<List<int>>? validator,
     AutovalidateMode? autovalidateMode,
     List<int>? initialValue,
-    EdgeInsets? errorTextPadding,
     NonnullFormFieldSetter<List<int>>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    EdgeInsets? labelPadding,
   }) : super({
-          'label': StateValue<String?>(label),
+          'labelText': StateValue<String?>(labelText),
           'split': StateValue<int>(split),
           'items': StateValue<List<CheckboxGroupItem>>(items),
-          'errorTextPadding': StateValue<EdgeInsets>(errorTextPadding ??
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 8)),
-          'labelPadding': StateValue<EdgeInsets>(
-              labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
         },
             visible: visible,
             readOnly: readOnly,
@@ -64,34 +59,21 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
             initialValue: initialValue ?? [],
             validator: validator, builder: (state) {
           bool readOnly = state.readOnly;
-          ThemeData formThemeData = state.formThemeData;
+          ThemeData themeData = state.themeData;
           Map<String, dynamic> stateMap = state.currentMap;
-          bool inline = state.inline;
-          String? label = inline ? null : stateMap['label'];
+          String? labelText = stateMap['labelText'];
           int split = stateMap['split'];
           List<CheckboxGroupItem> items = stateMap['items'];
-          EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
-          EdgeInsets labelPadding = stateMap['labelPadding'];
-
-          List<Widget> widgets = [];
-          if (label != null) {
-            Text text = Text(label,
-                textAlign: TextAlign.left,
-                style: ThemeUtil.getLabelStyle(formThemeData, state.hasError));
-            widgets.add(Padding(
-              padding: labelPadding,
-              child: text,
-            ));
-          }
 
           List<Widget> wrapWidgets = [];
 
           void changeValue(int i) {
-            if (state.value.contains(i))
-              state.value.remove(i);
+            List<int> value = List.of(state.value);
+            if (value.contains(i))
+              value.remove(i);
             else
-              state.value.add(i);
-            state.didChange(state.value);
+              value.add(i);
+            state.didChange(value);
           }
 
           for (int i = 0; i < items.length; i++) {
@@ -104,7 +86,6 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
                 wrapWidgets.add(CheckboxListTile(
                   dense: true,
                   contentPadding: item.padding,
-                  activeColor: formThemeData.primaryColor,
                   controlAffinity: item.controlAffinity,
                   secondary: item.secondary,
                   value: state.value.contains(i),
@@ -119,20 +100,27 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
               }
             }
 
+            bool selected = state.value.contains(i);
             Checkbox checkbox = Checkbox(
-                activeColor: formThemeData.primaryColor,
-                value: state.value.contains(i),
+                activeColor: themeData.primaryColor,
+                value: selected,
                 onChanged: isReadOnly
                     ? null
                     : (v) {
                         changeValue(i);
                       });
 
-            Widget title = split == 0
-                ? item.title
-                : Flexible(
-                    child: item.title,
-                  );
+            final Widget title = ThemeUtil.wrapTitle(
+                split == 0
+                    ? item.title
+                    : Flexible(
+                        child: item.title,
+                      ),
+                true,
+                !readOnly,
+                selected,
+                themeData,
+                ListTileTheme.of(state.context));
 
             List<Widget> children;
             switch (item.controlAffinity) {
@@ -151,17 +139,14 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
 
             Widget groupItemWidget = Padding(
               padding: item.padding,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                    borderRadius: const BorderRadius.all(Radius.circular(4.0)),
-                    onTap: isReadOnly
-                        ? null
-                        : () {
-                            changeValue(i);
-                          },
-                    child: checkBoxRow),
-              ),
+              child: InkWell(
+                  borderRadius: const BorderRadius.all(Radius.circular(4.0)),
+                  onTap: isReadOnly
+                      ? null
+                      : () {
+                          changeValue(i);
+                        },
+                  child: checkBoxRow),
             );
 
             bool visible = item.visible;
@@ -186,22 +171,12 @@ class CheckboxGroupFormField extends BaseNonnullValueField<List<int>> {
             }
           }
 
-          widgets.add(Wrap(children: wrapWidgets));
-
-          if (state.hasError) {
-            Text text = Text(state.errorText!,
-                overflow: inline ? TextOverflow.ellipsis : null,
-                style: ThemeUtil.getErrorStyle(formThemeData));
-            widgets.add(Padding(
-              padding: errorTextPadding,
-              child: text,
-            ));
-          }
-
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: widgets,
+          return DecorationField(
+            child: Wrap(children: wrapWidgets),
+            focusNode: state.focusNode,
+            errorText: state.errorText,
+            readOnly: readOnly,
+            labelText: labelText,
           );
         });
 }

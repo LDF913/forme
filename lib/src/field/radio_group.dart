@@ -3,6 +3,7 @@ import '../form_field.dart';
 import '../form_theme.dart';
 import '../state_model.dart';
 import 'checkbox_group.dart';
+import 'decoration_field.dart';
 
 class RadioGroupItem<T> extends CheckboxGroupItem {
   final T value;
@@ -30,29 +31,23 @@ class RadioGroupItem<T> extends CheckboxGroupItem {
 class RadioGroupFormField<T> extends BaseValueField<T> {
   RadioGroupFormField({
     required List<RadioGroupItem<T>> items,
-    String? label,
+    String? labelText,
     ValueChanged<T?>? onChanged,
     FormFieldValidator? validator,
     AutovalidateMode? autovalidateMode,
     int split = 2,
     dynamic initialValue,
-    EdgeInsets? errorTextPadding,
     FormFieldSetter<T>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    EdgeInsets? labelPadding,
   }) : super(
           {
-            'label': StateValue<String?>(label),
+            'labelText': StateValue<String?>(labelText),
             'split': StateValue<int>(split),
             'items': StateValue<List<RadioGroupItem<T>>>(items),
-            'errorTextPadding':
-                StateValue<EdgeInsets>(errorTextPadding ?? EdgeInsets.all(8)),
-            'labelPadding': StateValue<EdgeInsets>(
-                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
           visible: visible,
           readOnly: readOnly,
@@ -67,31 +62,15 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
-            bool inline = state.inline;
-            String? label = inline ? null : stateMap['label'];
+            ThemeData themeData = state.themeData;
+            String? labelText = stateMap['labelText'];
             int split = stateMap['split'];
             List<RadioGroupItem<T>> items = stateMap['items'];
-            EdgeInsets errorTextPadding = stateMap['errorTextPadding'];
-            EdgeInsets labelPadding = stateMap['labelPadding'];
-
-            List<Widget> widgets = [];
-            if (label != null) {
-              Text text = Text(label,
-                  textAlign: TextAlign.left,
-                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
-              widgets.add(Padding(
-                padding: labelPadding,
-                child: text,
-              ));
-            }
 
             List<Widget> wrapWidgets = [];
 
             void changeValue(T value) {
-              if (value != state.value) {
-                state.didChange(value);
-              }
+              state.didChange(value);
             }
 
             for (int i = 0; i < items.length; i++) {
@@ -130,11 +109,17 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
                           changeValue(item.value);
                         });
 
-              Widget title = split == 0
-                  ? item.title
-                  : Flexible(
-                      child: item.title,
-                    );
+              final Widget title = ThemeUtil.wrapTitle(
+                  split == 0
+                      ? item.title
+                      : Flexible(
+                          child: item.title,
+                        ),
+                  true,
+                  !readOnly,
+                  item.value == state.value,
+                  themeData,
+                  ListTileTheme.of(state.context));
 
               List<Widget> children;
               switch (item.controlAffinity) {
@@ -185,22 +170,12 @@ class RadioGroupFormField<T> extends BaseValueField<T> {
               }
             }
 
-            widgets.add(Wrap(children: wrapWidgets));
-
-            if (state.hasError) {
-              Text text = Text(state.errorText!,
-                  overflow: inline ? TextOverflow.ellipsis : null,
-                  style: ThemeUtil.getErrorStyle(themeData));
-              widgets.add(Padding(
-                padding: errorTextPadding,
-                child: text,
-              ));
-            }
-
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: widgets,
+            return DecorationField(
+              child: Wrap(children: wrapWidgets),
+              focusNode: state.focusNode,
+              errorText: state.errorText,
+              readOnly: readOnly,
+              labelText: labelText,
             );
           },
         );

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../form_theme.dart';
 import '../state_model.dart';
 import '../form_field.dart';
+import 'decoration_field.dart';
 
-typedef SubLabelRender = Widget Function(num value);
+typedef SubLabelRender = String Function(num value);
 
 class SliderFormField extends BaseNonnullValueField<num> {
   SliderFormField({
@@ -16,25 +16,19 @@ class SliderFormField extends BaseNonnullValueField<num> {
     required double max,
     required double min,
     SubLabelRender? subLabelRender,
-    String? label,
-    EdgeInsets? contentPadding,
+    String? labelText,
     NonnullFormFieldSetter<num>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    EdgeInsets? labelPadding,
   }) : super(
           {
-            'label': StateValue<String?>(label),
+            'labelText': StateValue<String?>(labelText),
             'max': StateValue<double>(max),
             'min': StateValue<double>(min),
             'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
-            'contentPadding': StateValue<EdgeInsets>(
-                contentPadding ?? const EdgeInsets.symmetric(horizontal: 10)),
-            'labelPadding': StateValue<EdgeInsets>(
-                labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
           },
           visible: visible,
           readOnly: readOnly,
@@ -49,61 +43,29 @@ class SliderFormField extends BaseNonnullValueField<num> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
-            FocusNode focusNode = state.focusNode;
+            ThemeData themeData = state.themeData;
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
-            String? label = stateMap['label'];
-            EdgeInsets contentPadding = stateMap['contentPadding'];
-            EdgeInsets labelPadding = stateMap['labelPadding'];
-            bool inline = state.inline;
-
-            List<Widget> columns = [];
-            if (label != null) {
-              Text text = Text(label,
-                  textAlign: TextAlign.left,
-                  style: ThemeUtil.getLabelStyle(themeData, state.hasError));
-              columns.add(Padding(
-                padding: labelPadding,
-                child: text,
-              ));
-            }
-
-            List<Widget> contentColumns = [];
+            String? labelText = stateMap['labelText'];
 
             num value = state.value;
 
-            if (subLabelRender != null) {
-              contentColumns.add(Row(
-                children: [
-                  Expanded(
-                    flex: ((value - min) * 100 / (max - min)).round(),
-                    child: const SizedBox(),
-                  ),
-                  subLabelRender(value),
-                  Expanded(
-                    flex: ((max - value) * 100 / (max - min)).round(),
-                    child: const SizedBox(),
-                  ),
-                ],
-              ));
-            }
+            String? sliderLabel =
+                subLabelRender == null ? null : subLabelRender(value);
 
             Widget slider = SliderTheme(
               data: SliderTheme.of(state.context),
               child: Slider(
-                focusNode: focusNode,
+                focusNode: state.focusNode,
                 value: value.toDouble(),
                 min: min,
                 max: max,
+                label: sliderLabel,
                 divisions: divisions,
                 onChanged: readOnly
                     ? null
                     : (double value) {
-                        if (!focusNode.hasFocus) {
-                          focusNode.requestFocus();
-                        }
                         state.didChange(value);
                       },
                 activeColor: themeData.primaryColor,
@@ -111,27 +73,11 @@ class SliderFormField extends BaseNonnullValueField<num> {
               ),
             );
 
-            contentColumns.add(slider);
-
-            if (state.hasError) {
-              TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
-              Text error = Text(state.errorText!,
-                  overflow: overflow,
-                  style: ThemeUtil.getErrorStyle(themeData));
-              contentColumns.add(error);
-            }
-
-            columns.add(Padding(
-              padding: inline ? EdgeInsets.zero : contentPadding,
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: contentColumns),
-            ));
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: columns,
+            return DecorationField(
+              child: slider,
+              errorText: state.errorText,
+              readOnly: readOnly,
+              labelText: labelText,
             );
           },
         );
@@ -144,27 +90,21 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
     AutovalidateMode? autovalidateMode,
     required double max,
     required double min,
-    String? label,
+    String? labelText,
     int? divisions,
     RangeValues? initialValue,
     RangeSubLabelRender? rangeSubLabelRender,
-    EdgeInsets? contentPadding,
     NonnullFormFieldSetter<RangeValues>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    EdgeInsets? labelPadding,
   }) : super({
-          'label': StateValue<String?>(label),
+          'labelText': StateValue<String?>(labelText),
           'max': StateValue<double>(max),
           'min': StateValue<double>(min),
           'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
-          'contentPadding': StateValue<EdgeInsets>(
-              contentPadding ?? EdgeInsets.symmetric(horizontal: 20)),
-          'labelPadding': StateValue<EdgeInsets>(
-              labelPadding ?? const EdgeInsets.symmetric(vertical: 10))
         },
             visible: visible,
             readOnly: readOnly,
@@ -178,65 +118,19 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             autovalidateMode: autovalidateMode, builder: (state) {
           bool readOnly = state.readOnly;
           Map<String, dynamic> stateMap = state.currentMap;
-          ThemeData themeData = state.formThemeData;
+          ThemeData themeData = state.themeData;
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];
           double min = stateMap['min'];
-          String? label = stateMap['label'];
-          EdgeInsets contentPadding = stateMap['contentPadding'];
-          EdgeInsets labelPadding = stateMap['labelPadding'];
-          bool inline = state.inline;
-
-          List<Widget> columns = [];
-          if (label != null) {
-            Text text = Text(label,
-                textAlign: TextAlign.left,
-                style: ThemeUtil.getLabelStyle(themeData, state.hasError));
-            columns.add(Padding(
-              padding: labelPadding,
-              child: text,
-            ));
-          }
-
-          List<Widget> contentColumns = [];
+          String? labelText = stateMap['labelText'];
 
           RangeValues rangeValues = state.value;
+          RangeLabels? sliderLabels;
 
           if (rangeSubLabelRender != null) {
-            contentColumns.add(Stack(
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      flex: ((rangeValues.start - min) * 100 / (max - min))
-                          .round(),
-                      child: const SizedBox(),
-                    ),
-                    rangeSubLabelRender.startRender(rangeValues.start),
-                    Expanded(
-                      flex: ((max - rangeValues.start) * 100 / (max - min))
-                          .round(),
-                      child: const SizedBox(),
-                    ),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      flex:
-                          ((rangeValues.end - min) * 100 / (max - min)).round(),
-                      child: const SizedBox(),
-                    ),
-                    rangeSubLabelRender.startRender(rangeValues.end),
-                    Expanded(
-                      flex:
-                          ((max - rangeValues.end) * 100 / (max - min)).round(),
-                      child: const SizedBox(),
-                    ),
-                  ],
-                )
-              ],
-            ));
+            String start = rangeSubLabelRender.startRender(rangeValues.start);
+            String end = rangeSubLabelRender.endRender(rangeValues.end);
+            sliderLabels = RangeLabels(start, end);
           }
 
           Widget slider = SliderTheme(
@@ -246,6 +140,7 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
               min: min,
               max: max,
               divisions: divisions,
+              labels: sliderLabels,
               onChanged: readOnly
                   ? null
                   : (RangeValues values) {
@@ -256,28 +151,12 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             ),
           );
 
-          contentColumns.add(slider);
-
-          if (state.hasError) {
-            TextOverflow? overflow = inline ? TextOverflow.ellipsis : null;
-            Text error = Text(state.errorText!,
-                overflow: overflow, style: ThemeUtil.getErrorStyle(themeData));
-            contentColumns.add(error);
-          }
-
-          columns.add(Padding(
-            padding: contentPadding,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: contentColumns,
-            ),
-          ));
-
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: columns,
+          return DecorationField(
+            child: slider,
+            focusNode: state.focusNode,
+            errorText: state.errorText,
+            readOnly: readOnly,
+            labelText: labelText,
           );
         });
 }

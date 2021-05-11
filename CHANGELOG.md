@@ -1,3 +1,11 @@
+## 1.0.0-beta.4
+
+1. add FormLayoutManagement (experimental)
+2. FormBuilder.textButton => FormBuilder.button
+3. remove form theme ,use current theme instead
+4. support onChanged on FormBuilder,used to listen field's value change
+5. bug fix
+
 ## 1.0.0-beta.3
 
 1. remove FormRowManagement
