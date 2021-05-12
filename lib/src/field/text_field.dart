@@ -40,6 +40,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
+    TextCapitalization? textCapitalization,
   }) : super(
           {
             'labelText': StateValue<String?>(labelText),
@@ -59,6 +60,8 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             'textInputAction': StateValue<TextInputAction?>(textInputAction),
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
+            'textCapitalization':
+                StateValue<TextCapitalization?>(textCapitalization),
           },
           name: name,
           flex: flex,
@@ -74,7 +77,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             bool readOnly = baseState.readOnly;
             _TextFormFieldState state = baseState as _TextFormFieldState;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.themeData;
+            ThemeData themeData = Theme.of(state.context);
             FocusNode? focusNode = baseState.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
@@ -93,6 +96,8 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
                     themeData.inputDecorationTheme;
+            TextCapitalization textCapitalization =
+                stateMap['textCapitalization'] ?? TextCapitalization.none;
 
             List<Widget> suffixes = [];
             if (clearable && !readOnly && state.value.length > 0) {
@@ -157,6 +162,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
               enabled: true,
               readOnly: readOnly,
               inputFormatters: inputFormatters,
+              textCapitalization: textCapitalization,
             );
 
             return textField;
@@ -249,13 +255,15 @@ class _TextFormFieldState extends BaseNonnullValueFieldState<String>
   }
 }
 
+enum DateTimeType { Date, DateTime }
+
 class DateTimeFormField extends BaseValueField<DateTime> {
   DateTimeFormField({
     String? labelText,
     String? hintText,
     TextStyle? style,
     DateTimeFormatter? formatter,
-    bool useTime = false,
+    DateTimeType type = DateTimeType.Date,
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
@@ -275,7 +283,7 @@ class DateTimeFormField extends BaseValueField<DateTime> {
             'labelText': StateValue<String?>(labelText),
             'hintText': StateValue<String?>(hintText),
             'maxLines': StateValue<int>(maxLines ?? 1),
-            'useTime': StateValue<bool>(useTime),
+            'type': StateValue<DateTimeType>(type),
             'formatter': StateValue<DateTimeFormatter?>(formatter),
             'style': StateValue<TextStyle?>(style),
             'firstDate': StateValue<DateTime>(firstDate ?? DateTime(2000)),
@@ -295,12 +303,11 @@ class DateTimeFormField extends BaseValueField<DateTime> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.themeData;
+            ThemeData themeData = Theme.of(state.context);
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
             TextStyle? style = stateMap['style'];
-            bool useTime = stateMap['useTime'];
             int maxLines = stateMap['maxLines'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
@@ -309,6 +316,7 @@ class DateTimeFormField extends BaseValueField<DateTime> {
                 (state as _DateTimeFormFieldState).textEditingController;
             DateTime firstDate = stateMap['firstDate'];
             DateTime lastDate = stateMap['lastDate'];
+            DateTimeType type = stateMap['type'];
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
@@ -323,7 +331,7 @@ class DateTimeFormField extends BaseValueField<DateTime> {
                       lastDate: lastDate)
                   .then((date) {
                 if (date != null) {
-                  if (useTime)
+                  if (type == DateTimeType.DateTime)
                     showTimePicker(
                       context: state.context,
                       initialTime: timeOfDay ??
@@ -403,7 +411,7 @@ typedef DateTimeFormatter = String Function(DateTime dateTime);
 
 class _DateTimeFormFieldState extends BaseValueFieldState<DateTime> {
   DateTimeFormatter get _formatter =>
-      getState('formatter') ?? getState('useTime')
+      getState('formatter') ?? getState('type') == DateTimeType.DateTime
           ? DateTimeFormField.defaultDateTimeFormatter
           : DateTimeFormField.defaultDateFormatter;
 
@@ -507,7 +515,7 @@ class NumberFormField extends BaseValueField<num> {
             bool autofocus = stateMap['autofocus'];
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
-                    state.themeData.inputDecorationTheme;
+                    Theme.of(state.context).inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
 

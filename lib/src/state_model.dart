@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'form_builder_utils.dart';
 import 'form_layout.dart';
@@ -54,6 +54,12 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
         : _initStateMap[stateKey]!.value;
   }
 
+  ///get init state value
+  T? getInitState<T>(String key) {
+    _enableKeyExists(key);
+    return _initStateMap[key]!.value;
+  }
+
   Map<String, dynamic> get currentMap {
     Map<String, dynamic> map = {};
     _initStateMap.forEach((key, value) {
@@ -65,15 +71,24 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   @override
   void update(Map<String, dynamic> state) {
     checkState(state);
-    List<String> keys = [];
+    Map<String, dynamic> changeMap = {};
     state.forEach((key, value) {
       dynamic currentValue = _state[key];
       if (!compare(key, value, currentValue)) {
         _state[key] = value;
-        keys.add(key);
+        changeMap[key] = currentValue;
       }
     });
-    doNotifyListeners(keys);
+    if (changeMap.isEmpty) return;
+    try {
+      changeMap.forEach((key, value) {
+        afterStateValueChanged(key, value, _state[key]);
+      });
+      beforeNotifyListeners(changeMap.keys);
+    } finally {
+      _gen++;
+      notifyListeners();
+    }
   }
 
   void update1(String key, dynamic value) {
@@ -128,24 +143,19 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
     super.dispose();
   }
 
-  @protected
-  void doNotifyListeners(Iterable<String> keys) {
-    if (keys.isEmpty) return;
-    try {
-      beforeNotifyListeners(keys);
-    } finally {
-      _gen++;
-      notifyListeners();
-    }
-  }
-
-  /// you can do something logic that before notify listeners
+  /// you can do something logic that before notify listeners,in this step,the value in state has been changed !
   ///
   /// **notifyListeners will be always executed even though errors threw by beforeNotifyListeners**
   ///
   /// [keys] updated|removed keys
   @protected
   void beforeNotifyListeners(Iterable<String> keys) {}
+
+  /// used to listen state value changed
+  ///
+  /// this method will called before [beforeNotifyListeners]
+  @protected
+  void afterStateValueChanged(String key, old, current) {}
 
   /// used to compare state value
   ///

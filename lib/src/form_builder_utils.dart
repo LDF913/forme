@@ -1,11 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'field/checkbox_group.dart';
 import 'field/filter_chip.dart';
-import 'field/radio_group.dart';
+import 'field/list_tile.dart';
 import 'field/selector.dart';
-import 'field/switch_group.dart';
 
 class FormBuilderUtils {
   FormBuilderUtils._();
@@ -14,13 +12,6 @@ class FormBuilderUtils {
     if (a is Set && b is Set) return setEquals(a, b);
     if (a is Map && b is Map) return mapEquals(a, b);
     return a == b;
-  }
-
-  static List<CheckboxGroupItem> toCheckboxGroupItems(List<String> items,
-      {EdgeInsets? padding}) {
-    return items
-        .map((e) => CheckboxGroupItem(label: e, padding: padding))
-        .toList();
   }
 
   static List<FilterChipItem<String>> toFilterChipItems(List<String> items,
@@ -37,13 +28,6 @@ class FormBuilderUtils {
         .toList();
   }
 
-  static List<RadioGroupItem<String>> toRadioGroupItems(List<String> items,
-      {EdgeInsets? padding}) {
-    return items
-        .map((e) => RadioGroupItem(label: e, value: e, padding: padding))
-        .toList();
-  }
-
   static SelectItemProvider toSelectItemProvider<T>(List<T> items) {
     return (page, params) {
       return Future.delayed(Duration.zero, () {
@@ -52,10 +36,19 @@ class FormBuilderUtils {
     };
   }
 
-  static List<SwitchGroupItem> toSwitchGroupItems(List<String> items,
-      {EdgeInsets? padding, TextStyle? style}) {
+  static List<ListTileItem<String>> toListTileItems(
+    List<String> items, {
+    EdgeInsets? padding,
+    TextStyle? style,
+    ListTileControlAffinity? controlAffinity,
+  }) {
     return items
-        .map((e) => SwitchGroupItem(e, padding: padding, textStyle: style))
+        .map((e) => ListTileItem<String>(
+              title: Text(e, style: style),
+              padding: padding,
+              data: e,
+              controlAffinity: controlAffinity,
+            ))
         .toList();
   }
 }

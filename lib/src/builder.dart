@@ -1,23 +1,13 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'field/button.dart';
-import 'field/filter_chip.dart';
+import 'package:flutter/widgets.dart';
 import 'focus_node.dart';
 import 'form_builder_utils.dart';
 import 'form_field.dart';
-import 'field/selector.dart';
-import 'field/switch_group.dart';
-import 'field/checkbox_group.dart';
 import 'form_layout.dart';
-import 'field/text_field.dart';
-import 'field/radio_group.dart';
-import 'field/slider.dart';
 import 'state_model.dart';
 import 'text_selection.dart';
 
 typedef FormValueChanged = void Function(String name, dynamic newValue);
-typedef FieldBuilder = Widget Function(BuilderInfo info, BuildContext context);
 
 class FormBuilder extends StatefulWidget {
   final FormManagement formManagement;
@@ -67,9 +57,9 @@ class FormBuilder extends StatefulWidget {
 
   FormLayout get _formLayout => _initStateMap['formLayout']!.value;
 
-  FormRow get _lastRow => _formLayout.lastRow();
-
-  /// create a new Row
+  /// require a new Row
+  ///
+  /// if last row is empty won't create a new row
   FormBuilder newRow() {
     _formLayout.lastEmptyRow();
     return this;
@@ -84,7 +74,7 @@ class FormBuilder extends StatefulWidget {
     VerticalDirection? verticalDirection,
     TextBaseline? textBaseline,
   }) {
-    _lastRow.customize(
+    _formLayout.customize(
         mainAxisAlignment: mainAxisAlignment,
         mainAxisSize: mainAxisSize,
         crossAxisAlignment: crossAxisAlignment,
@@ -94,530 +84,47 @@ class FormBuilder extends StatefulWidget {
     return this;
   }
 
-  /// append a number field to current row
-  FormBuilder numberField(
-      {String? name,
-      int flex = 1,
-      String? hintText,
-      String? labelText,
-      EdgeInsets? padding,
-      VoidCallback? onTap,
-      Widget? prefixIcon,
-      ValueChanged<num?>? onChanged,
-      FormFieldValidator<num>? validator,
-      AutovalidateMode? autovalidateMode,
-      double? max,
-      bool clearable = true,
-      bool readOnly = false,
-      bool visible = true,
-      int decimal = 0,
-      TextStyle? style,
-      num? initialValue,
-      List<Widget>? suffixIcons,
-      VoidCallback? onEditingComplete,
-      TextInputAction? textInputAction,
-      InputDecorationTheme? inputDecorationTheme,
-      bool autofocus = false,
-      bool allowNegative = false,
-      FormFieldSetter<num>? onSaved}) {
-    assert(flex != 0, 'numberfield flex can not be zero!');
-    _lastRow.append(NumberFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        autofocus: autofocus,
-        onChanged: onChanged,
-        decimal: decimal,
-        max: max,
-        hintText: hintText,
-        labelText: labelText,
-        validator: validator,
-        autovalidateMode: autovalidateMode,
-        clearable: clearable,
-        prefixIcon: prefixIcon,
-        style: style,
-        initialValue: initialValue,
-        suffixIcons: suffixIcons,
-        onEditingComplete: onEditingComplete,
-        textInputAction: textInputAction,
-        inputDecorationTheme: inputDecorationTheme,
-        allowNegative: allowNegative,
-        onSaved: onSaved));
+  /// ```
+  /// Row
+  ///   fields ... field
+  /// ```
+  FormBuilder append(Widget field) {
+    _formLayout.lastRow().append(field);
     return this;
   }
 
-  /// add a textfield to current row
-  FormBuilder textField({
-    String? name,
-    String? hintText,
-    String? labelText,
-    VoidCallback? onTap,
-    bool obscureText = false,
-    int flex = 1,
-    int? maxLines = 1,
-    Widget? prefixIcon,
-    TextInputType? keyboardType,
-    int? maxLength,
-    ValueChanged<String>? onChanged,
-    NonnullFieldValidator<String>? validator,
-    AutovalidateMode? autovalidateMode,
-    bool clearable = true,
-    bool passwordVisible = false,
-    bool readOnly = false,
-    bool visible = true,
-    List<TextInputFormatter>? inputFormatters,
-    EdgeInsets? padding,
-    TextStyle? style,
-    String? initialValue,
-    ToolbarOptions? toolbarOptions,
-    bool? selectAllOnFocus,
-    List<Widget>? suffixIcons,
-    VoidCallback? onEditingComplete,
-    TextInputAction? textInputAction,
-    InputDecorationTheme? inputDecorationTheme,
-    bool autofocus = false,
-    NonnullFormFieldSetter<String>? onSaved,
-  }) {
-    assert(flex != 0, 'textfield flex can not be zero!');
-    _lastRow.append(ClearableTextFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        autofocus: autofocus,
-        hintText: hintText,
-        labelText: labelText,
-        maxLength: maxLength,
-        maxLines: maxLines,
-        obscureText: obscureText,
-        onTap: onTap,
-        keyboardType: keyboardType,
-        validator: validator,
-        autovalidateMode: autovalidateMode,
-        clearable: clearable,
-        prefixIcon: prefixIcon,
-        passwordVisible: passwordVisible,
-        onChanged: onChanged,
-        inputFormatters: inputFormatters,
-        style: style,
-        initialValue: initialValue,
-        toolbarOptions: toolbarOptions,
-        selectAllOnFocus: selectAllOnFocus ?? false,
-        suffixIcons: suffixIcons,
-        textInputAction: textInputAction,
-        inputDecorationTheme: inputDecorationTheme,
-        onSaved: onSaved));
-    return this;
+  /// append a fieldBuilder to last  row
+  FormBuilder appendBuilder(FieldBuilder builder) {
+    return append(_builderField(builder));
   }
 
-  /// add a radio group
+  /// append a field take up one row
   ///
-  /// if inline is false,it will be added to current row
-  /// otherwise it will be placed in a new row
-  FormBuilder radioGroup<T>({
-    required List<RadioGroupItem<T>> items,
-    String? name,
-    String? labelText,
-    ValueChanged<T?>? onChanged,
-    bool readOnly = false,
-    bool visible = true,
-    FormFieldValidator? validator,
-    AutovalidateMode? autovalidateMode,
-    int split = 2,
-    EdgeInsets? padding,
-    dynamic? initialValue,
-    bool inline = false,
-    int flex = 1,
-    FormFieldSetter<T>? onSaved,
-  }) {
-    assert(flex != 0, 'radio group flex can not be zero!');
-    _lastRow.append(
-      RadioGroupFormField<T>(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        labelText: labelText,
-        items: List.of(items),
-        validator: validator,
-        autovalidateMode: autovalidateMode,
-        onChanged: onChanged,
-        split: split,
-        initialValue: initialValue,
-        onSaved: onSaved,
-      ),
-    );
+  /// ```
+  /// Row(lastEmptyRow)
+  ///   field
+  /// Row newRow
+  /// ```
+  ///
+  /// no need to call newRow before or after
+  /// this method,they will be automatic created
+  FormBuilder oneRowField(Widget field) {
+    _formLayout.lastEmptyRow().append(field);
+    _formLayout.append();
     return this;
   }
 
-  FormBuilder checkboxGroup({
-    required List<CheckboxGroupItem> items,
-    String? name,
-    String? labelText,
-    ValueChanged<List<int>>? onChanged,
-    NonnullFieldValidator<List<int>>? validator,
-    AutovalidateMode? autovalidateMode,
-    bool readOnly = false,
-    bool visible = true,
-    int split = 2,
-    int flex = 1,
-    EdgeInsets? padding,
-    List<int>? initialValue,
-    bool inline = false,
-    NonnullFormFieldSetter<List<int>>? onSaved,
-  }) {
-    assert(flex != 0, 'checkbox group flex can not be zero!');
-    _lastRow.append(
-      CheckboxGroupFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        items: List.of(items),
-        labelText: labelText,
-        validator: validator,
-        onChanged: onChanged,
-        autovalidateMode: autovalidateMode,
-        split: split,
-        initialValue: initialValue,
-        onSaved: onSaved,
-      ),
-    );
-    return this;
+  FormBuilder oneRowBuilder(FieldBuilder builder) {
+    return oneRowField(_builderField(builder));
   }
 
-  FormBuilder button(
-      {String? name,
-      required WidgetBuilder childBuilder,
-      int flex = 0,
-      required VoidCallback onPressed,
-      VoidCallback? onLongPress,
-      bool readOnly = false,
-      bool visible = true,
-      EdgeInsets? padding,
-      Icon? icon,
-      ButtonType type = ButtonType.Text}) {
-    _lastRow.append(Button(
-        childBuilder: childBuilder,
-        onPressed: onPressed,
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        icon: icon,
-        type: type));
-    return this;
-  }
-
-  FormBuilder datetimeField({
-    String? name,
-    String? labelText,
-    String? hintText,
-    bool readOnly = false,
-    bool visible = true,
-    int flex = 1,
-    DateTimeFormatter? formatter,
-    FormFieldValidator<DateTime>? validator,
-    bool useTime = true,
-    EdgeInsets? padding,
-    TextStyle? style,
-    int? maxLines,
-    ValueChanged<DateTime?>? onChanged,
-    DateTime? initialValue,
-    InputDecorationTheme? inputDecorationTheme,
-    FormFieldSetter<DateTime>? onSaved,
-    DateTime? firstDate,
-    DateTime? lastDate,
-  }) {
-    assert(flex != 0, 'datetimefield flex can not be zero!');
-    _lastRow.append(
-      DateTimeFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        hintText: hintText,
-        labelText: labelText,
-        formatter: formatter,
-        validator: validator,
-        useTime: useTime,
-        style: style,
-        maxLines: maxLines,
-        initialValue: initialValue,
-        inputDecorationTheme: inputDecorationTheme,
-        onChanged: onChanged,
-        onSaved: onSaved,
-        firstDate: firstDate,
-        lastDate: lastDate,
-      ),
-    );
-    return this;
-  }
-
-  FormBuilder selector<T>({
-    String? name,
-    String? labelText,
-    String? hintText,
-    bool readOnly = false,
-    bool visible = true,
-    bool clearable = true,
-    NonnullFieldValidator<List<T>>? validator,
-    AutovalidateMode? autovalidateMode,
-    EdgeInsets? padding,
-    bool multi = false,
-    ValueChanged<List<T>>? onChanged,
-    List<T>? initialValue,
-    SelectItemRender<T>? selectItemRender,
-    SelectedItemRender<T>? selectedItemRender,
-    SelectedSorter<T>? selectedSorter,
-    SelectItemProvider<T>? selectItemProvider,
-    SelectedItemLayoutType selectedItemLayoutType = SelectedItemLayoutType.wrap,
-    QueryFormBuilder? queryFormBuilder,
-    OnSelectDialogShow? onSelectDialogShow,
-    VoidCallback? onTap,
-    InputDecorationTheme? inputDecorationTheme,
-    bool inline = false,
-    int flex = 1,
-    NonnullFormFieldSetter<List<T>>? onSaved,
-  }) {
-    assert(flex != 0, 'selector flex can not be zero!');
-    _lastRow.append(
-      SelectorFormField<T>(
-        selectItemProvider,
-        onChanged: onChanged,
-        labelText: labelText,
-        hintText: hintText,
-        clearable: clearable,
-        validator: validator,
-        autovalidateMode: autovalidateMode,
-        multi: multi,
-        initialValue: initialValue,
-        selectItemRender: selectItemRender,
-        selectedItemRender: selectedItemRender,
-        selectedSorter: selectedSorter,
-        onTap: onTap,
-        selectedItemLayoutType: selectedItemLayoutType,
-        queryFormBuilder: queryFormBuilder,
-        onSelectDialogShow: onSelectDialogShow,
-        inputDecorationTheme: inputDecorationTheme,
-        onSaved: onSaved,
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-      ),
-    );
-    return this;
-  }
-
-  FormBuilder switchGroup({
-    String? name,
-    String? labelText,
-    bool readOnly = false,
-    bool visible = true,
-    EdgeInsets? padding,
-    required List<SwitchGroupItem> items,
-    bool hasSelectAllSwitch = true,
-    ValueChanged<List<int>>? onChanged,
-    NonnullFieldValidator<List<int>>? validator,
-    AutovalidateMode? autovalidateMode,
-    List<int>? initialValue,
-    EdgeInsets? selectAllPadding,
-    bool inline = false,
-    int flex = 1,
-    NonnullFormFieldSetter<List<int>>? onSaved,
-  }) {
-    _lastRow.append(
-      SwitchGroupFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        labelText: labelText,
-        items: items,
-        hasSelectAllSwitch: hasSelectAllSwitch,
-        validator: validator,
-        autovalidateMode: autovalidateMode,
-        initialValue: initialValue,
-        onChanged: onChanged,
-        onSaved: onSaved,
-      ),
-    );
-    return this;
-  }
-
-  FormBuilder switchInline({
-    String? name,
-    bool readOnly = false,
-    bool visible = true,
-    EdgeInsets? padding,
-    int flex = 0,
-    ValueChanged<bool>? onChanged,
-    NonnullFieldValidator<bool>? validator,
-    AutovalidateMode? autovalidateMode,
-    bool initialValue = false,
-    NonnullFormFieldSetter<bool>? onSaved,
-  }) {
-    _lastRow.append(
-      SwitchInlineFormField(
-          visible: visible,
-          readOnly: readOnly,
-          flex: flex,
-          padding: padding,
-          name: name,
-          validator: validator,
-          autovalidateMode: autovalidateMode,
-          onChanged: onChanged,
-          initialValue: initialValue,
-          onSaved: onSaved),
-    );
-    return this;
-  }
-
-  FormBuilder slider({
-    String? name,
-    bool readOnly = false,
-    bool visible = true,
-    EdgeInsets? padding,
-    ValueChanged<num>? onChanged,
-    NonnullFieldValidator<num>? validator,
-    AutovalidateMode? autovalidateMode,
-    double? initialValue,
-    required double min,
-    required double max,
-    int? divisions,
-    String? labelText,
-    SubLabelRender? subLabelRender,
-    int flex = 1,
-    NonnullFormFieldSetter<num>? onSaved,
-    EdgeInsets? labelPadding,
-  }) {
-    assert(flex != 0, 'textfield flex can not be zero!');
-    _lastRow.append(
-      SliderFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        autovalidateMode: autovalidateMode,
-        onChanged: onChanged,
-        validator: validator,
-        min: min,
-        max: max,
-        labelText: labelText,
-        divisions: divisions,
-        initialValue: initialValue ?? min,
-        subLabelRender: subLabelRender,
-        onSaved: onSaved,
-      ),
-    );
-    return this;
-  }
-
-  FormBuilder rangeSlider({
-    String? name,
-    bool readOnly = false,
-    bool visible = true,
-    EdgeInsets? padding,
-    ValueChanged<RangeValues>? onChanged,
-    NonnullFieldValidator<RangeValues>? validator,
-    AutovalidateMode? autovalidateMode,
-    RangeValues? initialValue,
-    required double min,
-    required double max,
-    int? divisions,
-    RangeSubLabelRender? rangeSubLabelRender,
-    NonnullFormFieldSetter<RangeValues>? onSaved,
-    int flex = 1,
-    String? labelText,
-  }) {
-    assert(flex != 0, 'rangeSlider flex can not be zero!');
-    _lastRow.append(
-      RangeSliderFormField(
-        visible: visible,
-        readOnly: readOnly,
-        flex: flex,
-        padding: padding,
-        name: name,
-        autovalidateMode: autovalidateMode,
-        onChanged: onChanged,
-        validator: validator,
-        min: min,
-        max: max,
-        labelText: labelText,
-        divisions: divisions,
-        initialValue: initialValue ?? RangeValues(min, max),
-        rangeSubLabelRender: rangeSubLabelRender,
-        onSaved: onSaved,
-      ),
-    );
-    return this;
-  }
-
-  FormBuilder filterChip<T>({
-    required List<FilterChipItem<T>> items,
-    List<T>? initialValue,
-    AutovalidateMode? autovalidateMode,
-    NonnullFieldValidator<List<T>>? validator,
-    ValueChanged<List<T>>? onChanged,
-    double? pressElevation,
-    String? name,
-    bool visible = true,
-    bool readOnly = false,
-    EdgeInsets? padding,
-    NonnullFormFieldSetter<List<T>>? onSaved,
-    int flex = 1,
-    int? count,
-    VoidCallback? exceedCallback,
-    ChipLayoutType layoutType = ChipLayoutType.wrap,
-    String? labelText,
-  }) {
-    _lastRow.append(FilterChipFormField(
-      count: count,
-      exceedCallback: exceedCallback,
-      labelText: labelText,
-      visible: visible,
-      readOnly: readOnly,
-      flex: flex,
-      padding: padding,
-      name: name,
-      items: items,
-      initialValue: initialValue,
-      autovalidateMode: autovalidateMode,
-      validator: validator,
-      onChanged: onChanged,
-      pressElevation: pressElevation,
-      onSaved: onSaved,
-      layoutType: layoutType,
-    ));
-    return this;
-  }
-
-  FormBuilder field({
-    required Widget field,
-  }) {
-    _lastRow.append(field);
-    return this;
-  }
-
-  FormBuilder builder(FieldBuilder builder) {
-    _lastRow.append(Builder(
+  Widget _builderField(FieldBuilder builder) {
+    return Builder(
       builder: (context) {
         BuilderInfo info = BuilderInfo.of(context);
         return builder(info, context);
       },
-    ));
-    return this;
+    );
   }
 
   @override
@@ -643,6 +150,7 @@ class _FormData extends InheritedWidget {
 class _FormModel extends BaseStateModel {
   final bool enableLayoutManagement;
   final FormValueChanged? onChanged;
+  FormLayout? originalFormLayout;
   _FormModel(Map<String, StateValue> value, this.enableLayoutManagement,
       this.onChanged)
       : super(value);
@@ -655,6 +163,13 @@ class _FormModel extends BaseStateModel {
 
   bool get readOnly => getState('readOnly');
   set readOnly(bool readOnly) => update1('readOnly', readOnly);
+
+  @override
+  void afterStateValueChanged(String key, dynamic old, dynamic current) {
+    if (key == 'formLayout' && old == null) {
+      originalFormLayout = getInitState(key);
+    }
+  }
 }
 
 class _FormBuilderState extends State<FormBuilder> {
@@ -679,6 +194,7 @@ class _FormBuilderState extends State<FormBuilder> {
     model.didUpdateModel(oldWidget._initStateMap, widget._initStateMap);
     if (oldWidget.enableLayoutManagement != widget.enableLayoutManagement)
       throw 'enableLayoutManagement should not be changed at runtime !';
+    migrateLayout();
   }
 
   @override
@@ -739,6 +255,64 @@ class _FormBuilderState extends State<FormBuilder> {
           ),
         ));
   }
+
+  void migrateLayout() {
+    if (model.originalFormLayout == null) return;
+    //form layout has been changed by formlayoutmanagement
+    FormLayout currentLayout = widget._formLayout;
+    FormLayout originalLayout = model.originalFormLayout!;
+    if (currentLayout.rowCount != originalLayout.rowCount)
+      throwWhenLayoutChanged();
+    for (int i = 0; i < originalLayout.rowCount; i++) {
+      FormRow originalRow = originalLayout.rows[i];
+      FormRow currentRow = currentLayout.rows[i];
+      if (originalRow.index != currentRow.index) throwWhenLayoutChanged();
+      if (originalRow.columnCount != currentRow.columnCount)
+        throwWhenLayoutChanged();
+
+      for (int j = 0; j < originalRow.columnCount; j++) {
+        IndexWidget originalColumn = originalRow.columns[j];
+        IndexWidget currentColumn = currentRow.columns[j];
+
+        if (originalColumn.index != currentColumn.index ||
+            originalColumn.widget.runtimeType !=
+                currentColumn.widget.runtimeType) throwWhenLayoutChanged();
+      }
+    }
+    FormLayout stateLayout = model.formLayout;
+    //start migrate
+    currentLayout.rows.forEach((element) {
+      Iterable<FormRow> stateRowIt = stateLayout.rows
+          .where((stateRowElement) => stateRowElement.index == element.index);
+      if (stateRowIt.isEmpty) return;
+      FormRow stateRow = stateRowIt.first;
+      stateRow.customize(
+          mainAxisAlignment: element.mainAxisAlignment,
+          mainAxisSize: element.mainAxisSize,
+          crossAxisAlignment: element.crossAxisAlignment,
+          textBaseline: element.textBaseline,
+          textDirection: element.textDirection,
+          verticalDirection: element.verticalDirection);
+
+      element.columns.forEach((element) {
+        Iterable<IndexWidget> stateIndexWidgetIt = stateRow.columns.where(
+            (stateColumnElement) => stateColumnElement.index == element.index);
+        if (stateIndexWidgetIt.isEmpty) return;
+        stateIndexWidgetIt.first.widget = element.widget;
+      });
+    });
+
+    stateLayout.customize(
+        mainAxisAlignment: currentLayout.mainAxisAlignment,
+        mainAxisSize: currentLayout.mainAxisSize,
+        crossAxisAlignment: currentLayout.crossAxisAlignment,
+        textBaseline: currentLayout.textBaseline,
+        textDirection: currentLayout.textDirection,
+        verticalDirection: currentLayout.verticalDirection);
+  }
+
+  void throwWhenLayoutChanged() =>
+      throw 'since form layout has been changed by FormLayoutManagement , you can\'t change form layout via ide or setState out of FormBuilder';
 }
 
 class _FormBuilderField extends StatefulWidget {
@@ -1185,6 +759,10 @@ class ValueFieldManagement {
 ///
 /// **you should use it when you  really need modify form layout at runtime**
 ///
+/// **when you start edit layout,even though you did nothing before  apply is called,
+/// form layout will be stored in FormModel,it means hotreload will not worked  when you change layout via ide
+/// or setState, so let form builder manage state  by itself rather than manage state out of formbuilder**
+///
 /// **@experimental**
 class FormLayoutManagement {
   final _ResourceManagement _resourceManagement;
@@ -1366,8 +944,6 @@ mixin AbstractFieldState<T extends StatefulWidget> on State<T> {
   Position get position => fieldInfo.position;
 
   bool get init => _init;
-
-  ThemeData get themeData => Theme.of(context);
 
   TextSelectionManagement? _textSelectionManagement;
 

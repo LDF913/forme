@@ -69,7 +69,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.themeData;
+            ThemeData themeData = Theme.of(state.context);
             List<FilterChipItem<T>> items = stateMap['items'];
             String? labelText = stateMap['labelText'];
             double? pressElevation = stateMap['pressElevation'];

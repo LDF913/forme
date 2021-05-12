@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// used to wrap form field which not support inputdecoration
 class DecorationField extends StatelessWidget {
   final String? labelText;
   final Widget child;
@@ -57,10 +58,12 @@ class DecorationField extends StatelessWidget {
             overflow: TextOverflow.ellipsis, style: _getErrorStyle(themeData)));
       }
 
-      return Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: rows);
+      return Container(
+        child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: rows),
+      );
     });
 
     return Focus(

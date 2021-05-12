@@ -43,7 +43,7 @@ class SliderFormField extends BaseNonnullValueField<num> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.themeData;
+            ThemeData themeData = Theme.of(state.context);
             int divisions = stateMap['divisions'];
             double max = stateMap['max'];
             double min = stateMap['min'];
@@ -74,7 +74,10 @@ class SliderFormField extends BaseNonnullValueField<num> {
             );
 
             return DecorationField(
-              child: slider,
+              child: Padding(
+                child: slider,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+              ),
               errorText: state.errorText,
               readOnly: readOnly,
               labelText: labelText,
@@ -118,7 +121,7 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             autovalidateMode: autovalidateMode, builder: (state) {
           bool readOnly = state.readOnly;
           Map<String, dynamic> stateMap = state.currentMap;
-          ThemeData themeData = state.themeData;
+          ThemeData themeData = Theme.of(state.context);
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];
           double min = stateMap['min'];
@@ -152,7 +155,10 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
           );
 
           return DecorationField(
-            child: slider,
+            child: Padding(
+              child: slider,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+            ),
             focusNode: state.focusNode,
             errorText: state.errorText,
             readOnly: readOnly,

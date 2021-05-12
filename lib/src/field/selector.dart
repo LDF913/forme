@@ -60,8 +60,8 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
             )));
   }
 
-  SelectorFormField(
-    this.selectItemProvider, {
+  SelectorFormField({
+    required this.selectItemProvider,
     ValueChanged<List<T>>? onChanged,
     bool clearable = true,
     String? labelText,
@@ -107,7 +107,7 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.themeData;
+            ThemeData themeData = Theme.of(state.context);
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];

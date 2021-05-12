@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 class FormLayout {
   MainAxisAlignment mainAxisAlignment;
@@ -8,6 +8,8 @@ class FormLayout {
   VerticalDirection verticalDirection;
   TextBaseline? textBaseline;
   List<FormRow> rows = [];
+
+  ///used as widget's key
   _Index _index = _Index();
 
   int get rowCount => rows.length;
@@ -24,7 +26,7 @@ class FormLayout {
         this.crossAxisAlignment =
             crossAxisAlignment ?? CrossAxisAlignment.center,
         this.verticalDirection = verticalDirection ?? VerticalDirection.down {
-    rows.add(FormRow(_index));
+    rows.add(FormRow(_index, _index.index));
   }
 
   customize({
@@ -42,7 +44,7 @@ class FormLayout {
   }
 
   FormRow append() {
-    FormRow row = FormRow(_index);
+    FormRow row = FormRow(_index, _index.index);
     rows.add(row);
     return row;
   }
@@ -50,7 +52,7 @@ class FormLayout {
   FormRow insert(int index) {
     if (index < 0 || index >= rows.length)
       throw 'index out of range,range is 0,${rows.length - 1}';
-    FormRow row = FormRow(_index);
+    FormRow row = FormRow(_index, _index.index);
     rows.insert(index, row);
     return row;
   }
@@ -96,10 +98,13 @@ class FormRow {
   TextBaseline? textBaseline;
   List<IndexWidget> columns = [];
   _Index _index;
+  int _gen;
 
   int get columnCount => columns.length;
 
-  FormRow(this._index)
+  int get index => _gen;
+
+  FormRow(this._index, this._gen)
       : this.mainAxisAlignment = MainAxisAlignment.start,
         this.mainAxisSize = MainAxisSize.max,
         this.crossAxisAlignment = CrossAxisAlignment.center,
@@ -144,7 +149,7 @@ class FormRow {
   }
 
   FormRow copy() {
-    FormRow row = FormRow(_index);
+    FormRow row = FormRow(_index, _gen);
     row.customize(
         mainAxisAlignment: mainAxisAlignment,
         mainAxisSize: mainAxisSize,
@@ -158,7 +163,7 @@ class FormRow {
 }
 
 class IndexWidget {
-  final Widget widget;
+  Widget widget;
   final int index;
   IndexWidget._(this.widget, this.index);
 }

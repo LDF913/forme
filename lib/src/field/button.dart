@@ -5,10 +5,10 @@ import '../state_model.dart';
 
 enum ButtonType { Text, Elevated, Outlined }
 
-class Button extends BaseCommonField {
-  Button(
+class ButtonFormField extends BaseCommonField {
+  ButtonFormField(
       {String? name,
-      required WidgetBuilder childBuilder,
+      required Widget child,
       int flex = 0,
       required VoidCallback onPressed,
       VoidCallback? onLongPress,
@@ -20,11 +20,11 @@ class Button extends BaseCommonField {
       ButtonType type = ButtonType.Text,
       Icon? icon})
       : super({
-          'gen': StateValue<int>(0),
           'style': StateValue<ButtonStyle?>(style),
           'autofocus': StateValue<bool>(autofocus),
           'type': StateValue<ButtonType>(type),
           'icon': StateValue<Icon?>(icon),
+          'child': StateValue<Widget>(child),
         },
             name: name,
             padding: padding,
@@ -33,21 +33,14 @@ class Button extends BaseCommonField {
             flex: flex, builder: (state) {
           Map<String, dynamic> stateMap = state.currentMap;
 
-          VoidCallback? wrap(VoidCallback? click) {
-            if (click == null) return null;
-            return () {
-              click();
-              int gen = stateMap['gen'];
-              state.model.update({'gen': ++gen});
-            };
-          }
-
           bool readOnly = state.readOnly;
           bool autofocus = stateMap['autofocus'];
-          Widget child = childBuilder(state.context);
-          VoidCallback? _onPressed = readOnly ? null : wrap(onPressed);
-          VoidCallback? _onLongPress = readOnly ? null : wrap(onLongPress);
+          VoidCallback? _onPressed = readOnly ? null : onPressed;
+          VoidCallback? _onLongPress = readOnly ? null : onLongPress;
           ButtonType type = stateMap['type'];
+          ButtonStyle? style = stateMap['style'];
+          Icon? icon = stateMap['icon'];
+          Widget child = stateMap['child'];
 
           switch (type) {
             case ButtonType.Text:
@@ -57,6 +50,7 @@ class Button extends BaseCommonField {
                       autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
+                      style: style,
                       child: child)
                   : TextButton.icon(
                       onPressed: _onPressed,
@@ -64,6 +58,7 @@ class Button extends BaseCommonField {
                       label: child,
                       focusNode: state.focusNode,
                       autofocus: autofocus,
+                      style: style,
                     );
             case ButtonType.Elevated:
               return icon == null
@@ -72,6 +67,7 @@ class Button extends BaseCommonField {
                       autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
+                      style: style,
                       child: child)
                   : ElevatedButton.icon(
                       onPressed: _onPressed,
@@ -79,6 +75,7 @@ class Button extends BaseCommonField {
                       label: child,
                       focusNode: state.focusNode,
                       autofocus: autofocus,
+                      style: style,
                     );
             case ButtonType.Outlined:
               return icon == null
@@ -87,6 +84,7 @@ class Button extends BaseCommonField {
                       autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
+                      style: style,
                       child: child)
                   : OutlinedButton.icon(
                       onPressed: _onPressed,
@@ -94,6 +92,7 @@ class Button extends BaseCommonField {
                       label: child,
                       focusNode: state.focusNode,
                       autofocus: autofocus,
+                      style: style,
                     );
           }
         });

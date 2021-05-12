@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 // make your form field state implement this class if you want to support textselection
 abstract class TextSelectionManagement {

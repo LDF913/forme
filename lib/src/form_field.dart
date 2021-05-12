@@ -4,6 +4,7 @@ import 'builder.dart';
 import 'form_layout.dart';
 import 'state_model.dart';
 
+typedef FieldBuilder = Widget Function(BuilderInfo info, BuildContext context);
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
