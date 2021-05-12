@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../form_field.dart';
 import '../state_model.dart';
+import 'decoration_field.dart';
 
 /// used to transfer rate to your rate
 ///

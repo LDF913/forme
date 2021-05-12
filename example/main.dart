@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'form_builder.dart';
-import 'src/field/list_tile.dart';
+import 'package:form_builder/form_builder.dart';
 
 void main() {
   runApp(MyApp());
@@ -252,7 +250,7 @@ class _MyHomePageState extends State<MyHomePage> {
           clearable: true,
           toolbarOptions: ToolbarOptions(copy: false, paste: false),
         ))
-        .builder((info, context) {
+        .appendBuilder((info, context) {
           int row = info.position.row;
           return ButtonFormField(
               child: Text('remove'),
