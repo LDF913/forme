@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'form_builder_utils.dart';
-import 'form_layout.dart';
 
 class StateValue<T> {
   final T value;
@@ -168,17 +167,8 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
 }
 
 /// when you want to create a stateful field,your custom field state must
-/// create an AbstractFieldStateModel,which used to contorl field's state
-///
-/// **some times,name of field will changed,at this time,you should clear state of this field,
-/// do that in state's didUpdateWidget method**
+/// create an AbstractFieldStateModel,which used to control field's state
 mixin AbstractFieldStateModel on AbstractStateModel {
-  /// get name of field
-  String? get name;
-
-  /// get position of field
-  Position get position;
-
   /// get readOnly state
   bool get readOnly;
 
@@ -198,10 +188,7 @@ mixin AbstractFieldStateModel on AbstractStateModel {
 
 /// a base field state model created by BaseFormField
 class BaseFieldStateModel extends BaseStateModel with AbstractFieldStateModel {
-  String? _name;
-  Position position;
-  BaseFieldStateModel(
-      Map<String, StateValue> initStateMap, this.position, this._name)
+  BaseFieldStateModel(Map<String, StateValue> initStateMap)
       : super(initStateMap);
 
   /// get padding state
@@ -224,12 +211,4 @@ class BaseFieldStateModel extends BaseStateModel with AbstractFieldStateModel {
   bool get visible => getState('visible');
   @override
   set visible(bool visible) => update1('visible', visible);
-
-  String? get name => _name;
-  set name(String? name) {
-    if (name != _name) {
-      _name = name;
-      _state.clear();
-    }
-  }
 }

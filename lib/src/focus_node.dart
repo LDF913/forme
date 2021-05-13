@@ -7,11 +7,10 @@ import 'package:flutter/widgets.dart';
 typedef FocusListener = void Function(String? key, bool hasFocus);
 
 class FocusNodes extends FocusNode {
-  final String? name;
   final Map<String, FocusNode> _nodes = {};
   FocusListener? focusListener;
 
-  FocusNodes(this.name) {
+  FocusNodes() {
     this.addListener(() {
       if (focusListener != null) focusListener!(null, this.hasFocus);
     });

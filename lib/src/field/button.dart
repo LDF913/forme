@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../builder.dart';
 import '../form_field.dart';
 import '../state_model.dart';
 
@@ -10,8 +11,8 @@ class ButtonFormField extends BaseCommonField {
       {String? name,
       required Widget child,
       int flex = 0,
-      required VoidCallback onPressed,
-      VoidCallback? onLongPress,
+      required ValueChanged<BuilderInfo> onPressed,
+      ValueChanged<BuilderInfo>? onLongPress,
       bool readOnly = false,
       bool visible = true,
       EdgeInsets? padding,
@@ -35,12 +36,21 @@ class ButtonFormField extends BaseCommonField {
 
           bool readOnly = state.readOnly;
           bool autofocus = stateMap['autofocus'];
-          VoidCallback? _onPressed = readOnly ? null : onPressed;
-          VoidCallback? _onLongPress = readOnly ? null : onLongPress;
           ButtonType type = stateMap['type'];
           ButtonStyle? style = stateMap['style'];
           Icon? icon = stateMap['icon'];
           Widget child = stateMap['child'];
+
+          VoidCallback? _onPressed = readOnly
+              ? null
+              : () {
+                  onPressed(BuilderInfo.of(state.context));
+                };
+          VoidCallback? _onLongPress = onLongPress == null || readOnly
+              ? null
+              : () {
+                  onLongPress(BuilderInfo.of(state.context));
+                };
 
           switch (type) {
             case ButtonType.Text:

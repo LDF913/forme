@@ -1,34 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'builder.dart';
-import 'form_layout.dart';
 import 'state_model.dart';
 
-typedef FieldBuilder = Widget Function(BuilderInfo info, BuildContext context);
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
-
-/// when you use [Builder] to build a widget
-///
-/// you can use [BuilderInfo.of(context)] to help you
-class BuilderInfo {
-  final Position position;
-
-  /// whether form is readOnly
-  final bool readOnly;
-  final ThemeData themeData;
-
-  static BuilderInfo of(BuildContext context) {
-    FieldInfo fieldInfo = FieldInfo.of(context);
-    return BuilderInfo._(Theme.of(context), fieldInfo);
-  }
-
-  BuilderInfo._(this.themeData, FieldInfo fieldInfo)
-      : this.position = fieldInfo.position,
-        this.readOnly = fieldInfo.readOnly;
-}
 
 mixin StatefulField<T extends AbstractFieldState> on StatefulWidget {
   /// field's name
@@ -167,15 +145,7 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
 
   @override
   BaseFieldStateModel createModel() {
-    return BaseFieldStateModel(
-        _getInitStateField(widget)!._initStateMap, position, name);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _baseFieldStateModel.name = name;
-    _baseFieldStateModel.position = position;
+    return BaseFieldStateModel(_getInitStateField(widget)!._initStateMap);
   }
 
   @override

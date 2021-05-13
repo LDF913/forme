@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:form_builder/form_builder.dart';
+
+import 'form_builder.dart';
 
 void main() {
   runApp(MyApp());
@@ -59,12 +60,13 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
             ),
-            createButtons(),
+            // for using snackbar here
+            Builder(builder: (context) => createButtons(context)),
           ]),
         ));
   }
 
-  Widget createButtons() {
+  Widget createButtons(BuildContext context) {
     Wrap buttons = Wrap(
       children: [
         Builder(
@@ -113,6 +115,28 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
+              Map<String, FormFieldManagementWithError> errorMap =
+                  formManagement.quietlyValidate();
+              for (FormFieldManagementWithError error in errorMap.values) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(error.errorText),
+                  backgroundColor: Colors.red,
+                ));
+                FormFieldManagement formFieldManagement =
+                    error.formFieldManagement;
+                if (formFieldManagement.focusable)
+                  formFieldManagement.focus = true;
+                formFieldManagement.ensureVisible();
+                return;
+              }
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('congratulations! no validate error found!'),
+                backgroundColor: Colors.green,
+              ));
+            },
+            child: Text('quietly validate')),
+        TextButton(
+            onPressed: () {
               formManagement.reset();
             },
             child: Text('reset')),
@@ -151,14 +175,15 @@ class _MyHomePageState extends State<MyHomePage> {
               formManagement.setData({
                 'username': 'user name',
                 'password': 'password',
-                'checkbox': [0],
+                'checkbox': ['male'],
                 'age': 38,
-                'radio': '1',
+                'radio': ['1'],
                 'startTime': DateTime.now(),
-                'switchGroup': [0, 1],
+                'switchGroup': ['switch1'],
                 'sliderInline': 50,
                 'filterChip': ['java', 'C#', 'flutter'],
-                'rangeSlider': RangeValues(10, 100)
+                'rangeSlider': RangeValues(10, 100),
+                'rate': 4.5
               });
             },
             child: Text('set form data')),
@@ -170,9 +195,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     return FormBuilder(
       formManagement: formManagement,
-      enableLayoutManagement: true,
-      onChanged: (name, newValue) {
-        print('$name\'s value changed, newValue:$newValue');
+      onChanged: (name, oldValue, newValue) {
+        print('$name\'s value changed, oldValue:$oldValue newValue:$newValue');
       },
     )
         .append(ClearableTextFormField(
@@ -186,7 +210,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .append(Builder(builder: (context) {
           return ButtonFormField(
               child: Text(username.readOnly ? 'editable' : 'readOnly'),
-              onPressed: () {
+              onPressed: (info) {
                 username.readOnly = !username.readOnly;
                 (context as Element).markNeedsBuild();
               });
@@ -205,43 +229,41 @@ class _MyHomePageState extends State<MyHomePage> {
         ))
         .append(ButtonFormField(
             type: ButtonType.Text,
-            onPressed: () {
+            onPressed: (info) {
               username.update1('labelText', 'username1');
             },
             child: Text('change username\'s label'),
             icon: Icon(Icons.edit)))
-        .oneRowBuilder((info, context) {
-          return ButtonFormField(
-              onPressed: () {
-                j++;
-                int row = BuilderInfo.of(context).position.row;
-                formLayoutManagement.startEdit();
-                formLayoutManagement.insert(
-                    field: Label("new row"), newRow: true, row: row);
-                formLayoutManagement.insert(
-                    field: NumberFormField(
-                      initialValue: j,
-                      name: 'num$j',
-                      flex: 2,
-                    ),
-                    row: row);
-                formLayoutManagement.insert(
-                    field: Builder(builder: (context) {
-                      int row = BuilderInfo.of(context).position.row;
-                      return TextButton.icon(
-                          onPressed: () {
-                            formLayoutManagement.startEdit();
-                            formLayoutManagement.remove(row);
-                            formLayoutManagement.apply();
-                          },
-                          icon: Icon(Icons.delete),
-                          label: Text('delete'));
-                    }),
-                    row: row);
-                formLayoutManagement.apply();
-              },
-              child: Text('insert a new row before this button'));
-        })
+        .oneRowField(ButtonFormField(
+            onPressed: (info) {
+              j++;
+              int row = info.position.row;
+              formLayoutManagement.startEdit();
+              formLayoutManagement.insert(
+                  field: Label("new row"), newRow: true, row: row);
+              formLayoutManagement.insert(
+                  field: NumberFormField(
+                    initialValue: j,
+                    name: 'num$j',
+                    flex: 2,
+                  ),
+                  row: row);
+              formLayoutManagement.insert(
+                  field: Builder(builder: (context) {
+                    int row = BuilderInfo.of(context).position.row;
+                    return TextButton.icon(
+                        onPressed: () {
+                          formLayoutManagement.startEdit();
+                          formLayoutManagement.remove(row);
+                          formLayoutManagement.apply();
+                        },
+                        icon: Icon(Icons.delete),
+                        label: Text('delete'));
+                  }),
+                  row: row);
+              formLayoutManagement.apply();
+            },
+            child: Text('insert a new row before this button')))
         .append(ClearableTextFormField(
           name: 'password',
           hintText: 'password',
@@ -250,19 +272,15 @@ class _MyHomePageState extends State<MyHomePage> {
           clearable: true,
           toolbarOptions: ToolbarOptions(copy: false, paste: false),
         ))
-        .appendBuilder((info, context) {
-          int row = info.position.row;
-          return ButtonFormField(
-              child: Text('remove'),
-              onPressed: () {
-                formLayoutManagement.startEdit();
-                formLayoutManagement.remove(row);
-                formLayoutManagement.apply();
-              });
-        })
         .append(ButtonFormField(
-          onPressed: () {
-            print("??");
+            child: Text('remove'),
+            onPressed: (info) {
+              formLayoutManagement.startEdit();
+              formLayoutManagement.remove(info.position.row);
+              formLayoutManagement.apply();
+            }))
+        .append(ButtonFormField(
+          onPressed: (info) async {
             formManagement
                 .newFormFieldManagement('password')
                 .textSelectionManagement
@@ -285,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   : null,
         ))
         .append(ButtonFormField(
-            onPressed: () {
+            onPressed: (info) {
               formManagement
                   .newFormFieldManagement('age')
                   .valueFieldManagement
@@ -293,7 +311,7 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             child: Text('validate me')))
         .append(ButtonFormField(
-            onPressed: () {
+            onPressed: (info) {
               formManagement.newFormFieldManagement('age').focus = true;
             },
             child: Text('request focus')))
@@ -312,7 +330,7 @@ class _MyHomePageState extends State<MyHomePage> {
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         ))
         .append(ButtonFormField(
-            onPressed: () {
+            onPressed: (info) {
               formManagement.newFormFieldManagement('checkbox2').update1(
                   'items',
                   FormBuilderUtils.toListTileItems(
@@ -326,23 +344,15 @@ class _MyHomePageState extends State<MyHomePage> {
             labelText: 'switch',
             validator: (value) => value.isEmpty ? 'select one pls !' : null,
             items: FormBuilderUtils.toListTileItems(
-                ['swith1', 'swith2', 'swith3'],
+                ['switch1', 'switch2', 'switch3'],
                 padding: const EdgeInsets.symmetric(horizontal: 5),
                 controlAffinity: ListTileControlAffinity.trailing)))
-        .oneRowField(ListTileFormField(
-          type: ListTileItemType.Radio,
-          items: FormBuilderUtils.toListTileItems(['1', '2']),
-          name: 'radio',
-          labelText: 'single choice',
-          validator: (value) => value.isEmpty ? 'select one !' : null,
-        ))
         .oneRowField(ListTileFormField(
           split: 1,
           type: ListTileItemType.Radio,
           items: FormBuilderUtils.toListTileItems(['1', '2']),
           name: 'radio',
           labelText: 'single choice',
-          validator: (value) => value.isEmpty ? 'select one !' : null,
         ))
         .append(DateTimeFormField(
           name: 'startTime',
@@ -382,22 +392,20 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             queryFormBuilder: (builder, query) {
               builder
-                  .append(RangeSliderFormField(
-                      name: 'filter',
-                      min: 1,
-                      max: 100,
-                      rangeSubLabelRender: RangeSubLabelRender(
-                          (start) => start.round().toString(),
-                          (end) => end.round().toString())))
                   .append(
-                      ButtonFormField(onPressed: query, child: Text('query')));
+                      RangeSliderFormField(name: 'filter', min: 1, max: 100))
+                  .append(ButtonFormField(
+                      onPressed: (info) {
+                        query();
+                      },
+                      child: Text('query')));
             },
             onSelectDialogShow: (formManagement) {
               //use this formManagement to control query form on search dialog
               formManagement
                   .newFormFieldManagement('filter')
                   .valueFieldManagement
-                  .setValue(RangeValues(20, 50));
+                  .value = RangeValues(20, 50);
               return true; //return true will set params before query
             },
             selectedItemLayoutType: SelectedItemLayoutType.scroll,
@@ -409,10 +417,8 @@ class _MyHomePageState extends State<MyHomePage> {
           labelText: 'age slider',
           validator: (value) =>
               value < 50 ? 'age slider must bigger than 50' : null,
-          subLabelRender: (value) => value.toStringAsFixed(0),
         ))
         .append(NumberFormField(
-            name: 'sliderInlineText',
             max: 100,
             labelText: 'inline slider',
             flex: 2,
@@ -425,8 +431,13 @@ class _MyHomePageState extends State<MyHomePage> {
             min: 0,
             max: 100,
             onChanged: (v) {
+              Position position = formManagement
+                  .newFormFieldManagement('sliderInline')
+                  .position;
               formManagement
-                  .newFormFieldManagement('sliderInlineText')
+                  .newFormPositionManagement(position.row)
+                  .formFieldManagements
+                  .first
                   .valueFieldManagement
                   .setValue(v.toDouble().toInt(), trigger: false);
             }))
@@ -435,11 +446,6 @@ class _MyHomePageState extends State<MyHomePage> {
           min: 0,
           max: 100,
           labelText: 'range slider',
-          rangeSubLabelRender: RangeSubLabelRender((start) {
-            return start.toStringAsFixed(0);
-          }, (end) {
-            return end.toStringAsFixed(0);
-          }),
         ))
         .oneRowField(FilterChipFormField(
             labelText: 'Filter Chip',

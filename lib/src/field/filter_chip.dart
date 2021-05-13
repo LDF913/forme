@@ -24,8 +24,7 @@ class FilterChipItem<T> {
       this.visible = true,
       this.contentPadding = const EdgeInsets.all(10),
       this.labelPadding})
-      : this.padding =
-            padding ?? EdgeInsets.symmetric(horizontal: 10, vertical: 5);
+      : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
 }
 
 enum ChipLayoutType { wrap, scroll }

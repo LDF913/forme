@@ -269,6 +269,8 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
                       .toList());
                 } else {
                   state.didChange(values
+                    ..removeWhere(
+                        (element) => controllableItems.contains(element))
                     ..addAll(controllableItems)
                     ..toSet()
                     ..toList());
@@ -276,12 +278,11 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
               }
 
               icon = InkWell(
-                onTap: readOnly || isAllReadOnly ? null : toggleValues,
                 child: IconButton(
                   icon: Icon(
                     iconData,
                   ),
-                  onPressed: toggleValues,
+                  onPressed: readOnly || isAllReadOnly ? null : toggleValues,
                 ),
               );
             }
