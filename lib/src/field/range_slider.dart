@@ -101,6 +101,21 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             labelText: labelText,
           );
         });
+
+  @override
+  _RangeSliderFormFieldState createState() => _RangeSliderFormFieldState();
+}
+
+class _RangeSliderFormFieldState
+    extends BaseNonnullValueFieldState<RangeValues> {
+  @override
+  void afterStateValueChanged(String key, old, current) {
+    super.afterStateValueChanged(key, old, current);
+    if (key == 'min' && value.start < current)
+      setValue(RangeValues(current, value.end));
+    if (key == 'max' && value.end > current)
+      setValue(RangeValues(value.start, current));
+  }
 }
 
 class CustomRangeSliderThumbCircle extends RangeSliderThumbShape {

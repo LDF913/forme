@@ -94,6 +94,18 @@ class SliderFormField extends BaseNonnullValueField<num> {
             );
           },
         );
+
+  @override
+  _SliderFormFieldState createState() => _SliderFormFieldState();
+}
+
+class _SliderFormFieldState extends BaseNonnullValueFieldState<num> {
+  @override
+  void afterStateValueChanged(String key, old, current) {
+    super.afterStateValueChanged(key, old, current);
+    if (key == 'min' && value < current) setValue(current);
+    if (key == 'max' && value > current) setValue(current);
+  }
 }
 
 // copied from https://medium.com/flutter-community/flutter-sliders-demystified-4b3ea65879c
