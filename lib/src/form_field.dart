@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import 'builder.dart';
 import 'state_model.dart';
+import 'widget/shake_widget.dart';
 
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
@@ -135,6 +136,11 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
   @protected
   T? getState<T>(String stateKey) => _baseFieldStateModel.getState<T>(stateKey);
 
+  /// remove states,this method won't call setState
+  @protected
+  void removeStates(Set<String> keys) =>
+      _baseFieldStateModel.removeStates(keys);
+
   @override
   void initFormManagement() {
     super.initFormManagement();
@@ -145,7 +151,8 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
 
   @override
   BaseFieldStateModel createModel() {
-    return BaseFieldStateModel(_getInitStateField(widget)!._initStateMap);
+    return _BaseFieldStateModelDelegate(
+        this, _getInitStateField(widget)!._initStateMap);
   }
 
   @override
@@ -165,7 +172,7 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
   BaseFieldStateModel get _baseFieldStateModel => model as BaseFieldStateModel;
 
   /// used to build default field widget
-  Widget get _child;
+  Widget get field;
 
   @override
   void dispose() {
@@ -185,7 +192,7 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
           padding ?? const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       child: Visibility(
         maintainState: true,
-        child: _child,
+        child: field,
         visible: visible,
       ),
     );
@@ -194,6 +201,39 @@ mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
       child: child,
       flex: _baseFieldStateModel.flex,
     );
+  }
+
+  /// used to know whick state keys changed
+  ///
+  /// **exception throw by this method won't stop notifyListeners**
+  @protected
+  @mustCallSuper
+  void beforeNotifyListeners(Iterable<String> keys) {}
+
+  /// used to know state value changed
+  ///
+  /// **exception throw by this method won't stop notifyListeners**
+  @protected
+  @mustCallSuper
+  void afterStateValueChanged(String key, dynamic old, dynamic current) {}
+}
+
+class _BaseFieldStateModelDelegate extends BaseFieldStateModel {
+  final BaseFieldState state;
+
+  _BaseFieldStateModelDelegate(this.state, Map<String, StateValue> initStateMap)
+      : super(initStateMap);
+
+  @override
+  void beforeNotifyListeners(Iterable<String> keys) {
+    super.beforeNotifyListeners(keys);
+    state.beforeNotifyListeners(keys);
+  }
+
+  @override
+  void afterStateValueChanged(String key, dynamic old, dynamic current) {
+    super.afterStateValueChanged(key, old, current);
+    state.afterStateValueChanged(key, old, current);
   }
 }
 
@@ -247,6 +287,7 @@ class BaseValueField<T> extends ValueField<T, BaseValueFieldState<T>>
             onSaved: onSaved,
             name: name) {
     _initStateMap.addAll({
+      'shaker': StateValue<Shaker?>(null),
       'flex': StateValue<int>(flex),
       'padding': StateValue<EdgeInsets?>(padding),
       'visible': StateValue<bool>(visible),
@@ -285,6 +326,7 @@ class BaseNonnullValueField<T>
             enabled: enabled,
             onSaved: onSaved) {
     _initStateMap.addAll({
+      'shaker': StateValue<Shaker?>(null),
       'flex': StateValue<int>(flex),
       'padding': StateValue<EdgeInsets?>(padding),
       'visible': StateValue<bool>(visible),
@@ -298,22 +340,48 @@ class BaseNonnullValueField<T>
 class BaseCommonFieldState extends AbstractCommonFieldState
     with BaseFieldState {
   @override
-  Widget get _child {
+  Widget get field {
     return widget.builder(this);
   }
 }
 
-class BaseValueFieldState<T> extends ValueFieldState<T> with BaseFieldState {
+mixin ShakeWrapper<T> on BaseFieldState<FormField<T>> {
+  Key? shakeKey;
   @override
-  Widget get _child {
-    return widget.builder(this);
+  Widget get field {
+    Widget field = shakeField;
+    Shaker? shaker = getState('shaker');
+    if (shaker != null) shakeKey = UniqueKey();
+    removeStates({'shaker'});
+    Widget shake = ShakeWidget(
+        key: shakeKey,
+        duration: shaker == null ? Duration.zero : shaker.duration,
+        deltaX: shaker?.deltax,
+        curve: shaker?.curve,
+        onEnd: shaker?.onEnd,
+        child: field);
+    return shake;
   }
+
+  Widget get shakeField;
+}
+
+class BaseValueFieldState<T> extends ValueFieldState<T>
+    with BaseFieldState, ShakeWrapper<T> {
+  @override
+  Widget get shakeField => super.doBuild();
 }
 
 class BaseNonnullValueFieldState<T> extends NonnullValueFieldState<T>
-    with BaseFieldState {
+    with BaseFieldState, ShakeWrapper<T> {
   @override
-  Widget get _child {
-    return widget.builder(this);
-  }
+  Widget get shakeField => super.doBuild();
+}
+
+class Shaker {
+  final Duration? duration;
+  final double? deltax;
+  final Curve? curve;
+  final VoidCallback? onEnd;
+  Shaker({this.duration, this.deltax, this.curve, this.onEnd});
 }

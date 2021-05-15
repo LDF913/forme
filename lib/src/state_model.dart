@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 
 import 'form_builder_utils.dart';
 
+/// used to hold value from widget
 class StateValue<T> {
   final T value;
 
@@ -17,8 +18,12 @@ class StateValue<T> {
   const StateValue(this.value);
 }
 
-/// used to update state
+/// used to manage state
 mixin AbstractStateModel {
+  /// whether support state
+  bool support(String stateKey);
+
+  /// update states
   void update(Map<String, dynamic> stateMap);
 }
 
@@ -69,7 +74,7 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
 
   @override
   void update(Map<String, dynamic> state) {
-    checkState(state);
+    _checkState(state);
     Map<String, dynamic> changeMap = {};
     state.forEach((key, value) {
       dynamic currentValue = _state[key];
@@ -125,8 +130,7 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
       throw 'did you put key :$stateKey into your initMap';
   }
 
-  @protected
-  void checkState(Map<String, dynamic> map) {
+  void _checkState(Map<String, dynamic> map) {
     map.forEach((key, value) {
       _enableKeyExists(key);
       StateValue stateValue = _initStateMap[key]!;
@@ -164,6 +168,15 @@ class BaseStateModel with AbstractStateModel, ChangeNotifier {
   bool compare(String key, value1, value2) {
     return FormBuilderUtils.compare(value1, value2);
   }
+
+  @override
+  bool support(String stateKey) {
+    return _initStateMap.containsKey(stateKey);
+  }
+
+  /// remove states won't notifyListeners
+  void removeStates(Set<String> keys) =>
+      _state.removeWhere((key, value) => keys.contains(key));
 }
 
 /// when you want to create a stateful field,your custom field state must

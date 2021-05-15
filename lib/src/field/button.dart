@@ -16,14 +16,12 @@ class ButtonFormField extends BaseCommonField {
       bool readOnly = false,
       bool visible = true,
       EdgeInsets? padding,
-      ButtonStyle? style,
-      bool autofocus = false,
       ButtonType type = ButtonType.Text,
+      TextButtonThemeData? textButtonThemeData,
+      ElevatedButtonThemeData? elevatedButtonThemeData,
+      OutlinedButtonThemeData? outlinedButtonThemeData,
       Icon? icon})
       : super({
-          'style': StateValue<ButtonStyle?>(style),
-          'autofocus': StateValue<bool>(autofocus),
-          'type': StateValue<ButtonType>(type),
           'icon': StateValue<Icon?>(icon),
           'child': StateValue<Widget>(child),
         },
@@ -35,75 +33,85 @@ class ButtonFormField extends BaseCommonField {
           Map<String, dynamic> stateMap = state.currentMap;
 
           bool readOnly = state.readOnly;
-          bool autofocus = stateMap['autofocus'];
-          ButtonType type = stateMap['type'];
-          ButtonStyle? style = stateMap['style'];
           Icon? icon = stateMap['icon'];
           Widget child = stateMap['child'];
+
+          BuilderInfo builderInfo = BuilderInfo.of(state.context);
 
           VoidCallback? _onPressed = readOnly
               ? null
               : () {
-                  onPressed(BuilderInfo.of(state.context));
+                  onPressed(builderInfo);
                 };
           VoidCallback? _onLongPress = onLongPress == null || readOnly
               ? null
               : () {
-                  onLongPress(BuilderInfo.of(state.context));
+                  onLongPress(builderInfo);
                 };
+
+          Widget button;
 
           switch (type) {
             case ButtonType.Text:
-              return icon == null
+              button = icon == null
                   ? TextButton(
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
-                      style: style,
                       child: child)
                   : TextButton.icon(
                       onPressed: _onPressed,
                       icon: icon,
                       label: child,
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
-                      style: style,
                     );
+              break;
             case ButtonType.Elevated:
-              return icon == null
+              button = icon == null
                   ? ElevatedButton(
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
-                      style: style,
                       child: child)
                   : ElevatedButton.icon(
                       onPressed: _onPressed,
                       icon: icon,
                       label: child,
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
-                      style: style,
                     );
+              break;
             case ButtonType.Outlined:
-              return icon == null
+              button = icon == null
                   ? OutlinedButton(
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
                       onPressed: _onPressed,
                       onLongPress: _onLongPress,
-                      style: style,
                       child: child)
                   : OutlinedButton.icon(
                       onPressed: _onPressed,
                       icon: icon,
                       label: child,
                       focusNode: state.focusNode,
-                      autofocus: autofocus,
-                      style: style,
                     );
+              break;
+          }
+
+          switch (type) {
+            case ButtonType.Text:
+              return TextButtonTheme(
+                  data:
+                      textButtonThemeData ?? TextButtonTheme.of(state.context),
+                  child: button);
+            case ButtonType.Elevated:
+              return ElevatedButtonTheme(
+                  data: elevatedButtonThemeData ??
+                      ElevatedButtonTheme.of(state.context),
+                  child: button);
+            case ButtonType.Outlined:
+              return OutlinedButtonTheme(
+                  data: outlinedButtonThemeData ??
+                      OutlinedButtonTheme.of(state.context),
+                  child: button);
           }
         });
 }

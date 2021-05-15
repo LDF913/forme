@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'form_builder.dart';
+import 'package:form_builder/form_builder.dart';
 
 void main() {
   runApp(MyApp());
@@ -115,18 +114,23 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
-              Map<String, FormFieldManagementWithError> errorMap =
-                  formManagement.quietlyValidate();
-              for (FormFieldManagementWithError error in errorMap.values) {
+              for (FormFieldManagementWithError error
+                  in formManagement.quietlyValidate()) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,
                 ));
                 FormFieldManagement formFieldManagement =
                     error.formFieldManagement;
-                if (formFieldManagement.focusable)
-                  formFieldManagement.focus = true;
-                formFieldManagement.ensureVisible();
+                formFieldManagement.ensureVisible().then((value) {
+                  //base value field support shaker
+                  if (formFieldManagement.supportState("shaker")) {
+                    formFieldManagement.update1('shaker', Shaker(onEnd: () {
+                      if (formFieldManagement.focusable)
+                        formFieldManagement.focus = true;
+                    }));
+                  }
+                });
                 return;
               }
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -195,6 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget createForm() {
     return FormBuilder(
       formManagement: formManagement,
+      enableLayoutManagement: true,
       onChanged: (name, oldValue, newValue) {
         print('$name\'s value changed, oldValue:$oldValue newValue:$newValue');
       },
@@ -215,18 +220,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 (context as Element).markNeedsBuild();
               });
         }))
-        .append(SwitchInlineFormField(name: 'rememberMe'))
-        .oneRowField(RateFormField(
-          name: 'rate',
-          labelText: 'Rate Me!',
-          onChanged: (value) {
-            if (value == null) return;
-            formManagement
-                .newFormFieldManagement('rate')
-                .update1('labelText', 'Rate Me!(current rate is $value)');
-          },
-          validator: (value) => value == null ? 'give me a rate pls' : null,
+        .append(SingleSwitchFormField(
+          name: 'rememberMe',
+          label: Text('rememberMe'),
         ))
+        .newRow()
         .append(ButtonFormField(
             type: ButtonType.Text,
             onPressed: (info) {
@@ -375,7 +373,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .oneRowField(SelectorFormField(
             name: 'selector',
             labelText: 'selector',
-            multi: true,
+            multi: false,
             selectItemProvider: (page, params) {
               RangeValues filter = params['filter'];
               List<int> items = List<int>.generate(100, (i) => i + 1)
@@ -420,6 +418,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ))
         .append(NumberFormField(
             max: 100,
+            name: 'sliderInlineText',
             labelText: 'inline slider',
             flex: 2,
             onChanged: (v) => formManagement
@@ -431,15 +430,10 @@ class _MyHomePageState extends State<MyHomePage> {
             min: 0,
             max: 100,
             onChanged: (v) {
-              Position position = formManagement
-                  .newFormFieldManagement('sliderInline')
-                  .position;
               formManagement
-                  .newFormPositionManagement(position.row)
-                  .formFieldManagements
-                  .first
+                  .newFormFieldManagement('sliderInlineText')
                   .valueFieldManagement
-                  .setValue(v.toDouble().toInt(), trigger: false);
+                  .setValue(v.toDouble().round(), trigger: false);
             }))
         .oneRowField(RangeSliderFormField(
           name: 'rangeSlider',
@@ -465,6 +459,18 @@ class _MyHomePageState extends State<MyHomePage> {
               'swift',
               'object-c'
             ])))
+        .oneRowField(RateFormField(
+          name: 'rate',
+          labelText: 'Rate Me!',
+          onChanged: (value) {
+            String text = 'Rate Me!';
+            if (value != null) text += 'current rate is $value';
+            formManagement
+                .newFormFieldManagement('rate')
+                .update1('labelText', text);
+          },
+          validator: (value) => value == null ? 'give me a rate pls' : null,
+        ))
         .append(CustomField())
 
         /// widge tree
@@ -532,14 +538,6 @@ class CustomField extends BaseCommonField {
 }
 
 class CustomFieldState extends BaseCommonFieldState {
-  @override
-  void initFormManagement() {
-    super.initFormManagement();
-    (model as BaseFieldStateModel).addListener(() {
-      setState(() {});
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return widget.builder(this);

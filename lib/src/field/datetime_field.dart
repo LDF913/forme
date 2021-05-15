@@ -69,6 +69,8 @@ class DateTimeFormField extends BaseValueField<DateTime> {
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
+              if (value.isBefore(firstDate)) value = firstDate;
+              if (value.isAfter(lastDate)) value = lastDate;
               TimeOfDay? timeOfDay = state.value == null
                   ? null
                   : TimeOfDay(hour: value.hour, minute: value.minute);
@@ -195,5 +197,22 @@ class _DateTimeFormFieldState extends BaseValueFieldState<DateTime> {
   void dispose() {
     textEditingController.dispose();
     super.dispose();
+  }
+
+  @override
+  void afterStateValueChanged(String key, dynamic old, dynamic current) {
+    super.afterStateValueChanged(key, old, current);
+
+    void clearValue() {
+      setValue(null);
+      textEditingController.text = '';
+    }
+
+    if (value == null) return;
+
+    if (key == 'type')
+      textEditingController.text = value == null ? '' : _formatter(value!);
+    if (key == 'firstDate' && current.isAfter(value!)) clearValue();
+    if (key == 'lastDate' && current.isBefore(value!)) clearValue();
   }
 }

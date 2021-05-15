@@ -7,74 +7,33 @@ FormManagement formManagement = FormManagement();
 
 Widget form = FormBuilder(
       {bool readOnly,//set form's readonly state
-      bool visible, // set form's visible state
-      FormThemeData? formThemeData, //set themedata of form 
+      bool visible, // set form's visible state 
       MainAxisAlignment? mainAxisAlignment, // customize column 
       MainAxisSize? mainAxisSize,
       CrossAxisAlignment? crossAxisAlignment,
       TextDirection? textDirection,
       VerticalDirection? verticalDirection,
       TextBaseline? textBaseline,
-      /// whether enableLayoutManagement
-      ///
-      /// if enabled , global key will be used for every field (root of form field)
-      ///
-      /// **enable it when you really need modify form layout at runtime,otherwise disable it for performance improve,
-      /// this flag should not be changed at runtime**
-      ///
-      /// **experimental**
       bool enableLayoutFormManagement = false,
+      FormValueChanged? onChanged,
       this.formManagement,
-	.textField(
+    ).append(ClearableTextFormField(
           name: 'username',
           labelText: 'username',
           clearable: true,
+          selectAllOnFocus: true,
           validator: (value) =>
               value.isEmpty ? 'username can not be empty !' : null,
-        )
-        .switchInline(
-          name: 'switch1',
-          onChanged: (value) => print('switch1 value changed $value'),
-        )
-        .nextLine()
-        .textField(
-            name: 'password',
-            hintText: 'password',
-            obscureText: true,
-            passwordVisible: true,
-            clearable: true,
-            toolbarOptions: ToolbarOptions(copy: false, paste: false),
-            onChanged: (value) => print('password value changed $value'),
-            flex: 1)
-        .textButton(
-            onPressed: () {
-              formManagement
-                  .getFormFieldManagement('password')
-                  .textSelectionManagement
-                  .selectAll();
-            },
-            label: 'button',
-            name: 'button')
-        .nextLine()
-        .numberField(
-          name: 'age',
-          hintText: 'age',
-          clearable: true,
-          flex: 3,
-          min: -18,
-          max: 99,
-          decimal: 0,
-          onChanged: (value) => print('age value changed $value'),
-          validator: (value) => value == null ? 'not empty' : null,
-        )
-        .checkboxGroup(
-          items: FormBuilder.toCheckboxGroupItems(['male', 'female']),
-          name: 'checkbox',
-          split: 2,
-          label: 'sex',
-          onChanged: (value) => print('checkbox value changed $value'),
-          validator: (value) => value.isEmpty ? 'pls select sex' : null,
-        );
+        ))
+        .append(Builder(builder: (context) {
+          return ButtonFormField(
+              child: Text(username.readOnly ? 'editable' : 'readOnly'),
+              onPressed: () {
+                username.readOnly = !username.readOnly;
+                (context as Element).markNeedsBuild();
+              });
+        }))
+        .append(SwitchInlineFormField(name: 'rememberMe'));
 ```
 
 ## form widget tree
@@ -106,20 +65,56 @@ Flexible(
 
 ## methods
 
+### FormBuilder
+
+#### create a new row
+
+**if form layout's last row is not empty,will creat a new row**
+
+``` dart
+FormBuilder builder = formBuilder.newRow();
+```
+
+#### customize last row
+
+``` dart
+FormBuilder builder = formBuilder.customize({
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
+  })
+```
+
+#### append a field
+
+**append a field to last row**
+
+``` dart
+FormBuilder builder = formBuilder.append(Widget field);
+```
+
+#### append a builder field
+
+``` dart
+FormBuilder builder = formBuilder.appendBuilder(FieldBuilder builder);
+```
+
+#### append a field take up one row
+
+``` dart
+FormBuilder builder = formBuilder.oneRowField(Widget field);
+```
+
+#### append a builder field take up one row
+
+``` dart
+FormBuilder builder = formBuilder.oneRowBuilder(FieldBuilder builder);
+```
+
 ### FormManagement
-
-#### get FormThemeData
-
-``` dart
-FormThemeData formThemeData => formManagement.formThemeData
-```
-
-#### set FormThemeData
-
-``` dart
-formManagement.formThemeData = FormThemeData(themeData);// system theme
-formManagement.formThemeData = DefaultFormTheme(); //default theme from  https://github.com/mitesh77/Best-Flutter-UI-Templates/blob/master/best_flutter_ui_templates/lib/hotel_booking/filters_screen.dart
-```
 
 #### whether has a name field
 
@@ -156,6 +151,13 @@ formManagement.readOnly = true|false;
 ``` dart
 int rows = formManagement.rows;
 ```
+
+#### get column of row
+
+``` dart
+int column = formManagement.getColumn(row);
+```
+
 #### create FormFieldManagement
 
 ``` dart
@@ -182,6 +184,14 @@ FormLayoutManagement formLayoutManagement = formManagement.newFormLayoutManageme
 Map<String,dynamic> dataMap = formManagement.data;
 ```
 
+#### set form data
+
+``` dart
+Map<String,dynamic> formData = {};
+formManagement.data = formData;//will trigger field's onChanged
+formManagement.setData(formData,{trigger:trigger});
+```
+
 #### reset form
 
 ``` dart
@@ -204,14 +214,19 @@ bool isValid = formManagement.isValid
 
 #### get error
 
-``` dart
-Map<String, String> errorMap = formManagement.error;
-```
-#### create FormRowManagement
+**get all errors after validate**
 
-``` dart 
-FormRowManagement formRowManagement = formManagement.newFormRowManagement(int row);
-``` 
+``` dart
+Map<String, FormFieldManagement> errorMap = formManagement.error;
+```
+
+#### quietly validate
+
+**validate all field and get error , this method will not display error msg**
+
+``` dart
+List<FormFieldManagementError> errors = formManagement.quietlyValidate();
+```
 
 ### FormFieldManagement
 
@@ -296,12 +311,6 @@ bool visible = formFieldManagement.visible;
 formFieldManagement.visible = true|false
 ```
 
-#### get field's state value
-
-``` dart
-T? value => formFieldManagement.getState<T>(String stateKey);
-```
-
 #### update field's state
 
 **see supported states for every field <a href="#field-states">here</a>**
@@ -316,6 +325,18 @@ formFieldManagement.update({});
 
 ``` dart
 formFieldManagement.update1(String key,dynamic value);
+```
+
+#### make field visible in viewport
+
+**not work if field or form is invisible**
+
+``` dart
+  Future<void> future = formFieldManagement.ensureVisible(
+      {Duration? duration,
+      Curve? curve,
+      ScrollPositionAlignmentPolicy? alignmentPolicy,
+      double? alignment})
 ```
 
 ### ValueFieldManagement
@@ -386,7 +407,6 @@ bool visible = formPositionManagement.visible;
 ``` dart
 formPositionManagement.visible = true|false;
 ```
-
 
 ### FormLayoutManagement (experimental)
 
@@ -489,6 +509,7 @@ formLayoutManagement.cancel();
 |  keyboardType  |  TextInputType  |       true        |
 |  autofocus  |  bool  |       false        |
 |  maxLines  |  int  |       true        |
+|  minLines  |  int  |       true        |
 |  maxLength  |  int  |       true        |
 |  clearable  |  bool  |       false        |
 |  prefixIcon  |  Widget  |       true        |
@@ -499,6 +520,7 @@ formLayoutManagement.cancel();
 |  suffixIcons  |  List&lt; Widget&gt; |       true        |
 |  textInputAction  |  TextInputAction |       true        |
 |  inputDecorationTheme  |  InputDecorationTheme |       true        |
+| textCapitalization | TextCapitalization| true|
 
 ### DateTimeFormField
 
@@ -507,10 +529,12 @@ formLayoutManagement.cancel();
 |     labelText  |        String   |       true        |
 |     hintText   |        String   |       true        |
 |  maxLines  |  int  |       false        |
-|  useTime  |  bool  |       false        |
+|  type  |  DateTimeType  |       false        |
 |  formatter  |  DateTimeFormatter  |       true        |
 |  style  |  TextStyle  |       true        |
 |  inputDecorationTheme  |  InputDecorationTheme |       true        |
+|  firstDate  |  DateTime  |       false        |
+|  lastDate  |  DateTime  |       false        |
 
 ### NumberFormField
 
@@ -526,28 +550,9 @@ formLayoutManagement.cancel();
 |  textInputAction  |  TextInputAction |       true        |
 |  inputDecorationTheme  |  InputDecorationTheme |       true        |
 |  decimal  |  int |       false        |
-|  max  |  max |       true        |
-|  min  |  min |       true        |
+|  max  |  double |       true        |
+|  allowNegative  |  bool |       false        |
 
-### CheckboxGroupFormField
-
-|     name       |        Type     |       nullable    |
-|     --         |        --       |       ---         |
-|     label  |        String   |       true        |
-|  split  |  int  |       false        |
-|  items  |  List&lt; CheckboxGroupItem&gt; |       false        |
-|  errorTextPadding  | EdgeInsets   |       false        |
-|  labelPadding  | EdgeInsets   |       false        |
-
-### RadioGroupFormField
-
-|     name       |        Type     |       nullable    |
-|     --         |        --       |       ---         |
-|     label  |        String   |       true        |
-|  split  |  int  |       false        |
-|  items  |  List&lt; RadioGroupItem&gt; |       false        |
-|  errorTextPadding  | EdgeInsets   |       false        |
-|  labelPadding  | EdgeInsets   |       false        |
 
 ### SelectorFormField
 
@@ -557,68 +562,103 @@ formLayoutManagement.cancel();
 |     hintText  |        String   |       true        |
 |  multi  |  bool  |       false        |
 |  clearable  |  bool  |       false        |
-|  inputDecorationTheme  | InputDecorationTheme   |       true     |
+|  selectorThemeData  | SelectorThemeData   |       false     |
+|  selectedItemLayoutType  | SelectedItemLayoutType   |       false     |
 
 ### SliderFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
-|     label  |        String   |       true        |
+|     labelText  |        String   |       true        |
 |     max  |        double   |       false        |
 |  min  |  double  |       false        |
 |  divisions  |  int  |       false        |
-|  contentPadding  | EdgeInsets   |       false     |
-|  labelPadding  | EdgeInsets   |       false        |
+|  activeColor  | Color   |       true     |
+|  inactiveColor  | Color   |       true     |
 
 ### RangeSliderFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
-|     label  |        String   |       true        |
+|     labelText  |        String   |       true        |
 |     max  |        double   |       false        |
 |  min  |  double  |       false        |
 |  divisions  |  int  |       false        |
-|  contentPadding  | EdgeInsets   |       false     |
-|  labelPadding  | EdgeInsets   |       false        |
+|  activeColor  | Color   |       true     |
+|  inactiveColor  | Color   |       true     |
 
-### SwitchGroupFormField
+### ListTileFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
-|     label  |        String   |       true        |
-|     items  |        List&lt; SwitchGroupItem&gt; |       false        |
-|  hasSelectAllSwitch  |  bool  |       false        |
-|  selectAllPadding  |  EdgeInsets  |       false        |
-|  errorTextPadding  | EdgeInsets   |       false     |
-|  labelPadding  | EdgeInsets   |       false        |
+|     labelText  |        String   |       true        |
+|     split  |        int   |       false        |
+|     items  |        List&lt; ListTileItem&lt;T&gt;&gt; |       false        |
+|  hasSelectAll  |  bool  |       false        |
+|  checkboxRenderData  |  CheckboxRenderData  |       true        |
+|  radioRenderData  |  RadioRenderData  |       true        |
+|  switchRenderData  |  SwitchRenderData  |       true        |
+|  listTileThemeData  | ListTileThemeData   |       true     |
 
 ### FilterChipFormField
 
 |     name       |        Type     |       nullable    |
 |     --         |        --       |       ---         |
-|     label  |        String   |       true        |
+|     labelText  |        String   |       true        |
 |     items  |        List&lt; FilterChipItem&lt;T&gt;&gt; |       false        |
 |  pressElevation  |  double  |       true        |
-|  errorTextPadding  | EdgeInsets   |       false     |
-|  labelPadding  | EdgeInsets   |       false        |
 |  count  | int   |       true        |
+|  layoutType  | ChipLayoutType   |       false        |
+|  chipThemeData  | ChipThemeData   |       true        |
 
+### RateFormField
+
+|     name       |        Type     |       nullable    |
+|     --         |        --       |       ---         |
+|     labelText  |        String   |       true        |
+|  rateThemeData  | RateThemeData   |       true        |
+
+
+### SingleSwitchFormField
+
+|     name       |        Type     |       nullable    |
+|     --         |        --       |       ---         |
+|     label  |        Widget   |       true        |
+|  switchRenderData  | SwitchRenderData   |       true        |
+
+
+### SingleCheckboxFormField
+
+|     name       |        Type     |       nullable    |
+|     --         |        --       |       ---         |
+|     label  |        Widget   |       true        |
+|  checkboxRenderData  | CheckboxRenderData   |       true        |
+
+
+### ButtonFormField
+
+|     name       |        Type     |       nullable    |
+|     --         |        --       |       ---         |
+|     icon  |        Widget   |       true        |
+|  child  | Widget   |       false        |
 
 ## currently support fields
 
 | field | return value | nullable|
 | ---| ---| --- |
 | ClearableTextFormField|  string | false |
-| CheckboxGroupFormField|  List&lt; int&gt; | false |
-| RadioGroupFormField|  T | true |
 | DateTimeFormField|  DateTime | true |
 | SelectorFormField|  List&lt; T&gt; | false |
-| SwitchGroupFormField|  List&lt; int&gt; | false |
-| SwitchInlineFormField|  bool | false |
+| ListTileFormField|  List&lt; T&gt; | false |
+| InlineFormField|  bool | false |
 | NumberFormField|  num | true |
 | SliderFormField|  double | false |
 | RangeSliderFormField|  RangeValues | false|
 | FilterChipFormField|  List&lt; T&gt; | false |
+| RateFormField| dobule | true |
+| SingleSwitchFormField| bool | false |
+| SingleCheckboxFormField| bool | false |
+|ButtonFormField|-|-|
 
 ## build your own form field
 
@@ -650,11 +690,11 @@ class CustomNullableValueField<T> extends BaseValueField<T> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
-            // state is ValueFieldState<T>,if you override ValueFieldState,you can cast it as your custom ValueFieldState,in this example you can cast it to _CustomNullableValueFieldState,you can get name via state.name(nullable),you can also get row|column|flex|inline to help you building your widget
+            ThemeData themeData = Theme.of(context);
+            // state is ValueFieldState<T>,if you override ValueFieldState,you can cast it as your custom ValueFieldState,in this example you can cast it to _CustomNullableValueFieldState,you can get name via state.name(nullable)
             // readOnly : whether this field should readOnly
-            // stateMap : can be regarded as the lastest initStateMap , user can change stateMap var FormFieldManagement's update|removeState|directly set state, in this example ,you should get label&textStyle form stateMap rather than directly use them
-            // themeData : ThemeData
+            // stateMap : can be regarded as the lastest initStateMap , user can change stateMap var FormFieldManagement's update,
+            // in this example ,you should get label&textStyle form stateMap rather than directly use them
             return Row(
               children: [
                 Text(
@@ -728,8 +768,7 @@ class _CustomNullableValueFieldState<T> extends BaseValueFieldState<T>
 the last step is insert your field 
 
 ``` dart
-FormBuilder.field(
-    field: CustomNullableValueField<String>(
+FormBuilder.append(CustomNullableValueField<String>(
         onChanged: (value) => print(value), value: '123')),
 ```
 
@@ -738,7 +777,6 @@ build a nonnull value field is almost the same,just extends BaseNonnullValueFiel
 this is an example:
 
 ``` dart
-
 class CustomNonnullableValueField extends BaseNonnullValueField<bool> {
   CustomNonnullableValueField({
     String? label,
@@ -757,7 +795,7 @@ class CustomNonnullableValueField extends BaseNonnullValueField<bool> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
+            ThemeData themeData = Theme.of(state.context);
             return Row(
               children: [
                 Text(
@@ -779,18 +817,19 @@ class CustomNonnullableValueField extends BaseNonnullValueField<bool> {
 ### build a commonfield
 
 ``` dart
+
 class Label extends BaseCommonField {
   final String label;
-  Label(this.label)
+  Label(this.label, {int flex = 1})
       : super(
           {'label': StateValue<String>(label)},
+          flex: flex,
           builder: (state) {
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = state.formThemeData;
+            ThemeData themeData = Theme.of(state.context);
             return Text(
               stateMap['label'],
-              style: TextStyle(
-                  fontSize: 18, color: themeData.primaryColor),
+              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
             );
           },
         );
@@ -800,7 +839,7 @@ class Label extends BaseCommonField {
 ### build a Stateless Field
 
 ``` dart
-FormBuilder.field(field: Builder(builder: (context) {
+FormBuilder.append(Builder(builder: (context) {
           BuilderInfo info = BuilderInfo.of(context);
           Position position = info.position;
           return Expanded(
@@ -812,7 +851,7 @@ FormBuilder.field(field: Builder(builder: (context) {
                   style: TextStyle(fontSize: 20),
                 ),
                 Container(
-                  color: info.formThemeData.primaryColor.withOpacity(0.3),
+                  color: info.themeData.primaryColor.withOpacity(0.3),
                   child: ListView(
                     shrinkWrap: true,
                     children: [
@@ -831,9 +870,4 @@ FormBuilder.field(field: Builder(builder: (context) {
 
 ## project status
 
-beta
-
-## develop plan
-
-1. performance test 
-2. support more fields
+1.0.0 release

@@ -28,16 +28,13 @@ class RateFormField extends BaseValueField<double> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    double iconSize = 36,
-    EdgeInsets? iconPading,
     RateTransfer? transfer,
-    int? ratio,
+    int ratio = 1,
+    RateThemeData? rateThemeData,
   }) : super(
           {
             'labelText': StateValue<String?>(labelText),
-            'iconSize': StateValue<double>(iconSize),
-            'iconPadding': StateValue<EdgeInsets?>(iconPading),
-            'ratio': StateValue<int?>(ratio),
+            'rateThemeData': StateValue<RateThemeData?>(rateThemeData),
           },
           visible: visible,
           readOnly: readOnly,
@@ -52,14 +49,13 @@ class RateFormField extends BaseValueField<double> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            double size = stateMap['iconSize'];
-            EdgeInsets iconPadding = stateMap['iconPadding'] ??
-                const EdgeInsets.symmetric(vertical: 5, horizontal: 10);
-            int ratio = stateMap['ratio'] ?? 1;
             String? labelText = stateMap['labelText'];
-            double? value = (state.value?.toDouble() ?? 0) / ratio;
-
             ThemeData themeData = Theme.of(state.context);
+            RateThemeData rateThemeData =
+                stateMap['rateThemeData'] ?? const RateThemeData();
+            double? value = (state.value?.toDouble() ?? 0) / ratio;
+            double size = rateThemeData.iconSize;
+            EdgeInsets iconPadding = rateThemeData.iconPadding;
 
             List<Widget> icons = [];
             for (int i = 0; i < 5; i++) {
@@ -67,11 +63,11 @@ class RateFormField extends BaseValueField<double> {
               if (rate < 0) rate = 0;
               icons.add(Padding(
                 child: _RateIcon(
-                  icon: Icons.star,
+                  icon: rateThemeData.icon,
                   size: size,
                   color: readOnly
-                      ? themeData.disabledColor
-                      : themeData.primaryColor,
+                      ? rateThemeData.disabledColor ?? themeData.disabledColor
+                      : rateThemeData.seletedColor ?? themeData.primaryColor,
                   rate: rate,
                 ),
                 padding: iconPadding,
@@ -106,6 +102,7 @@ class RateFormField extends BaseValueField<double> {
                       }
 
                       state.didChange((tapRate.floor() + finalRate) * ratio);
+                      state.requestFocus();
                     },
             );
 
@@ -155,4 +152,20 @@ class _RateIcon extends StatelessWidget {
       ),
     );
   }
+}
+
+class RateThemeData {
+  final IconData icon;
+  final double iconSize;
+  final Color? seletedColor;
+  final Color? disabledColor;
+  final EdgeInsets iconPadding;
+
+  const RateThemeData(
+      {this.icon = Icons.star,
+      this.iconSize = 36,
+      this.seletedColor,
+      this.disabledColor,
+      this.iconPadding =
+          const EdgeInsets.symmetric(horizontal: 10, vertical: 5)});
 }

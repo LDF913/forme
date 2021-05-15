@@ -1,5 +1,3 @@
-import 'dart:collection';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -431,6 +429,7 @@ class _ResourceManagement {
 /// (eg FormBuilder(formMangement:_FormBuilderFieldModel())),your form will rebuild always**
 class FormManagement {
   final _ResourceManagement _resourceManagement;
+  FormLayoutManagement? _formLayoutManagement;
 
   FormManagement() : this._resourceManagement = _ResourceManagement();
 
@@ -479,13 +478,13 @@ class FormManagement {
   /// create a form position management used to control visible|readOnly state of all
   /// fields at this position
   FormPositionManagement newFormPositionManagement(int row, {int? column}) =>
-      _RealTimeFormPositionManagement(_resourceManagement, row, column: column);
+      FormPositionManagement._(_resourceManagement, row, column: column);
 
   /// create a form layout management used to modify layout of form
   ///
   /// **@experimental**
   FormLayoutManagement newFormLayoutManagement() =>
-      FormLayoutManagement._(_resourceManagement);
+      _formLayoutManagement ??= FormLayoutManagement._(_resourceManagement);
 
   /// get form data
   ///
@@ -535,33 +534,29 @@ class FormManagement {
   /// field's validator ,  also [ValueFieldManagement.errorText] will   return null too,
   /// so value field will not display error
   ///
-  /// key is field'name
-  /// value is [FormFieldManagementWithError] you can get errorText
+  /// you can get errorText
   /// via [FormFieldManagementWithError.errorText]
   /// or request a focus via [FormFieldManagement.focus]
   /// or ensure field visible via [FormFieldManagement.ensureVisible]
   ///
   /// **the result has been sorted by position**
-  Map<String, FormFieldManagementWithError> quietlyValidate() {
-    Map<String, FormFieldManagementWithError> errorMap = {};
+  List<FormFieldManagementWithError> quietlyValidate() {
+    List<FormFieldManagementWithError> errors = [];
     for (_FixedFormFieldManagement management in _valueFieldManagements) {
       if (management.name == null) continue;
       String? errorText =
           management._valueFieldManagement!.state._quietlyValidate();
       if (errorText == null) continue;
-      errorMap[management.name!] =
-          FormFieldManagementWithError._(management, errorText);
+      errors.add(FormFieldManagementWithError._(management, errorText));
     }
-    var sortedKeys = errorMap.keys.toList(growable: false)
-      ..sort((k1, k2) {
-        Position p1 = errorMap[k1]!.formFieldManagement.position;
-        Position p2 = errorMap[k2]!.formFieldManagement.position;
-        int compare = p1.row.compareTo(p2.row);
-        if (compare == 0) return p1.column.compareTo(p2.column);
-        return compare;
-      });
-    return LinkedHashMap.fromIterable(sortedKeys,
-        key: (k) => k, value: (k) => errorMap[k]!);
+    errors.sort((a, b) {
+      Position p1 = a.formFieldManagement.position;
+      Position p2 = b.formFieldManagement.position;
+      int compare = p1.row.compareTo(p2.row);
+      if (compare == 0) return p1.column.compareTo(p2.column);
+      return compare;
+    });
+    return errors;
   }
 
   /// equals to setData(data,trigger:true)
@@ -726,6 +721,9 @@ class _FixedFormFieldManagement extends FormFieldManagement {
 
   @override
   bool get isValueField => _valueFieldManagement != null;
+
+  @override
+  bool supportState(String key) => model.support(key);
 }
 
 class _FixedValueFieldManagement<T> extends ValueFieldManagement<T> {
@@ -818,6 +816,9 @@ class _RealTimeFormFieldManagement extends FormFieldManagement {
           curve: curve,
           alignmentPolicy: alignmentPolicy,
           alignment: alignment);
+
+  @override
+  bool supportState(String key) => _management.supportState(key);
 }
 
 class _RealTimeValueFieldManagement<T> extends ValueFieldManagement<T> {
@@ -858,39 +859,23 @@ class _RealTimeValueFieldManagement<T> extends ValueFieldManagement<T> {
   set value(T? value) => _management.value = value;
 }
 
-class _RealTimeFormPositionManagement extends FormPositionManagement {
+class FormPositionManagement {
   final int row;
   final int? column;
   final _ResourceManagement resourceManagement;
-  _RealTimeFormPositionManagement(this.resourceManagement, this.row,
-      {this.column});
+  FormPositionManagement._(this.resourceManagement, this.row, {this.column});
 
-  @override
   bool get readOnly => _managements.every((element) => element.readOnly);
 
-  @override
   bool get visible => _managements.any((element) => element.visible);
 
-  @override
   set readOnly(bool readOnly) => _managements.forEach((element) {
         element.readOnly = readOnly;
       });
 
-  @override
   set visible(bool visible) => _managements.forEach((element) {
         element.visible = visible;
       });
-
-  @override
-  Iterable<FormFieldManagement> get formFieldManagements => _managements
-      .toList()
-      .asMap()
-      .map((key, value) => MapEntry(
-          key,
-          _RealTimeFormFieldManagement(
-              _FieldKey(row: row, column: column, index: key),
-              resourceManagement)))
-      .values;
 
   Iterable<FormFieldManagement> get _managements {
     Iterable<FormFieldManagement> managements =
@@ -1097,7 +1082,13 @@ mixin AbstractFieldState<T extends StatefulWidget> on State<T> {
   /// call this method in builder or in [initFormManagement]
   FocusNodes get focusNode {
     FocusNodes focusNodes = _focusNode ??= FocusNodes();
-    return _fixedFormFieldManagement.focusNode = focusNodes;
+    _fixedFormFieldManagement.focusNode = focusNodes;
+    return focusNodes;
+  }
+
+  void requestFocus() {
+    if (_focusNode == null || !_focusNode!.canRequestFocus) return;
+    _focusNode!.requestFocus();
   }
 
   @protected
@@ -1161,15 +1152,18 @@ abstract class ValueFieldState<T> extends FormFieldState<T>
     doChangeValue(value);
   }
 
+  void setValue(T? newValue) {
+    if (!compare(value, newValue)) {
+      super.setValue(newValue);
+      _didChange(value, newValue, true);
+    }
+  }
+
   void doChangeValue(T? newValue, {bool trigger = true}) {
     if (!compare(value, newValue)) {
-      try {
-        _didChange(value, newValue, trigger);
-      } finally {
-        super.didChange(newValue);
-      }
+      super.didChange(newValue);
+      _didChange(value, newValue, trigger);
     }
-    _focusNode?.requestFocus();
   }
 
   @override
@@ -1183,6 +1177,11 @@ abstract class ValueFieldState<T> extends FormFieldState<T>
     }
   }
 
+  /// used to compare two values  determine whether changeValue
+  ///
+  /// default used [FormBuilderUtils.compare]
+  ///
+  /// override this method if it can't meet your needs
   @protected
   bool compare(T? a, T? b) {
     return FormBuilderUtils.compare(a, b);
@@ -1205,6 +1204,11 @@ abstract class ValueFieldState<T> extends FormFieldState<T>
 
   String? _quietlyValidate() {
     if (widget.validator != null) return widget.validator!(value);
+  }
+
+  @protected
+  Widget doBuild() {
+    return super.build(context);
   }
 }
 

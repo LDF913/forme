@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../render/theme_data.dart';
+import '../render/form_render_utils.dart';
 
 import '../form_field.dart';
-import '../form_theme.dart';
 import '../state_model.dart';
 import 'decoration_field.dart';
 
@@ -10,25 +11,29 @@ class ListTileItem<T> {
   final bool readOnly;
   final bool visible;
   final EdgeInsets padding;
+
+  /// only work when split = 1
   final Widget? secondary;
   final ListTileControlAffinity controlAffinity;
+
+  /// only work when split = 1
   final Widget? subtitle;
   final bool dense;
   final T data;
   final bool ignoreSplit;
 
-  ListTileItem({
-    required this.title,
-    this.subtitle,
-    this.secondary,
-    ListTileControlAffinity? controlAffinity,
-    this.readOnly = false,
-    this.visible = true,
-    this.dense = false,
-    EdgeInsets? padding,
-    required this.data,
-    this.ignoreSplit = false,
-  })  : this.controlAffinity =
+  ListTileItem(
+      {required this.title,
+      this.subtitle,
+      this.secondary,
+      ListTileControlAffinity? controlAffinity,
+      this.readOnly = false,
+      this.visible = true,
+      this.dense = false,
+      EdgeInsets? padding,
+      required this.data,
+      this.ignoreSplit = false})
+      : this.controlAffinity =
             controlAffinity ?? ListTileControlAffinity.leading,
         this.padding = padding ?? EdgeInsets.zero;
 }
@@ -52,11 +57,21 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
     EdgeInsets? padding,
     ListTileItemType type = ListTileItemType.Checkbox,
     bool hasSelectAll = true,
+    CheckboxRenderData? checkboxRenderData,
+    RadioRenderData? radioRenderData,
+    SwitchRenderData? switchRenderData,
+    ListTileThemeData? listTileThemeData,
   }) : super({
           'labelText': StateValue<String?>(labelText),
           'split': StateValue<int>(split),
           'items': StateValue<List<ListTileItem<T>>>(items),
           'hasSelectAll': StateValue<bool>(hasSelectAll),
+          'listTileThemeData':
+              StateValue<ListTileThemeData?>(listTileThemeData),
+          'checkboxRenderData':
+              StateValue<CheckboxRenderData?>(checkboxRenderData),
+          'radioRenderData': StateValue<RadioRenderData?>(radioRenderData),
+          'switchRenderData': StateValue<SwitchRenderData?>(switchRenderData),
         },
             visible: visible,
             readOnly: readOnly,
@@ -69,16 +84,22 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
             initialValue: initialValue ?? [],
             validator: validator, builder: (state) {
           bool readOnly = state.readOnly;
-          ThemeData themeData = Theme.of(state.context);
           Map<String, dynamic> stateMap = state.currentMap;
           String? labelText = stateMap['labelText'];
           int split = stateMap['split'];
           List<ListTileItem<T>> items = stateMap['items'];
           bool hasSelectAll = stateMap['hasSelectAll'];
 
+          ListTileThemeData? listTileThemeData = stateMap['listTileThemeData'];
+          CheckboxRenderData? checkboxRenderData =
+              stateMap['checkboxRenderData'];
+          RadioRenderData? radioRenderData = stateMap['radioRenderData'];
+          SwitchRenderData? switchRenderData = stateMap['switchRenderData'];
+
           List<Widget> wrapWidgets = [];
 
           void changeValue(T value) {
+            state.requestFocus();
             switch (type) {
               case ListTileItemType.Checkbox:
               case ListTileItemType.Switch:
@@ -130,7 +151,6 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
                   title: item.title,
                   value: selected,
                   onChanged: readOnly ? null : (v) => changeValue(item.data),
-                  activeColor: themeData.primaryColor,
                 );
             }
           }
@@ -139,21 +159,27 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
               ListTileItem item, bool selected, bool readOnly) {
             switch (type) {
               case ListTileItemType.Checkbox:
-                return Checkbox(
-                    activeColor: themeData.primaryColor,
-                    value: selected,
-                    onChanged: readOnly ? null : (v) => changeValue(item.data));
+                return FormRenderUtils.checkbox(
+                    selected,
+                    readOnly || item.readOnly
+                        ? null
+                        : (v) => changeValue(item.data),
+                    checkboxRenderData);
               case ListTileItemType.Switch:
-                return Switch(
-                    value: selected,
-                    activeColor: themeData.primaryColor,
-                    onChanged: readOnly ? null : (v) => changeValue(item.data));
+                return FormRenderUtils.adaptiveSwitch(
+                    selected,
+                    readOnly || item.readOnly
+                        ? null
+                        : (v) => changeValue(item.data),
+                    switchRenderData);
               case ListTileItemType.Radio:
-                return Radio<T>(
-                    activeColor: themeData.primaryColor,
-                    value: item.data,
-                    groupValue: state.value.isEmpty ? null : state.value[0],
-                    onChanged: readOnly ? null : (v) => changeValue(item.data));
+                return FormRenderUtils.radio<T>(
+                    item.data,
+                    state.value.isEmpty ? null : state.value[0],
+                    readOnly || item.readOnly
+                        ? null
+                        : (v) => changeValue(item.data),
+                    radioRenderData);
             }
           }
 
@@ -171,17 +197,11 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
 
             Widget tileItem = createCommonItem(item, selected, readOnly);
 
-            final Widget title = ThemeUtil.wrapTitle(
-                split == 0
-                    ? item.title
-                    : Flexible(
-                        child: item.title,
-                      ),
-                true,
-                !readOnly,
-                selected,
-                themeData,
-                ListTileTheme.of(state.context));
+            final Widget title = split == 0
+                ? item.title
+                : Flexible(
+                    child: item.title,
+                  );
 
             List<Widget> children;
             switch (item.controlAffinity) {
@@ -262,6 +282,7 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
               IconData iconData =
                   selectAll ? Icons.switch_right : Icons.switch_left;
               void toggleValues() {
+                state.requestFocus();
                 List<T> values = List.of(state.value);
                 if (selectAll) {
                   state.didChange(values
@@ -288,11 +309,17 @@ class ListTileFormField<T> extends BaseNonnullValueField<List<T>> {
             }
           }
 
+          Widget child = Wrap(children: wrapWidgets);
+          if (split == 1) {
+            child =
+                FormRenderUtils.mergeListTileTheme(child, listTileThemeData);
+          }
+
           return DecorationField(
               labelText: labelText,
               readOnly: readOnly || isAllReadOnly,
               errorText: state.errorText,
-              child: Wrap(children: wrapWidgets),
+              child: child,
               focusNode: state.focusNode,
               icon: icon);
         });

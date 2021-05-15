@@ -1,11 +1,10 @@
 library form_builder;
 
 export 'src/builder.dart';
-export 'src/form_theme.dart';
 export 'src/field/selector.dart';
 export 'src/field/slider.dart';
 export 'src/field/list_tile.dart';
-export 'src/field/switch_inline.dart';
+export 'src/field/single_checkbox.dart';
 export 'src/field/text_field.dart';
 export 'src/field/number_field.dart';
 export 'src/field/datetime_field.dart';
@@ -18,4 +17,6 @@ export 'src/form_layout.dart';
 export 'src/field/button.dart';
 export 'src/field/rate.dart';
 export 'src/field/range_slider.dart';
+export 'src/field/single_switch.dart';
+export 'src/field/single_checkbox.dart';
 export 'src/management.dart';

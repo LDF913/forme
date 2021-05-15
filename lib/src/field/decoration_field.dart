@@ -8,7 +8,6 @@ class DecorationField extends StatelessWidget {
   final FocusNode? focusNode;
   final Widget? icon;
   final bool readOnly;
-  final TextStyle? labelStyle;
 
   const DecorationField(
       {Key? key,
@@ -17,8 +16,7 @@ class DecorationField extends StatelessWidget {
       this.errorText,
       this.focusNode,
       this.readOnly = false,
-      this.icon,
-      this.labelStyle})
+      this.icon})
       : super(key: key);
 
   @override
@@ -35,14 +33,14 @@ class DecorationField extends StatelessWidget {
         }
 
         if (icon != null) {
-          Color? color = hasFocus
+          Color? iconColor = hasFocus
               ? themeData.primaryColor
               : readOnly
                   ? themeData.disabledColor
                   : _getDefaultIconColor(themeData);
           children.add(Spacer());
           children.add(IconTheme(
-            data: IconThemeData(color: color),
+            data: IconTheme.of(context).copyWith(color: iconColor),
             child: icon!,
           ));
         }
@@ -78,6 +76,14 @@ class DecorationField extends StatelessWidget {
         color: hasFocus ? themeData.primaryColor : themeData.hintColor);
   }
 
+  TextStyle? _getErrorStyle(ThemeData themeData) {
+    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
+    final Color color = themeData.errorColor;
+    return themeData.textTheme.caption
+        ?.copyWith(color: color)
+        .merge(inputDecorationTheme.errorStyle);
+  }
+
   Color? _getDefaultIconColor(ThemeData themeData) {
     switch (themeData.brightness) {
       case Brightness.dark:
@@ -85,13 +91,5 @@ class DecorationField extends StatelessWidget {
       case Brightness.light:
         return Colors.black45;
     }
-  }
-
-  TextStyle? _getErrorStyle(ThemeData themeData) {
-    InputDecorationTheme inputDecorationTheme = themeData.inputDecorationTheme;
-    final Color color = themeData.errorColor;
-    return themeData.textTheme.caption
-        ?.copyWith(color: color)
-        .merge(inputDecorationTheme.errorStyle);
   }
 }

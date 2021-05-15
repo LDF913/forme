@@ -1,19 +1,88 @@
 import 'package:flutter/material.dart';
+import '../render/theme_data.dart';
+import '../render/form_render_utils.dart';
 
 import '../builder.dart';
 import '../state_model.dart';
 import '../form_field.dart';
 
-typedef SelectItemRender<T> = Widget Function(
-    T item, bool multiSelect, bool isSelected, ThemeData themeData);
-typedef SelectedItemRender<T> = Widget Function(
-    T item, bool multiSelect, bool readOnly, ThemeData themeData);
+/// used to render select list
+///
+/// [item] current item data
+///
+/// [multiSelect] whether mulitSelect or not
+///
+/// [isSelected] whether is selected or not
+///
+/// [themeData] current theme data
+///
+/// [select] a function used to select this item , select is null if selector is readOnly
+///
+/// **since the items was wrapped by ListTileTheme ,
+///  so better to return a widget contain CheckboxListTile or RadioListTile**
+///
+/// **default used item.toString() as label text**
+typedef SelectItemRender<T> = Widget Function(T item, bool multiSelect,
+    bool isSelected, ThemeData themeData, VoidCallback? select);
+
+/// used to render selected item
+///
+/// [item] selected item data from SelectItemProvider
+///
+/// [multiSelect] whether multiSelect or not
+///
+/// [readOnly] whether item should be readOnly
+///
+/// [themeData] current theme data
+///
+/// [remove] a function used to remove this widget, when mutilSelect or readOnly this parameter is null!
+///
+/// **since selected items wrapped by ChipTheme ,so better to return a widget contain Chip**
+///
+/// **default used item.toString() as label text**
+typedef SelectedItemRender<T> = Widget Function(T item, bool multiSelect,
+    bool readOnly, ThemeData themeData, VoidCallback? remove);
+
+/// used to sort selected items
 typedef SelectedSorter<T> = void Function(List<T> selected);
+
+/// used to provider select items
+///
+/// [page] target page
+///
+/// [params] query params get from query form builder
 typedef SelectItemProvider<T> = Future<SelectItemPage<T>> Function(
     int page, Map<String, dynamic> params);
+
+/// used to build a query form
+///
+/// [builder] form builder
+///
+/// [submit] an function used to submit query
 typedef QueryFormBuilder = void Function(
     FormBuilder builder, VoidCallback submit);
+
+/// used to listen select dialog open
+///
+/// helpful if you want to set initialValue for query form
+///
+/// if return true,will set query params before query otherwise just control form
 typedef OnSelectDialogShow = bool Function(FormManagement formManagement);
+
+/// used to render selector
+class SelectorThemeData {
+  //used to render select items
+  final ListTileThemeData? listTileThemeData;
+
+  /// used to render selected item
+  final ChipThemeData? chipThemeData;
+
+  ///used to render selector
+  final InputDecorationTheme? inputDecorationTheme;
+
+  const SelectorThemeData(
+      {this.listTileThemeData, this.chipThemeData, this.inputDecorationTheme});
+}
 
 class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
   final SelectItemRender<T>? selectItemRender;
@@ -24,40 +93,28 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
   final QueryFormBuilder? queryFormBuilder;
   final OnSelectDialogShow? onSelectDialogShow;
   final VoidCallback? onTap;
+  final SelectorThemeData selectorThemeData;
 
-  Widget _defaultSelectedItemRender<T>(
-      T item, bool multiSelect, bool readOnly, ThemeData themeData) {
+  Widget _defaultSelectedItemRender<T>(T item, bool multiSelect, bool readOnly,
+      ThemeData themeData, VoidCallback? remove) {
     if (!multiSelect) {
       return Padding(
         child: Text(item.toString()),
-        padding: EdgeInsets.only(left: 5, right: 5, top: 5),
+        padding: const EdgeInsets.only(left: 5, right: 5, top: 5),
       );
     }
     return Padding(
-        padding: EdgeInsets.only(right: 10),
+        padding: const EdgeInsets.only(right: 10),
         child: Chip(
-            backgroundColor: readOnly
-                ? themeData.primaryColor.withOpacity(0.5)
-                : themeData.primaryColor,
-            label: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  item.toString(),
-                  style: TextStyle(),
-                ),
-                SizedBox(
-                  width: 4,
-                ),
-                Visibility(
-                  child: Icon(
-                    Icons.clear,
-                    size: 12,
-                  ),
-                  visible: !readOnly,
-                )
-              ],
-            )));
+          label: Text(
+            item.toString(),
+          ),
+          onDeleted: remove,
+          deleteIcon: Icon(
+            Icons.close,
+            size: 24,
+          ),
+        ));
   }
 
   SelectorFormField({
@@ -85,14 +142,17 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
+    this.selectorThemeData = const SelectorThemeData(),
   }) : super(
           {
             'labelText': StateValue<String?>(labelText),
             'hintText': StateValue<String?>(hintText),
             'multi': StateValue<bool>(multi),
             'clearable': StateValue<bool>(clearable),
-            'inputDecorationTheme':
-                StateValue<InputDecorationTheme?>(inputDecorationTheme)
+            'selectorThemeData':
+                StateValue<SelectorThemeData>(selectorThemeData),
+            'selectedItemLayoutType':
+                StateValue<SelectedItemLayoutType>(selectedItemLayoutType),
           },
           visible: visible,
           readOnly: readOnly,
@@ -107,15 +167,15 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = Theme.of(state.context);
             FocusNode focusNode = state.focusNode;
             String? labelText = stateMap['labelText'];
             String? hintText = stateMap['hintText'];
             bool multi = stateMap['multi'];
             bool clearable = stateMap['clearable'];
-            InputDecorationTheme inputDecorationTheme =
-                stateMap['inputDecorationTheme'] ??
-                    themeData.inputDecorationTheme;
+            SelectorThemeData selectorThemeData = stateMap['selectorThemeData'];
+            SelectedItemLayoutType selectedItemLayoutType =
+                stateMap['selectedItemLayoutType'];
+            ThemeData themeData = Theme.of(state.context);
 
             List<Widget> icons = [];
             if (clearable && !readOnly && state.value.isNotEmpty) {
@@ -141,19 +201,24 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
                   (state.widget as SelectorFormField)
                       ._defaultSelectedItemRender;
               if (!multi) {
-                widget = render(state.value[0], multi, readOnly, themeData);
+                widget =
+                    render(state.value[0], multi, readOnly, themeData, null);
               } else {
                 if (selectedSorter != null) selectedSorter(state.value);
                 List<Widget> itemWidgets = state.value.map((item) {
                   return InkWell(
-                    onTap: readOnly
-                        ? null
-                        : onTap ??
-                            () {
-                              state.didChange(List.of(state.value)
-                                ..removeWhere((element) => element == item));
-                            },
-                    child: render(item, multi, readOnly, themeData),
+                    child: render(
+                        item,
+                        multi,
+                        readOnly,
+                        themeData,
+                        readOnly
+                            ? null
+                            : () {
+                                state.didChange(List.of(state.value)
+                                  ..removeWhere((element) => element == item));
+                              }),
+                    onTap: () {}, //prevent show selector dialog
                   );
                 }).toList();
 
@@ -166,18 +231,25 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
                   default:
                     widget = Wrap(children: itemWidgets);
                 }
+
+                widget = ChipTheme(
+                  child: widget,
+                  data: selectorThemeData.chipThemeData ??
+                      ChipTheme.of(state.context),
+                );
               }
             }
-
             final InputDecoration effectiveDecoration = InputDecoration(
-                contentPadding: multi ? EdgeInsets.zero : null,
-                labelText: labelText,
-                hintText: hintText,
-                suffixIcon: Row(
-                  children: icons,
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
-                )).applyDefaults(inputDecorationTheme);
+                    contentPadding: multi ? EdgeInsets.zero : null,
+                    labelText: labelText,
+                    hintText: hintText,
+                    suffixIcon: Row(
+                      children: icons,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      mainAxisSize: MainAxisSize.min,
+                    ))
+                .applyDefaults(selectorThemeData.inputDecorationTheme ??
+                    themeData.inputDecorationTheme);
 
             Widget child = Focus(
                 focusNode: focusNode,
@@ -195,13 +267,15 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
                                       .push(MaterialPageRoute<List<T>>(
                                           builder: (BuildContext context) {
                                             return _SelectorDialog<T>(
-                                                selectItemRender,
-                                                state.value,
-                                                selectItemProvider,
-                                                multi,
-                                                queryFormBuilder,
-                                                onSelectDialogShow,
-                                                themeData);
+                                              selectItemRender,
+                                              state.value,
+                                              selectItemProvider,
+                                              multi,
+                                              queryFormBuilder,
+                                              onSelectDialogShow,
+                                              themeData,
+                                              selectorThemeData,
+                                            );
                                           },
                                           fullscreenDialog: true));
                                   if (selected != null) {
@@ -228,6 +302,9 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
     if (old.length != selected.length) return false;
     return old.every((element) => selected.contains(element));
   }
+
+  @override
+  _SelectorFormFieldState<T> createState() => _SelectorFormFieldState();
 }
 
 class _SelectorDialog<T> extends StatefulWidget {
@@ -238,14 +315,17 @@ class _SelectorDialog<T> extends StatefulWidget {
   final QueryFormBuilder? queryFormBuilder;
   final OnSelectDialogShow? onSelectDialogShow;
   final ThemeData themeData;
+  final SelectorThemeData selectorThemeData;
   _SelectorDialog(
-      this.selectItemRender,
-      this.selected,
-      this.selectItemProvider,
-      this.multi,
-      this.queryFormBuilder,
-      this.onSelectDialogShow,
-      this.themeData);
+    this.selectItemRender,
+    this.selected,
+    this.selectItemProvider,
+    this.multi,
+    this.queryFormBuilder,
+    this.onSelectDialogShow,
+    this.themeData,
+    this.selectorThemeData,
+  );
   @override
   _SelectorDialogState<T> createState() => _SelectorDialogState();
 }
@@ -327,27 +407,22 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
     }
   }
 
-  Widget renderSelectItems(
-      T item, bool multiSelect, bool isSelected, ThemeData themeData) {
-    Color color =
-        isSelected ? themeData.primaryColor : themeData.unselectedWidgetColor;
-    return Padding(
-        child: Row(
-          children: [
-            Expanded(child: Text(item.toString())),
-            Icon(
-              isSelected
-                  ? multiSelect
-                      ? Icons.check_box
-                      : Icons.radio_button_checked
-                  : multiSelect
-                      ? Icons.check_box_outline_blank
-                      : Icons.radio_button_off,
-              color: color,
-            ),
-          ],
-        ),
-        padding: EdgeInsets.all(4));
+  Widget renderSelectItems(T item, bool multiSelect, bool isSelected,
+      ThemeData themeData, VoidCallback? select) {
+    if (multiSelect) {
+      return CheckboxListTile(
+          dense: true,
+          title: Text(item.toString()),
+          value: isSelected,
+          onChanged: select == null ? null : (v) => select());
+    } else {
+      return RadioListTile<T>(
+          dense: true,
+          title: Text(item.toString()),
+          value: item,
+          groupValue: isSelected ? item : null,
+          onChanged: select == null ? null : (v) => select());
+    }
   }
 
   Widget? buildQueryForm() {
@@ -399,20 +474,20 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
         }
         return true;
       },
-      child: ListView.builder(
-          itemBuilder: (context, index) {
-            var item = items[index];
-            bool selected = isSelected(item);
-            SelectItemRender<T> render =
-                widget.selectItemRender ?? renderSelectItems;
-            return InkWell(
-              child: render(item, widget.multi, selected, themeData),
-              onTap: () {
+      child: FormRenderUtils.mergeListTileTheme(
+          ListView.builder(
+            itemBuilder: (context, index) {
+              var item = items[index];
+              bool selected = isSelected(item);
+              SelectItemRender<T> render =
+                  widget.selectItemRender ?? renderSelectItems;
+              return render(item, widget.multi, selected, themeData, () {
                 toggle(item);
-              },
-            );
-          },
-          itemCount: items.length),
+              });
+            },
+            itemCount: items.length,
+          ),
+          widget.selectorThemeData.listTileThemeData),
     );
   }
 
@@ -486,6 +561,14 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
                 children: columns,
               ))),
     );
+  }
+}
+
+class _SelectorFormFieldState<T> extends BaseNonnullValueFieldState<List<T>> {
+  @override
+  void beforeNotifyListeners(Iterable<String> keys) {
+    super.beforeNotifyListeners(keys);
+    if (keys.contains("multi")) setValue([]);
   }
 }
 

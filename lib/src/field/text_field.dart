@@ -50,6 +50,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             'keyboardType': StateValue<TextInputType?>(keyboardType),
             'autofocus': StateValue<bool>(autofocus),
             'maxLines': StateValue<int?>(maxLines),
+            'minLines': StateValue<int?>(minLines),
             'maxLength': StateValue<int?>(maxLength),
             'clearable': StateValue<bool>(clearable),
             'prefixIcon': StateValue<Widget?>(prefixIcon),
@@ -85,7 +86,8 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
             String? hintText = stateMap['hintText'];
             TextInputType? keyboardType = stateMap['keyboardType'];
             bool autofocus = stateMap['autofocus'];
-            int? maxLines = stateMap['maxLines'];
+            int? maxLines = obscureText ? 1 : stateMap['maxLines'];
+            int? minLines = obscureText ? 1 : stateMap['minLines'];
             int? maxLength = stateMap['maxLength'];
             bool clearable = stateMap['clearable'];
             Widget? prefixIcon = stateMap['prefixIcon'];
@@ -155,7 +157,7 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
               autofocus: autofocus,
               obscureText: state.obscureText,
               toolbarOptions: toolbarOptions,
-              maxLines: obscureText ? 1 : maxLines,
+              maxLines: maxLines,
               minLines: minLines,
               maxLength: maxLength,
               onChanged: (value) => state.didChange(value),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widget/slider_theme.dart';
 import '../form_field.dart';
 import '../state_model.dart';
 import 'decoration_field.dart';
@@ -29,11 +28,15 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
+    Color? activeColor,
+    Color? inactiveColor,
   }) : super({
           'labelText': StateValue<String?>(labelText),
           'max': StateValue<double>(max),
           'min': StateValue<double>(min),
           'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
+          'activeColor': StateValue<Color?>(activeColor),
+          'inactiveColor': StateValue<Color?>(inactiveColor),
         },
             visible: visible,
             readOnly: readOnly,
@@ -47,11 +50,12 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             autovalidateMode: autovalidateMode, builder: (state) {
           bool readOnly = state.readOnly;
           Map<String, dynamic> stateMap = state.currentMap;
-          ThemeData themeData = Theme.of(state.context);
           int divisions = stateMap['divisions'];
           double max = stateMap['max'];
           double min = stateMap['min'];
           String? labelText = stateMap['labelText'];
+          Color? activeColor = stateMap['activeColor'];
+          Color? inactiveColor = stateMap['inactiveColor'];
 
           RangeValues rangeValues = state.value;
           RangeLabels? sliderLabels;
@@ -75,13 +79,14 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
               max: max,
               divisions: divisions,
               labels: sliderLabels,
+              activeColor: activeColor,
+              inactiveColor: inactiveColor,
               onChanged: readOnly
                   ? null
                   : (RangeValues values) {
                       state.didChange(values);
+                      state.requestFocus();
                     },
-              activeColor: themeData.primaryColor,
-              inactiveColor: themeData.unselectedWidgetColor.withOpacity(0.4),
             ),
           );
 
@@ -96,4 +101,78 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             labelText: labelText,
           );
         });
+}
+
+class CustomRangeSliderThumbCircle extends RangeSliderThumbShape {
+  final double enabledThumbRadius;
+  final double elevation;
+  final double pressedElevation;
+  final RangeValues value;
+
+  CustomRangeSliderThumbCircle(
+      {this.enabledThumbRadius = 12,
+      this.elevation = 1,
+      this.pressedElevation = 6,
+      required this.value});
+
+  @override
+  Size getPreferredSize(bool isEnabled, bool isDiscrete) {
+    return Size.fromRadius(enabledThumbRadius);
+  }
+
+  @override
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    bool? isOnTop,
+    required SliderThemeData sliderTheme,
+    TextDirection? textDirection,
+    Thumb? thumb,
+    bool? isPressed,
+  }) {
+    String value;
+    Thumb _thumb = thumb ?? Thumb.start;
+    switch (_thumb) {
+      case Thumb.start:
+        value = this.value.start.round().toString();
+        break;
+      case Thumb.end:
+        value = this.value.end.round().toString();
+        break;
+    }
+
+    final Canvas canvas = context.canvas;
+    final ColorTween colorTween = ColorTween(
+      begin: sliderTheme.disabledThumbColor,
+      end: sliderTheme.thumbColor,
+    );
+    final Color color = colorTween.evaluate(enableAnimation)!;
+
+    final paint = Paint()
+      ..color = color //Thumb Background Color
+      ..style = PaintingStyle.fill;
+
+    TextSpan span = new TextSpan(
+        style: new TextStyle(
+          fontSize: enabledThumbRadius * .8,
+          fontWeight: FontWeight.w700,
+          color: Colors.white, //Text Color of Value on Thumb
+        ),
+        text: value);
+
+    TextPainter tp = new TextPainter(
+        text: span,
+        textAlign: TextAlign.center,
+        textDirection: TextDirection.ltr);
+    tp.layout();
+    Offset textCenter =
+        Offset(center.dx - (tp.width / 2), center.dy - (tp.height / 2));
+
+    canvas.drawCircle(center, enabledThumbRadius * .9, paint);
+    tp.paint(canvas, textCenter);
+  }
 }

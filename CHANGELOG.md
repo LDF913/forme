@@ -1,3 +1,9 @@
+## 1.0.0
+1. BaseValueField support shake , use `formFieldManagement.update1('shaker',Shaker())` to shake it
+2. add some render data to control field render
+3. `FormFieldManagement` add supportState(String key) method
+4. bug fix
+
 ## 1.0.0-beta.4
 
 1. add FormLayoutManagement (experimental)

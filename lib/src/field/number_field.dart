@@ -44,6 +44,7 @@ class NumberFormField extends BaseValueField<num> {
             'inputDecorationTheme':
                 StateValue<InputDecorationTheme?>(inputDecorationTheme),
             'decimal': StateValue<int>(decimal),
+            'max': StateValue<double?>(max),
             'allowNegative': StateValue<bool>(allowNegative),
           },
           visible: visible,
@@ -73,6 +74,7 @@ class NumberFormField extends BaseValueField<num> {
             InputDecorationTheme inputDecorationTheme =
                 stateMap['inputDecorationTheme'] ??
                     Theme.of(state.context).inputDecorationTheme;
+            double? max = stateMap['max'];
             TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
 
@@ -221,5 +223,36 @@ class _NumberFieldState extends BaseValueFieldState<num>
   void setSelection(int start, int end) {
     TextSelectionManagement.setSelectionWithTextEditingController(
         start, end, textEditingController);
+  }
+
+  void clearValue() {
+    super.setValue(null);
+    textEditingController.text = '';
+  }
+
+  @override
+  void afterStateValueChanged(String key, dynamic old, dynamic current) {
+    super.afterStateValueChanged(key, old, current);
+    if (value == null) return;
+
+    if (key == 'max') {
+      double? max = current;
+      if (max == null) return;
+      if (max < value!) clearValue();
+    }
+
+    if (key == 'decimal') {
+      int? decimal = current;
+      if (decimal == null) return;
+      int indexOfPoint = value.toString().indexOf(".");
+      if (indexOfPoint == -1) return;
+      int decimalNum = value.toString().length - (indexOfPoint + 1);
+      if (decimalNum > decimal) clearValue();
+    }
+
+    if (key == 'allowNegative') {
+      bool allowNegative = current;
+      if (!allowNegative && value! < 0) clearValue();
+    }
   }
 }

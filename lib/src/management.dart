@@ -61,12 +61,15 @@ abstract class FormFieldManagement {
 
   /// make current field visible in viewport
   ///
-  /// if current field is invisible ,take no effect
+  /// if current field|form is invisible , nothing happened
   Future<void> ensureVisible(
       {Duration? duration,
       Curve? curve,
       ScrollPositionAlignmentPolicy? alignmentPolicy,
       double? alignment});
+
+  /// whether support state
+  bool supportState(String key);
 }
 
 abstract class ValueFieldManagement<T> {
@@ -94,31 +97,4 @@ abstract class ValueFieldManagement<T> {
 
   /// get error message
   String? get errorText;
-}
-
-abstract class FormPositionManagement {
-  /// get row
-  int get row;
-
-  /// get column
-  int? get column;
-
-  ///whether  all fields is readOnly
-  bool get readOnly;
-
-  /// whether at least one field is visible
-  bool get visible;
-
-  /// set readOnly on all fields at this position
-  set readOnly(bool readOnly);
-
-  /// set visible on all fields at this position
-  set visible(bool visible);
-
-  /// get all form field managements at this position
-  ///
-  /// if your field doesn't has a name field but you still want to control it, you can use this method
-  ///
-  /// **if not field management can be found ,an error will be throw**
-  Iterable<FormFieldManagement> get formFieldManagements;
 }

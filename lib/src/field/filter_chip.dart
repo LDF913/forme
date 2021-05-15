@@ -47,6 +47,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
     int? count,
     VoidCallback? exceedCallback,
     ChipLayoutType layoutType = ChipLayoutType.wrap,
+    ChipThemeData? chipThemeData,
   }) : super(
           {
             'items': StateValue<List<FilterChipItem<T>>>(items),
@@ -54,6 +55,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
             'pressElevation': StateValue<double?>(pressElevation),
             'count': StateValue<int?>(count),
             'layoutType': StateValue<ChipLayoutType>(layoutType),
+            'chipThemeData': StateValue<ChipThemeData?>(chipThemeData),
           },
           visible: visible,
           readOnly: readOnly,
@@ -68,12 +70,13 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
           builder: (state) {
             bool readOnly = state.readOnly;
             Map<String, dynamic> stateMap = state.currentMap;
-            ThemeData themeData = Theme.of(state.context);
             List<FilterChipItem<T>> items = stateMap['items'];
             String? labelText = stateMap['labelText'];
             double? pressElevation = stateMap['pressElevation'];
             ChipLayoutType layoutType = stateMap['layoutType'];
             int? count = stateMap['count'];
+            ChipThemeData chipThemeData =
+                stateMap['chipThemeData'] ?? ChipTheme.of(state.context);
 
             List<Widget> chips = [];
             for (FilterChipItem<T> item in items) {
@@ -84,9 +87,6 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                 avatar: item.avatar,
                 padding: item.contentPadding,
                 pressElevation: pressElevation,
-                disabledColor: themeData.primaryColor.withOpacity(0.5),
-                backgroundColor: themeData.primaryColor.withOpacity(0.5),
-                selectedColor: themeData.primaryColor,
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
@@ -100,6 +100,7 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                           state.didChange(
                               List.of(state.value)..remove(item.data));
                         }
+                        state.requestFocus();
                       },
               );
               chips.add(Visibility(
@@ -126,7 +127,10 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
             }
 
             return DecorationField(
-              child: chipWidget,
+              child: ChipTheme(
+                data: chipThemeData,
+                child: chipWidget,
+              ),
               focusNode: state.focusNode,
               errorText: state.errorText,
               readOnly: readOnly,
