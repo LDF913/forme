@@ -6,7 +6,7 @@ import '../form_field.dart';
 import '../state_model.dart';
 import '../text_selection.dart';
 
-class NumberFormField extends BaseValueField<num> {
+class NumberFormField extends BaseValueField<num, NumberFieldModel> {
   NumberFormField({
     bool autofocus = false,
     String? labelText,
@@ -31,22 +31,22 @@ class NumberFormField extends BaseValueField<num> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'hintText': StateValue<String?>(hintText),
-            'autofocus': StateValue<bool>(autofocus),
-            'clearable': StateValue<bool>(clearable),
-            'prefixIcon': StateValue<Widget?>(prefixIcon),
-            'style': StateValue<TextStyle?>(style),
-            'suffixIcons': StateValue<List<Widget>?>(suffixIcons),
-            'textInputAction': StateValue<TextInputAction?>(textInputAction),
-            'inputDecorationTheme':
-                StateValue<InputDecorationTheme?>(inputDecorationTheme),
-            'decimal': StateValue<int>(decimal),
-            'max': StateValue<double?>(max),
-            'allowNegative': StateValue<bool>(allowNegative),
-          },
+          model: NumberFieldModel(
+            labelText: labelText,
+            hintText: hintText,
+            autofocus: autofocus,
+            clearable: clearable,
+            prefixIcon: prefixIcon,
+            style: style,
+            suffixIcons: suffixIcons,
+            textInputAction: textInputAction,
+            inputDecorationTheme: inputDecorationTheme,
+            decimal: decimal,
+            max: max,
+            allowNegative: allowNegative,
+          ),
           visible: visible,
           readOnly: readOnly,
           flex: flex,
@@ -57,24 +57,24 @@ class NumberFormField extends BaseValueField<num> {
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
+          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
             FocusNode focusNode = state.focusNode;
-            String? labelText = stateMap['labelText'];
-            String? hintText = stateMap['hintText'];
-            bool clearable = stateMap['clearable'];
-            Widget? prefixIcon = stateMap['prefixIcon'];
-            TextStyle? style = stateMap['style'];
-            List<Widget>? suffixIcons = stateMap['suffixIcons'];
-            TextInputAction? textInputAction = stateMap['textInputAction'];
-            int decimal = stateMap['decimal'];
-            bool allowNegative = stateMap['allowNegative'];
-            bool autofocus = stateMap['autofocus'];
+            String? labelText = state.model.labelText;
+            String? hintText = state.model.hintText;
+            bool clearable = state.model.clearable!;
+            Widget? prefixIcon = state.model.prefixIcon;
+            TextStyle? style = state.model.style;
+            List<Widget>? suffixIcons = state.model.suffixIcons;
+            TextInputAction? textInputAction = state.model.textInputAction;
+            int decimal = state.model.decimal!;
+            bool allowNegative = state.model.allowNegative!;
+            bool autofocus = state.model.autofocus!;
             InputDecorationTheme inputDecorationTheme =
-                stateMap['inputDecorationTheme'] ??
+                state.model.inputDecorationTheme ??
                     Theme.of(state.context).inputDecorationTheme;
-            double? max = stateMap['max'];
+            double? max = state.model.max;
             TextEditingController textEditingController =
                 (state as _NumberFieldState).textEditingController;
 
@@ -170,7 +170,7 @@ class NumberFormField extends BaseValueField<num> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends BaseValueFieldState<num>
+class _NumberFieldState extends BaseValueFieldState<num, NumberFieldModel>
     with TextSelectionManagement {
   late final TextEditingController textEditingController;
   @override
@@ -179,7 +179,7 @@ class _NumberFieldState extends BaseValueFieldState<num>
   @override
   num? get value => super.value == null
       ? null
-      : getState('decimal') == 0
+      : model.decimal == 0
           ? super.value!.toInt()
           : super.value!.toDouble();
 
@@ -231,28 +231,67 @@ class _NumberFieldState extends BaseValueFieldState<num>
   }
 
   @override
-  void afterStateValueChanged(String key, dynamic old, dynamic current) {
-    super.afterStateValueChanged(key, old, current);
+  void beforeMerge(NumberFieldModel old, NumberFieldModel current) {
     if (value == null) return;
-
-    if (key == 'max') {
-      double? max = current;
-      if (max == null) return;
-      if (max < value!) clearValue();
-    }
-
-    if (key == 'decimal') {
-      int? decimal = current;
-      if (decimal == null) return;
+    if (current.max != null && current.max! < value!) clearValue();
+    if (current.allowNegative != null && !current.allowNegative! && value! < 0)
+      clearValue();
+    int? decimal = current.decimal;
+    if (decimal != null) {
       int indexOfPoint = value.toString().indexOf(".");
       if (indexOfPoint == -1) return;
       int decimalNum = value.toString().length - (indexOfPoint + 1);
       if (decimalNum > decimal) clearValue();
     }
+  }
+}
 
-    if (key == 'allowNegative') {
-      bool allowNegative = current;
-      if (!allowNegative && value! < 0) clearValue();
-    }
+class NumberFieldModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final String? hintText;
+  final bool? autofocus;
+  final bool? clearable;
+  final Widget? prefixIcon;
+  final TextStyle? style;
+  final List<Widget>? suffixIcons;
+  final TextInputAction? textInputAction;
+  final InputDecorationTheme? inputDecorationTheme;
+  final int? decimal;
+  final double? max;
+  final bool? allowNegative;
+
+  NumberFieldModel({
+    this.labelText,
+    this.hintText,
+    this.autofocus,
+    this.clearable,
+    this.prefixIcon,
+    this.style,
+    this.suffixIcons,
+    this.textInputAction,
+    this.inputDecorationTheme,
+    this.decimal,
+    this.max,
+    this.allowNegative,
+  });
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    NumberFieldModel oldModel = old as NumberFieldModel;
+    return NumberFieldModel(
+      labelText: labelText ?? oldModel.labelText,
+      hintText: hintText ?? oldModel.hintText,
+      autofocus: autofocus ?? oldModel.autofocus,
+      clearable: clearable ?? oldModel.clearable,
+      prefixIcon: prefixIcon ?? oldModel.prefixIcon,
+      style: style ?? oldModel.style,
+      suffixIcons: suffixIcons ?? oldModel.suffixIcons,
+      textInputAction: textInputAction ?? oldModel.textInputAction,
+      inputDecorationTheme:
+          inputDecorationTheme ?? oldModel.inputDecorationTheme,
+      decimal: decimal ?? oldModel.decimal,
+      max: max ?? oldModel.max,
+      allowNegative: allowNegative ?? oldModel.allowNegative,
+    );
   }
 }

@@ -84,7 +84,8 @@ class SelectorThemeData {
       {this.listTileThemeData, this.chipThemeData, this.inputDecorationTheme});
 }
 
-class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
+class SelectorFormField<T>
+    extends BaseNonnullValueField<List<T>, SelectorModel> {
   final SelectItemRender<T>? selectItemRender;
   final SelectedItemRender<T>? selectedItemRender;
   final SelectedSorter<T>? selectedSorter;
@@ -143,17 +144,16 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
     bool readOnly = false,
     EdgeInsets? padding,
     this.selectorThemeData = const SelectorThemeData(),
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'hintText': StateValue<String?>(hintText),
-            'multi': StateValue<bool>(multi),
-            'clearable': StateValue<bool>(clearable),
-            'selectorThemeData':
-                StateValue<SelectorThemeData>(selectorThemeData),
-            'selectedItemLayoutType':
-                StateValue<SelectedItemLayoutType>(selectedItemLayoutType),
-          },
+          model: SelectorModel(
+            labelText: labelText,
+            hintText: hintText,
+            multi: multi,
+            clearable: clearable,
+            selectorThemeData: selectorThemeData,
+            selectedItemLayoutType: selectedItemLayoutType,
+          ),
           visible: visible,
           readOnly: readOnly,
           flex: flex,
@@ -164,17 +164,18 @@ class SelectorFormField<T> extends BaseNonnullValueField<List<T>> {
           validator: validator,
           initialValue: initialValue ?? List<T>.empty(growable: true),
           autovalidateMode: autovalidateMode,
+          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
             FocusNode focusNode = state.focusNode;
-            String? labelText = stateMap['labelText'];
-            String? hintText = stateMap['hintText'];
-            bool multi = stateMap['multi'];
-            bool clearable = stateMap['clearable'];
-            SelectorThemeData selectorThemeData = stateMap['selectorThemeData'];
+            String? labelText = state.model.labelText;
+            String? hintText = state.model.hintText;
+            bool multi = state.model.multi!;
+            bool clearable = state.model.clearable!;
+            SelectorThemeData selectorThemeData =
+                state.model.selectorThemeData!;
             SelectedItemLayoutType selectedItemLayoutType =
-                stateMap['selectedItemLayoutType'];
+                state.model.selectedItemLayoutType!;
             ThemeData themeData = Theme.of(state.context);
 
             List<Widget> icons = [];
@@ -564,11 +565,13 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
   }
 }
 
-class _SelectorFormFieldState<T> extends BaseNonnullValueFieldState<List<T>> {
+class _SelectorFormFieldState<T>
+    extends BaseNonnullValueFieldState<List<T>, SelectorModel> {
   @override
-  void beforeNotifyListeners(Iterable<String> keys) {
-    super.beforeNotifyListeners(keys);
-    if (keys.contains("multi")) setValue([]);
+  void beforeMerge(SelectorModel old, SelectorModel current) {
+    if (current.multi != null && current.multi != old.multi) {
+      setValue([]);
+    }
   }
 }
 
@@ -580,3 +583,34 @@ class SelectItemPage<T> {
 }
 
 enum SelectedItemLayoutType { wrap, scroll }
+
+class SelectorModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final String? hintText;
+  final bool? multi;
+  final bool? clearable;
+  final SelectorThemeData? selectorThemeData;
+  final SelectedItemLayoutType? selectedItemLayoutType;
+
+  SelectorModel(
+      {this.labelText,
+      this.hintText,
+      this.multi,
+      this.clearable,
+      this.selectorThemeData,
+      this.selectedItemLayoutType});
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    SelectorModel oldModel = old as SelectorModel;
+    return SelectorModel(
+      labelText: labelText ?? oldModel.labelText,
+      hintText: hintText ?? oldModel.hintText,
+      multi: multi ?? oldModel.multi,
+      clearable: clearable ?? oldModel.clearable,
+      selectorThemeData: selectorThemeData ?? oldModel.selectorThemeData,
+      selectedItemLayoutType:
+          selectedItemLayoutType ?? oldModel.selectedItemLayoutType,
+    );
+  }
+}

@@ -20,3 +20,4 @@ export 'src/field/range_slider.dart';
 export 'src/field/single_switch.dart';
 export 'src/field/single_checkbox.dart';
 export 'src/management.dart';
+export 'src/render/theme_data.dart';

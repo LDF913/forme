@@ -8,7 +8,8 @@ import 'decoration_field.dart';
 
 enum InlineFieldType { Switch, Checkbox }
 
-class SingleCheckboxFormField extends BaseNonnullValueField<bool> {
+class SingleCheckboxFormField
+    extends BaseNonnullValueField<bool, SingleCheckboxModel> {
   SingleCheckboxFormField({
     ValueChanged<bool>? onChanged,
     NonnullFieldValidator<bool>? validator,
@@ -22,12 +23,10 @@ class SingleCheckboxFormField extends BaseNonnullValueField<bool> {
     EdgeInsets? padding,
     Widget? label,
     CheckboxRenderData? checkboxRenderData,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'label': StateValue<Widget?>(label),
-            'checkboxRenderData':
-                StateValue<CheckboxRenderData?>(checkboxRenderData),
-          },
+          model: SingleCheckboxModel(
+              checkboxRenderData: checkboxRenderData, label: label),
           visible: visible,
           readOnly: readOnly,
           flex: flex,
@@ -38,17 +37,17 @@ class SingleCheckboxFormField extends BaseNonnullValueField<bool> {
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
+          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             bool value = state.value;
-            Map<String, dynamic> stateMap = state.currentMap;
             CheckboxRenderData? checkboxRenderData =
-                stateMap['checkboxRenderData'];
+                state.model.checkboxRenderData;
             return DecorationField(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  stateMap['label'] ?? SizedBox(),
+                  state.model.label ?? SizedBox(),
                   FormRenderUtils.checkbox(
                       value,
                       readOnly
@@ -66,4 +65,18 @@ class SingleCheckboxFormField extends BaseNonnullValueField<bool> {
             );
           },
         );
+}
+
+class SingleCheckboxModel extends AbstractFieldStateModel {
+  final Widget? label;
+  final CheckboxRenderData? checkboxRenderData;
+  SingleCheckboxModel({this.label, this.checkboxRenderData});
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    SingleCheckboxModel oldModel = old as SingleCheckboxModel;
+    return SingleCheckboxModel(
+      label: label ?? oldModel.label,
+      checkboxRenderData: checkboxRenderData ?? oldModel.checkboxRenderData,
+    );
+  }
 }

@@ -1,6 +1,6 @@
 name: form_builder
 description: flutter row-column based form builder, build form quickly,create field fast,less code,more powerful
-version: 1.0.0
+version: 2.0.0-alpha
 homepage: https://github.com/wwwqyhme/flutter-form-builder
 
 environment:

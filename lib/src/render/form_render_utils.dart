@@ -42,7 +42,6 @@ class FormRenderUtils {
       trackColor: switchRenderData?.trackColor,
       dragStartBehavior:
           switchRenderData?.dragStartBehavior ?? DragStartBehavior.start,
-      mouseCursor: switchRenderData?.mouseCursor,
       focusColor: switchRenderData?.focusColor,
       hoverColor: switchRenderData?.hoverColor,
       overlayColor: switchRenderData?.overlayColor,
@@ -56,7 +55,6 @@ class FormRenderUtils {
       CheckboxRenderData? checkboxRenderData) {
     return Checkbox(
       activeColor: checkboxRenderData?.activeColor,
-      mouseCursor: checkboxRenderData?.mouseCursor,
       fillColor: checkboxRenderData?.fillColor,
       checkColor: checkboxRenderData?.checkColor,
       materialTapTargetSize: checkboxRenderData?.materialTapTargetSize,
@@ -74,7 +72,6 @@ class FormRenderUtils {
       RadioRenderData? radioRenderData) {
     return Radio<T>(
       activeColor: radioRenderData?.activeColor,
-      mouseCursor: radioRenderData?.mouseCursor,
       fillColor: radioRenderData?.fillColor,
       materialTapTargetSize: radioRenderData?.materialTapTargetSize,
       focusColor: radioRenderData?.focusColor,

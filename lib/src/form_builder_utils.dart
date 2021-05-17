@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import 'field/filter_chip.dart';
 import 'field/list_tile.dart';
-import 'field/selector.dart';
 
 class FormBuilderUtils {
   FormBuilderUtils._();
@@ -27,14 +26,6 @@ class FormBuilderUtils {
             contentPadding: contentPadding,
             labelPadding: labelPadding))
         .toList();
-  }
-
-  static SelectItemProvider toSelectItemProvider<T>(List<T> items) {
-    return (page, params) {
-      return Future.delayed(Duration.zero, () {
-        return SelectItemPage<T>(items, items.length);
-      });
-    };
   }
 
   static List<ListTileItem<String>> toListTileItems(

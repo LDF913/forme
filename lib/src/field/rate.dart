@@ -15,13 +15,12 @@ import 'decoration_field.dart';
 /// **return value must be in [0,1]**
 typedef RateTransfer = double Function(double rate);
 
-class RateFormField extends BaseValueField<double> {
+class RateFormField extends BaseValueField<double, RateModel> {
   RateFormField({
     ValueChanged<double?>? onChanged,
     FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    String? labelText,
     FormFieldSetter<double>? onSaved,
     String? name,
     int flex = 1,
@@ -30,12 +29,11 @@ class RateFormField extends BaseValueField<double> {
     EdgeInsets? padding,
     RateTransfer? transfer,
     int ratio = 1,
+    String? labelText,
     RateThemeData? rateThemeData,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'rateThemeData': StateValue<RateThemeData?>(rateThemeData),
-          },
+          model: RateModel(labelText: labelText, rateThemeData: rateThemeData),
           visible: visible,
           readOnly: readOnly,
           flex: flex,
@@ -46,13 +44,13 @@ class RateFormField extends BaseValueField<double> {
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
+          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
-            String? labelText = stateMap['labelText'];
+            String? labelText = state.model.labelText;
             ThemeData themeData = Theme.of(state.context);
             RateThemeData rateThemeData =
-                stateMap['rateThemeData'] ?? const RateThemeData();
+                state.model.rateThemeData ?? const RateThemeData();
             double? value = (state.value?.toDouble() ?? 0) / ratio;
             double size = rateThemeData.iconSize;
             EdgeInsets iconPadding = rateThemeData.iconPadding;
@@ -168,4 +166,19 @@ class RateThemeData {
       this.disabledColor,
       this.iconPadding =
           const EdgeInsets.symmetric(horizontal: 10, vertical: 5)});
+}
+
+class RateModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final RateThemeData? rateThemeData;
+
+  RateModel({this.labelText, this.rateThemeData});
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    RateModel oldModel = old as RateModel;
+    return RateModel(
+        labelText: labelText ?? oldModel.labelText,
+        rateThemeData: rateThemeData ?? oldModel.rateThemeData);
+  }
 }

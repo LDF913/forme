@@ -8,7 +8,8 @@ import '../state_model.dart';
 import '../text_selection.dart';
 import '../form_field.dart';
 
-class ClearableTextFormField extends BaseNonnullValueField<String> {
+class ClearableTextFormField
+    extends BaseNonnullValueField<String, TextFieldModel> {
   final bool obscureText;
   ClearableTextFormField({
     String? labelText,
@@ -43,29 +44,26 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
     bool readOnly = false,
     EdgeInsets? padding,
     TextCapitalization? textCapitalization,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'hintText': StateValue<String?>(hintText),
-            'keyboardType': StateValue<TextInputType?>(keyboardType),
-            'autofocus': StateValue<bool>(autofocus),
-            'maxLines': StateValue<int?>(maxLines),
-            'minLines': StateValue<int?>(minLines),
-            'maxLength': StateValue<int?>(maxLength),
-            'clearable': StateValue<bool>(clearable),
-            'prefixIcon': StateValue<Widget?>(prefixIcon),
-            'inputFormatters':
-                StateValue<List<TextInputFormatter>?>(inputFormatters),
-            'style': StateValue<TextStyle?>(style),
-            'toolbarOptions': StateValue<ToolbarOptions?>(toolbarOptions),
-            'selectAllOnFocus': StateValue<bool>(selectAllOnFocus),
-            'suffixIcons': StateValue<List<Widget>?>(suffixIcons),
-            'textInputAction': StateValue<TextInputAction?>(textInputAction),
-            'inputDecorationTheme':
-                StateValue<InputDecorationTheme?>(inputDecorationTheme),
-            'textCapitalization':
-                StateValue<TextCapitalization?>(textCapitalization),
-          },
+          model: TextFieldModel(
+            labelText: labelText,
+            hintText: hintText,
+            keyboardType: keyboardType,
+            autofocus: autofocus,
+            maxLines: maxLines,
+            minLines: minLines,
+            maxLength: maxLength,
+            clearable: clearable,
+            prefixIcon: prefixIcon,
+            toolbarOptions: toolbarOptions,
+            selectAllOnFocus: selectAllOnFocus,
+            style: style,
+            suffixIcons: suffixIcons,
+            textInputAction: textInputAction,
+            inputDecorationTheme: inputDecorationTheme,
+            textCapitalization: textCapitalization,
+          ),
           name: name,
           flex: flex,
           visible: visible,
@@ -76,32 +74,30 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
+          wrapper: wrapper,
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
             _TextFormFieldState state = baseState as _TextFormFieldState;
-            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = Theme.of(state.context);
             FocusNode? focusNode = baseState.focusNode;
-            String? labelText = stateMap['labelText'];
-            String? hintText = stateMap['hintText'];
-            TextInputType? keyboardType = stateMap['keyboardType'];
-            bool autofocus = stateMap['autofocus'];
-            int? maxLines = obscureText ? 1 : stateMap['maxLines'];
-            int? minLines = obscureText ? 1 : stateMap['minLines'];
-            int? maxLength = stateMap['maxLength'];
-            bool clearable = stateMap['clearable'];
-            Widget? prefixIcon = stateMap['prefixIcon'];
-            List<TextInputFormatter>? inputFormatters =
-                stateMap['inputFormatters'];
-            TextStyle? style = stateMap['style'];
-            ToolbarOptions? toolbarOptions = stateMap['toolbarOptions'];
-            List<Widget>? suffixIcons = stateMap['suffixIcons'];
-            TextInputAction? textInputAction = stateMap['textInputAction'];
+            String? labelText = state.model.labelText;
+            String? hintText = state.model.hintText;
+            TextInputType? keyboardType = state.model.keyboardType;
+            bool autofocus = state.model.autofocus!;
+            int? maxLines = obscureText ? 1 : state.model.maxLines;
+            int? minLines = obscureText ? 1 : state.model.minLines;
+            int? maxLength = state.model.maxLength;
+            bool clearable = state.model.clearable!;
+            Widget? prefixIcon = state.model.prefixIcon;
+            TextStyle? style = state.model.style;
+            ToolbarOptions? toolbarOptions = state.model.toolbarOptions;
+            List<Widget>? suffixIcons = state.model.suffixIcons;
+            TextInputAction? textInputAction = state.model.textInputAction;
             InputDecorationTheme inputDecorationTheme =
-                stateMap['inputDecorationTheme'] ??
+                state.model.inputDecorationTheme ??
                     themeData.inputDecorationTheme;
             TextCapitalization textCapitalization =
-                stateMap['textCapitalization'] ?? TextCapitalization.none;
+                state.model.textCapitalization ?? TextCapitalization.none;
 
             List<Widget> suffixes = [];
             if (clearable && !readOnly && state.value.length > 0) {
@@ -177,7 +173,8 @@ class ClearableTextFormField extends BaseNonnullValueField<String> {
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextFormFieldState extends BaseNonnullValueFieldState<String>
+class _TextFormFieldState
+    extends BaseNonnullValueFieldState<String, TextFieldModel>
     with TextSelectionManagement {
   bool obscureText = false;
 
@@ -186,7 +183,7 @@ class _TextFormFieldState extends BaseNonnullValueFieldState<String>
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
 
-  bool get selectAllOnFocus => getState('selectAllOnFocus');
+  bool get selectAllOnFocus => model.selectAllOnFocus!;
 
   void doSelectAll() {
     if (focusNode.hasFocus) {
@@ -256,5 +253,67 @@ class _TextFormFieldState extends BaseNonnullValueFieldState<String>
   @override
   void selectAll() {
     setSelection(0, textEditingController.text.length);
+  }
+}
+
+class TextFieldModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final String? hintText;
+  final TextInputType? keyboardType;
+  final bool? autofocus;
+  final int? maxLines;
+  final int? minLines;
+  final int? maxLength;
+  final bool? clearable;
+  final Widget? prefixIcon;
+  final TextStyle? style;
+  final ToolbarOptions? toolbarOptions;
+  final bool? selectAllOnFocus;
+  final List<Widget>? suffixIcons;
+  final TextInputAction? textInputAction;
+  final InputDecorationTheme? inputDecorationTheme;
+  final TextCapitalization? textCapitalization;
+
+  TextFieldModel({
+    this.labelText,
+    this.hintText,
+    this.keyboardType,
+    this.autofocus,
+    this.maxLines,
+    this.minLines,
+    this.maxLength,
+    this.clearable,
+    this.prefixIcon,
+    this.style,
+    this.toolbarOptions,
+    this.selectAllOnFocus,
+    this.suffixIcons,
+    this.textInputAction,
+    this.inputDecorationTheme,
+    this.textCapitalization,
+  });
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    TextFieldModel oldModel = old as TextFieldModel;
+    return TextFieldModel(
+      labelText: labelText ?? oldModel.labelText,
+      hintText: hintText ?? oldModel.hintText,
+      keyboardType: keyboardType ?? oldModel.keyboardType,
+      autofocus: autofocus ?? oldModel.autofocus,
+      maxLines: maxLines ?? oldModel.maxLines,
+      minLines: minLines ?? oldModel.minLines,
+      maxLength: maxLength ?? oldModel.maxLength,
+      clearable: clearable ?? oldModel.clearable,
+      prefixIcon: prefixIcon ?? oldModel.prefixIcon,
+      toolbarOptions: toolbarOptions ?? oldModel.toolbarOptions,
+      selectAllOnFocus: selectAllOnFocus ?? oldModel.selectAllOnFocus,
+      style: style ?? oldModel.style,
+      suffixIcons: suffixIcons ?? oldModel.suffixIcons,
+      textInputAction: textInputAction ?? oldModel.textInputAction,
+      inputDecorationTheme:
+          inputDecorationTheme ?? oldModel.inputDecorationTheme,
+      textCapitalization: textCapitalization ?? oldModel.textCapitalization,
+    );
   }
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../form_field.dart';
-import '../state_model.dart';
 import 'decoration_field.dart';
 import 'slider.dart';
 
@@ -11,7 +11,8 @@ class RangeSubLabelRender {
   RangeSubLabelRender(this.startRender, this.endRender);
 }
 
-class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
+class RangeSliderFormField
+    extends BaseNonnullValueField<RangeValues, SliderModel> {
   RangeSliderFormField({
     ValueChanged<RangeValues>? onChanged,
     NonnullFieldValidator<RangeValues>? validator,
@@ -30,14 +31,21 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
     EdgeInsets? padding,
     Color? activeColor,
     Color? inactiveColor,
-  }) : super({
-          'labelText': StateValue<String?>(labelText),
-          'max': StateValue<double>(max),
-          'min': StateValue<double>(min),
-          'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
-          'activeColor': StateValue<Color?>(activeColor),
-          'inactiveColor': StateValue<Color?>(inactiveColor),
-        },
+    SliderThemeData? sliderThemeData,
+    SemanticFormatterCallback? semanticFormatterCallback,
+    ValueChanged<RangeValues>? onChangeStart,
+    ValueChanged<RangeValues>? onChangeEnd,
+    WidgetWrapper? wrapper,
+  }) : super(
+            model: SliderModel(
+              labelText: labelText,
+              max: max,
+              min: min,
+              divisions: divisions ?? (max - min).toInt(),
+              activeColor: activeColor,
+              inactiveColor: inactiveColor,
+              sliderThemeData: sliderThemeData,
+            ),
             visible: visible,
             readOnly: readOnly,
             flex: flex,
@@ -47,74 +55,79 @@ class RangeSliderFormField extends BaseNonnullValueField<RangeValues> {
             onSaved: onSaved,
             validator: validator,
             initialValue: initialValue ?? RangeValues(min, max),
-            autovalidateMode: autovalidateMode, builder: (state) {
-          bool readOnly = state.readOnly;
-          Map<String, dynamic> stateMap = state.currentMap;
-          int divisions = stateMap['divisions'];
-          double max = stateMap['max'];
-          double min = stateMap['min'];
-          String? labelText = stateMap['labelText'];
-          Color? activeColor = stateMap['activeColor'];
-          Color? inactiveColor = stateMap['inactiveColor'];
+            autovalidateMode: autovalidateMode,
+            wrapper: wrapper,
+            builder: (state) {
+              bool readOnly = state.readOnly;
+              int divisions = state.model.divisions!;
+              double max = state.model.max!;
+              double min = state.model.min!;
+              String? labelText = state.model.labelText;
+              Color? activeColor = state.model.activeColor;
+              Color? inactiveColor = state.model.inactiveColor;
 
-          RangeValues rangeValues = state.value;
-          RangeLabels? sliderLabels;
+              RangeValues rangeValues = state.value;
+              RangeLabels? sliderLabels;
 
-          if (rangeSubLabelRender != null) {
-            String start = rangeSubLabelRender.startRender(rangeValues.start);
-            String end = rangeSubLabelRender.endRender(rangeValues.end);
-            sliderLabels = RangeLabels(start, end);
-          }
+              if (rangeSubLabelRender != null) {
+                String start =
+                    rangeSubLabelRender.startRender(rangeValues.start);
+                String end = rangeSubLabelRender.endRender(rangeValues.end);
+                sliderLabels = RangeLabels(start, end);
+              }
 
-          SliderThemeData sliderThemeData = SliderTheme.of(state.context);
-          if (sliderThemeData.thumbShape == null)
-            sliderThemeData = sliderThemeData.copyWith(
-                rangeThumbShape:
-                    CustomRangeSliderThumbCircle(value: state.value));
-          Widget slider = SliderTheme(
-            data: sliderThemeData,
-            child: RangeSlider(
-              values: rangeValues,
-              min: min,
-              max: max,
-              divisions: divisions,
-              labels: sliderLabels,
-              activeColor: activeColor,
-              inactiveColor: inactiveColor,
-              onChanged: readOnly
-                  ? null
-                  : (RangeValues values) {
-                      state.didChange(values);
-                      state.requestFocus();
-                    },
-            ),
-          );
+              SliderThemeData sliderThemeData =
+                  state.model.sliderThemeData ?? SliderTheme.of(state.context);
+              if (sliderThemeData.thumbShape == null)
+                sliderThemeData = sliderThemeData.copyWith(
+                    rangeThumbShape:
+                        CustomRangeSliderThumbCircle(value: state.value));
+              Widget slider = SliderTheme(
+                data: sliderThemeData,
+                child: RangeSlider(
+                  values: rangeValues,
+                  min: min,
+                  max: max,
+                  divisions: divisions,
+                  labels: sliderLabels,
+                  activeColor: activeColor,
+                  inactiveColor: inactiveColor,
+                  onChangeStart: onChangeStart,
+                  onChangeEnd: onChangeEnd,
+                  semanticFormatterCallback: semanticFormatterCallback,
+                  onChanged: readOnly
+                      ? null
+                      : (RangeValues values) {
+                          state.didChange(values);
+                          state.requestFocus();
+                        },
+                ),
+              );
 
-          return DecorationField(
-            child: Padding(
-              child: slider,
-              padding: const EdgeInsets.symmetric(vertical: 10),
-            ),
-            focusNode: state.focusNode,
-            errorText: state.errorText,
-            readOnly: readOnly,
-            labelText: labelText,
-          );
-        });
+              return DecorationField(
+                child: Padding(
+                  child: slider,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                ),
+                focusNode: state.focusNode,
+                errorText: state.errorText,
+                readOnly: readOnly,
+                labelText: labelText,
+              );
+            });
 
   @override
   _RangeSliderFormFieldState createState() => _RangeSliderFormFieldState();
 }
 
 class _RangeSliderFormFieldState
-    extends BaseNonnullValueFieldState<RangeValues> {
+    extends BaseNonnullValueFieldState<RangeValues, SliderModel> {
   @override
-  void afterStateValueChanged(String key, old, current) {
-    super.afterStateValueChanged(key, old, current);
-    if (key == 'min' && value.start < current)
-      setValue(RangeValues(current, value.end));
-    if (key == 'max' && value.end > current)
-      setValue(RangeValues(value.start, current));
+  void beforeMerge(SliderModel old, SliderModel current) {
+    if (current.min != null && value.start < current.min!)
+      setValue(RangeValues(current.min!, value.end));
+    if (current.max != null && value.end > current.max!)
+      setValue(RangeValues(value.start, current.max!));
   }
 }
 

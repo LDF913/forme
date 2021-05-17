@@ -6,12 +6,12 @@ import '../state_model.dart';
 
 enum DateTimeType { Date, DateTime }
 
-class DateTimeFormField extends BaseValueField<DateTime> {
+class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
   DateTimeFormField({
     String? labelText,
     String? hintText,
     TextStyle? style,
-    DateTimeFormatter? formatter,
+    DateTimeFormatter? dateTimeFormatter,
     DateTimeType type = DateTimeType.Date,
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
@@ -27,19 +27,20 @@ class DateTimeFormField extends BaseValueField<DateTime> {
     EdgeInsets? padding,
     DateTime? firstDate,
     DateTime? lastDate,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'hintText': StateValue<String?>(hintText),
-            'maxLines': StateValue<int>(maxLines ?? 1),
-            'type': StateValue<DateTimeType>(type),
-            'formatter': StateValue<DateTimeFormatter?>(formatter),
-            'style': StateValue<TextStyle?>(style),
-            'firstDate': StateValue<DateTime>(firstDate ?? DateTime(2000)),
-            'lastDate': StateValue<DateTime>(lastDate ?? DateTime(2099)),
-            'inputDecorationTheme':
-                StateValue<InputDecorationTheme?>(inputDecorationTheme),
-          },
+          model: DateTimeFieldModel(
+            labelText: labelText,
+            hintText: hintText,
+            style: style,
+            inputDecorationTheme: inputDecorationTheme,
+            type: type,
+            dateTimeFormatter: dateTimeFormatter,
+            firstDate: firstDate ?? DateTime(1970),
+            lastDate: lastDate ?? DateTime(2099),
+            maxLines: maxLines ?? 1,
+          ),
+          wrapper: wrapper,
           name: name,
           flex: flex,
           visible: visible,
@@ -51,21 +52,20 @@ class DateTimeFormField extends BaseValueField<DateTime> {
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
             ThemeData themeData = Theme.of(state.context);
             FocusNode focusNode = state.focusNode;
-            String? labelText = stateMap['labelText'];
-            String? hintText = stateMap['hintText'];
-            TextStyle? style = stateMap['style'];
-            int maxLines = stateMap['maxLines'];
+            String? labelText = state.model.labelText;
+            String? hintText = state.model.hintText;
+            TextStyle? style = state.model.style;
+            int maxLines = state.model.maxLines!;
             InputDecorationTheme inputDecorationTheme =
-                stateMap['inputDecorationTheme'] ??
+                state.model.inputDecorationTheme ??
                     themeData.inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _DateTimeFormFieldState).textEditingController;
-            DateTime firstDate = stateMap['firstDate'];
-            DateTime lastDate = stateMap['lastDate'];
-            DateTimeType type = stateMap['type'];
+            DateTime firstDate = state.model.firstDate!;
+            DateTime lastDate = state.model.lastDate!;
+            DateTimeType type = state.model.type!;
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
@@ -160,16 +160,21 @@ class DateTimeFormField extends BaseValueField<DateTime> {
 
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
-class _DateTimeFormFieldState extends BaseValueFieldState<DateTime> {
-  DateTimeFormatter get _formatter =>
-      getState('formatter') ?? getState('type') == DateTimeType.DateTime
-          ? DateTimeFormField.defaultDateTimeFormatter
-          : DateTimeFormField.defaultDateFormatter;
+class _DateTimeFormFieldState
+    extends BaseValueFieldState<DateTime, DateTimeFieldModel> {
+  DateTimeFormatter get _formatter => _getDateTimeFormatter(model.type!);
 
   late final TextEditingController textEditingController;
 
   @override
   DateTimeFormField get widget => super.widget as DateTimeFormField;
+
+  DateTimeFormatter _getDateTimeFormatter(DateTimeType type) {
+    return model.dateTimeFormatter ??
+        (type == DateTimeType.DateTime
+            ? DateTimeFormField.defaultDateTimeFormatter
+            : DateTimeFormField.defaultDateFormatter);
+  }
 
   @override
   void initState() {
@@ -199,20 +204,61 @@ class _DateTimeFormFieldState extends BaseValueFieldState<DateTime> {
     super.dispose();
   }
 
+  void clearValue() {
+    setValue(null);
+    textEditingController.text = '';
+  }
+
   @override
-  void afterStateValueChanged(String key, dynamic old, dynamic current) {
-    super.afterStateValueChanged(key, old, current);
-
-    void clearValue() {
-      setValue(null);
-      textEditingController.text = '';
-    }
-
+  void beforeMerge(DateTimeFieldModel old, DateTimeFieldModel current) {
     if (value == null) return;
+    if (current.type != old.type && current.type != null)
+      textEditingController.text =
+          value == null ? '' : _getDateTimeFormatter(current.type!)(value!);
+    if (current.firstDate != null && current.firstDate!.isAfter(value!))
+      clearValue();
+    if (current.lastDate != null && current.lastDate!.isBefore(value!))
+      clearValue();
+  }
+}
 
-    if (key == 'type')
-      textEditingController.text = value == null ? '' : _formatter(value!);
-    if (key == 'firstDate' && current.isAfter(value!)) clearValue();
-    if (key == 'lastDate' && current.isBefore(value!)) clearValue();
+class DateTimeFieldModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final String? hintText;
+  final TextStyle? style;
+  final DateTimeType? type;
+  final DateTimeFormatter? dateTimeFormatter;
+  final DateTime? firstDate;
+  final DateTime? lastDate;
+  final int? maxLines;
+  final InputDecorationTheme? inputDecorationTheme;
+
+  DateTimeFieldModel({
+    this.labelText,
+    this.hintText,
+    this.style,
+    this.inputDecorationTheme,
+    this.type,
+    this.dateTimeFormatter,
+    this.firstDate,
+    this.lastDate,
+    this.maxLines,
+  });
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    DateTimeFieldModel oldModel = old as DateTimeFieldModel;
+    return DateTimeFieldModel(
+      labelText: labelText ?? oldModel.labelText,
+      hintText: hintText ?? oldModel.hintText,
+      style: style ?? oldModel.style,
+      inputDecorationTheme:
+          inputDecorationTheme ?? oldModel.inputDecorationTheme,
+      type: type ?? oldModel.type,
+      dateTimeFormatter: dateTimeFormatter ?? oldModel.dateTimeFormatter,
+      firstDate: firstDate ?? oldModel.firstDate,
+      lastDate: lastDate ?? oldModel.lastDate,
+      maxLines: maxLines ?? oldModel.maxLines,
+    );
   }
 }

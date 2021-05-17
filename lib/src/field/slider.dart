@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../state_model.dart';
 import '../form_field.dart';
 import 'decoration_field.dart';
 
 typedef SubLabelRender = String Function(num value);
 
-class SliderFormField extends BaseNonnullValueField<num> {
+class SliderFormField extends BaseNonnullValueField<num, SliderModel> {
   SliderFormField({
     ValueChanged<num>? onChanged,
     NonnullFieldValidator<num>? validator,
@@ -24,15 +25,22 @@ class SliderFormField extends BaseNonnullValueField<num> {
     EdgeInsets? padding,
     Color? activeColor,
     Color? inactiveColor,
+    SliderThemeData? sliderThemeData,
+    SemanticFormatterCallback? semanticFormatterCallback,
+    ValueChanged<double>? onChangeStart,
+    ValueChanged<double>? onChangeEnd,
+    MouseCursor? mouseCursor,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'labelText': StateValue<String?>(labelText),
-            'max': StateValue<double>(max),
-            'min': StateValue<double>(min),
-            'divisions': StateValue<int>(divisions ?? (max - min).toInt()),
-            'activeColor': StateValue<Color?>(activeColor),
-            'inactiveColor': StateValue<Color?>(inactiveColor),
-          },
+          model: SliderModel(
+            labelText: labelText,
+            max: max,
+            min: min,
+            divisions: divisions ?? (max - min).toInt(),
+            activeColor: activeColor,
+            inactiveColor: inactiveColor,
+            sliderThemeData: sliderThemeData,
+          ),
           visible: visible,
           readOnly: readOnly,
           flex: flex,
@@ -43,22 +51,23 @@ class SliderFormField extends BaseNonnullValueField<num> {
           validator: validator,
           initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
+          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
-            int divisions = stateMap['divisions'];
-            double max = stateMap['max'];
-            double min = stateMap['min'];
-            String? labelText = stateMap['labelText'];
-            Color? activeColor = stateMap['activeColor'];
-            Color? inactiveColor = stateMap['inactiveColor'];
+            int divisions = state.model.divisions!;
+            double max = state.model.max!;
+            double min = state.model.min!;
+            String? labelText = state.model.labelText;
+            Color? activeColor = state.model.activeColor;
+            Color? inactiveColor = state.model.inactiveColor;
 
             num value = state.value;
 
             String? sliderLabel =
                 subLabelRender == null ? null : subLabelRender(value);
 
-            SliderThemeData sliderThemeData = SliderTheme.of(state.context);
+            SliderThemeData sliderThemeData =
+                state.model.sliderThemeData ?? SliderTheme.of(state.context);
             if (sliderThemeData.thumbShape == null)
               sliderThemeData = sliderThemeData.copyWith(
                   thumbShape:
@@ -73,6 +82,10 @@ class SliderFormField extends BaseNonnullValueField<num> {
                 divisions: divisions,
                 activeColor: activeColor,
                 inactiveColor: inactiveColor,
+                onChangeStart: onChangeStart,
+                onChangeEnd: onChangeEnd,
+                semanticFormatterCallback: semanticFormatterCallback,
+                mouseCursor: mouseCursor,
                 onChanged: readOnly
                     ? null
                     : (double value) {
@@ -99,12 +112,44 @@ class SliderFormField extends BaseNonnullValueField<num> {
   _SliderFormFieldState createState() => _SliderFormFieldState();
 }
 
-class _SliderFormFieldState extends BaseNonnullValueFieldState<num> {
+class _SliderFormFieldState
+    extends BaseNonnullValueFieldState<num, SliderModel> {
   @override
-  void afterStateValueChanged(String key, old, current) {
-    super.afterStateValueChanged(key, old, current);
-    if (key == 'min' && value < current) setValue(current);
-    if (key == 'max' && value > current) setValue(current);
+  void beforeMerge(SliderModel old, SliderModel current) {
+    if (current.min != null && value < current.min!) setValue(current.min!);
+    if (current.max != null && value > current.max!) setValue(current.max!);
+  }
+}
+
+class SliderModel extends AbstractFieldStateModel {
+  final String? labelText;
+  final double? max;
+  final double? min;
+  final int? divisions;
+  final Color? activeColor;
+  final Color? inactiveColor;
+  final SliderThemeData? sliderThemeData;
+
+  SliderModel(
+      {this.labelText,
+      this.max,
+      this.min,
+      this.divisions,
+      this.activeColor,
+      this.inactiveColor,
+      this.sliderThemeData});
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+    SliderModel oldModel = old as SliderModel;
+    return SliderModel(
+      labelText: labelText ?? oldModel.labelText,
+      max: max ?? oldModel.max,
+      min: min ?? oldModel.min,
+      divisions: divisions ?? oldModel.divisions,
+      activeColor: activeColor ?? oldModel.activeColor,
+      inactiveColor: inactiveColor ?? oldModel.inactiveColor,
+      sliderThemeData: sliderThemeData ?? oldModel.sliderThemeData,
+    );
   }
 }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import 'builder.dart';
+import 'management.dart';
 import 'state_model.dart';
 import 'widget/shake_widget.dart';
 
@@ -9,7 +10,14 @@ typedef NonnullFormFieldSetter<T> = void Function(T newValue);
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
 
-mixin StatefulField<T extends AbstractFieldState> on StatefulWidget {
+/// used to wrap BaseField
+///
+///
+/// wrap result should not be changed at runtime
+typedef WidgetWrapper = Widget Function(Widget child);
+
+mixin StatefulField<T extends AbstractFieldState,
+    E extends AbstractFieldStateModel> on StatefulWidget {
   /// field's name
   ///
   /// used to control field
@@ -17,35 +25,35 @@ mixin StatefulField<T extends AbstractFieldState> on StatefulWidget {
 
   @override
   T createState();
+
+  E get model;
+
+  bool get readOnly;
 }
 
-mixin BaseStatefulField<T extends AbstractFieldState> on StatefulField<T> {
-  Map<String, StateValue> get _initStateMap;
-}
-
-abstract class AbstractCommonField<CommonFieldState> extends StatefulWidget
-    with StatefulField {
+abstract class AbstractCommonField<T extends AbstractCommonFieldState,
+        E extends AbstractFieldStateModel> extends StatefulWidget
+    with StatefulField<T, E> {
   final String? name;
   final FieldContentBuilder<AbstractCommonFieldState> builder;
   const AbstractCommonField({this.name, required this.builder});
-  @override
-  AbstractCommonFieldState createState();
 }
 
-abstract class CommonField<K extends AbstractCommonFieldState>
-    extends AbstractCommonField {
-  CommonField({String? name, required FieldContentBuilder<K> builder})
+abstract class CommonField<T extends AbstractCommonFieldState,
+    E extends AbstractFieldStateModel> extends AbstractCommonField<T, E> {
+  CommonField({String? name, required FieldContentBuilder<T> builder})
       : super(
             builder: (state) {
-              return builder(state as K);
+              return builder(state as T);
             },
             name: name);
   @override
-  K createState();
+  T createState();
 }
 
-abstract class ValueField<T, K extends ValueFieldState<T>> extends FormField<T>
-    with StatefulField<ValueFieldState<T>> {
+abstract class ValueField<T, K extends ValueFieldState<T, E>,
+        E extends AbstractFieldStateModel> extends FormField<T>
+    with StatefulField<ValueFieldState<T, E>, E> {
   final String? name;
   final ValueChanged<T?>? onChanged;
 
@@ -73,8 +81,8 @@ abstract class ValueField<T, K extends ValueFieldState<T>> extends FormField<T>
   K createState();
 }
 
-abstract class NonnullValueField<T, K extends NonnullValueFieldState<T>>
-    extends ValueField<T, K> {
+abstract class NonnullValueField<T, K extends NonnullValueFieldState<T, E>,
+    E extends AbstractFieldStateModel> extends ValueField<T, K, E> {
   @override
   T get initialValue => super.initialValue!;
 
@@ -101,7 +109,8 @@ abstract class NonnullValueField<T, K extends NonnullValueFieldState<T>>
   K createState();
 }
 
-abstract class NonnullValueFieldState<T> extends ValueFieldState<T> {
+abstract class NonnullValueFieldState<T, E extends AbstractFieldStateModel>
+    extends ValueFieldState<T, E> {
   @override
   T get value => super.value!;
 
@@ -118,164 +127,184 @@ abstract class NonnullValueFieldState<T> extends ValueFieldState<T> {
   }
 }
 
-abstract class AbstractCommonFieldState extends State<AbstractCommonField>
-    with AbstractFieldState<AbstractCommonField> {
+abstract class AbstractCommonFieldState<E extends AbstractFieldStateModel>
+    extends State<AbstractCommonField>
+    with AbstractFieldState<AbstractCommonField, E> {
   @override
   Widget build(BuildContext context) {
     return widget.builder(this);
   }
 }
 
+mixin BaseStatefulField<T extends AbstractFieldState,
+    E extends AbstractFieldStateModel> on StatefulField<T, E> {
+  bool get visible;
+  int? get flex;
+  EdgeInsets? get padding;
+  WidgetWrapper? get wrapper;
+}
+
 /// this state is used for BaseFormField
 ///
-/// **do not used this state unless your custom field is [BaseCommonField] [BaseValueField] [BaseNonnullValueField]**
-mixin BaseFieldState<T extends StatefulWidget> on AbstractFieldState<T> {
-  @override
-  bool get readOnly => super.readOnly || _baseFieldStateModel.readOnly;
-
-  @protected
-  T? getState<T>(String stateKey) => _baseFieldStateModel.getState<T>(stateKey);
-
-  /// remove states,this method won't call setState
-  @protected
-  void removeStates(Set<String> keys) =>
-      _baseFieldStateModel.removeStates(keys);
+/// **do not used this state unless your custom field is [BaseStatefulField]**
+mixin BaseFieldState<T extends StatefulWidget,
+    E extends AbstractFieldStateModel> on AbstractFieldState<T, E> {
+  bool? _readOnly;
+  bool? _visible;
+  EdgeInsets? _padding;
+  int? _flex;
 
   @override
-  void initFormManagement() {
-    super.initFormManagement();
-    _baseFieldStateModel.addListener(() {
-      setState(() {});
-    });
+  bool get isFieldReadOnly => _readOnly ?? _field.readOnly;
+  @override
+  set readOnly(bool readOnly) {
+    if (readOnly != _readOnly)
+      setState(() {
+        _readOnly = readOnly;
+      });
   }
 
-  @override
-  BaseFieldStateModel createModel() {
-    return _BaseFieldStateModelDelegate(
-        this, _getInitStateField(widget)!._initStateMap);
+  bool get visible => _visible ?? _field.visible;
+  set visible(bool visible) {
+    if (visible != _visible)
+      setState(() {
+        _visible = visible;
+      });
   }
 
-  @override
-  void didUpdateWidget(T oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    Map<String, StateValue>? old = _getInitStateField(oldWidget)?._initStateMap;
-    Map<String, StateValue>? current =
-        _getInitStateField(widget)?._initStateMap;
-    _baseFieldStateModel.didUpdateModel(old, current);
+  int? get flex => _flex ?? _field.flex;
+  set flex(int? flex) {
+    if (flex != _flex)
+      setState(() {
+        _flex = flex;
+      });
   }
 
-  Map<String, dynamic> get currentMap => _baseFieldStateModel.currentMap;
+  EdgeInsets? get padding => _padding ?? _field.padding;
+  set padding(EdgeInsets? padding) {
+    if (padding != _padding)
+      setState(() {
+        _padding = padding;
+      });
+  }
 
-  BaseStatefulField? _getInitStateField(T t) =>
-      t is BaseStatefulField ? t as BaseStatefulField : null;
-
-  BaseFieldStateModel get _baseFieldStateModel => model as BaseFieldStateModel;
+  /// whether this field is readOnly
 
   /// used to build default field widget
   Widget get field;
-
-  @override
-  void dispose() {
-    _baseFieldStateModel.dispose();
-    super.dispose();
-  }
 
   /// used to wrap default field  to flexible
   ///
   /// override this if you do not need flexible
   @override
   Widget build(BuildContext context) {
-    bool visible = model.visible;
-    EdgeInsets? padding = _baseFieldStateModel.padding;
-    Widget child = Padding(
-      padding:
-          padding ?? const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      child: Visibility(
-        maintainState: true,
-        child: field,
-        visible: visible,
+    Widget child = Visibility(
+      maintainState: true,
+      child: Padding(
+        padding:
+            padding ?? const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+        child: _field.wrapper == null ? field : _field.wrapper!(field),
       ),
+      visible: visible,
     );
     return Flexible(
       fit: visible ? FlexFit.tight : FlexFit.loose,
       child: child,
-      flex: _baseFieldStateModel.flex,
+      flex: flex ?? 1,
     );
   }
 
-  /// used to know whick state keys changed
-  ///
-  /// **exception throw by this method won't stop notifyListeners**
-  @protected
-  @mustCallSuper
-  void beforeNotifyListeners(Iterable<String> keys) {}
-
-  /// used to know state value changed
-  ///
-  /// **exception throw by this method won't stop notifyListeners**
-  @protected
-  @mustCallSuper
-  void afterStateValueChanged(String key, dynamic old, dynamic current) {}
-}
-
-class _BaseFieldStateModelDelegate extends BaseFieldStateModel {
-  final BaseFieldState state;
-
-  _BaseFieldStateModelDelegate(this.state, Map<String, StateValue> initStateMap)
-      : super(initStateMap);
-
   @override
-  void beforeNotifyListeners(Iterable<String> keys) {
-    super.beforeNotifyListeners(keys);
-    state.beforeNotifyListeners(keys);
+  FormFieldManagement customFormFieldManagement(FormFieldManagement delegate) {
+    return _BaseFormFieldManagement(delegate, this);
   }
 
-  @override
-  void afterStateValueChanged(String key, dynamic old, dynamic current) {
-    super.afterStateValueChanged(key, old, current);
-    state.afterStateValueChanged(key, old, current);
-  }
+  BaseStatefulField get _field => widget as BaseStatefulField;
 }
 
-class BaseCommonField extends CommonField<BaseCommonFieldState>
-    with BaseStatefulField {
-  final Map<String, StateValue> _initStateMap;
-  BaseCommonField(
-    this._initStateMap, {
-    String? name,
-    required FieldContentBuilder<BaseCommonFieldState> builder,
-    int flex = 1,
-    bool visible = true,
-    bool readOnly = false,
-    EdgeInsets? padding,
-  }) : super(builder: builder, name: name) {
-    _initStateMap.addAll({
-      'flex': StateValue<int>(flex),
-      'padding': StateValue<EdgeInsets?>(padding),
-      'visible': StateValue<bool>(visible),
-      'readOnly': StateValue<bool>(readOnly),
+mixin BaseValueState<T, E extends AbstractFieldStateModel>
+    on BaseFieldState<FormField<T>, E> {
+  Key? _shakeKey;
+  Shaker? _shaker;
+
+  _shake(Shaker shaker) {
+    if (_shaker != null) return;
+    setState(() {
+      _shaker = shaker;
     });
   }
 
   @override
-  BaseCommonFieldState createState() => BaseCommonFieldState();
+  Widget get field {
+    Widget field = shakeField;
+    if (_shaker != null) _shakeKey = UniqueKey();
+    Duration? duration = _shaker == null ? Duration.zero : _shaker!.duration;
+    _shaker = null;
+    Widget shake = ShakeWidget(
+        key: _shakeKey,
+        duration: duration,
+        deltaX: _shaker?.deltax,
+        curve: _shaker?.curve,
+        onEnd: _shaker?.onEnd,
+        child: field);
+    return shake;
+  }
+
+  @override
+  FormFieldManagement customFormFieldManagement(FormFieldManagement delegate) {
+    BaseFormFieldManagement baseFormFieldManagement =
+        super.customFormFieldManagement(delegate) as BaseFormFieldManagement;
+    return _BaseFormValueFieldManagement(baseFormFieldManagement, this);
+  }
+
+  Widget get shakeField;
 }
 
-class BaseValueField<T> extends ValueField<T, BaseValueFieldState<T>>
-    with BaseStatefulField {
-  final Map<String, StateValue> _initStateMap;
-  BaseValueField(this._initStateMap,
+class BaseCommonField<E extends AbstractFieldStateModel>
+    extends CommonField<BaseCommonFieldState<E>, E> with BaseStatefulField {
+  final E model;
+  final bool readOnly;
+  final int? flex;
+  final EdgeInsets? padding;
+  final bool visible;
+  final WidgetWrapper? wrapper;
+  BaseCommonField({
+    String? name,
+    this.flex,
+    this.padding,
+    this.visible = true,
+    this.readOnly = false,
+    this.wrapper,
+    required this.model,
+    required FieldContentBuilder<BaseCommonFieldState<E>> builder,
+  }) : super(builder: builder, name: name);
+
+  @override
+  BaseCommonFieldState<E> createState() => BaseCommonFieldState();
+}
+
+class BaseValueField<T, E extends AbstractFieldStateModel>
+    extends ValueField<T, BaseValueFieldState<T, E>, E> with BaseStatefulField {
+  final E model;
+  final bool readOnly;
+  final int? flex;
+  final EdgeInsets? padding;
+  final bool visible;
+  final WidgetWrapper? wrapper;
+  BaseValueField(
       {ValueChanged<T?>? onChanged,
-      required FieldContentBuilder<BaseValueFieldState<T>> builder,
+      required this.model,
+      required FieldContentBuilder<BaseValueFieldState<T, E>> builder,
       FormFieldValidator<T>? validator,
       AutovalidateMode? autovalidateMode,
       T? initialValue,
       bool enabled = true,
       FormFieldSetter<T>? onSaved,
-      int flex = 1,
-      bool visible = true,
-      bool readOnly = false,
-      EdgeInsets? padding,
+      this.flex,
+      this.padding,
+      this.visible = true,
+      this.readOnly = false,
+      this.wrapper,
       String? name})
       : super(
             builder: builder,
@@ -285,38 +314,36 @@ class BaseValueField<T> extends ValueField<T, BaseValueFieldState<T>>
             initialValue: initialValue,
             enabled: enabled,
             onSaved: onSaved,
-            name: name) {
-    _initStateMap.addAll({
-      'shaker': StateValue<Shaker?>(null),
-      'flex': StateValue<int>(flex),
-      'padding': StateValue<EdgeInsets?>(padding),
-      'visible': StateValue<bool>(visible),
-      'readOnly': StateValue<bool>(readOnly),
-    });
-  }
+            name: name);
   @override
-  BaseValueFieldState<T> createState() => BaseValueFieldState();
+  BaseValueFieldState<T, E> createState() => BaseValueFieldState();
 }
 
-class BaseNonnullValueField<T>
-    extends NonnullValueField<T, BaseNonnullValueFieldState<T>>
+class BaseNonnullValueField<T, E extends AbstractFieldStateModel>
+    extends NonnullValueField<T, BaseNonnullValueFieldState<T, E>, E>
     with BaseStatefulField {
-  final Map<String, StateValue> _initStateMap;
+  final E model;
+  final bool readOnly;
+  final int? flex;
+  final EdgeInsets? padding;
+  final bool visible;
+  final WidgetWrapper? wrapper;
   BaseNonnullValueField(
-    this._initStateMap, {
-    required FieldContentBuilder<BaseNonnullValueFieldState<T>> builder,
-    ValueChanged<T>? onChanged,
-    NonnullFieldValidator<T>? validator,
-    AutovalidateMode? autovalidateMode,
-    required T initialValue,
-    NonnullFormFieldSetter<T>? onSaved,
-    bool enabled = true,
-    String? name,
-    int flex = 1,
-    bool visible = true,
-    bool readOnly = false,
-    EdgeInsets? padding,
-  }) : super(
+      {required this.model,
+      required FieldContentBuilder<BaseNonnullValueFieldState<T, E>> builder,
+      ValueChanged<T>? onChanged,
+      NonnullFieldValidator<T>? validator,
+      AutovalidateMode? autovalidateMode,
+      required T initialValue,
+      NonnullFormFieldSetter<T>? onSaved,
+      bool enabled = true,
+      String? name,
+      this.flex,
+      this.padding,
+      this.visible = true,
+      this.readOnly = false,
+      this.wrapper})
+      : super(
             name: name,
             builder: builder,
             onChanged: onChanged,
@@ -324,56 +351,29 @@ class BaseNonnullValueField<T>
             autovalidateMode: autovalidateMode,
             initialValue: initialValue,
             enabled: enabled,
-            onSaved: onSaved) {
-    _initStateMap.addAll({
-      'shaker': StateValue<Shaker?>(null),
-      'flex': StateValue<int>(flex),
-      'padding': StateValue<EdgeInsets?>(padding),
-      'visible': StateValue<bool>(visible),
-      'readOnly': StateValue<bool>(readOnly),
-    });
-  }
+            onSaved: onSaved);
   @override
-  BaseNonnullValueFieldState<T> createState() => BaseNonnullValueFieldState();
+  BaseNonnullValueFieldState<T, E> createState() =>
+      BaseNonnullValueFieldState();
 }
 
-class BaseCommonFieldState extends AbstractCommonFieldState
-    with BaseFieldState {
+class BaseCommonFieldState<E extends AbstractFieldStateModel>
+    extends AbstractCommonFieldState<E> with BaseFieldState {
   @override
   Widget get field {
     return widget.builder(this);
   }
 }
 
-mixin ShakeWrapper<T> on BaseFieldState<FormField<T>> {
-  Key? shakeKey;
-  @override
-  Widget get field {
-    Widget field = shakeField;
-    Shaker? shaker = getState('shaker');
-    if (shaker != null) shakeKey = UniqueKey();
-    removeStates({'shaker'});
-    Widget shake = ShakeWidget(
-        key: shakeKey,
-        duration: shaker == null ? Duration.zero : shaker.duration,
-        deltaX: shaker?.deltax,
-        curve: shaker?.curve,
-        onEnd: shaker?.onEnd,
-        child: field);
-    return shake;
-  }
-
-  Widget get shakeField;
-}
-
-class BaseValueFieldState<T> extends ValueFieldState<T>
-    with BaseFieldState, ShakeWrapper<T> {
+class BaseValueFieldState<T, E extends AbstractFieldStateModel>
+    extends ValueFieldState<T, E> with BaseFieldState, BaseValueState<T, E> {
   @override
   Widget get shakeField => super.doBuild();
 }
 
-class BaseNonnullValueFieldState<T> extends NonnullValueFieldState<T>
-    with BaseFieldState, ShakeWrapper<T> {
+class BaseNonnullValueFieldState<T, E extends AbstractFieldStateModel>
+    extends NonnullValueFieldState<T, E>
+    with BaseFieldState, BaseValueState<T, E> {
   @override
   Widget get shakeField => super.doBuild();
 }
@@ -384,4 +384,39 @@ class Shaker {
   final Curve? curve;
   final VoidCallback? onEnd;
   Shaker({this.duration, this.deltax, this.curve, this.onEnd});
+}
+
+class _BaseFormFieldManagement extends BaseFormFieldManagement {
+  final BaseFieldState state;
+  _BaseFormFieldManagement(FormFieldManagement delegate, this.state)
+      : super(delegate);
+
+  @override
+  int? get flex => state.flex;
+
+  @override
+  set flex(int? flex) => state.flex = flex;
+
+  @override
+  EdgeInsets? get padding => state.padding;
+
+  @override
+  set padding(EdgeInsets? padding) => state.padding = padding;
+
+  @override
+  bool get visible => state.visible;
+
+  @override
+  set visible(bool visible) => state.visible = visible;
+}
+
+class _BaseFormValueFieldManagement extends BaseFormValueFieldManagement {
+  final BaseValueState state;
+  _BaseFormValueFieldManagement(BaseFormFieldManagement delegate, this.state)
+      : super(delegate);
+
+  @override
+  void shake({Shaker? shaker}) {
+    state._shake(shaker ?? Shaker());
+  }
 }

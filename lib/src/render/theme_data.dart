@@ -125,3 +125,45 @@ class RadioRenderData {
     this.visualDensity,
   });
 }
+
+class FilterChipRenderData {
+  final TextStyle? labelStyle;
+  final EdgeInsets? labelPadding;
+  final double? pressElevation;
+  final Color? disabledColor;
+  final Color? selectedColor;
+  final String? tooltip;
+  final BorderSide? side;
+  final OutlinedBorder? shape;
+  final Color? backgroundColor;
+  final EdgeInsets? padding;
+  final VisualDensity? visualDensity;
+  final MaterialTapTargetSize? materialTapTargetSize;
+  final double? elevation;
+  final Color? shadowColor;
+  final Color? selectedShadowColor;
+  final bool? showCheckmark;
+  final Color? checkmarkColor;
+  final CircleBorder? avatarBorder;
+
+  FilterChipRenderData({
+    this.labelPadding,
+    this.labelStyle,
+    this.avatarBorder,
+    this.backgroundColor,
+    this.checkmarkColor,
+    this.showCheckmark,
+    this.shadowColor,
+    this.disabledColor,
+    this.selectedColor,
+    this.selectedShadowColor,
+    this.visualDensity,
+    this.elevation,
+    this.pressElevation,
+    this.materialTapTargetSize,
+    this.padding,
+    this.shape,
+    this.side,
+    this.tooltip,
+  });
+}

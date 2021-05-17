@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../render/theme_data.dart';
 
 import '../state_model.dart';
 import '../form_field.dart';
@@ -14,50 +15,58 @@ class FilterChipItem<T> {
   final EdgeInsets padding;
   final bool readOnly;
   final bool visible;
+  final String? tooltip;
+  final TextStyle? labelStyle;
 
-  FilterChipItem(
-      {required this.label,
-      this.avatar,
-      required this.data,
-      EdgeInsets? padding,
-      this.readOnly = false,
-      this.visible = true,
-      this.contentPadding = const EdgeInsets.all(10),
-      this.labelPadding})
-      : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
+  FilterChipItem({
+    required this.label,
+    this.avatar,
+    required this.data,
+    EdgeInsets? padding,
+    this.readOnly = false,
+    this.visible = true,
+    this.contentPadding = const EdgeInsets.all(10),
+    this.labelPadding,
+    this.tooltip,
+    this.labelStyle,
+  }) : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
 }
 
 enum ChipLayoutType { wrap, scroll }
 
-class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
+class FilterChipFormField<T>
+    extends BaseNonnullValueField<List<T>, FilterChipModel<T>> {
   FilterChipFormField({
-    required List<FilterChipItem<T>> items,
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
     NonnullFieldValidator<List<T>>? validator,
     ValueChanged<List<T>>? onChanged,
-    double? pressElevation,
-    String? labelText,
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    int? count,
     VoidCallback? exceedCallback,
-    ChipLayoutType layoutType = ChipLayoutType.wrap,
+    required List<FilterChipItem<T>>? items,
+    String? labelText,
+    ChipLayoutType? layoutType,
+    int? count,
+    double? pressElevation,
+    FilterChipRenderData? filterChipRenderData,
     ChipThemeData? chipThemeData,
+    WidgetWrapper? wrapper,
   }) : super(
-          {
-            'items': StateValue<List<FilterChipItem<T>>>(items),
-            'labelText': StateValue<String?>(labelText),
-            'pressElevation': StateValue<double?>(pressElevation),
-            'count': StateValue<int?>(count),
-            'layoutType': StateValue<ChipLayoutType>(layoutType),
-            'chipThemeData': StateValue<ChipThemeData?>(chipThemeData),
-          },
+          model: FilterChipModel(
+              items: items,
+              labelText: labelText,
+              layoutType: layoutType,
+              count: count,
+              pressElevation: pressElevation,
+              filterChipRenderData: filterChipRenderData,
+              chipThemeData: chipThemeData),
           visible: visible,
+          wrapper: wrapper,
           readOnly: readOnly,
           flex: flex,
           padding: padding,
@@ -69,14 +78,16 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
           initialValue: initialValue ?? [],
           builder: (state) {
             bool readOnly = state.readOnly;
-            Map<String, dynamic> stateMap = state.currentMap;
-            List<FilterChipItem<T>> items = stateMap['items'];
-            String? labelText = stateMap['labelText'];
-            double? pressElevation = stateMap['pressElevation'];
-            ChipLayoutType layoutType = stateMap['layoutType'];
-            int? count = stateMap['count'];
+            FilterChipModel<T> model = state.model;
+            List<FilterChipItem<T>> items = model.items!;
+            String? labelText = model.labelText;
+            double? pressElevation = model.pressElevation;
+            ChipLayoutType layoutType = model.layoutType ?? ChipLayoutType.wrap;
+            int? count = model.count;
             ChipThemeData chipThemeData =
-                stateMap['chipThemeData'] ?? ChipTheme.of(state.context);
+                model.chipThemeData ?? ChipTheme.of(state.context);
+            FilterChipRenderData? filterChipRenderData =
+                model.filterChipRenderData;
 
             List<Widget> chips = [];
             for (FilterChipItem<T> item in items) {
@@ -85,8 +96,28 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
                 selected: state.value.contains(item.data),
                 label: item.label,
                 avatar: item.avatar,
-                padding: item.contentPadding,
-                pressElevation: pressElevation,
+                padding: item.contentPadding ?? filterChipRenderData?.padding,
+                pressElevation:
+                    pressElevation ?? filterChipRenderData?.pressElevation,
+                tooltip: item.tooltip ?? filterChipRenderData?.tooltip,
+                materialTapTargetSize:
+                    filterChipRenderData?.materialTapTargetSize,
+                avatarBorder:
+                    filterChipRenderData?.avatarBorder ?? const CircleBorder(),
+                backgroundColor: filterChipRenderData?.backgroundColor,
+                checkmarkColor: filterChipRenderData?.checkmarkColor,
+                showCheckmark: filterChipRenderData?.showCheckmark,
+                shadowColor: filterChipRenderData?.shadowColor,
+                disabledColor: filterChipRenderData?.disabledColor,
+                selectedColor: filterChipRenderData?.selectedColor,
+                selectedShadowColor: filterChipRenderData?.selectedShadowColor,
+                visualDensity: filterChipRenderData?.visualDensity,
+                elevation: filterChipRenderData?.elevation,
+                labelPadding:
+                    item.labelPadding ?? filterChipRenderData?.labelPadding,
+                labelStyle: item.labelStyle ?? filterChipRenderData?.labelStyle,
+                shape: filterChipRenderData?.shape,
+                side: filterChipRenderData?.side,
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
@@ -138,4 +169,53 @@ class FilterChipFormField<T> extends BaseNonnullValueField<List<T>> {
             );
           },
         );
+
+  @override
+  _FilterChipFormFieldState<T> createState() => _FilterChipFormFieldState();
+}
+
+class _FilterChipFormFieldState<T>
+    extends BaseNonnullValueFieldState<List<T>, FilterChipModel<T>> {
+  @override
+  void beforeMerge(FilterChipModel<T> old, FilterChipModel<T> current) {
+    if (current.items != null) {
+      List<T> items = List.of(value);
+      Iterable<T> datas = current.items!.map((e) => e.data);
+      items.removeWhere((element) => !datas.contains(element));
+      setValue(items);
+    }
+  }
+}
+
+class FilterChipModel<T> extends AbstractFieldStateModel {
+  final List<FilterChipItem<T>>? items;
+  final String? labelText;
+  final ChipLayoutType? layoutType;
+  final int? count;
+  final double? pressElevation;
+  final FilterChipRenderData? filterChipRenderData;
+  final ChipThemeData? chipThemeData;
+
+  FilterChipModel(
+      {this.items,
+      this.labelText,
+      this.pressElevation,
+      this.count,
+      this.layoutType,
+      this.filterChipRenderData,
+      this.chipThemeData});
+
+  @override
+  AbstractFieldStateModel merge(AbstractFieldStateModel oldFieldState) {
+    FilterChipModel<T> old = oldFieldState as FilterChipModel<T>;
+    return FilterChipModel<T>(
+      items: items ?? old.items,
+      labelText: labelText ?? old.labelText,
+      pressElevation: pressElevation ?? old.pressElevation,
+      count: count ?? old.count,
+      layoutType: layoutType ?? old.layoutType,
+      chipThemeData: chipThemeData ?? old.chipThemeData,
+      filterChipRenderData: filterChipRenderData ?? old.filterChipRenderData,
+    );
+  }
 }
