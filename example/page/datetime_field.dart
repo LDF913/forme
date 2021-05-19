@@ -1,11 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
-
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class DateTimeFieldPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,25 +13,28 @@ class DateTimeFieldPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(DateTimeFormField(
                   name: 'dateTimeField',
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text:
                                 'value changed, current value is ${v.toString()}');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('dateTimeField')
                               .model =
                           DateTimeFieldModel(labelText: 'filter dateTimeField');
@@ -40,7 +42,7 @@ class DateTimeFieldPage extends StatelessWidget {
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('dateTimeField')
                               .model =
                           DateTimeFieldModel(
@@ -53,7 +55,7 @@ class DateTimeFieldPage extends StatelessWidget {
                     child: Text('update dateTimeField render data')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('dateTimeField')
                               .model =
                           DateTimeFieldModel(
@@ -62,24 +64,16 @@ class DateTimeFieldPage extends StatelessWidget {
                     child: Text('set first day to tomorrow')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('dateTimeField')
                               .model =
                           DateTimeFieldModel(type: DateTimeType.DateTime);
                     },
                     child: Text('allow datetime')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('dateTimeField')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('dateTimeField')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -88,9 +82,9 @@ class DateTimeFieldPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('dateTimeField')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -101,9 +95,9 @@ class DateTimeFieldPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('dateTimeField')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

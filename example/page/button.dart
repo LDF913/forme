@@ -1,9 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'package:form_builder/form_builder.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class ButtonPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -12,19 +13,24 @@ class ButtonPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            ).append(ButtonFormField(
-              name: 'button',
-              child: Text('Button'),
-              onPressed: (info) => {},
-            )),
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
+                .customize(mainAxisAlignment: MainAxisAlignment.center)
+                .append(ButtonFormField(
+                  name: 'button',
+                  child: Text('Button'),
+                  onPressed: () => {},
+                ))
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('button').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('button')
+                              .model =
                           ButtonModel(
                               child: Text('new content'),
                               icon: Icon(Icons.accessible_forward_rounded),
@@ -33,12 +39,13 @@ class ButtonPage extends StatelessWidget {
                     child: Text('update button content')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('button').model =
-                          ButtonModel(type: ButtonType.Outlined);
+                      formKey.currentManagement
+                          .newFormFieldManagement('button')
+                          .model = ButtonModel(type: ButtonType.Outlined);
                     },
                     child: Text('update button type')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('button')
                       .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
@@ -49,7 +56,7 @@ class ButtonPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('button')
                       .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
@@ -62,7 +69,7 @@ class ButtonPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('button')
                           .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);

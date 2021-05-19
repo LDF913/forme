@@ -1,11 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
-
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class NumberFieldPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,27 +13,30 @@ class NumberFieldPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(NumberFormField(
                   name: 'numberField',
                   max: 100,
                   allowNegative: false,
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text:
                                 'value changed, current value is ${v.toString()}');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('numberField')
                               .model =
                           NumberFieldModel(labelText: 'filter numberField');
@@ -42,7 +44,7 @@ class NumberFieldPage extends StatelessWidget {
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('numberField')
                               .model =
                           NumberFieldModel(
@@ -51,7 +53,7 @@ class NumberFieldPage extends StatelessWidget {
                     child: Text('add prefix icon')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('numberField')
                           .model = NumberFieldModel(suffixIcons: [
                         Icon(Icons.youtube_searched_for),
@@ -61,7 +63,7 @@ class NumberFieldPage extends StatelessWidget {
                     child: Text('add suffix icon')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('numberField')
                               .model =
                           NumberFieldModel(
@@ -74,37 +76,29 @@ class NumberFieldPage extends StatelessWidget {
                     child: Text('update numberField render data')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('numberField')
                           .model = NumberFieldModel(allowNegative: true);
                     },
                     child: Text('allow negative')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('numberField')
                           .model = NumberFieldModel(decimal: 2);
                     },
                     child: Text('allow 2 decimal')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('numberField')
                           .model = NumberFieldModel(max: 19);
                     },
                     child: Text('set max num to 19')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('numberField')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('numberField')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -113,9 +107,9 @@ class NumberFieldPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('numberField')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -126,9 +120,9 @@ class NumberFieldPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('numberField')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

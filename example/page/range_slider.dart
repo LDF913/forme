@@ -1,10 +1,11 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class RangeSliderPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,34 +14,37 @@ class RangeSliderPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(RangeSliderFormField(
                   name: 'rangeSlider',
                   max: 100,
                   min: 1,
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text:
                                 'value changed, current value is ${v.start.round().toString()} - ${v.end.round().toString()}');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('rangeSlider')
                           .model = SliderModel(labelText: 'filter rangeSlider');
                     },
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('rangeSlider')
                               .model =
                           SliderModel(
@@ -50,30 +54,22 @@ class RangeSliderPage extends StatelessWidget {
                     child: Text('update rangeSlider render data')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('rangeSlider')
                           .model = SliderModel(divisions: 10);
                     },
                     child: Text('update divisions')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('rangeSlider')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('rangeSlider')
                           .model = SliderModel(min: 40, max: 90);
                     },
                     child: Text('update min & max')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('rangeSlider')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -82,9 +78,9 @@ class RangeSliderPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('rangeSlider')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -95,9 +91,9 @@ class RangeSliderPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('rangeSlider')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

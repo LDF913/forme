@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class SliderPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,33 +13,39 @@ class SliderPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(SliderFormField(
                   name: 'slider',
                   max: 100,
                   min: 1,
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text:
                                 'value changed, current value is ${v.round().toString()}');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('slider').model =
-                          SliderModel(labelText: 'filter slider');
+                      formKey.currentManagement
+                          .newFormFieldManagement('slider')
+                          .model = SliderModel(labelText: 'filter slider');
                     },
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement.newFormFieldManagement('slider').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('slider')
+                              .model =
                           SliderModel(
                               activeColor: Colors.red,
                               inactiveColor: Colors.green);
@@ -47,28 +53,22 @@ class SliderPage extends StatelessWidget {
                     child: Text('update slider render data')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('slider').model =
-                          SliderModel(divisions: 10);
+                      formKey.currentManagement
+                          .newFormFieldManagement('slider')
+                          .model = SliderModel(divisions: 10);
                     },
                     child: Text('update divisions')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('slider')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement.newFormFieldManagement('slider').model =
-                          SliderModel(min: 40, max: 90);
+                          .model = SliderModel(min: 40, max: 90);
                     },
                     child: Text('update min & max')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('slider')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -77,9 +77,9 @@ class SliderPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('slider')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -90,9 +90,9 @@ class SliderPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('slider')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

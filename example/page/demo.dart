@@ -10,15 +10,10 @@ class DemoPage extends StatefulWidget {
 class _DemoPageState extends State<DemoPage> {
   int j = 1;
 
-  FormManagement formManagement = FormManagement();
-  late CastableFormFieldManagement username;
-  late FormLayoutManagement formLayoutManagement;
-
+  final FormKey formKey = FormKey();
   @override
   void initState() {
     super.initState();
-    username = formManagement.newFormFieldManagement('username');
-    formLayoutManagement = formManagement.formLayoutManagement;
   }
 
   @override
@@ -29,13 +24,6 @@ class _DemoPageState extends State<DemoPage> {
         ),
         body: SingleChildScrollView(
           child: Column(children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'form1',
-                style: TextStyle(fontSize: 30),
-              ),
-            ),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: createForm(),
@@ -51,30 +39,35 @@ class _DemoPageState extends State<DemoPage> {
       children: [
         Builder(
           builder: (context) {
+            LayoutFormManagement layoutFormManagement =
+                formKey.currentManagement as LayoutFormManagement;
             return TextButton(
                 onPressed: () {
-                  formManagement.visible = !formManagement.visible;
+                  layoutFormManagement.visible = !layoutFormManagement.visible;
                   (context as Element).markNeedsBuild();
                 },
-                child:
-                    Text(formManagement.visible ? 'hide form' : 'show form'));
+                child: Text(
+                    !layoutFormManagement.visible ? 'show form' : 'hide form'));
           },
         ),
         Builder(
           builder: (context) {
             return TextButton(
                 onPressed: () {
-                  formManagement.readOnly = !formManagement.readOnly;
+                  formKey.currentManagement.readOnly =
+                      !formKey.currentManagement.readOnly;
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(formManagement.readOnly
+                child: Text(formKey.currentManagement.readOnly
                     ? 'set form editable'
                     : 'set form readonly'));
           },
         ),
         Builder(
           builder: (context) {
-            BaseFormFieldManagement management = username.cast();
+            BaseFormFieldManagement management = formKey.currentManagement
+                .newFormFieldManagement('username')
+                .cast();
             return TextButton(
                 onPressed: () async {
                   management.visible = !management.visible;
@@ -91,13 +84,13 @@ class _DemoPageState extends State<DemoPage> {
             child: Text('rebuild page')),
         TextButton(
             onPressed: () {
-              formManagement.validate();
+              formKey.currentManagement.validate();
             },
             child: Text('validate')),
         TextButton(
             onPressed: () {
               for (FormFieldManagementWithError error
-                  in formManagement.quietlyValidate()) {
+                  in formKey.currentManagement.quietlyValidate()) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,
@@ -106,15 +99,7 @@ class _DemoPageState extends State<DemoPage> {
                     error.formFieldManagement;
                 formFieldManagement.ensureVisible().then((value) {
                   //base value field support shaker
-                  if (formFieldManagement
-                      .canCast<BaseFormValueFieldManagement>()) {
-                    formFieldManagement
-                        .cast<BaseFormValueFieldManagement>()
-                        .shake(shaker: Shaker(onEnd: () {
-                      if (formFieldManagement.focusable)
-                        formFieldManagement.focus = true;
-                    }));
-                  }
+                  if (formFieldManagement.canCast<BaseFormFieldManagement>()) {}
                 });
                 return;
               }
@@ -126,18 +111,18 @@ class _DemoPageState extends State<DemoPage> {
             child: Text('quietly validate')),
         TextButton(
             onPressed: () {
-              formManagement.reset();
+              formKey.currentManagement.reset();
             },
             child: Text('reset')),
         TextButton(
           onPressed: () {
-            print(formManagement.data);
+            print(formKey.currentManagement.data);
           },
           child: Text('get form data'),
         ),
         TextButton(
             onPressed: () {
-              formManagement.setData({
+              formKey.currentManagement.setData({
                 'username': 'user name',
                 'password': 'password',
                 'checkbox': ['male'],
@@ -158,25 +143,32 @@ class _DemoPageState extends State<DemoPage> {
   }
 
   Widget createForm() {
-    return FormBuilder(
-      formManagement: formManagement,
-      enableLayoutManagement: true,
-      onChanged: (name, oldValue, newValue) {
-        print('$name\'s value changed, oldValue:$oldValue newValue:$newValue');
-      },
-    )
-        .append(ClearableTextFormField(
+    return FormBuilder()
+        .key(formKey)
+        .onChanged((name, oldValue, newValue) {
+          print(
+              '$name\'s value changed, oldValue:$oldValue newValue:$newValue');
+        })
+        .layoutBuilder()
+        .enableLayoutManagement(true)
+        .oneRowField(ClearableTextFormField(
           name: 'username',
           labelText: 'username',
           clearable: true,
+          onTap: () {
+            print("??");
+          },
           selectAllOnFocus: true,
           validator: (value) =>
               value.isEmpty ? 'username can not be empty !' : null,
         ))
         .append(Builder(builder: (context) {
+          BaseFormFieldManagement username = formKey.currentManagement
+              .newFormFieldManagement('username')
+              .cast();
           return ButtonFormField(
               child: Text(username.readOnly ? 'editable' : 'readOnly'),
-              onPressed: (info) {
+              onPressed: () {
                 username.readOnly = !username.readOnly;
                 (context as Element).markNeedsBuild();
               });
@@ -188,41 +180,50 @@ class _DemoPageState extends State<DemoPage> {
         .newRow()
         .append(ButtonFormField(
             type: ButtonType.Text,
-            onPressed: (info) {
-              username.model = TextFieldModel(labelText: 'username1');
+            onPressed: () {
+              formKey.currentManagement
+                  .newFormFieldManagement('username')
+                  .model = TextFieldModel(labelText: 'username1');
             },
             child: Text('change username\'s label'),
             icon: Icon(Icons.edit)))
-        .oneRowField(ButtonFormField(
-            onPressed: (info) {
-              j++;
-              int row = info.position.row;
-              formLayoutManagement.startEdit();
-              formLayoutManagement.insert(
-                  field: Label("new row"), newRow: true, row: row);
-              formLayoutManagement.insert(
-                  field: NumberFormField(
-                    initialValue: j,
-                    name: 'num$j',
-                    flex: 2,
-                  ),
-                  row: row);
-              formLayoutManagement.insert(
-                  field: Builder(builder: (context) {
-                    int row = BuilderInfo.of(context).position.row;
-                    return TextButton.icon(
-                        onPressed: () {
-                          formLayoutManagement.startEdit();
-                          formLayoutManagement.remove(row);
-                          formLayoutManagement.apply();
-                        },
-                        icon: Icon(Icons.delete),
-                        label: Text('delete'));
-                  }),
-                  row: row);
-              formLayoutManagement.apply();
-            },
-            child: Text('insert a new row before this button')))
+        .oneRowField(Builder(builder: (context) {
+          return ButtonFormField(
+              onPressed: () {
+                j++;
+                int row = Position.of(context).row;
+                LayoutFormManagement layoutFormManagement =
+                    formKey.currentManagement as LayoutFormManagement;
+                FormLayoutManagement formLayoutManagement =
+                    layoutFormManagement.formLayoutManagement;
+
+                formLayoutManagement.startEdit();
+                formLayoutManagement.insert(
+                    field: Label("new row"), newRow: true, row: row);
+                formLayoutManagement.insert(
+                    field: NumberFormField(
+                      initialValue: j,
+                      name: 'num$j',
+                      flex: 2,
+                    ),
+                    row: row);
+                formLayoutManagement.insert(
+                    field: Builder(builder: (context) {
+                      int row = Position.of(context).row;
+                      return TextButton.icon(
+                          onPressed: () {
+                            formLayoutManagement.startEdit();
+                            formLayoutManagement.remove(row);
+                            formLayoutManagement.apply();
+                          },
+                          icon: Icon(Icons.delete),
+                          label: Text('delete'));
+                    }),
+                    row: row);
+                formLayoutManagement.apply();
+              },
+              child: Text('insert a new row before this button'));
+        }))
         .append(ClearableTextFormField(
           name: 'password',
           hintText: 'password',
@@ -231,16 +232,22 @@ class _DemoPageState extends State<DemoPage> {
           clearable: true,
           toolbarOptions: ToolbarOptions(copy: false, paste: false),
         ))
+        .append(Builder(builder: (context) {
+          return ButtonFormField(
+              child: Text('remove'),
+              onPressed: () {
+                LayoutFormManagement layoutFormManagement =
+                    formKey.currentManagement as LayoutFormManagement;
+                FormLayoutManagement formLayoutManagement =
+                    layoutFormManagement.formLayoutManagement;
+                formLayoutManagement.startEdit();
+                formLayoutManagement.remove(Position.of(context).row);
+                formLayoutManagement.apply();
+              });
+        }))
         .append(ButtonFormField(
-            child: Text('remove'),
-            onPressed: (info) {
-              formLayoutManagement.startEdit();
-              formLayoutManagement.remove(info.position.row);
-              formLayoutManagement.apply();
-            }))
-        .append(ButtonFormField(
-          onPressed: (info) async {
-            formManagement
+          onPressed: () async {
+            formKey.currentManagement
                 .newFormFieldManagement('password')
                 .textSelectionManagement
                 .selectAll();
@@ -262,16 +269,17 @@ class _DemoPageState extends State<DemoPage> {
                   : null,
         ))
         .append(ButtonFormField(
-            onPressed: (info) {
-              formManagement
+            onPressed: () {
+              formKey.currentManagement
                   .newFormFieldManagement('age')
                   .valueFieldManagement
                   .validate();
             },
             child: Text('validate me')))
         .append(ButtonFormField(
-            onPressed: (info) {
-              formManagement.newFormFieldManagement('age').focus = true;
+            onPressed: () {
+              formKey.currentManagement.newFormFieldManagement('age').focus =
+                  true;
             },
             child: Text('request focus')))
         .oneRowField(ListTileFormField<String>(
@@ -289,8 +297,10 @@ class _DemoPageState extends State<DemoPage> {
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
         ))
         .append(ButtonFormField(
-            onPressed: (info) {
-              formManagement.newFormFieldManagement('checkbox2').model =
+            onPressed: () {
+              formKey.currentManagement
+                      .newFormFieldManagement('checkbox2')
+                      .model =
                   ListTileModel<String>(
                       items: FormBuilderUtils.toListTileItems(
                           ['new value1', 'new value2']));
@@ -350,18 +360,20 @@ class _DemoPageState extends State<DemoPage> {
               });
             },
             queryFormBuilder: (builder, query) {
-              builder
+              return builder
+                  .layoutBuilder()
                   .append(
                       RangeSliderFormField(name: 'filter', min: 1, max: 100))
                   .append(ButtonFormField(
-                      onPressed: (info) {
+                      onPressed: () {
                         query();
                       },
-                      child: Text('query')));
+                      child: Text('query')))
+                  .build();
             },
-            onSelectDialogShow: (formManagement) {
-              //use this formManagement to control query form on search dialog
-              formManagement
+            onSelectDialogShow: (FormManagement currentManagement) {
+              //use this formKey.currentManagement to control query form on search dialog
+              currentManagement
                   .newFormFieldManagement('filter')
                   .valueFieldManagement
                   .value = RangeValues(20, 50);
@@ -382,7 +394,7 @@ class _DemoPageState extends State<DemoPage> {
             name: 'sliderInlineText',
             labelText: 'inline slider',
             flex: 2,
-            onChanged: (v) => formManagement
+            onChanged: (v) => formKey.currentManagement
                 .newFormFieldManagement('sliderInline')
                 .valueFieldManagement
                 .setValue(v == null ? 0.0 : v.toDouble(), trigger: false)))
@@ -391,7 +403,7 @@ class _DemoPageState extends State<DemoPage> {
             min: 0,
             max: 100,
             onChanged: (v) {
-              formManagement
+              formKey.currentManagement
                   .newFormFieldManagement('sliderInlineText')
                   .valueFieldManagement
                   .setValue(v.toDouble().round(), trigger: false);
@@ -426,11 +438,12 @@ class _DemoPageState extends State<DemoPage> {
           onChanged: (value) {
             String text = 'Rate Me!';
             if (value != null) text += 'current rate is $value';
-            formManagement.newFormFieldManagement('rate').model =
+            formKey.currentManagement.newFormFieldManagement('rate').model =
                 RateModel(labelText: text);
           },
           validator: (value) => value == null ? 'give me a rate pls' : null,
-        ));
+        ))
+        .build();
   }
 }
 

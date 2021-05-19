@@ -1,11 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
-
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class CheckboxGroupPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,34 +13,37 @@ class CheckboxGroupPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(ListTileFormField<String>(
                   items: FormBuilderUtils.toListTileItems(['1', '2', '3']),
                   type: ListTileItemType.Checkbox,
                   split: 3,
                   name: 'checkboxGroup',
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text: 'value changed, current value is $v');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('checkboxGroup')
                           .model = ListTileModel<String>(split: 1);
                     },
                     child: Text('update split')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('checkboxGroup')
                               .model =
                           ListTileModel<String>(
@@ -51,7 +53,7 @@ class CheckboxGroupPage extends StatelessWidget {
                     child: Text('update items')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('checkboxGroup')
                               .model =
                           ListTileModel<String>(
@@ -60,7 +62,7 @@ class CheckboxGroupPage extends StatelessWidget {
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('checkboxGroup')
                               .model =
                           ListTileModel<String>(
@@ -71,18 +73,10 @@ class CheckboxGroupPage extends StatelessWidget {
                                   CheckboxRenderData(activeColor: Colors.pink));
                     },
                     child: Text('update checkboxGroup render data')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('checkboxGroup')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('checkboxGroup')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -91,9 +85,9 @@ class CheckboxGroupPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('checkboxGroup')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -104,9 +98,9 @@ class CheckboxGroupPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('checkboxGroup')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

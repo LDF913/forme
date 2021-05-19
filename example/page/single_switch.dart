@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class SingleSwitchPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,30 +13,41 @@ class SingleSwitchPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
+                .customize(mainAxisAlignment: MainAxisAlignment.center)
                 .oneRowField(SingleSwitchFormField(
                   name: 'switch',
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text: 'value changed, current value is $v');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText(
+                  wrapper: (child) => Center(
+                    child: child,
+                  ),
+                ))
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('switch').model =
-                          SingleSwitchModel(label: Text('new label'));
+                      formKey.currentManagement
+                          .newFormFieldManagement('switch')
+                          .model = SingleSwitchModel(label: Text('new label'));
                     },
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement.newFormFieldManagement('switch').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('switch')
+                              .model =
                           SingleSwitchModel(
                               switchRenderData: SwitchRenderData(
                                   activeColor: Colors.red,
@@ -44,18 +55,10 @@ class SingleSwitchPage extends StatelessWidget {
                                   activeTrackColor: Colors.yellow));
                     },
                     child: Text('update switch render data')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('switch')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('switch')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -64,9 +67,9 @@ class SingleSwitchPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('switch')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -77,9 +80,9 @@ class SingleSwitchPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('switch')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

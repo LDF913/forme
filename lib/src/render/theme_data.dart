@@ -13,8 +13,11 @@ class CheckboxRenderData {
   final double? splashRadius;
   final VisualDensity? visualDensity;
   final MaterialTapTargetSize? materialTapTargetSize;
+  final Color? tileColor;
+  final Color? selectedTileColor;
+  final ShapeBorder? shape;
 
-  CheckboxRenderData({
+  const CheckboxRenderData({
     this.mouseCursor,
     this.activeColor,
     this.fillColor,
@@ -25,6 +28,9 @@ class CheckboxRenderData {
     this.overlayColor,
     this.splashRadius,
     this.visualDensity,
+    this.tileColor,
+    this.selectedTileColor,
+    this.shape,
   });
 }
 
@@ -79,8 +85,11 @@ class SwitchRenderData {
   final double? splashRadius;
   final ImageErrorListener? onActiveThumbImageError;
   final ImageErrorListener? onInactiveThumbImageError;
+  final Color? tileColor;
+  final ShapeBorder? shape;
+  final Color? selectedTileColor;
 
-  SwitchRenderData({
+  const SwitchRenderData({
     this.activeColor,
     this.activeTrackColor,
     this.inactiveThumbColor,
@@ -99,6 +108,9 @@ class SwitchRenderData {
     this.splashRadius,
     this.onActiveThumbImageError,
     this.onInactiveThumbImageError,
+    this.tileColor,
+    this.shape,
+    this.selectedTileColor,
   });
 }
 
@@ -112,8 +124,11 @@ class RadioRenderData {
   final double? splashRadius;
   final VisualDensity? visualDensity;
   final MaterialTapTargetSize? materialTapTargetSize;
+  final Color? tileColor;
+  final Color? selectedTileColor;
+  final ShapeBorder? shape;
 
-  RadioRenderData({
+  const RadioRenderData({
     this.mouseCursor,
     this.activeColor,
     this.fillColor,
@@ -123,6 +138,9 @@ class RadioRenderData {
     this.overlayColor,
     this.splashRadius,
     this.visualDensity,
+    this.tileColor,
+    this.selectedTileColor,
+    this.shape,
   });
 }
 
@@ -146,7 +164,7 @@ class FilterChipRenderData {
   final Color? checkmarkColor;
   final CircleBorder? avatarBorder;
 
-  FilterChipRenderData({
+  const FilterChipRenderData({
     this.labelPadding,
     this.labelStyle,
     this.avatarBorder,

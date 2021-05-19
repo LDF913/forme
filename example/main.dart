@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'page/button.dart';
 import 'page/checkbox_group.dart';
 import 'page/datetime_field.dart';
+import 'page/demo2.dart';
 import 'page/filter_chip.dart';
-import 'page/main.dart';
+import 'page/demo.dart';
 import 'page/number_field.dart';
 import 'page/radio_group.dart';
 import 'page/range_slider.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         '/datetime': (context) => DateTimeFieldPage(),
         '/text': (context) => TextFieldPage(),
         '/demo': (context) => DemoPage(),
+        '/demo2': (context) => Demo2Page(),
       },
     );
   }
@@ -140,6 +142,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.pushNamed(context, '/demo');
                 },
                 child: Text('demo page')),
+            TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/demo2');
+                },
+                child: Text('demo2 page')),
           ],
         ));
   }

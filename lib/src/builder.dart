@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+
 import 'focus_node.dart';
 import 'form_builder_utils.dart';
 import 'form_field.dart';
@@ -9,58 +8,101 @@ import 'management.dart';
 import 'state_model.dart';
 import 'text_selection.dart';
 
-/// used to build a field
-typedef FieldBuilder = Widget Function(BuilderInfo info, BuildContext context);
 typedef FormValueChanged = void Function(
     String name, dynamic oldValue, dynamic newValue);
 
-class FormBuilder extends StatefulWidget {
-  /// used to control form
-  final FormManagement formManagement;
+/// form key is a global key
+///
+/// used to get form management
+class FormKey extends LabeledGlobalKey<State> {
+  FormKey({String? debugLabel}) : super(debugLabel);
 
-  /// form layout
-  final FormLayout _formLayout;
+  //get form management , return null if there's no form management
+  FormManagement? get quietlyManagement {
+    State? state = currentState;
+    if (state == null || state is! _AbstractFormState) return null;
+    return state.formManagement;
+  }
 
-  /// listen form value changed
-  ///
-  /// this listener will be always triggered when field'value changed
-  ///
-  /// **only listen fields which has a name**
-  final FormValueChanged? onChanged;
+  /// get form management , throw an error if there's no form management
+  FormManagement get currentManagement {
+    if (currentState == null) {
+      throw 'current state is null,did you put this key on FormBuilder?';
+    }
+    if (currentState is! _AbstractFormState) {
+      throw 'current state is not a FormState , you should put this key on FormBuilder rather than other widget';
+    }
+    return (currentState as _AbstractFormState).formManagement;
+  }
+}
 
-  /// whether enableLayoutManagement
-  ///
-  /// if enabled , global key will be used for every builder field (root of form field)
-  ///
-  /// **enable it when you really need modify form layout at runtime,otherwise disable it for performance improve,
-  /// when try to update this flag at runtime,an error will be throw**
-  ///
-  ///
-  /// **@experimental**
-  final bool enableLayoutManagement;
+class FormBuilder {
+  FormValueChanged? _onChanged;
+  bool _readOnly = false;
+  FormLayoutBuilder? _layoutBuilder;
+  FormKey? _key;
 
-  /// whether form should be readOnly
-  ///
-  /// default is false
-  final bool readOnly;
+  FormBuilder key(FormKey key) {
+    this._key = key;
+    return this;
+  }
 
-  /// whether form should be visible
-  ///
-  /// default is true
-  final bool visible;
+  /// whether form should be readonly
+  FormBuilder readOnly(bool readOnly) {
+    this._readOnly = readOnly;
+    return this;
+  }
 
-  FormBuilder({
-    required this.formManagement,
+  /// set formvalue changed listener
+  FormBuilder onChanged(FormValueChanged changed) {
+    this._onChanged = changed;
+    return this;
+  }
+
+  /// create a layout form builder
+  FormLayoutBuilder layoutBuilder({
     MainAxisAlignment? mainAxisAlignment,
     MainAxisSize? mainAxisSize,
     CrossAxisAlignment? crossAxisAlignment,
     TextDirection? textDirection,
     VerticalDirection? verticalDirection,
     TextBaseline? textBaseline,
-    this.enableLayoutManagement = false,
-    this.onChanged,
-    this.readOnly = false,
-    this.visible = true,
+  }) {
+    return _layoutBuilder ??
+        FormLayoutBuilder._(this,
+            mainAxisAlignment: mainAxisAlignment,
+            mainAxisSize: mainAxisSize,
+            crossAxisAlignment: crossAxisAlignment,
+            textBaseline: textBaseline,
+            textDirection: textDirection,
+            verticalDirection: verticalDirection);
+  }
+
+  Widget build({
+    required Widget child,
+  }) {
+    return _SimpleForm(
+      key: _key,
+      child: child,
+      readOnly: _readOnly,
+    );
+  }
+}
+
+class FormLayoutBuilder {
+  final FormBuilder _builder;
+  final FormLayout _formLayout;
+  bool? _visible;
+  bool? _enableLayoutManagement;
+
+  FormLayoutBuilder._(
+    this._builder, {
+    MainAxisAlignment? mainAxisAlignment,
+    MainAxisSize? mainAxisSize,
+    CrossAxisAlignment? crossAxisAlignment,
+    TextDirection? textDirection,
+    VerticalDirection? verticalDirection,
+    TextBaseline? textBaseline,
   }) : this._formLayout = FormLayout(
             mainAxisAlignment: mainAxisAlignment,
             mainAxisSize: mainAxisSize,
@@ -72,13 +114,33 @@ class FormBuilder extends StatefulWidget {
   /// require a new Row
   ///
   /// if last row is empty won't create a new row
-  FormBuilder newRow() {
+  FormLayoutBuilder newRow() {
     _formLayout.lastEmptyRow();
     return this;
   }
 
+  /// whether form should be visible
+  FormLayoutBuilder visible(bool visible) {
+    _visible = visible;
+    return this;
+  }
+
+  /// whether enableLayoutManagement
+  ///
+  /// if enabled , global key will be used for every builder field (root of form field)
+  ///
+  /// **enable it when you really need modify form layout at runtime,otherwise disable it for performance improve,
+  /// when try to update this flag at runtime,an error will be throw**
+  ///
+  ///
+  /// **@experimental**
+  FormLayoutBuilder enableLayoutManagement(bool enableLayoutManagement) {
+    _enableLayoutManagement = enableLayoutManagement;
+    return this;
+  }
+
   /// customize last row
-  FormBuilder customize({
+  FormLayoutBuilder customize({
     MainAxisAlignment? mainAxisAlignment,
     MainAxisSize? mainAxisSize,
     CrossAxisAlignment? crossAxisAlignment,
@@ -100,14 +162,9 @@ class FormBuilder extends StatefulWidget {
   /// Row
   ///   fields ... field
   /// ```
-  FormBuilder append(Widget field) {
+  FormLayoutBuilder append(Widget field) {
     _formLayout.lastRow().append(field);
     return this;
-  }
-
-  /// append a fieldBuilder to last  row
-  FormBuilder appendBuilder(FieldBuilder builder) {
-    return append(_builderField(builder));
   }
 
   /// append a field take up one row
@@ -120,273 +177,120 @@ class FormBuilder extends StatefulWidget {
   ///
   /// no need to call newRow before or after
   /// this method,they will be automatic created
-  FormBuilder oneRowField(Widget field) {
+  FormLayoutBuilder oneRowField(Widget field) {
     _formLayout.lastEmptyRow().append(field);
     _formLayout.append();
     return this;
   }
 
-  FormBuilder oneRowBuilder(FieldBuilder builder) {
-    return oneRowField(_builderField(builder));
-  }
-
-  Widget _builderField(FieldBuilder builder) {
-    return Builder(
-      builder: (context) {
-        BuilderInfo info = BuilderInfo.of(context);
-        return builder(info, context);
-      },
+  Widget build() {
+    return _LayoutForm(
+      key: _builder._key,
+      formLayout: _formLayout,
+      readOnly: _builder._readOnly,
+      visible: _visible ?? true,
+      enableLayoutManagement: _enableLayoutManagement ?? false,
+      onChanged: _builder._onChanged,
     );
   }
-
-  @override
-  State<StatefulWidget> createState() => _FormBuilderState();
 }
 
-class _FormData extends InheritedWidget {
-  final _ResourceManagement data;
-  final int gen;
-  final bool enableLayoutManagement;
+abstract class _AbstractForm extends StatefulWidget {
+  /// whether form should be readOnly;
+  ///
+  /// default false
+  final bool readOnly;
+
+  /// listen form value changed
+  ///
+  /// this listener will be always triggered when field'value changed
+  ///
+  /// **only listen fields which has a name**
   final FormValueChanged? onChanged;
 
-  _FormData(this.data, this.gen, this.enableLayoutManagement, this.onChanged,
-      {required Widget child})
-      : super(child: child);
+  _AbstractForm({
+    Key? key,
+    this.readOnly = false,
+    this.onChanged,
+  }) : super(key: key);
 
   @override
-  bool updateShouldNotify(covariant _FormData oldWidget) {
-    return gen != oldWidget.gen;
-  }
-
-  static _FormData of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_FormData>()!;
-  }
+  _AbstractFormState createState();
 }
 
-class _FormModel {
-  final _FormBuilderState state;
-  _FormModel(this.state);
-
-  bool get readOnly => state.readOnly;
-  set readOnly(bool readOnly) => state.readOnly = readOnly;
-
-  bool get visible => state.visible;
-  set visible(bool visible) => state.visible = visible;
-
-  FormLayout get formLayout => state.formLayout;
-  set formLayout(FormLayout layout) => state.formLayout = layout;
-}
-
-class _FormBuilderState extends State<FormBuilder> {
+abstract class _AbstractFormState extends State<_AbstractForm> {
   late final _ResourceManagement resourceManagement;
+  late final FormManagement formManagement;
+
   bool? _readOnly;
   bool? _visible;
-  FormLayout? _formLayout;
-  FormLayout? originalFormLayout;
 
-  int gen = 0;
+  final Map<int, Key> keys = {};
+  final List<CastableFormFieldManagement> formFieldManagements = [];
+  List<ValueFieldState> valueFieldStates = [];
 
-  bool get readOnly => _readOnly ?? widget.readOnly;
-  set readOnly(bool readOnly) {
-    if (_readOnly != readOnly)
-      setState(() {
-        gen++;
-        _readOnly = readOnly;
-      });
-  }
+  FormValueChanged? get onChanged => widget.onChanged;
 
-  bool get visible => _visible ?? widget.visible;
-  set visible(bool visible) {
-    if (_visible != visible)
-      setState(() {
-        gen++;
-        _visible = visible;
-      });
-  }
-
-  set formLayout(FormLayout formLayout) {
-    if (!widget.enableLayoutManagement)
-      throw 'can not update form layout, enableLayoutManagement is false';
-    if (_formLayout == null) {
-      originalFormLayout = widget._formLayout;
-    }
-    setState(() {
-      gen++;
-      _formLayout = formLayout;
-    });
-  }
-
-  FormLayout get formLayout => _formLayout ?? widget._formLayout;
+  FormManagement createFormManagement(_ResourceManagement resourceManagement);
 
   @override
   void initState() {
     super.initState();
-    resourceManagement = widget.formManagement._resourceManagement;
-    resourceManagement.registerFormModel(_FormModel(this));
+    resourceManagement = _ResourceManagement(this);
+    formManagement = createFormManagement(resourceManagement);
   }
 
-  @override
-  void didUpdateWidget(FormBuilder oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.enableLayoutManagement != widget.enableLayoutManagement)
-      throw 'enableLayoutManagement should not be changed at runtime !';
-    if (oldWidget.formManagement != widget.formManagement)
-      throw 'formManagement should not be changed at runtime!';
-    migrateLayout();
-  }
+  @protected
+  int gen = 0;
 
-  @override
-  void dispose() {
-    resourceManagement.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    formLayout.removeEmptyRow();
-    List<Row> rows = [];
-    int row = 0;
-    List<int> indexs = [];
-    for (FormRow formRow in formLayout.rows) {
-      List<_FormBuilderField> children = [];
-      int column = 0;
-      for (IndexWidget iw in formRow.columns) {
-        Position position = Position(row: row, column: column);
-        Key? key = widget.enableLayoutManagement
-            ? resourceManagement.registerGlobalKey(iw.index)
-            : null;
-        children.add(_FormBuilderField(iw.widget, position, key: key));
-        column++;
-        indexs.add(iw.index);
-      }
-      rows.add(Row(
-        crossAxisAlignment: formRow.crossAxisAlignment,
-        mainAxisAlignment: formRow.mainAxisAlignment,
-        mainAxisSize: formRow.mainAxisSize,
-        textDirection: formRow.textDirection,
-        verticalDirection: formRow.verticalDirection,
-        textBaseline: formRow.textBaseline,
-        children: children,
-      ));
-      row++;
-    }
-    //removed unused keys
-    resourceManagement.unregisterGlobalKeys(indexs);
-    return Visibility(
-        visible: visible,
-        maintainState: true,
-        child: _FormData(
-          resourceManagement,
-          gen,
-          widget.enableLayoutManagement,
-          widget.onChanged,
-          child: Column(
-            mainAxisAlignment: formLayout.mainAxisAlignment,
-            mainAxisSize: formLayout.mainAxisSize,
-            crossAxisAlignment: formLayout.crossAxisAlignment,
-            textDirection: formLayout.textDirection,
-            textBaseline: formLayout.textBaseline,
-            verticalDirection: formLayout.verticalDirection,
-            children: rows,
-          ),
-        ));
-  }
-
-  void migrateLayout() {
-    if (originalFormLayout == null) return;
-    //form layout has been changed by formlayoutmanagement
-    FormLayout currentLayout = widget._formLayout..removeEmptyRow();
-    FormLayout originalLayout = originalFormLayout!;
-    if (currentLayout.rowCount != originalLayout.rowCount)
-      throwWhenLayoutChanged();
-    for (int i = 0; i < originalLayout.rowCount; i++) {
-      FormRow originalRow = originalLayout.rows[i];
-      FormRow currentRow = currentLayout.rows[i];
-      if (originalRow.index != currentRow.index) throwWhenLayoutChanged();
-      if (originalRow.columnCount != currentRow.columnCount)
-        throwWhenLayoutChanged();
-
-      for (int j = 0; j < originalRow.columnCount; j++) {
-        IndexWidget originalColumn = originalRow.columns[j];
-        IndexWidget currentColumn = currentRow.columns[j];
-
-        if (originalColumn.index != currentColumn.index ||
-            originalColumn.widget.runtimeType !=
-                currentColumn.widget.runtimeType) throwWhenLayoutChanged();
-      }
-    }
-    FormLayout stateLayout = formLayout;
-    //start migrate
-    currentLayout.rows.forEach((element) {
-      Iterable<FormRow> stateRowIt = stateLayout.rows
-          .where((stateRowElement) => stateRowElement.index == element.index);
-      if (stateRowIt.isEmpty) return;
-      FormRow stateRow = stateRowIt.first;
-      stateRow.customize(
-          mainAxisAlignment: element.mainAxisAlignment,
-          mainAxisSize: element.mainAxisSize,
-          crossAxisAlignment: element.crossAxisAlignment,
-          textBaseline: element.textBaseline,
-          textDirection: element.textDirection,
-          verticalDirection: element.verticalDirection);
-
-      element.columns.forEach((element) {
-        Iterable<IndexWidget> stateIndexWidgetIt = stateRow.columns.where(
-            (stateColumnElement) => stateColumnElement.index == element.index);
-        if (stateIndexWidgetIt.isEmpty) return;
-        stateIndexWidgetIt.first.widget = element.widget;
+  bool get readOnly => _readOnly ?? widget.readOnly;
+  set readOnly(bool readOnly) {
+    if (_readOnly != readOnly) {
+      setState(() {
+        gen++;
+        _readOnly = readOnly;
       });
-    });
-
-    stateLayout.customize(
-        mainAxisAlignment: currentLayout.mainAxisAlignment,
-        mainAxisSize: currentLayout.mainAxisSize,
-        crossAxisAlignment: currentLayout.crossAxisAlignment,
-        textBaseline: currentLayout.textBaseline,
-        textDirection: currentLayout.textDirection,
-        verticalDirection: currentLayout.verticalDirection);
+    }
   }
 
-  void throwWhenLayoutChanged() =>
-      throw 'since form layout has been changed by FormLayoutManagement , you can\'t change form layout via ide or setState out of FormBuilder';
-}
+  Widget buildContent();
 
-class _FormBuilderField extends StatefulWidget {
-  final Widget child;
-  final Position position;
-  _FormBuilderField(this.child, this.position, {Key? key}) : super(key: key);
-  @override
-  State<StatefulWidget> createState() => _FormBuilderFieldState();
-}
-
-class _FormBuilderFieldState extends State<_FormBuilderField> {
   @override
   Widget build(BuildContext context) {
-    _FormModel model = _ResourceManagement.of(context).formModel;
-    return _InheritedFieldInfo(
-        FieldInfo._(widget.position, model.readOnly), widget.child);
+    return _FormStatus._(
+      gen: gen,
+      readOnly: readOnly,
+      child: buildContent(),
+      resourceManagement: resourceManagement,
+    );
+  }
+}
+
+class _FormStatus extends InheritedWidget {
+  final bool readOnly;
+  final int gen;
+  final _ResourceManagement resourceManagement;
+
+  _FormStatus._(
+      {required this.readOnly,
+      required this.gen,
+      required Widget child,
+      required this.resourceManagement})
+      : super(child: child);
+
+  @override
+  bool updateShouldNotify(covariant _FormStatus oldWidget) {
+    return gen != oldWidget.gen;
   }
 }
 
 /// used to register|unregister|lookup resources
 class _ResourceManagement {
-  final GlobalKey key = GlobalKey(); //form key !
-  _FormModel? _formModel;
-  final Map<int, Key> keys = {};
+  final _AbstractFormState state;
   final List<CastableFormFieldManagement> formFieldManagements = [];
   List<ValueFieldState> valueFieldStates = [];
 
-  Key registerGlobalKey(int index) {
-    return keys.putIfAbsent(index, () => GlobalKey());
-  }
-
-  void unregisterGlobalKeys(List<int> used) {
-    keys.removeWhere((key, value) => !used.contains(key));
-  }
-
-  void registerFormModel(_FormModel formModel) {
-    this._formModel = formModel;
-  }
+  _ResourceManagement(this.state);
 
   void registerFormFieldManagement(
           CastableFormFieldManagement formFieldManagement) =>
@@ -402,10 +306,6 @@ class _ResourceManagement {
   void unregisterValueFieldState(ValueFieldState valueFieldState) =>
       valueFieldStates.remove(valueFieldState);
 
-  static _ResourceManagement of(BuildContext context) {
-    return _FormData.of(context).data;
-  }
-
   CastableFormFieldManagement? getFormFieldManagement(String name) {
     Iterable<CastableFormFieldManagement> it =
         formFieldManagements.where((element) => element.name == name);
@@ -418,218 +318,197 @@ class _ResourceManagement {
     return it.isEmpty ? null : it.first;
   }
 
-  Iterable<FormFieldManagement> getFormFieldManagements(int row,
-      {int? column}) {
-    return formFieldManagements.where((element) {
-      if (element.position.row == row)
-        return column == null ? true : element.position.column == column;
-      return false;
-    });
-  }
-
   bool hasName(String name) => getFormFieldManagement(name) != null;
 
-  _FormModel get formModel {
-    if (_formModel == null) throw 'no form model can be found';
-    return _formModel!;
-  }
-
-  void dispose() {
-    keys.clear();
+  static _ResourceManagement of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<_FormStatus>()!
+        .resourceManagement;
   }
 }
 
-/// a management used to control a form
+/// state for all stateful form field
 ///
-/// ```
-/// FormBuilder(formManagement:your form management)
-/// ```
+/// if you want FormBuilder control your custom stateful field,you can do as follows
 ///
-/// **when you create a _FormBuilderFieldModel,it's also created a new  GlobalKey used by FormBuilder,so if your _FormBuilderFieldModel instance changed for every builder
-/// (eg FormBuilder(formMangement:_FormBuilderFieldModel())),your form will rebuild always**
-class FormManagement {
-  final _ResourceManagement _resourceManagement;
-  final FormLayoutManagement formLayoutManagement;
+/// 1. make your custom field extends StatefulWidget and with [StatefulField]
+/// 2. make your custom state extends State and with [AbstractFieldState]
+///
+mixin AbstractFieldState<T extends StatefulWidget,
+    E extends AbstractFieldStateModel> on State<T> {
+  bool _init = false;
+  late final _ResourceManagement _resourceManagement;
+  late final CastableFormFieldManagement _formFieldManagement;
 
-  FormManagement() : this._(_ResourceManagement());
+  FocusNodes? _focusNode;
 
-  FormManagement._(this._resourceManagement)
-      : this.formLayoutManagement = FormLayoutManagement._(_resourceManagement);
+  String? get name => _field.name;
 
-  /// whether form has a name field
-  bool hasField(String name) => _resourceManagement.hasName(name);
+  bool get init => _init;
 
-  /// whether form is visible
-  bool get visible => _formModel.visible;
+  E? _model;
 
-  /// show|hide form
-  set visible(bool visible) => _formModel.visible = visible;
+  /// whether field should be readOnly
+  bool get readOnly => _resourceManagement.state.readOnly || isFieldReadOnly;
 
-  /// whether form is readonly
-  bool get readOnly => _formModel.readOnly;
+  /// whether form is LayoutForm
+  @protected
+  bool get useLayout => _resourceManagement.state is _LayoutFormState;
 
-  /// set form readOnly|editable
-  set readOnly(bool readOnly) => _formModel.readOnly = readOnly;
+  /// whether field is readOnly
+  @protected
+  bool get isFieldReadOnly;
 
-  /// get rows of form
-  int get rows => _formModel.formLayout.rowCount;
+  /// set readOnly on this field
+  set readOnly(bool readOnly);
 
-  /// get column of a row
-  int getColumn(int row) {
-    if (row < 0 || row > rows - 1) throw 'row out of range ,range is 0~$rows';
-    return _formModel.formLayout.rows[row].columnCount;
+  /// get current widget's focus node
+  ///
+  /// if there's no focus node,will create a new one
+  ///
+  /// call this method in builder or in [initFormManagement]
+  FocusNodes get focusNode {
+    return _focusNode ??= FocusNodes();
   }
 
-  /// get a new formfieldManagement by name
-  CastableFormFieldManagement newFormFieldManagement(String name) =>
-      _AutofindFormFieldManagement._(name, _resourceManagement);
-
-  /// get form data
-  ///
-  /// if a value field doesn't has a name state,it's value will be ignored
-  Map<String, dynamic> get data {
-    Map<String, dynamic> map = {};
-    _valueFieldStates.forEach((element) {
-      String? name = element.name;
-      if (name == null) return;
-      dynamic value = element.value;
-      map[name] = value;
-    });
-    return map;
+  void requestFocus() {
+    if (_focusNode == null || !_focusNode!.canRequestFocus) return;
+    _focusNode!.requestFocus();
   }
 
-  /// get error msg after validate form,if you don't want to display error text,
-  /// look at [quietlyValidate]
-  ///
-  /// key is field'name
-  /// value is [FormFieldManagement] you can get errorText
-  /// via [FormFieldManagement.valueFieldManagement.errorText]
-  /// or request a focus via [FormFieldManagement.focus]
-  /// or ensure field visible via [FormFieldManagement.ensureVisible]
-  ///
-  /// **the result has been sorted by position**
-  Map<String, CastableFormFieldManagement> get errors {
-    return (_valueFieldStates
-            .where(
-                (element) => element.name != null && element.errorText != null)
-            .toList()
-              ..sort((a, b) {
-                Position pa = a.position;
-                Position pb = b.position;
-                int compare = pa.row.compareTo(pb.row);
-                if (compare == 0) return pa.column.compareTo(pb.column);
-                return compare;
-              }))
-        .asMap()
-        .map((key, value) => MapEntry(value.name!,
-            _resourceManagement.getFormFieldManagement(value.name!)!));
+  @protected
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_init) return;
+    _init = true;
+    _resourceManagement = _ResourceManagement.of(context);
+    initFormManagement();
   }
 
-  /// perform a quietly validate, used to get error text and without display it
+  /// this method will be called immediately after initState
+  /// and will only be called once during state lifecycle
   ///
-  /// this method will not set errorText on field and rebuild field , so after this method called
-  /// [ValueFieldManagement.isValid] still return true even though an error text returned by
-  /// field's validator ,  also [ValueFieldManagement.errorText] will   return null too,
-  /// so value field will not display error
-  ///
-  /// you can get errorText
-  /// via [FormFieldManagementWithError.errorText]
-  /// or request a focus via [FormFieldManagement.focus]
-  /// or ensure field visible via [FormFieldManagement.ensureVisible]
-  ///
-  /// **the result has been sorted by position**
-  List<FormFieldManagementWithError> quietlyValidate() {
-    List<FormFieldManagementWithError> errors = [];
-    for (ValueFieldState state in _valueFieldStates) {
-      if (state.name == null) continue;
-      String? errorText = state._quietlyValidate();
-      if (errorText == null) continue;
-      CastableFormFieldManagement management =
-          _resourceManagement.getFormFieldManagement(state.name!)!;
-      errors.add(FormFieldManagementWithError._(management, errorText));
+  /// **you should call getState in this method , not in initState!**
+  @protected
+  @mustCallSuper
+  void initFormManagement() {
+    _formFieldManagement = _CastableFormFieldManagement(
+        customFormFieldManagement(_FixedFormFieldManagement(this)));
+    _resourceManagement.registerFormFieldManagement(_formFieldManagement);
+  }
+
+  /// let subclass override base FormFieldManagement
+  @protected
+  FormFieldManagement customFormFieldManagement(
+      FormFieldManagement baseManagement) {
+    return baseManagement;
+  }
+
+  @protected
+  void dispose() {
+    _resourceManagement.unregisterFormFieldManagement(_formFieldManagement);
+    _focusNode?.dispose();
+    super.dispose();
+  }
+
+  /// used to do some logic before model merge
+  @protected
+  void beforeMerge(E old, E current) {}
+
+  StatefulField<AbstractFieldState, E> get _field =>
+      widget as StatefulField<AbstractFieldState, E>;
+
+  _updateModel(E _model) {
+    if (_model != model) {
+      setState(() {
+        beforeMerge(model, _model);
+        this._model = _model.merge(model) as E;
+      });
     }
-    errors.sort((a, b) {
-      Position p1 = a.formFieldManagement.position;
-      Position p2 = b.formFieldManagement.position;
-      int compare = p1.row.compareTo(p2.row);
-      if (compare == 0) return p1.column.compareTo(p2.column);
-      return compare;
-    });
-    return errors;
   }
 
-  /// equals to setData(data,trigger:true)
-  set data(Map<String, dynamic> data) => setData(data);
+  E get model => _model ?? _field.model;
+}
 
-  /// set form data
-  ///
-  /// [trigger] whether trigger onChanged
-  void setData(Map<String, dynamic> data, {bool trigger = true}) {
-    if (data.isEmpty) return;
-    data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
-      FormFieldManagement? management =
-          _resourceManagement.getFormFieldManagement(key);
-      if (management == null || !management.isValueField) return;
-      management.valueFieldManagement.setValue(value, trigger: trigger);
-    });
+abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
+    extends FormFieldState<T> with AbstractFieldState<FormField<T>, E> {
+  ValueChanged<T?>? get onChanged =>
+      (super.widget as ValueField<T, ValueFieldState<T, E>, E>).onChanged;
+
+  @override
+  void initFormManagement() {
+    super.initFormManagement();
+    _resourceManagement.registerValueFieldState(this);
   }
 
-  /// reset form
-  ///
-  /// **only reset all value fields**
+  @override
+  void didChange(T? value) {
+    doChangeValue(value);
+  }
+
+  void setValue(T? newValue) {
+    if (!compare(value, newValue)) {
+      super.setValue(newValue);
+      _didChange(value, newValue, true);
+    }
+  }
+
+  void doChangeValue(T? newValue, {bool trigger = true}) {
+    if (!compare(value, newValue)) {
+      super.didChange(newValue);
+      _didChange(value, newValue, trigger);
+    }
+  }
+
+  @override
   void reset() {
-    _valueFieldStates.forEach((element) {
-      element.reset();
-    });
+    try {
+      if (!compare(value, widget.initialValue)) {
+        _didChange(value, widget.initialValue, true);
+      }
+    } finally {
+      super.reset();
+    }
   }
 
-  /// validate form and return is valid or not
+  /// used to compare two values  determine whether changeValue
   ///
-  /// **will display error if invalid ,
-  /// if you only want to know the form is valid or not ,
-  /// use [isValid] instead**
-  bool validate() {
-    bool hasError = false;
-    for (final ValueFieldState field in _valueFieldStates)
-      hasError = !field.validate() || hasError;
-    return !hasError;
+  /// default used [FormBuilderUtils.compare]
+  ///
+  /// override this method if it can't meet your needs
+  @protected
+  bool compare(T? a, T? b) {
+    return FormBuilderUtils.compare(a, b);
   }
 
-  /// whether form is valid
-  ///
-  /// **only check is valid or not , won't show error**
-  bool get isValid {
-    bool hasError = false;
-    for (final ValueFieldState field in _valueFieldStates)
-      hasError = !field.isValid || hasError;
-    return !hasError;
+  _didChange(T? old, T? current, bool trigger) {
+    if (trigger) {
+      ValueChanged<T?>? onChanged =
+          (super.widget as ValueField<T, ValueFieldState<T, E>, E>).onChanged;
+      if (onChanged != null) onChanged(current);
+    }
+    if (name != null) {
+      FormValueChanged? formValueChanged = _resourceManagement.state.onChanged;
+      if (formValueChanged != null) {
+        formValueChanged(name!, old, current);
+      }
+    }
   }
 
-  /// save all form fields
-  ///
-  /// form field's onSaved will be  called
-  void onSaved() {
-    _valueFieldStates.forEach((element) {
-      element.save();
-    });
+  String? _quietlyValidate() {
+    if (widget.validator != null) return widget.validator!(value);
   }
 
-  /// get current formManagement from context
-  ///
-  /// **context must be child context of FormBuilder**
-  ///
-  /// ```
-  /// appendBuilder(Builder(builder:(context){
-  ///   //ok to call FormManagement.of(context)
-  /// }))
-  /// ```
-  static FormManagement of(BuildContext context) =>
-      FormManagement._(_ResourceManagement.of(context));
+  @protected
+  Widget doBuild() {
+    return super.build(context);
+  }
 
-  _FormModel get _formModel => _resourceManagement.formModel;
-
-  Iterable<ValueFieldState> get _valueFieldStates =>
-      _resourceManagement.valueFieldStates;
+  @override
+  void dispose() {
+    super.dispose();
+    _resourceManagement.unregisterValueFieldState(this);
+  }
 }
 
 class _FixedFormFieldManagement extends FormFieldManagement {
@@ -643,8 +522,6 @@ class _FixedFormFieldManagement extends FormFieldManagement {
       Curve? curve,
       ScrollPositionAlignmentPolicy? alignmentPolicy,
       double? alignment}) {
-    if (!state._resourceManagement.formModel.visible)
-      return Future<void>.value();
     return Scrollable.ensureVisible(state.context,
         duration: duration ?? Duration.zero,
         curve: curve ?? Curves.ease,
@@ -677,9 +554,6 @@ class _FixedFormFieldManagement extends FormFieldManagement {
     if (state._focusNode == null) throw 'current field do not has a focusnode';
     state._focusNode!.focusListener = listener;
   }
-
-  @override
-  Position get position => state.position;
 
   @override
   bool get supportTextSelection => state is TextSelectionManagement;
@@ -743,36 +617,410 @@ class _FixedValueFieldManagement<T> extends ValueFieldManagement<T> {
   String? quietlyValidate() => state._quietlyValidate();
 }
 
-/// a field management used to control field
-///
-/// this management will auto find lastest field by name
-///
-/// ``` dart
-/// FilterChipFormField(name:'123');
-/// FormFieldManagement management = formManagement.newFormFieldManagement('123');
-/// // management manage FilterChipField
-/// NumberFormField(name:'123') // user swap two field's name
-/// // management manage NumberFormField
-/// ```
-class _AutofindFormFieldManagement extends CastableFormFieldManagement {
-  final String _name;
-  final _ResourceManagement resourceManagement;
+class _TextSelectionManagementDelegate extends TextSelectionManagement {
+  final TextSelectionManagement textSelectionManagement;
 
-  _AutofindFormFieldManagement._(this._name, this.resourceManagement);
+  _TextSelectionManagementDelegate(this.textSelectionManagement);
+  @override
+  void selectAll() {
+    textSelectionManagement.selectAll();
+  }
 
   @override
-  CastableFormFieldManagement get delegate {
+  void setSelection(int start, int end) {
+    textSelectionManagement.setSelection(start, end);
+  }
+}
+
+class FormFieldManagementWithError {
+  final CastableFormFieldManagement formFieldManagement;
+  final String errorText;
+  const FormFieldManagementWithError._(
+      this.formFieldManagement, this.errorText);
+}
+
+class _CastableFormFieldManagement extends CastableFormFieldManagement {
+  final FormFieldManagement delegate;
+  _CastableFormFieldManagement(this.delegate);
+}
+
+class _LayoutForm extends _AbstractForm {
+  final bool enableLayoutManagement;
+
+  final bool visible;
+
+  final FormLayout formLayout;
+
+  _LayoutForm({
+    Key? key,
+    this.enableLayoutManagement = false,
+    FormValueChanged? onChanged,
+    bool readOnly = false,
+    this.visible = true,
+    required this.formLayout,
+  }) : super(
+          key: key,
+          readOnly: readOnly,
+          onChanged: onChanged,
+        );
+
+  @override
+  _LayoutFormState createState() => _LayoutFormState();
+}
+
+class _LayoutFormState extends _AbstractFormState {
+  FormLayout? _formLayout;
+  FormLayout? originalFormLayout;
+
+  Map<int, Key> keys = {};
+
+  bool get visible => _visible ?? widget.visible;
+  set visible(bool visible) {
+    if (_visible != visible) {
+      setState(() {
+        gen++;
+        _visible = visible;
+      });
+    }
+  }
+
+  @override
+  _LayoutForm get widget => super.widget as _LayoutForm;
+
+  set formLayout(FormLayout formLayout) {
+    if (!widget.enableLayoutManagement)
+      throw 'can not update form layout, enableLayoutManagement is false';
+    if (_formLayout == null) {
+      originalFormLayout = widget.formLayout;
+    }
+    setState(() {
+      gen++;
+      _formLayout = formLayout;
+    });
+  }
+
+  FormLayout get formLayout => _formLayout ?? widget.formLayout;
+
+  @override
+  void didUpdateWidget(_LayoutForm oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    migrateLayout();
+  }
+
+  @override
+  Widget buildContent() {
+    formLayout.removeEmptyRow();
+    List<Row> rows = [];
+    int row = 0;
+    List<int> indexs = [];
+    for (FormRow formRow in formLayout.rows) {
+      List<_FormBuilderField> children = [];
+      int column = 0;
+      for (IndexWidget iw in formRow.columns) {
+        Position position = Position._(row: row, column: column);
+        Key? key = widget.enableLayoutManagement
+            ? keys.putIfAbsent(iw.index, () => GlobalKey())
+            : null;
+        children.add(_FormBuilderField(iw.widget, position, key: key));
+        column++;
+        indexs.add(iw.index);
+      }
+      rows.add(Row(
+        crossAxisAlignment: formRow.crossAxisAlignment,
+        mainAxisAlignment: formRow.mainAxisAlignment,
+        mainAxisSize: formRow.mainAxisSize,
+        textDirection: formRow.textDirection,
+        verticalDirection: formRow.verticalDirection,
+        textBaseline: formRow.textBaseline,
+        children: children,
+      ));
+      row++;
+    }
+    keys.removeWhere((key, value) => !indexs.contains(key));
+    return Visibility(
+        visible: visible,
+        maintainState: true,
+        child: Column(
+          mainAxisAlignment: formLayout.mainAxisAlignment,
+          mainAxisSize: formLayout.mainAxisSize,
+          crossAxisAlignment: formLayout.crossAxisAlignment,
+          textDirection: formLayout.textDirection,
+          textBaseline: formLayout.textBaseline,
+          verticalDirection: formLayout.verticalDirection,
+          children: rows,
+        ));
+  }
+
+  void migrateLayout() {
+    if (originalFormLayout == null) return;
+    //form layout has been changed by formlayoutmanagement
+    FormLayout currentLayout = widget.formLayout..removeEmptyRow();
+    FormLayout originalLayout = originalFormLayout!;
+    if (currentLayout.rowCount != originalLayout.rowCount)
+      throwWhenLayoutChanged();
+    for (int i = 0; i < originalLayout.rowCount; i++) {
+      FormRow originalRow = originalLayout.rows[i];
+      FormRow currentRow = currentLayout.rows[i];
+      if (originalRow.index != currentRow.index) throwWhenLayoutChanged();
+      if (originalRow.columnCount != currentRow.columnCount)
+        throwWhenLayoutChanged();
+
+      for (int j = 0; j < originalRow.columnCount; j++) {
+        IndexWidget originalColumn = originalRow.columns[j];
+        IndexWidget currentColumn = currentRow.columns[j];
+
+        if (originalColumn.index != currentColumn.index ||
+            originalColumn.widget.runtimeType !=
+                currentColumn.widget.runtimeType) throwWhenLayoutChanged();
+      }
+    }
+    FormLayout stateLayout = formLayout;
+    //start migrate
+    currentLayout.rows.forEach((element) {
+      Iterable<FormRow> stateRowIt = stateLayout.rows
+          .where((stateRowElement) => stateRowElement.index == element.index);
+      if (stateRowIt.isEmpty) return;
+      FormRow stateRow = stateRowIt.first;
+      stateRow.customize(
+          mainAxisAlignment: element.mainAxisAlignment,
+          mainAxisSize: element.mainAxisSize,
+          crossAxisAlignment: element.crossAxisAlignment,
+          textBaseline: element.textBaseline,
+          textDirection: element.textDirection,
+          verticalDirection: element.verticalDirection);
+
+      element.columns.forEach((element) {
+        Iterable<IndexWidget> stateIndexWidgetIt = stateRow.columns.where(
+            (stateColumnElement) => stateColumnElement.index == element.index);
+        if (stateIndexWidgetIt.isEmpty) return;
+        stateIndexWidgetIt.first.widget = element.widget;
+      });
+    });
+
+    stateLayout.customize(
+        mainAxisAlignment: currentLayout.mainAxisAlignment,
+        mainAxisSize: currentLayout.mainAxisSize,
+        crossAxisAlignment: currentLayout.crossAxisAlignment,
+        textBaseline: currentLayout.textBaseline,
+        textDirection: currentLayout.textDirection,
+        verticalDirection: currentLayout.verticalDirection);
+  }
+
+  void throwWhenLayoutChanged() =>
+      throw 'since form layout has been changed by FormLayoutManagement , you can\'t change form layout via ide or setState out of FormBuilder';
+
+  @override
+  FormManagement createFormManagement(_ResourceManagement resourceManagement) {
+    return LayoutFormManagement._(resourceManagement);
+  }
+}
+
+class _FormBuilderField extends StatefulWidget {
+  final Widget child;
+  final Position position;
+  _FormBuilderField(this.child, this.position, {Key? key}) : super(key: key);
+  @override
+  State<StatefulWidget> createState() => _FormBuilderFieldState();
+}
+
+class _FormBuilderFieldState extends State<_FormBuilderField> {
+  @override
+  Widget build(BuildContext context) {
+    return _FieldInfo(widget.position, widget.child);
+  }
+}
+
+/// field's position
+///
+/// one position may contain multi fields
+class Position {
+  /// row of field
+  final int row;
+
+  /// columns of field
+  final int column;
+
+  Position._({required this.row, required this.column});
+
+  @override
+  bool operator ==(other) {
+    if (other is! Position) return false;
+    if (row == other.row && column == other.column) return true;
+    return false;
+  }
+
+  @override
+  int get hashCode => hashValues(row, column);
+
+  /// get current field's position
+  ///
+  /// **can only be used in LayoutForm**
+  static Position of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_FieldInfo>()!.position;
+  }
+}
+
+class _FieldInfo extends InheritedWidget {
+  final Position position;
+
+  _FieldInfo(this.position, Widget child) : super(child: child);
+
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
+    return true;
+  }
+}
+
+class _SimpleForm extends _AbstractForm {
+  final Widget child;
+  _SimpleForm({
+    Key? key,
+    required this.child,
+    FormValueChanged? onChanged,
+    bool readOnly = false,
+  }) : super(
+          key: key,
+          onChanged: onChanged,
+          readOnly: readOnly,
+        );
+  @override
+  _SimpleFormState createState() => _SimpleFormState();
+}
+
+class _SimpleFormState extends _AbstractFormState {
+  @override
+  Widget buildContent() {
+    return (widget as _SimpleForm).child;
+  }
+
+  @override
+  FormManagement createFormManagement(_ResourceManagement resourceManagement) {
+    return SimpleFormManagement._(resourceManagement);
+  }
+}
+
+class SimpleFormManagement extends FormManagement {
+  final _ResourceManagement _resourceManagement;
+
+  SimpleFormManagement._(this._resourceManagement);
+
+  @override
+  bool hasField(String name) => _resourceManagement.hasName(name);
+
+  @override
+  bool get readOnly => _resourceManagement.state.readOnly;
+
+  @override
+  set readOnly(bool readOnly) => _resourceManagement.state.readOnly = readOnly;
+
+  @override
+  CastableFormFieldManagement newFormFieldManagement(String name) {
     CastableFormFieldManagement? management =
-        resourceManagement.getFormFieldManagement(_name);
-    if (management == null) throw 'field can not be found';
+        _resourceManagement.getFormFieldManagement(name);
+    if (management == null) throw 'no field can be found by name :$name';
     return management;
   }
 
   @override
-  bool canCast<T extends FormFieldManagement>() => delegate.canCast<T>();
+  Map<String, dynamic> get data {
+    Map<String, dynamic> map = {};
+    _valueFieldStates.forEach((element) {
+      String? name = element.name;
+      if (name == null) return;
+      dynamic value = element.value;
+      map[name] = value;
+    });
+    return map;
+  }
 
   @override
-  T cast<T extends FormFieldManagement>() => delegate.cast<T>();
+  List<FormFieldManagementWithError> get errors {
+    List<FormFieldManagementWithError> errors = [];
+    for (ValueFieldState state in _valueFieldStates) {
+      if (state.name == null) continue;
+      String? errorText = state.errorText;
+      if (errorText == null) continue;
+      CastableFormFieldManagement management =
+          _resourceManagement.getFormFieldManagement(state.name!)!;
+      errors.add(FormFieldManagementWithError._(management, errorText));
+    }
+    return errors;
+  }
+
+  @override
+  List<FormFieldManagementWithError> quietlyValidate() {
+    List<FormFieldManagementWithError> errors = [];
+    for (ValueFieldState state in _valueFieldStates) {
+      if (state.name == null) continue;
+      String? errorText = state._quietlyValidate();
+      if (errorText == null) continue;
+      CastableFormFieldManagement management =
+          _resourceManagement.getFormFieldManagement(state.name!)!;
+      errors.add(FormFieldManagementWithError._(management, errorText));
+    }
+    return errors;
+  }
+
+  @override
+  set data(Map<String, dynamic> data) => setData(data);
+
+  @override
+  void setData(Map<String, dynamic> data, {bool trigger = true}) {
+    if (data.isEmpty) return;
+    data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
+      FormFieldManagement? management =
+          _resourceManagement.getFormFieldManagement(key);
+      if (management == null || !management.isValueField) return;
+      management.valueFieldManagement.setValue(value, trigger: trigger);
+    });
+  }
+
+  @override
+  void reset() {
+    _valueFieldStates.forEach((element) {
+      element.reset();
+    });
+  }
+
+  @override
+  bool validate() {
+    bool hasError = false;
+    for (final ValueFieldState field in _valueFieldStates)
+      hasError = !field.validate() || hasError;
+    return !hasError;
+  }
+
+  @override
+  bool get isValid {
+    bool hasError = false;
+    for (final ValueFieldState field in _valueFieldStates)
+      hasError = !field.isValid || hasError;
+    return !hasError;
+  }
+
+  @override
+  void onSaved() {
+    _valueFieldStates.forEach((element) {
+      element.save();
+    });
+  }
+
+  Iterable<ValueFieldState> get _valueFieldStates =>
+      _resourceManagement.valueFieldStates;
+}
+
+class LayoutFormManagement extends SimpleFormManagement
+    implements FormManagement {
+  final FormLayoutManagement formLayoutManagement;
+  LayoutFormManagement._(_ResourceManagement resourceManagement)
+      : this.formLayoutManagement = FormLayoutManagement._(resourceManagement),
+        super._(resourceManagement);
+
+  bool get visible => _state.visible;
+
+  set visible(bool visible) => _state.visible = visible;
+
+  _LayoutFormState get _state => _resourceManagement.state as _LayoutFormState;
 }
 
 /// used to modify layout of form
@@ -892,7 +1140,8 @@ class FormLayoutManagement {
   void startEdit() {
     if (_formLayout != null)
       throw 'call apply or cancel first before you call startEdit again';
-    _formLayout = _formModel.formLayout.copy();
+    _formLayout =
+        (_resourceManagement.state as _LayoutFormState).formLayout.copy();
   }
 
   /// cancel edit
@@ -905,7 +1154,7 @@ class FormLayoutManagement {
   void apply() {
     _ensureStarted();
     _formLayout!.removeEmptyRow();
-    _formModel.formLayout = _formLayout!;
+    (_resourceManagement.state as _LayoutFormState).formLayout = _formLayout!;
     _formLayout = null;
   }
 
@@ -923,268 +1172,4 @@ class FormLayoutManagement {
         throw 'column is out of range ,range is 0,$maxColumn';
     }
   }
-
-  _FormModel get _formModel => _resourceManagement.formModel;
-}
-
-/// state for all stateful form field
-///
-/// if you want FormBuilder control your custom stateful field,you can do as follows
-///
-/// 1. make your custom field extends StatefulWidget and with [StatefulField]
-/// 2. make your custom state extends State and with [AbstractFieldState]
-///
-mixin AbstractFieldState<T extends StatefulWidget,
-    E extends AbstractFieldStateModel> on State<T> {
-  bool _init = false;
-  late final _ResourceManagement _resourceManagement;
-  late final CastableFormFieldManagement _formFieldManagement;
-
-  late FieldInfo fieldInfo;
-
-  FocusNodes? _focusNode;
-
-  String? get name => _field.name;
-
-  /// get row of field
-  int get row => position.row;
-
-  /// get column of field
-  int get column => position.column;
-
-  Position get position => fieldInfo.position;
-
-  bool get init => _init;
-
-  E? _model;
-
-  bool get readOnly =>
-      _resourceManagement._formModel!.readOnly || isFieldReadOnly;
-
-  /// whether field is readOnly
-  @protected
-  bool get isFieldReadOnly;
-
-  /// set readOnly on this field
-  set readOnly(bool readOnly);
-
-  /// get current widget's focus node
-  ///
-  /// if there's no focus node,will create a new one
-  ///
-  /// call this method in builder or in [initFormManagement]
-  FocusNodes get focusNode {
-    return _focusNode ??= FocusNodes();
-  }
-
-  void requestFocus() {
-    if (_focusNode == null || !_focusNode!.canRequestFocus) return;
-    _focusNode!.requestFocus();
-  }
-
-  @protected
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    fieldInfo = FieldInfo.of(context);
-    if (_init) return;
-    _init = true;
-    _resourceManagement = _ResourceManagement.of(context);
-    initFormManagement();
-  }
-
-  /// this method will be called immediately after initState
-  /// and will only be called once during state lifecycle
-  ///
-  /// **you should call getState in this method , not in initState!**
-  @protected
-  @mustCallSuper
-  void initFormManagement() {
-    _formFieldManagement = _CastableFormFieldManagement(
-        customFormFieldManagement(_FixedFormFieldManagement(this)));
-    _resourceManagement.registerFormFieldManagement(_formFieldManagement);
-  }
-
-  /// let subclass override base FormFieldManagement
-  @protected
-  FormFieldManagement customFormFieldManagement(
-      FormFieldManagement baseManagement) {
-    return baseManagement;
-  }
-
-  @protected
-  void dispose() {
-    _resourceManagement.unregisterFormFieldManagement(_formFieldManagement);
-    _focusNode?.dispose();
-    super.dispose();
-  }
-
-  /// used to do some logic before model merge
-  @protected
-  void beforeMerge(E old, E current) {}
-
-  StatefulField<AbstractFieldState, E> get _field =>
-      widget as StatefulField<AbstractFieldState, E>;
-
-  _updateModel(E _model) {
-    if (_model != model) {
-      setState(() {
-        beforeMerge(model, _model);
-        this._model = _model.merge(model) as E;
-      });
-    }
-  }
-
-  E get model => _model ?? _field.model;
-}
-
-abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
-    extends FormFieldState<T> with AbstractFieldState<FormField<T>, E> {
-  ValueChanged<T?>? get onChanged =>
-      (super.widget as ValueField<T, ValueFieldState<T, E>, E>).onChanged;
-
-  @override
-  void initFormManagement() {
-    super.initFormManagement();
-    _resourceManagement.registerValueFieldState(this);
-  }
-
-  @override
-  void didChange(T? value) {
-    doChangeValue(value);
-  }
-
-  void setValue(T? newValue) {
-    if (!compare(value, newValue)) {
-      super.setValue(newValue);
-      _didChange(value, newValue, true);
-    }
-  }
-
-  void doChangeValue(T? newValue, {bool trigger = true}) {
-    if (!compare(value, newValue)) {
-      super.didChange(newValue);
-      _didChange(value, newValue, trigger);
-    }
-  }
-
-  @override
-  void reset() {
-    try {
-      if (!compare(value, widget.initialValue)) {
-        _didChange(value, widget.initialValue, true);
-      }
-    } finally {
-      super.reset();
-    }
-  }
-
-  /// used to compare two values  determine whether changeValue
-  ///
-  /// default used [FormBuilderUtils.compare]
-  ///
-  /// override this method if it can't meet your needs
-  @protected
-  bool compare(T? a, T? b) {
-    return FormBuilderUtils.compare(a, b);
-  }
-
-  _didChange(T? old, T? current, bool trigger) {
-    if (trigger) {
-      ValueChanged<T?>? onChanged =
-          (super.widget as ValueField<T, ValueFieldState<T, E>, E>).onChanged;
-      if (onChanged != null) onChanged(current);
-    }
-    if (name != null) {
-      FormValueChanged? formValueChanged = _FormData.of(context).onChanged;
-      if (formValueChanged != null) {
-        formValueChanged(name!, old, current);
-      }
-    }
-  }
-
-  String? _quietlyValidate() {
-    if (widget.validator != null) return widget.validator!(value);
-  }
-
-  @protected
-  Widget doBuild() {
-    return super.build(context);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _resourceManagement.unregisterValueFieldState(this);
-  }
-}
-
-class FieldInfo {
-  final Position position;
-  final bool readOnly;
-
-  FieldInfo._(this.position, this.readOnly);
-
-  static FieldInfo of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_InheritedFieldInfo>()!
-        .fieldInfo;
-  }
-}
-
-class _InheritedFieldInfo extends InheritedWidget {
-  final FieldInfo fieldInfo;
-
-  _InheritedFieldInfo(this.fieldInfo, Widget child) : super(child: child);
-
-  @override
-  bool updateShouldNotify(covariant _InheritedFieldInfo oldWidget) {
-    return true;
-  }
-}
-
-/// when you use [Builder] to build a widget
-///
-/// you can use [BuilderInfo.of(context)] to help you
-class BuilderInfo {
-  final Position position;
-
-  /// whether form is readOnly
-  final bool readOnly;
-  final ThemeData themeData;
-
-  static BuilderInfo of(BuildContext context) {
-    FieldInfo fieldInfo = FieldInfo.of(context);
-    return BuilderInfo._(Theme.of(context), fieldInfo);
-  }
-
-  BuilderInfo._(this.themeData, FieldInfo fieldInfo)
-      : this.position = fieldInfo.position,
-        this.readOnly = fieldInfo.readOnly;
-}
-
-class _TextSelectionManagementDelegate extends TextSelectionManagement {
-  final TextSelectionManagement textSelectionManagement;
-
-  _TextSelectionManagementDelegate(this.textSelectionManagement);
-  @override
-  void selectAll() {
-    textSelectionManagement.selectAll();
-  }
-
-  @override
-  void setSelection(int start, int end) {
-    textSelectionManagement.setSelection(start, end);
-  }
-}
-
-class FormFieldManagementWithError {
-  final CastableFormFieldManagement formFieldManagement;
-  final String errorText;
-  const FormFieldManagementWithError._(
-      this.formFieldManagement, this.errorText);
-}
-
-class _CastableFormFieldManagement extends CastableFormFieldManagement {
-  final FormFieldManagement delegate;
-  _CastableFormFieldManagement(this.delegate);
 }

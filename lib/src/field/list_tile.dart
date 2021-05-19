@@ -123,6 +123,10 @@ class ListTileFormField<T>
                 switch (type) {
                   case ListTileItemType.Radio:
                     return RadioListTile<T>(
+                      shape: radioRenderData?.shape,
+                      tileColor: radioRenderData?.tileColor,
+                      selectedTileColor: radioRenderData?.selectedTileColor,
+                      activeColor: radioRenderData?.activeColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       groupValue: state.value.isEmpty ? null : state.value[0],
@@ -136,6 +140,11 @@ class ListTileFormField<T>
                     );
                   case ListTileItemType.Checkbox:
                     return CheckboxListTile(
+                      shape: checkboxRenderData?.shape,
+                      tileColor: checkboxRenderData?.tileColor,
+                      selectedTileColor: checkboxRenderData?.selectedTileColor,
+                      activeColor: checkboxRenderData?.activeColor,
+                      checkColor: checkboxRenderData?.checkColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,
@@ -148,6 +157,15 @@ class ListTileFormField<T>
                     );
                   case ListTileItemType.Switch:
                     return SwitchListTile(
+                      tileColor: switchRenderData?.tileColor,
+                      activeColor: switchRenderData?.activeColor,
+                      activeTrackColor: switchRenderData?.activeTrackColor,
+                      inactiveThumbColor: switchRenderData?.inactiveThumbColor,
+                      inactiveTrackColor: switchRenderData?.inactiveTrackColor,
+                      activeThumbImage: switchRenderData?.activeThumbImage,
+                      inactiveThumbImage: switchRenderData?.inactiveThumbImage,
+                      shape: switchRenderData?.shape,
+                      selectedTileColor: switchRenderData?.selectedTileColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,

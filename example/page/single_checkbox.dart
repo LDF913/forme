@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class SingleCheckboxPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,30 +13,38 @@ class SingleCheckboxPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
+                .customize(mainAxisAlignment: MainAxisAlignment.center)
                 .oneRowField(SingleCheckboxFormField(
                   name: 'checkbox',
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text: 'value changed, current value is $v');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('checkbox').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('checkbox')
+                              .model =
                           SingleCheckboxModel(label: Text('new label'));
                     },
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement.newFormFieldManagement('checkbox').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('checkbox')
+                              .model =
                           SingleCheckboxModel(
                               checkboxRenderData: CheckboxRenderData(
                                   activeColor: Colors.red,
@@ -44,18 +52,10 @@ class SingleCheckboxPage extends StatelessWidget {
                                   splashRadius: 20));
                     },
                     child: Text('update checkbox render data')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('checkbox')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('checkbox')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -64,9 +64,9 @@ class SingleCheckboxPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('checkbox')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -77,9 +77,9 @@ class SingleCheckboxPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('checkbox')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

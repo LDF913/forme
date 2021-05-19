@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class RadioGroupPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,33 +13,36 @@ class RadioGroupPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(ListTileFormField<String>(
                   items: FormBuilderUtils.toListTileItems(['1', '2', '3']),
                   type: ListTileItemType.Radio,
                   name: 'radioGroup',
                   onChanged: (v) {
-                    formManagement.newFormFieldManagement('text').model =
+                    formKey.currentManagement
+                            .newFormFieldManagement('text')
+                            .model =
                         ChangeTextModel(
                             text: 'value changed, current value is $v');
                   },
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('radioGroup')
                           .model = ListTileModel<String>(split: 1);
                     },
                     child: Text('update split')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('radioGroup')
                               .model =
                           ListTileModel<String>(
@@ -49,7 +52,7 @@ class RadioGroupPage extends StatelessWidget {
                     child: Text('update items')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('radioGroup')
                               .model =
                           ListTileModel<String>(labelText: 'filter radioGroup');
@@ -57,7 +60,7 @@ class RadioGroupPage extends StatelessWidget {
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement
+                      formKey.currentManagement
                               .newFormFieldManagement('radioGroup')
                               .model =
                           ListTileModel<String>(
@@ -68,18 +71,10 @@ class RadioGroupPage extends StatelessWidget {
                                   RadioRenderData(activeColor: Colors.pink));
                     },
                     child: Text('update radioGroup render data')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('radioGroup')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('radioGroup')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -88,9 +83,9 @@ class RadioGroupPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('radioGroup')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -101,9 +96,9 @@ class RadioGroupPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('radioGroup')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

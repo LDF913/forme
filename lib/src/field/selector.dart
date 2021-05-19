@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../management.dart';
 import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
@@ -59,7 +60,7 @@ typedef SelectItemProvider<T> = Future<SelectItemPage<T>> Function(
 /// [builder] form builder
 ///
 /// [submit] an function used to submit query
-typedef QueryFormBuilder = void Function(
+typedef QueryFormBuilder = Widget Function(
     FormBuilder builder, VoidCallback submit);
 
 /// used to listen select dialog open
@@ -342,7 +343,7 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
 
   int gen = 0;
 
-  FormManagement queryFormManagement = FormManagement();
+  final FormKey _formKey = FormKey();
   Map<String, dynamic> params = {};
 
   ThemeData? themeData;
@@ -355,10 +356,11 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
 
     if (widget.onSelectDialogShow != null && widget.queryFormBuilder != null) {
       WidgetsBinding.instance?.addPostFrameCallback((_) {
-        bool queryAfterLoadParams =
-            widget.onSelectDialogShow!(queryFormManagement);
-        if (queryAfterLoadParams && queryFormManagement.validate()) {
-          params = queryFormManagement.data;
+        FormManagement? formManagement = _formKey.quietlyManagement;
+        if (formManagement == null) return;
+        bool queryAfterLoadParams = widget.onSelectDialogShow!(formManagement);
+        if (queryAfterLoadParams && formManagement.validate()) {
+          params = formManagement.data;
         }
         loadData(gen);
       });
@@ -382,9 +384,8 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
   }
 
   void query() {
-    if (!queryFormManagement.validate()) {
-      return;
-    }
+    FormManagement? formManagement = _formKey.quietlyManagement;
+    if (formManagement != null && !formManagement.validate()) return;
     update(() {
       gen++;
       empty = false;
@@ -393,7 +394,7 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
       items = [];
       error = false;
       count = 0;
-      params = queryFormManagement.data;
+      params = formManagement == null ? {} : formManagement.data;
     });
     loadData(gen);
   }
@@ -430,11 +431,8 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
     if (widget.queryFormBuilder == null) {
       return null;
     }
-    FormBuilder form = FormBuilder(
-      formManagement: queryFormManagement,
-    );
-    widget.queryFormBuilder!(form, query);
-    return form;
+    FormBuilder form = FormBuilder().key(_formKey);
+    return widget.queryFormBuilder!(form, query);
   }
 
   void loadData(int gen, {bool decreasePageWhenError = false}) {

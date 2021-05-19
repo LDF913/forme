@@ -1,10 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 import 'change_text.dart';
 
-final FormManagement formManagement = FormManagement();
-
 class SelectorPage extends StatelessWidget {
+  final FormKey formKey = FormKey();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,9 +13,9 @@ class SelectorPage extends StatelessWidget {
         ),
         body: Column(
           children: [
-            FormBuilder(
-              formManagement: formManagement,
-            )
+            FormBuilder()
+                .key(formKey)
+                .layoutBuilder()
                 .oneRowField(SelectorFormField(
                   name: 'selector',
                   labelText: 'selector',
@@ -38,48 +38,53 @@ class SelectorPage extends StatelessWidget {
                     });
                   },
                   queryFormBuilder: (builder, query) {
-                    builder
+                    return builder
+                        .layoutBuilder()
                         .append(RangeSliderFormField(
                             name: 'filter', min: 1, max: 100))
                         .append(ButtonFormField(
-                            onPressed: (info) {
-                              query();
-                            },
-                            child: Text('query')));
+                            onPressed: query, child: Text('query')))
+                        .build();
                   },
-                  onSelectDialogShow: (formManagement) {
-                    //use this formManagement to control query form on search dialog
-                    formManagement
+                  onSelectDialogShow: (FormManagement currentManagement) {
+                    //use this formKey.currentManagement to control query form on search dialog
+                    currentManagement
                         .newFormFieldManagement('filter')
                         .valueFieldManagement
                         .value = RangeValues(20, 50);
                     return true; //return true will set params before query
                   },
                   selectedItemLayoutType: SelectedItemLayoutType.scroll,
-                  onChanged: (v) =>
-                      formManagement.newFormFieldManagement('text').model =
-                          ChangeTextModel(
-                              text: 'selector value changed, current value $v'),
+                  onChanged: (v) => formKey.currentManagement
+                          .newFormFieldManagement('text')
+                          .model =
+                      ChangeTextModel(
+                          text: 'selector value changed, current value $v'),
                 ))
-                .oneRowField(ChangeText()),
+                .oneRowField(ChangeText())
+                .build(),
             Wrap(
               spacing: 20,
               children: [
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('selector').model =
-                          SelectorModel(multi: true);
+                      formKey.currentManagement
+                          .newFormFieldManagement('selector')
+                          .model = SelectorModel(multi: true);
                     },
                     child: Text('change to mutil selector')),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement.newFormFieldManagement('selector').model =
-                          SelectorModel(labelText: 'filter selector');
+                      formKey.currentManagement
+                          .newFormFieldManagement('selector')
+                          .model = SelectorModel(labelText: 'filter selector');
                     },
                     child: Text('update label text')),
                 OutlinedButton(
                     onPressed: () async {
-                      formManagement.newFormFieldManagement('selector').model =
+                      formKey.currentManagement
+                              .newFormFieldManagement('selector')
+                              .model =
                           SelectorModel(
                               selectorThemeData: SelectorThemeData(
                                   listTileThemeData:
@@ -93,18 +98,10 @@ class SelectorPage extends StatelessWidget {
                                       deleteIconColor: Colors.green)));
                     },
                     child: Text('update selector render data')),
-                OutlinedButton(
-                    onPressed: () {
-                      formManagement
-                          .newFormFieldManagement('selector')
-                          .cast<BaseFormValueFieldManagement>()
-                          .shake();
-                    },
-                    child: Text('shake')),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('selector')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.visible = !management.visible;
@@ -113,9 +110,9 @@ class SelectorPage extends StatelessWidget {
                       child: Text(management.visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormValueFieldManagement management = formManagement
+                  BaseFormFieldManagement management = formKey.currentManagement
                       .newFormFieldManagement('selector')
-                      .cast<BaseFormValueFieldManagement>();
+                      .cast<BaseFormFieldManagement>();
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -126,9 +123,9 @@ class SelectorPage extends StatelessWidget {
                 }),
                 OutlinedButton(
                     onPressed: () {
-                      formManagement
+                      formKey.currentManagement
                           .newFormFieldManagement('selector')
-                          .cast<BaseFormValueFieldManagement>()
+                          .cast<BaseFormFieldManagement>()
                           .padding = const EdgeInsets.all(20);
                     },
                     child: Text('update padding')),

@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import 'builder.dart';
 import 'management.dart';
 import 'state_model.dart';
-import 'widget/shake_widget.dart';
 
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
@@ -198,6 +197,7 @@ mixin BaseFieldState<T extends StatefulWidget,
   /// override this if you do not need flexible
   @override
   Widget build(BuildContext context) {
+    if (!useLayout) return field;
     Widget child = Visibility(
       maintainState: true,
       child: Padding(
@@ -220,44 +220,6 @@ mixin BaseFieldState<T extends StatefulWidget,
   }
 
   BaseStatefulField get _field => widget as BaseStatefulField;
-}
-
-mixin BaseValueState<T, E extends AbstractFieldStateModel>
-    on BaseFieldState<FormField<T>, E> {
-  Key? _shakeKey;
-  Shaker? _shaker;
-
-  _shake(Shaker shaker) {
-    if (_shaker != null) return;
-    setState(() {
-      _shaker = shaker;
-    });
-  }
-
-  @override
-  Widget get field {
-    Widget field = shakeField;
-    if (_shaker != null) _shakeKey = UniqueKey();
-    Duration? duration = _shaker == null ? Duration.zero : _shaker!.duration;
-    _shaker = null;
-    Widget shake = ShakeWidget(
-        key: _shakeKey,
-        duration: duration,
-        deltaX: _shaker?.deltax,
-        curve: _shaker?.curve,
-        onEnd: _shaker?.onEnd,
-        child: field);
-    return shake;
-  }
-
-  @override
-  FormFieldManagement customFormFieldManagement(FormFieldManagement delegate) {
-    BaseFormFieldManagement baseFormFieldManagement =
-        super.customFormFieldManagement(delegate) as BaseFormFieldManagement;
-    return _BaseFormValueFieldManagement(baseFormFieldManagement, this);
-  }
-
-  Widget get shakeField;
 }
 
 class BaseCommonField<E extends AbstractFieldStateModel>
@@ -366,24 +328,15 @@ class BaseCommonFieldState<E extends AbstractFieldStateModel>
 }
 
 class BaseValueFieldState<T, E extends AbstractFieldStateModel>
-    extends ValueFieldState<T, E> with BaseFieldState, BaseValueState<T, E> {
+    extends ValueFieldState<T, E> with BaseFieldState {
   @override
-  Widget get shakeField => super.doBuild();
+  Widget get field => super.doBuild();
 }
 
 class BaseNonnullValueFieldState<T, E extends AbstractFieldStateModel>
-    extends NonnullValueFieldState<T, E>
-    with BaseFieldState, BaseValueState<T, E> {
+    extends NonnullValueFieldState<T, E> with BaseFieldState {
   @override
-  Widget get shakeField => super.doBuild();
-}
-
-class Shaker {
-  final Duration? duration;
-  final double? deltax;
-  final Curve? curve;
-  final VoidCallback? onEnd;
-  Shaker({this.duration, this.deltax, this.curve, this.onEnd});
+  Widget get field => super.doBuild();
 }
 
 class _BaseFormFieldManagement extends BaseFormFieldManagement {
@@ -408,15 +361,4 @@ class _BaseFormFieldManagement extends BaseFormFieldManagement {
 
   @override
   set visible(bool visible) => state.visible = visible;
-}
-
-class _BaseFormValueFieldManagement extends BaseFormValueFieldManagement {
-  final BaseValueState state;
-  _BaseFormValueFieldManagement(BaseFormFieldManagement delegate, this.state)
-      : super(delegate);
-
-  @override
-  void shake({Shaker? shaker}) {
-    state._shake(shaker ?? Shaker());
-  }
 }

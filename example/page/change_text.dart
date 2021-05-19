@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
 
 class ChangeText extends BaseCommonField<ChangeTextModel> {
-  ChangeText()
-      : super(
+  ChangeText({
+    WidgetWrapper? wrapper,
+  }) : super(
+          wrapper: wrapper,
           name: 'text',
           model: ChangeTextModel(text: ''),
           builder: (state) {

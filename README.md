@@ -3,37 +3,36 @@
 ## basic usage
 
 ``` dart
-FormManagement formManagement = FormManagement();
+FormKey formKey = FormKey();// formkey is a global key
 
-Widget form = FormBuilder(
-      {bool readOnly,//set form's readonly state
-      bool visible, // set form's visible state 
-      MainAxisAlignment? mainAxisAlignment, // customize column 
-      MainAxisSize? mainAxisSize,
-      CrossAxisAlignment? crossAxisAlignment,
-      TextDirection? textDirection,
-      VerticalDirection? verticalDirection,
-      TextBaseline? textBaseline,
-      bool enableLayoutFormManagement = false,
-      FormValueChanged? onChanged,
-      this.formManagement,
-    ).append(ClearableTextFormField(
+//if you want to create a simple formbuilder
+Widget form = FormBuilder()
+         .key(formKey)
+        .onChanged((name, oldValue, newValue) {
+          print(
+              '$name\'s value changed, oldValue:$oldValue newValue:$newValue');
+        }).build(child:Widget);
+
+// if you want to create a row-column based formbuilder
+Widget form = FormBuilder()
+        .key(formKey)
+        .onChanged((name, oldValue, newValue) {
+          print(
+              '$name\'s value changed, oldValue:$oldValue newValue:$newValue');
+        })
+        .layoutBuilder()
+        .enableLayoutManagement(true)
+        .oneRowField(ClearableTextFormField(
           name: 'username',
           labelText: 'username',
           clearable: true,
+          onTap: () {
+            print("??");
+          },
           selectAllOnFocus: true,
           validator: (value) =>
               value.isEmpty ? 'username can not be empty !' : null,
-        ))
-        .append(Builder(builder: (context) {
-          return ButtonFormField(
-              child: Text(username.readOnly ? 'editable' : 'readOnly'),
-              onPressed: () {
-                username.readOnly = !username.readOnly;
-                (context as Element).markNeedsBuild();
-              });
-        }))
-        .append(SwitchInlineFormField(name: 'rememberMe'));
+        )).build();
 ```
 
 ## form widget tree

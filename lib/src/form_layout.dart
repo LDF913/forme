@@ -172,26 +172,3 @@ class _Index {
   int gen = 0;
   int get index => gen++;
 }
-
-/// field's position
-///
-/// one position may contain multi fields
-class Position {
-  /// row of field
-  final int row;
-
-  /// columns of field
-  final int column;
-
-  Position({required this.row, required this.column});
-
-  @override
-  bool operator ==(other) {
-    if (other is! Position) return false;
-    if (row == other.row && column == other.column) return true;
-    return false;
-  }
-
-  @override
-  int get hashCode => hashValues(row, column);
-}

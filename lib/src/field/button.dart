@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../builder.dart';
 import '../form_field.dart';
 import '../state_model.dart';
 
@@ -10,8 +9,8 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
   ButtonFormField({
     String? name,
     int flex = 0,
-    required ValueChanged<BuilderInfo> onPressed,
-    ValueChanged<BuilderInfo>? onLongPress,
+    required VoidCallback onPressed,
+    VoidCallback? onLongPress,
     bool readOnly = false,
     bool visible = true,
     EdgeInsets? padding,
@@ -43,18 +42,8 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
               ButtonStyle? style = state.model.style;
               ButtonType type = state.model.type!;
 
-              BuilderInfo builderInfo = BuilderInfo.of(state.context);
-
-              VoidCallback? _onPressed = readOnly
-                  ? null
-                  : () {
-                      onPressed(builderInfo);
-                    };
-              VoidCallback? _onLongPress = onLongPress == null || readOnly
-                  ? null
-                  : () {
-                      onLongPress(builderInfo);
-                    };
+              VoidCallback? _onPressed = readOnly ? null : onPressed;
+              VoidCallback? _onLongPress = readOnly ? null : onLongPress;
 
               Widget button;
 
