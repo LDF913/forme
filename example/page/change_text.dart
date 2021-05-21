@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
+import 'package:form_builder/src/form_state_model.dart';
 
 class ChangeText extends BaseCommonField<ChangeTextModel> {
   ChangeText({LayoutParam? layoutParam})
