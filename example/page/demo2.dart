@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'package:form_builder/form_builder.dart';
@@ -67,12 +66,9 @@ class _Demo2PageState extends State<Demo2Page> {
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,
                 ));
-                CastableFormFieldManagement formFieldManagement =
+                FormFieldManagement formFieldManagement =
                     error.formFieldManagement;
-                formFieldManagement.ensureVisible().then((value) {
-                  //base value field support shaker
-                  if (formFieldManagement.canCast<BaseFormFieldManagement>()) {}
-                });
+                formFieldManagement.ensureVisible().then((value) {});
                 return;
               }
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -133,22 +129,24 @@ class _Demo2PageState extends State<Demo2Page> {
                 child: Container(
                   padding: const EdgeInsets.only(left: 16, right: 16),
                   child: ClearableTextFormField(
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    labelText: 'username',
-                    keyboardType: TextInputType.text,
-                    inputDecorationTheme: InputDecorationTheme(
-                      border: InputBorder.none,
-                      helperStyle: TextStyle(
+                    model: TextFieldModel(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
-                      labelStyle: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                        letterSpacing: 0.2,
+                      labelText: 'username',
+                      keyboardType: TextInputType.text,
+                      inputDecorationTheme: InputDecorationTheme(
+                        border: InputBorder.none,
+                        helperStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                     onEditingComplete: () {},
@@ -173,8 +171,10 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
           child: SliderFormField(
             name: 'slider',
-            min: 1,
-            max: 100,
+            model: SliderModel(
+              min: 0,
+              max: 100,
+            ),
           ),
         ),
         InputDecorator(
@@ -184,8 +184,7 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
           child: RangeSliderFormField(
             name: 'rangeSlider',
-            min: 1,
-            max: 100,
+            model: SliderModel(min: 1, max: 100),
           ),
         ),
         InputDecorator(
@@ -194,11 +193,13 @@ class _Demo2PageState extends State<Demo2Page> {
             border: InputBorder.none,
           ),
           child: ListTileFormField(
-            items: FormBuilderUtils.toListTileItems(['1', '2']),
             name: 'radioTile',
-            hasSelectAll: false,
             type: ListTileItemType.Radio,
-            split: 1,
+            model: ListTileModel(
+              items: FormBuilderUtils.toListTileItems(['1', '2']),
+              hasSelectAll: false,
+              split: 1,
+            ),
           ),
         ),
         InputDecorator(
@@ -207,11 +208,13 @@ class _Demo2PageState extends State<Demo2Page> {
             border: InputBorder.none,
           ),
           child: ListTileFormField(
-            items: FormBuilderUtils.toListTileItems(['1', '2']),
             name: 'checkboxTile',
-            hasSelectAll: false,
             type: ListTileItemType.Checkbox,
-            split: 1,
+            model: ListTileModel(
+              items: FormBuilderUtils.toListTileItems(['1', '2']),
+              hasSelectAll: false,
+              split: 1,
+            ),
           ),
         ),
         InputDecorator(
@@ -220,41 +223,18 @@ class _Demo2PageState extends State<Demo2Page> {
             border: InputBorder.none,
           ),
           child: ListTileFormField(
-            items: FormBuilderUtils.toListTileItems(['1', '2'],
-                controlAffinity: ListTileControlAffinity.trailing),
             name: 'switchTile',
-            hasSelectAll: false,
             type: ListTileItemType.Switch,
-            split: 1,
+            model: ListTileModel(
+              items: FormBuilderUtils.toListTileItems(['1', '2'],
+                  controlAffinity: ListTileControlAffinity.trailing),
+              hasSelectAll: false,
+              split: 1,
+            ),
           ),
         ),
       ],
     );
     return FormBuilder().key(formKey).build(child: child);
-  }
-}
-
-class Label extends BaseCommonField<LabelModel> {
-  Label(String label, {int flex = 1})
-      : super(
-          model: LabelModel(label: label),
-          flex: flex,
-          builder: (state) {
-            ThemeData themeData = Theme.of(state.context);
-            return Text(
-              state.model.label!,
-              style: TextStyle(fontSize: 18, color: themeData.primaryColor),
-            );
-          },
-        );
-}
-
-class LabelModel extends AbstractFieldStateModel {
-  final String? label;
-  LabelModel({this.label});
-  @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
-    LabelModel oldModel = old as LabelModel;
-    return LabelModel(label: label ?? oldModel.label);
   }
 }

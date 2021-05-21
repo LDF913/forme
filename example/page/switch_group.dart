@@ -17,10 +17,12 @@ class SwitchGroupPage extends StatelessWidget {
                 .key(formKey)
                 .layoutBuilder()
                 .oneRowField(ListTileFormField<String>(
-                  switchRenderData: SwitchRenderData(activeColor: Colors.red),
-                  items: FormBuilderUtils.toListTileItems(['1', '2', '3']),
+                  model: ListTileModel(
+                    switchRenderData: SwitchRenderData(activeColor: Colors.red),
+                    items: FormBuilderUtils.toListTileItems(['1', '2', '3']),
+                    split: 3,
+                  ),
                   type: ListTileItemType.Switch,
-                  split: 3,
                   name: 'switchGroup',
                   onChanged: (v) {
                     formKey.currentManagement
@@ -75,20 +77,21 @@ class SwitchGroupPage extends StatelessWidget {
                     },
                     child: Text('update switchGroup render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('switchGroup')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('switchGroup');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('switchGroup')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('switchGroup');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -100,9 +103,10 @@ class SwitchGroupPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('switchGroup')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('switchGroup')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

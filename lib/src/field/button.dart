@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
+import 'base_field.dart';
 
 enum ButtonType { Text, Elevated, Outlined }
 
@@ -22,19 +22,17 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
     ButtonStyle? style,
     ButtonType type = ButtonType.Text,
     WidgetWrapper? wrapper,
+    LayoutParam? layoutParam,
   }) : super(
+            layoutParam: layoutParam ?? LayoutParam(flex: 0),
             model: ButtonModel(
               child: child,
               icon: icon,
               style: style,
               type: type,
             ),
-            wrapper: wrapper,
             name: name,
-            padding: padding,
             readOnly: readOnly,
-            visible: visible,
-            flex: flex,
             builder: (state) {
               bool readOnly = state.readOnly;
               Icon? icon = state.model.icon;

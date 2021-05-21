@@ -4,8 +4,8 @@ import 'focus_node.dart';
 import 'form_builder_utils.dart';
 import 'form_field.dart';
 import 'form_layout.dart';
+import 'form_state_model.dart';
 import 'management.dart';
-import 'state_model.dart';
 import 'text_selection.dart';
 
 typedef FormValueChanged = void Function(
@@ -14,25 +14,23 @@ typedef FormValueChanged = void Function(
 /// form key is a global key
 ///
 /// used to get form management
-class FormKey extends LabeledGlobalKey<State> {
+class FormKey extends LabeledGlobalKey<_AbstractFormState> {
   FormKey({String? debugLabel}) : super(debugLabel);
 
   //get form management , return null if there's no form management
   FormManagement? get quietlyManagement {
-    State? state = currentState;
-    if (state == null || state is! _AbstractFormState) return null;
+    _AbstractFormState? state = currentState;
+    if (state == null) return null;
     return state.formManagement;
   }
 
   /// get form management , throw an error if there's no form management
   FormManagement get currentManagement {
+    _AbstractFormState? currentState = super.currentState;
     if (currentState == null) {
       throw 'current state is null,did you put this key on FormBuilder?';
     }
-    if (currentState is! _AbstractFormState) {
-      throw 'current state is not a FormState , you should put this key on FormBuilder rather than other widget';
-    }
-    return (currentState as _AbstractFormState).formManagement;
+    return currentState.formManagement;
   }
 }
 
@@ -186,7 +184,7 @@ class FormLayoutBuilder {
   Widget build() {
     return _LayoutForm(
       key: _builder._key,
-      formLayout: _formLayout,
+      formLayout: _formLayout..removeEmptyRow(),
       readOnly: _builder._readOnly,
       visible: _visible ?? true,
       enableLayoutManagement: _enableLayoutManagement ?? false,
@@ -219,25 +217,18 @@ abstract class _AbstractForm extends StatefulWidget {
 }
 
 abstract class _AbstractFormState extends State<_AbstractForm> {
-  late final _ResourceManagement resourceManagement;
   late final FormManagement formManagement;
 
+  final Set<AbstractFieldState> fieldStates = {};
+
   bool? _readOnly;
-  bool? _visible;
 
-  final Map<int, Key> keys = {};
-  final List<CastableFormFieldManagement> formFieldManagements = [];
-  List<ValueFieldState> valueFieldStates = [];
-
-  FormValueChanged? get onChanged => widget.onChanged;
-
-  FormManagement createFormManagement(_ResourceManagement resourceManagement);
+  FormManagement createFormManagement();
 
   @override
   void initState() {
     super.initState();
-    resourceManagement = _ResourceManagement(this);
-    formManagement = createFormManagement(resourceManagement);
+    formManagement = createFormManagement();
   }
 
   @protected
@@ -253,78 +244,76 @@ abstract class _AbstractFormState extends State<_AbstractForm> {
     }
   }
 
+  T? getFormFieldManagement<T extends FormFieldManagement>(String name) {
+    Iterable<AbstractFieldState> iterable =
+        fieldStates.where((element) => element.name == name);
+    if (iterable.isNotEmpty)
+      return iterable.first.createFormFieldManagement() as T;
+  }
+
   Widget buildContent();
+
+  _FormScope createFormScope(_FormScope base) {
+    return base;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return _FormStatus._(
+    return _InheritedFormScope(
       gen: gen,
-      readOnly: readOnly,
+      formScope: createFormScope(_FormScope(
+          readOnly: readOnly,
+          fieldStates: fieldStates,
+          valueChanged: widget.onChanged)),
       child: buildContent(),
-      resourceManagement: resourceManagement,
     );
   }
 }
 
-class _FormStatus extends InheritedWidget {
-  final bool readOnly;
+class _InheritedFormScope extends InheritedWidget {
   final int gen;
-  final _ResourceManagement resourceManagement;
+  final _FormScope formScope;
 
-  _FormStatus._(
-      {required this.readOnly,
-      required this.gen,
-      required Widget child,
-      required this.resourceManagement})
-      : super(child: child);
+  _InheritedFormScope({
+    required this.gen,
+    required this.formScope,
+    required Widget child,
+  }) : super(child: child);
 
   @override
-  bool updateShouldNotify(covariant _FormStatus oldWidget) {
+  bool updateShouldNotify(covariant _InheritedFormScope oldWidget) {
     return gen != oldWidget.gen;
   }
 }
 
-/// used to register|unregister|lookup resources
-class _ResourceManagement {
-  final _AbstractFormState state;
-  final List<CastableFormFieldManagement> formFieldManagements = [];
-  List<ValueFieldState> valueFieldStates = [];
+class _FormScope {
+  final bool readOnly;
+  final Set<AbstractFieldState> fieldStates;
+  final FormValueChanged? valueChanged;
 
-  _ResourceManagement(this.state);
-
-  void registerFormFieldManagement(
-          CastableFormFieldManagement formFieldManagement) =>
-      formFieldManagements.add(formFieldManagement);
-
-  void unregisterFormFieldManagement(
-          CastableFormFieldManagement formFieldManagement) =>
-      formFieldManagements.remove(formFieldManagement);
-
-  void registerValueFieldState(ValueFieldState valueFieldState) =>
-      valueFieldStates.add(valueFieldState);
-
-  void unregisterValueFieldState(ValueFieldState valueFieldState) =>
-      valueFieldStates.remove(valueFieldState);
-
-  CastableFormFieldManagement? getFormFieldManagement(String name) {
-    Iterable<CastableFormFieldManagement> it =
-        formFieldManagements.where((element) => element.name == name);
-    return it.isEmpty ? null : it.first;
+  void onValueChanged(String name, oldValue, newValue) {
+    if (valueChanged != null) valueChanged!(name, oldValue, newValue);
   }
 
-  ValueFieldState? getValueFieldState(String name) {
-    Iterable<ValueFieldState> it =
-        valueFieldStates.where((element) => element.name == name);
-    return it.isEmpty ? null : it.first;
+  _FormScope(
+      {required this.readOnly, required this.fieldStates, this.valueChanged});
+
+  void registerField(AbstractFieldState fieldState) {
+    if (fieldStates
+        .where((element) =>
+            element.name != null && element.name == fieldState.name)
+        .isNotEmpty)
+      throw 'name in a form must be unique , current name ${fieldState.name} is exists';
+    this.fieldStates.add(fieldState);
   }
 
-  bool hasName(String name) => getFormFieldManagement(name) != null;
-
-  static _ResourceManagement of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<_FormStatus>()!
-        .resourceManagement;
+  void unregisterField(AbstractFieldState fieldState) {
+    this.fieldStates.remove(fieldState);
   }
+
+  static _FormScope of(BuildContext context) => context
+      .dependOnInheritedWidgetOfExactType<_InheritedFormScope>()!
+      .formScope;
 }
 
 /// state for all stateful form field
@@ -337,23 +326,19 @@ class _ResourceManagement {
 mixin AbstractFieldState<T extends StatefulWidget,
     E extends AbstractFieldStateModel> on State<T> {
   bool _init = false;
-  late final _ResourceManagement _resourceManagement;
-  late final CastableFormFieldManagement _formFieldManagement;
-
   FocusNodes? _focusNode;
-
   String? get name => _field.name;
 
-  bool get init => _init;
+  late _FormScope _formScope;
 
   E? _model;
 
   /// whether field should be readOnly
-  bool get readOnly => _resourceManagement.state.readOnly || isFieldReadOnly;
+  bool get readOnly => _formScope.readOnly || isFieldReadOnly;
 
   /// whether form is LayoutForm
   @protected
-  bool get useLayout => _resourceManagement.state is _LayoutFormState;
+  bool get isLayoutForm => _formScope is _LayoutFormScope;
 
   /// whether field is readOnly
   @protected
@@ -376,38 +361,31 @@ mixin AbstractFieldState<T extends StatefulWidget,
     _focusNode!.requestFocus();
   }
 
-  @protected
+  /// you can override this method to wrap your custom FormFieldManagement
+  ///
+  /// **you should always wrap formfieldmanagement
+  /// returned by parent**
+  ///
+  /// use [FormManagement.newFormFieldManagement] to get FormFieldManagement that you wrapped,
+  ///
+  /// you can use [FormFieldManagementDelegate] to fast wrap
+  FormFieldManagement createFormFieldManagement() {
+    return _FixedFormFieldManagement(this);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _formScope = _FormScope.of(context);
     if (_init) return;
     _init = true;
-    _resourceManagement = _ResourceManagement.of(context);
-    initFormManagement();
+    _formScope.registerField(this);
   }
 
-  /// this method will be called immediately after initState
-  /// and will only be called once during state lifecycle
-  ///
-  /// **you should call getState in this method , not in initState!**
-  @protected
-  @mustCallSuper
-  void initFormManagement() {
-    _formFieldManagement = _CastableFormFieldManagement(
-        customFormFieldManagement(_FixedFormFieldManagement(this)));
-    _resourceManagement.registerFormFieldManagement(_formFieldManagement);
-  }
-
-  /// let subclass override base FormFieldManagement
-  @protected
-  FormFieldManagement customFormFieldManagement(
-      FormFieldManagement baseManagement) {
-    return baseManagement;
-  }
-
-  @protected
+  @override
   void dispose() {
-    _resourceManagement.unregisterFormFieldManagement(_formFieldManagement);
     _focusNode?.dispose();
+    _formScope.unregisterField(this);
     super.dispose();
   }
 
@@ -436,12 +414,6 @@ abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
       (super.widget as ValueField<T, ValueFieldState<T, E>, E>).onChanged;
 
   @override
-  void initFormManagement() {
-    super.initFormManagement();
-    _resourceManagement.registerValueFieldState(this);
-  }
-
-  @override
   void didChange(T? value) {
     doChangeValue(value);
   }
@@ -454,9 +426,10 @@ abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
   }
 
   void doChangeValue(T? newValue, {bool trigger = true}) {
-    if (!compare(value, newValue)) {
+    T? oldValue = value;
+    if (!compare(oldValue, newValue)) {
       super.didChange(newValue);
-      _didChange(value, newValue, trigger);
+      _didChange(oldValue, newValue, trigger);
     }
   }
 
@@ -488,10 +461,7 @@ abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
       if (onChanged != null) onChanged(current);
     }
     if (name != null) {
-      FormValueChanged? formValueChanged = _resourceManagement.state.onChanged;
-      if (formValueChanged != null) {
-        formValueChanged(name!, old, current);
-      }
+      _formScope.onValueChanged(name!, old, current);
     }
   }
 
@@ -502,12 +472,6 @@ abstract class ValueFieldState<T, E extends AbstractFieldStateModel>
   @protected
   Widget doBuild() {
     return super.build(context);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _resourceManagement.unregisterValueFieldState(this);
   }
 }
 
@@ -633,15 +597,10 @@ class _TextSelectionManagementDelegate extends TextSelectionManagement {
 }
 
 class FormFieldManagementWithError {
-  final CastableFormFieldManagement formFieldManagement;
+  final FormFieldManagement formFieldManagement;
   final String errorText;
   const FormFieldManagementWithError._(
       this.formFieldManagement, this.errorText);
-}
-
-class _CastableFormFieldManagement extends CastableFormFieldManagement {
-  final FormFieldManagement delegate;
-  _CastableFormFieldManagement(this.delegate);
 }
 
 class _LayoutForm extends _AbstractForm {
@@ -668,11 +627,28 @@ class _LayoutForm extends _AbstractForm {
   _LayoutFormState createState() => _LayoutFormState();
 }
 
+class _LayoutFormScope extends _FormScope {
+  final _FormScope delegate;
+  final FormLayout formLayout;
+  final bool visible;
+
+  _LayoutFormScope(
+    this.delegate, {
+    required this.formLayout,
+    required this.visible,
+  }) : super(
+          fieldStates: delegate.fieldStates,
+          readOnly: delegate.readOnly,
+          valueChanged: delegate.valueChanged,
+        );
+}
+
 class _LayoutFormState extends _AbstractFormState {
   FormLayout? _formLayout;
   FormLayout? originalFormLayout;
 
   Map<int, Key> keys = {};
+  bool? _visible;
 
   bool get visible => _visible ?? widget.visible;
   set visible(bool visible) {
@@ -704,25 +680,38 @@ class _LayoutFormState extends _AbstractFormState {
   @override
   void didUpdateWidget(_LayoutForm oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.enableLayoutManagement != widget.enableLayoutManagement)
+      throw 'enableLayoutManagement should not be changed at runtime !';
     migrateLayout();
+  }
+
+  @override
+  void dispose() {
+    keys.clear();
+    super.dispose();
+  }
+
+  @override
+  _FormScope createFormScope(_FormScope base) {
+    return _LayoutFormScope(
+      base,
+      formLayout: formLayout,
+      visible: visible,
+    );
   }
 
   @override
   Widget buildContent() {
     formLayout.removeEmptyRow();
     List<Row> rows = [];
-    int row = 0;
     List<int> indexs = [];
     for (FormRow formRow in formLayout.rows) {
       List<_FormBuilderField> children = [];
-      int column = 0;
       for (IndexWidget iw in formRow.columns) {
-        Position position = Position._(row: row, column: column);
         Key? key = widget.enableLayoutManagement
             ? keys.putIfAbsent(iw.index, () => GlobalKey())
             : null;
-        children.add(_FormBuilderField(iw.widget, position, key: key));
-        column++;
+        children.add(_FormBuilderField(iw.widget, key: key));
         indexs.add(iw.index);
       }
       rows.add(Row(
@@ -734,7 +723,6 @@ class _LayoutFormState extends _AbstractFormState {
         textBaseline: formRow.textBaseline,
         children: children,
       ));
-      row++;
     }
     keys.removeWhere((key, value) => !indexs.contains(key));
     return Visibility(
@@ -810,15 +798,14 @@ class _LayoutFormState extends _AbstractFormState {
       throw 'since form layout has been changed by FormLayoutManagement , you can\'t change form layout via ide or setState out of FormBuilder';
 
   @override
-  FormManagement createFormManagement(_ResourceManagement resourceManagement) {
-    return LayoutFormManagement._(resourceManagement);
+  FormManagement createFormManagement() {
+    return LayoutFormManagement._(this);
   }
 }
 
 class _FormBuilderField extends StatefulWidget {
   final Widget child;
-  final Position position;
-  _FormBuilderField(this.child, this.position, {Key? key}) : super(key: key);
+  _FormBuilderField(this.child, {Key? key}) : super(key: key);
   @override
   State<StatefulWidget> createState() => _FormBuilderFieldState();
 }
@@ -826,7 +813,7 @@ class _FormBuilderField extends StatefulWidget {
 class _FormBuilderFieldState extends State<_FormBuilderField> {
   @override
   Widget build(BuildContext context) {
-    return _FieldInfo(widget.position, widget.child);
+    return widget.child;
   }
 }
 
@@ -842,32 +829,26 @@ class Position {
 
   Position._({required this.row, required this.column});
 
-  @override
-  bool operator ==(other) {
-    if (other is! Position) return false;
-    if (row == other.row && column == other.column) return true;
-    return false;
-  }
-
-  @override
-  int get hashCode => hashValues(row, column);
-
-  /// get current field's position
+  /// find current field's widget's position
   ///
-  /// **can only be used in LayoutForm**
+  /// **use this method in LayoutForm**
   static Position of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_FieldInfo>()!.position;
-  }
-}
-
-class _FieldInfo extends InheritedWidget {
-  final Position position;
-
-  _FieldInfo(this.position, Widget child) : super(child: child);
-
-  @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return true;
+    _FormScope scope = _FormScope.of(context);
+    if (scope is! _LayoutFormScope)
+      throw 'this form is not a layout form , can not get position of widget';
+    int row = 0;
+    for (int i = 0; i < scope.formLayout.rowCount; i++) {
+      FormRow formRow = scope.formLayout.rows[i];
+      int column = 0;
+      for (IndexWidget iw in formRow.columns) {
+        if (iw.widget == context.widget) {
+          return Position._(row: row, column: column);
+        }
+        column++;
+      }
+      row++;
+    }
+    throw 'can not find widget is FormLayout';
   }
 }
 
@@ -894,29 +875,28 @@ class _SimpleFormState extends _AbstractFormState {
   }
 
   @override
-  FormManagement createFormManagement(_ResourceManagement resourceManagement) {
-    return SimpleFormManagement._(resourceManagement);
+  FormManagement createFormManagement() {
+    return SimpleFormManagement._(this);
   }
 }
 
 class SimpleFormManagement extends FormManagement {
-  final _ResourceManagement _resourceManagement;
+  final _AbstractFormState _state;
 
-  SimpleFormManagement._(this._resourceManagement);
-
-  @override
-  bool hasField(String name) => _resourceManagement.hasName(name);
+  SimpleFormManagement._(this._state);
 
   @override
-  bool get readOnly => _resourceManagement.state.readOnly;
+  bool hasField(String name) => _state.getFormFieldManagement(name) != null;
 
   @override
-  set readOnly(bool readOnly) => _resourceManagement.state.readOnly = readOnly;
+  bool get readOnly => _state.readOnly;
 
   @override
-  CastableFormFieldManagement newFormFieldManagement(String name) {
-    CastableFormFieldManagement? management =
-        _resourceManagement.getFormFieldManagement(name);
+  set readOnly(bool readOnly) => _state.readOnly = readOnly;
+
+  @override
+  T newFormFieldManagement<T extends FormFieldManagement>(String name) {
+    T? management = _state.getFormFieldManagement<T>(name);
     if (management == null) throw 'no field can be found by name :$name';
     return management;
   }
@@ -935,27 +915,22 @@ class SimpleFormManagement extends FormManagement {
 
   @override
   List<FormFieldManagementWithError> get errors {
-    List<FormFieldManagementWithError> errors = [];
-    for (ValueFieldState state in _valueFieldStates) {
-      if (state.name == null) continue;
-      String? errorText = state.errorText;
-      if (errorText == null) continue;
-      CastableFormFieldManagement management =
-          _resourceManagement.getFormFieldManagement(state.name!)!;
-      errors.add(FormFieldManagementWithError._(management, errorText));
-    }
-    return errors;
+    return _readErrors((state) => state.errorText);
   }
 
   @override
   List<FormFieldManagementWithError> quietlyValidate() {
+    return _readErrors((state) => state._quietlyValidate());
+  }
+
+  List<FormFieldManagementWithError> _readErrors(String? f(ValueFieldState e)) {
     List<FormFieldManagementWithError> errors = [];
     for (ValueFieldState state in _valueFieldStates) {
       if (state.name == null) continue;
-      String? errorText = state._quietlyValidate();
+      String? errorText = f(state);
       if (errorText == null) continue;
-      CastableFormFieldManagement management =
-          _resourceManagement.getFormFieldManagement(state.name!)!;
+      FormFieldManagement management =
+          _state.getFormFieldManagement(state.name!)!;
       errors.add(FormFieldManagementWithError._(management, errorText));
     }
     return errors;
@@ -968,8 +943,7 @@ class SimpleFormManagement extends FormManagement {
   void setData(Map<String, dynamic> data, {bool trigger = true}) {
     if (data.isEmpty) return;
     data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
-      FormFieldManagement? management =
-          _resourceManagement.getFormFieldManagement(key);
+      FormFieldManagement? management = _state.getFormFieldManagement(key);
       if (management == null || !management.isValueField) return;
       management.valueFieldManagement.setValue(value, trigger: trigger);
     });
@@ -1005,22 +979,65 @@ class SimpleFormManagement extends FormManagement {
     });
   }
 
-  Iterable<ValueFieldState> get _valueFieldStates =>
-      _resourceManagement.valueFieldStates;
+  Iterable<ValueFieldState> get _valueFieldStates => _state.fieldStates
+      .where((element) => element is ValueFieldState)
+      .map((e) => e as ValueFieldState);
 }
 
 class LayoutFormManagement extends SimpleFormManagement
     implements FormManagement {
   final FormLayoutManagement formLayoutManagement;
-  LayoutFormManagement._(_ResourceManagement resourceManagement)
-      : this.formLayoutManagement = FormLayoutManagement._(resourceManagement),
-        super._(resourceManagement);
+  LayoutFormManagement._(_LayoutFormState state)
+      : this.formLayoutManagement = FormLayoutManagement._(state),
+        super._(state);
 
+  /// whether current form is visible
   bool get visible => _state.visible;
 
+  /// show|hide form
   set visible(bool visible) => _state.visible = visible;
 
-  _LayoutFormState get _state => _resourceManagement.state as _LayoutFormState;
+  @override
+  _LayoutFormState get _state => super._state as _LayoutFormState;
+
+  /// ** method result has been sorted by position**
+  @override
+  List<FormFieldManagementWithError> get errors {
+    return _readErrors((state) => state.errorText);
+  }
+
+  /// ** method result has been sorted by position**
+  @override
+  List<FormFieldManagementWithError> quietlyValidate() {
+    return _readErrors((state) => state._quietlyValidate());
+  }
+
+  @override
+  List<FormFieldManagementWithError> _readErrors(
+      String? f(ValueFieldState state)) {
+    Map<String, int> sortKeyMap = {};
+    List<FormFieldManagementWithError> errors = super._readErrors((state) {
+      sortKeyMap[state.name!] = _getSortKey(state.context);
+      return f(state);
+    });
+    errors.sort((a, b) {
+      return sortKeyMap[a.formFieldManagement.name]!
+          .compareTo(sortKeyMap[b.formFieldManagement.name]!);
+    });
+    return errors;
+  }
+
+  int _getSortKey(BuildContext context) {
+    _LayoutFormScope scope = _FormScope.of(context) as _LayoutFormScope;
+    int index = 0;
+    for (FormRow row in scope.formLayout.rows) {
+      for (IndexWidget indexWidget in row.columns) {
+        if (indexWidget.widget == context.widget) return index;
+        index++;
+      }
+    }
+    throw 'can not find widget ${context.widget} in FormLayout';
+  }
 }
 
 /// used to modify layout of form
@@ -1032,8 +1049,8 @@ class LayoutFormManagement extends SimpleFormManagement
 ///
 /// **@experimental**
 class FormLayoutManagement {
-  final _ResourceManagement _resourceManagement;
-  FormLayoutManagement._(this._resourceManagement);
+  final _LayoutFormState _state;
+  FormLayoutManagement._(this._state);
 
   FormLayout? _formLayout;
 
@@ -1140,8 +1157,7 @@ class FormLayoutManagement {
   void startEdit() {
     if (_formLayout != null)
       throw 'call apply or cancel first before you call startEdit again';
-    _formLayout =
-        (_resourceManagement.state as _LayoutFormState).formLayout.copy();
+    _formLayout = _state.formLayout.copy();
   }
 
   /// cancel edit
@@ -1154,7 +1170,7 @@ class FormLayoutManagement {
   void apply() {
     _ensureStarted();
     _formLayout!.removeEmptyRow();
-    (_resourceManagement.state as _LayoutFormState).formLayout = _formLayout!;
+    _state.formLayout = _formLayout!;
     _formLayout = null;
   }
 

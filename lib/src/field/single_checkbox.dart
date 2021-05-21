@@ -3,8 +3,9 @@ import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
 import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 enum InlineFieldType { Switch, Checkbox }
 
@@ -21,23 +22,19 @@ class SingleCheckboxFormField
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    Widget? label,
-    CheckboxRenderData? checkboxRenderData,
     WidgetWrapper? wrapper,
+    required SingleCheckboxModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: SingleCheckboxModel(
-              checkboxRenderData: checkboxRenderData, label: label),
-          visible: visible,
+          layoutParam: layoutParam ?? LayoutParam(flex: 0),
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             bool value = state.value;

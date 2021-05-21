@@ -2,8 +2,15 @@ import 'package:flutter/widgets.dart';
 
 import '../form_builder.dart';
 import 'focus_node.dart';
+import 'form_state_model.dart';
 import 'text_selection.dart';
 
+/// base form management
+///
+/// you can access a form management by [FormKey]
+///
+/// **if you are use layout form builder, you can cast this to [LayoutFormManagement] ,
+/// which can use [FormLayoutManagement] and hide|show form**
 abstract class FormManagement {
   /// whether form has a name field
   bool hasField(String name);
@@ -14,20 +21,28 @@ abstract class FormManagement {
   /// set form readOnly|editable
   set readOnly(bool readOnly);
 
-  /// get a new formfieldManagement by name
-  CastableFormFieldManagement newFormFieldManagement(String name);
+  /// create a new formfieldManagement by name
+  ///
+  /// when your field is a BaseField and your form is LayoutForm,
+  /// you can cast FormFieldManagement as [BaseLayoutFormFieldManagement] , which
+  /// can used to check visible of field or get field's position
+  ///
+  /// you can override [AbstractFieldState.createFormFieldManagement] to wrap you custom
+  /// FormFieldManagement, and this method will return your wrapped.
+  /// **when you override this method,
+  /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
+  T newFormFieldManagement<T extends FormFieldManagement>(String name);
 
   /// get form data
   ///
-  /// if a value field doesn't has a name state,it's value will be ignored
+  /// if a value field doesn't has a name ,it's value will be ignored
   Map<String, dynamic> get data;
 
   /// get error msg after validate form,if you don't want to display error text,
   /// look at [quietlyValidate]
   ///
-  /// key is field'name
-  /// value is [FormFieldManagement] you can get errorText
-  /// via [FormFieldManagement.valueFieldManagement.errorText]
+  /// you can get errorText
+  /// via [FormFieldManagementWithError.errorText]
   /// or request a focus via [FormFieldManagement.focus]
   /// or ensure field visible via [FormFieldManagement.ensureVisible]
   List<FormFieldManagementWithError> get errors;
@@ -77,18 +92,18 @@ abstract class FormManagement {
 }
 
 /// used to control form field
-abstract class FormFieldManagement {
+abstract class FormFieldManagement<T extends AbstractFieldStateModel> {
   ///get field's name
   String? get name;
-  // bool get readOnly;
 
+  /// whether field is readOnly;
   bool get readOnly;
 
   /// set readOnly on field,it's equals to update1('readOnly',readOnly)
-  //set readOnly(bool readOnly);
+  /// set readOnly(bool readOnly);
   set readOnly(bool readOnly);
 
-  // whether field support focus
+  /// whether field is focusable
   bool get focusable;
 
   // whether field is focused
@@ -117,11 +132,23 @@ abstract class FormFieldManagement {
   /// otherwise throw an exception
   TextSelectionManagement get textSelectionManagement;
 
-  /// set state model for field
-  set model(AbstractFieldStateModel model);
+  /// set state model on field
+  ///
+  /// [model] is provided by your custom [AbstractFieldState],
+  /// if you no need a model,you can use [EmptyStateModel]
+  ///
+  /// model is a property variable of [AbstractFieldState],used to provide
+  /// data that determine how to render a field , you can
+  /// rebuild field easily via call this method and
+  /// avoid build whole form
+  ///
+  /// **model's all properties should be nullable**
+  ///
+  /// **model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
+  set model(T model);
 
   /// get current state model;
-  AbstractFieldStateModel get model;
+  T get model;
 
   /// make current field visible in viewport
   Future<void> ensureVisible(
@@ -136,7 +163,7 @@ abstract class ValueFieldManagement<T> {
   T? get value;
 
   /// set newValue on valuefield,this method will trigger onChanged listener
-  /// if you do not trigger it,you can use setValue method
+  /// if you don't want to trigger it,you can use setValue method
   set value(T? value) => setValue(value, trigger: true);
 
   /// set newValue on valuefield,if trigger is false,won't trigger onChanged listener
@@ -220,43 +247,4 @@ abstract class FormFieldManagementDelegate extends FormFieldManagement {
           curve: curve,
           alignment: alignment,
           alignmentPolicy: alignmentPolicy);
-}
-
-/// base form field management
-abstract class BaseFormFieldManagement extends FormFieldManagementDelegate {
-  final FormFieldManagement delegate;
-
-  BaseFormFieldManagement(this.delegate);
-
-  /// whether field is visible
-  bool get visible;
-
-  /// hide|show field
-  set visible(bool visible);
-
-  /// get flex of field
-  int? get flex;
-
-  /// set flex of field
-  set flex(int? flex);
-
-  /// get padding of field
-  EdgeInsets? get padding;
-
-  /// set padding of field
-  set padding(EdgeInsets? padding);
-}
-
-abstract class CastableFormFieldManagement extends FormFieldManagementDelegate {
-  /// whether this formfieldmanagement can cast to target
-  bool canCast<T extends FormFieldManagement>() => delegate is T;
-
-  /// cast FormFieldManagement to what you want
-  ///
-  /// if field is BaseCommonField , can cast to [BaseFormFieldManagement]
-  T cast<T extends FormFieldManagement>() {
-    if (delegate is! T)
-      throw 'current FormFieldManagement is ${delegate.runtimeType}, can not cast to $T';
-    return delegate as T;
-  }
 }

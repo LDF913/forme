@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:form_builder/form_builder.dart';
-
 import 'change_text.dart';
 
 class TextFieldPage extends StatelessWidget {
@@ -28,6 +27,7 @@ class TextFieldPage extends StatelessWidget {
                             text:
                                 'value changed, current value is ${v.toString()}');
                   },
+                  model: TextFieldModel(),
                 ))
                 .oneRowField(ChangeText())
                 .build(),
@@ -113,20 +113,21 @@ class TextFieldPage extends StatelessWidget {
                     },
                     child: Text('update inputAction to search')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('textField')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('textField');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('textField')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('textField');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -138,9 +139,10 @@ class TextFieldPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('textField')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('textField')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-
-import 'page/button.dart';
 import 'page/checkbox_group.dart';
 import 'page/datetime_field.dart';
+import 'page/radio_group.dart';
+import 'page/range_slider.dart';
+import 'page/slider.dart';
+
+import 'page/button.dart';
 import 'page/demo2.dart';
 import 'page/filter_chip.dart';
 import 'page/demo.dart';
 import 'page/number_field.dart';
-import 'page/radio_group.dart';
-import 'page/range_slider.dart';
+import 'page/picker.dart';
 import 'page/rate.dart';
 import 'page/selector.dart';
 import 'page/single_checkbox.dart';
 import 'page/single_switch.dart';
-import 'page/slider.dart';
 import 'page/switch_group.dart';
 import 'page/text_field.dart';
 
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         '/number': (context) => NumberFieldPage(),
         '/datetime': (context) => DateTimeFieldPage(),
         '/text': (context) => TextFieldPage(),
+        '/picker': (context) => CupertinoPickerPage(),
         '/demo': (context) => DemoPage(),
         '/demo2': (context) => Demo2Page(),
       },
@@ -137,6 +139,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   Navigator.pushNamed(context, '/text');
                 },
                 child: Text('TextFormField')),
+            TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/picker');
+                },
+                child: Text('CupertinoPickerPageFormField')),
             TextButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/demo');

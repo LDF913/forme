@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import '../form_field.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 typedef SubLabelRender = String Function(num value);
 
@@ -12,51 +13,35 @@ class SliderFormField extends BaseNonnullValueField<num, SliderModel> {
     NonnullFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    int? divisions,
-    required double max,
-    required double min,
     SubLabelRender? subLabelRender,
-    String? labelText,
     NonnullFormFieldSetter<num>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    Color? activeColor,
-    Color? inactiveColor,
-    SliderThemeData? sliderThemeData,
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<double>? onChangeStart,
     ValueChanged<double>? onChangeEnd,
     MouseCursor? mouseCursor,
     WidgetWrapper? wrapper,
+    required SliderModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: SliderModel(
-            labelText: labelText,
-            max: max,
-            min: min,
-            divisions: divisions ?? (max - min).toInt(),
-            activeColor: activeColor,
-            inactiveColor: inactiveColor,
-            sliderThemeData: sliderThemeData,
-          ),
-          visible: visible,
+          layoutParam: layoutParam,
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
-          initialValue: initialValue ?? min,
+          initialValue: initialValue ?? model.min ?? 1,
           autovalidateMode: autovalidateMode,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
-            int divisions = state.model.divisions!;
-            double max = state.model.max!;
-            double min = state.model.min!;
+            double max = state.model.max ?? 100;
+            double min = state.model.min ?? 1;
+            int divisions = state.model.divisions ?? (max - min).round();
             String? labelText = state.model.labelText;
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;

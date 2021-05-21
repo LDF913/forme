@@ -18,6 +18,7 @@ class SingleCheckboxPage extends StatelessWidget {
                 .layoutBuilder()
                 .customize(mainAxisAlignment: MainAxisAlignment.center)
                 .oneRowField(SingleCheckboxFormField(
+                  model: SingleCheckboxModel(),
                   name: 'checkbox',
                   onChanged: (v) {
                     formKey.currentManagement
@@ -53,20 +54,21 @@ class SingleCheckboxPage extends StatelessWidget {
                     },
                     child: Text('update checkbox render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('checkbox')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('checkbox');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('checkbox')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('checkbox');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -78,9 +80,10 @@ class SingleCheckboxPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('checkbox')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('checkbox')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

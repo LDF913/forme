@@ -6,6 +6,22 @@ import 'theme_data.dart';
 class FormRenderUtils {
   FormRenderUtils._();
 
+  static Wrap wrap(WrapRenderData? wrapRenderData, List<Widget> children) {
+    return Wrap(
+      spacing: wrapRenderData?.spacing ?? 0.0,
+      runSpacing: wrapRenderData?.runSpacing ?? 0.0,
+      textDirection: wrapRenderData?.textDirection,
+      crossAxisAlignment:
+          wrapRenderData?.crossAxisAlignment ?? WrapCrossAlignment.start,
+      verticalDirection:
+          wrapRenderData?.verticalDirection ?? VerticalDirection.down,
+      alignment: wrapRenderData?.alignment ?? WrapAlignment.start,
+      direction: wrapRenderData?.direction ?? Axis.horizontal,
+      runAlignment: wrapRenderData?.runAlignment ?? WrapAlignment.start,
+      children: children,
+    );
+  }
+
   static Widget mergeListTileTheme(
       Widget child, ListTileThemeData? listTileThemeData) {
     return ListTileTheme.merge(

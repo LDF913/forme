@@ -18,8 +18,11 @@ class SelectorPage extends StatelessWidget {
                 .layoutBuilder()
                 .oneRowField(SelectorFormField(
                   name: 'selector',
-                  labelText: 'selector',
-                  multi: false,
+                  model: SelectorModel(
+                    labelText: 'selector',
+                    multi: false,
+                    selectedItemLayoutType: SelectedItemLayoutType.scroll,
+                  ),
                   selectItemProvider: (page, params) {
                     RangeValues filter = params['filter'];
                     List<int> items = List<int>.generate(100, (i) => i + 1)
@@ -41,7 +44,9 @@ class SelectorPage extends StatelessWidget {
                     return builder
                         .layoutBuilder()
                         .append(RangeSliderFormField(
-                            name: 'filter', min: 1, max: 100))
+                          name: 'filter',
+                          model: SliderModel(min: 1, max: 100),
+                        ))
                         .append(ButtonFormField(
                             onPressed: query, child: Text('query')))
                         .build();
@@ -54,7 +59,6 @@ class SelectorPage extends StatelessWidget {
                         .value = RangeValues(20, 50);
                     return true; //return true will set params before query
                   },
-                  selectedItemLayoutType: SelectedItemLayoutType.scroll,
                   onChanged: (v) => formKey.currentManagement
                           .newFormFieldManagement('text')
                           .model =
@@ -99,20 +103,21 @@ class SelectorPage extends StatelessWidget {
                     },
                     child: Text('update selector render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('selector')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('selector');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('selector')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('selector');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -124,9 +129,10 @@ class SelectorPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('selector')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('selector')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

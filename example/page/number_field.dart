@@ -18,8 +18,10 @@ class NumberFieldPage extends StatelessWidget {
                 .layoutBuilder()
                 .oneRowField(NumberFormField(
                   name: 'numberField',
-                  max: 100,
-                  allowNegative: false,
+                  model: NumberFieldModel(
+                    max: 100,
+                    allowNegative: false,
+                  ),
                   onChanged: (v) {
                     formKey.currentManagement
                             .newFormFieldManagement('text')
@@ -96,20 +98,21 @@ class NumberFieldPage extends StatelessWidget {
                     },
                     child: Text('set max num to 19')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('numberField')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('numberField');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('numberField')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('numberField');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -121,9 +124,10 @@ class NumberFieldPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('numberField')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('numberField')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

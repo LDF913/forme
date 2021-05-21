@@ -1,10 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import '../render/form_render_utils.dart';
 import '../render/theme_data.dart';
 
-import '../state_model.dart';
+import '../form_state_model.dart';
 import '../form_field.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 class FilterChipItem<T> {
   final Widget label;
@@ -48,28 +49,13 @@ class FilterChipFormField<T>
     bool readOnly = false,
     EdgeInsets? padding,
     VoidCallback? exceedCallback,
-    required List<FilterChipItem<T>>? items,
-    String? labelText,
-    ChipLayoutType? layoutType,
-    int? count,
-    double? pressElevation,
-    FilterChipRenderData? filterChipRenderData,
-    ChipThemeData? chipThemeData,
     WidgetWrapper? wrapper,
+    required FilterChipModel<T> model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: FilterChipModel(
-              items: items,
-              labelText: labelText,
-              layoutType: layoutType,
-              count: count,
-              pressElevation: pressElevation,
-              filterChipRenderData: filterChipRenderData,
-              chipThemeData: chipThemeData),
-          visible: visible,
-          wrapper: wrapper,
+          layoutParam: layoutParam,
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           validator: validator,
           onChanged: onChanged,
@@ -79,7 +65,7 @@ class FilterChipFormField<T>
           builder: (state) {
             bool readOnly = state.readOnly;
             FilterChipModel<T> model = state.model;
-            List<FilterChipItem<T>> items = model.items!;
+            List<FilterChipItem<T>> items = model.items ?? [];
             String? labelText = model.labelText;
             double? pressElevation = model.pressElevation;
             ChipLayoutType layoutType = model.layoutType ?? ChipLayoutType.wrap;
@@ -146,13 +132,19 @@ class FilterChipFormField<T>
 
             switch (layoutType) {
               case ChipLayoutType.wrap:
-                chipWidget = Wrap(
-                  children: chips,
-                );
+                chipWidget =
+                    FormRenderUtils.wrap(state.model.wrapRenderData, chips);
                 break;
               case ChipLayoutType.scroll:
                 chipWidget = SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
+                    scrollDirection: state.model.singleChildScrollViewRenderData
+                            ?.scrollDirection ??
+                        Axis.horizontal,
+                    reverse:
+                        state.model.singleChildScrollViewRenderData?.reverse ??
+                            false,
+                    padding:
+                        state.model.singleChildScrollViewRenderData?.padding,
                     child: Row(children: chips));
                 break;
             }
@@ -195,15 +187,20 @@ class FilterChipModel<T> extends AbstractFieldStateModel {
   final double? pressElevation;
   final FilterChipRenderData? filterChipRenderData;
   final ChipThemeData? chipThemeData;
+  final WrapRenderData? wrapRenderData;
+  final SingleChildScrollViewRenderData? singleChildScrollViewRenderData;
 
-  FilterChipModel(
-      {this.items,
-      this.labelText,
-      this.pressElevation,
-      this.count,
-      this.layoutType,
-      this.filterChipRenderData,
-      this.chipThemeData});
+  FilterChipModel({
+    this.items,
+    this.labelText,
+    this.pressElevation,
+    this.count,
+    this.layoutType,
+    this.filterChipRenderData,
+    this.chipThemeData,
+    this.wrapRenderData,
+    this.singleChildScrollViewRenderData,
+  });
 
   @override
   AbstractFieldStateModel merge(AbstractFieldStateModel oldFieldState) {
@@ -216,6 +213,7 @@ class FilterChipModel<T> extends AbstractFieldStateModel {
       layoutType: layoutType ?? old.layoutType,
       chipThemeData: chipThemeData ?? old.chipThemeData,
       filterChipRenderData: filterChipRenderData ?? old.filterChipRenderData,
+      wrapRenderData: wrapRenderData ?? old.wrapRenderData,
     );
   }
 }

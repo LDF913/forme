@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+/// form layout used by LayoutForm
 class FormLayout {
   MainAxisAlignment mainAxisAlignment;
   MainAxisSize mainAxisSize;
@@ -9,7 +10,7 @@ class FormLayout {
   TextBaseline? textBaseline;
   List<FormRow> rows = [];
 
-  ///used as widget's key
+  ///used to create & find a global key
   _Index _index = _Index();
 
   int get rowCount => rows.length;
@@ -41,6 +42,8 @@ class FormLayout {
     this.mainAxisSize = mainAxisSize ?? MainAxisSize.max;
     this.crossAxisAlignment = crossAxisAlignment ?? CrossAxisAlignment.center;
     this.verticalDirection = verticalDirection ?? VerticalDirection.down;
+    this.textBaseline = textBaseline;
+    this.textDirection = textDirection;
   }
 
   FormRow append() {
@@ -122,6 +125,8 @@ class FormRow {
     this.mainAxisSize = mainAxisSize ?? MainAxisSize.max;
     this.crossAxisAlignment = crossAxisAlignment ?? CrossAxisAlignment.center;
     this.verticalDirection = verticalDirection ?? VerticalDirection.down;
+    this.textBaseline = textBaseline;
+    this.textDirection = textDirection;
   }
 
   void append(Widget child) {

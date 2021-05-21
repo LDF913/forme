@@ -4,8 +4,9 @@ import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
 import '../builder.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import '../form_field.dart';
+import 'base_field.dart';
 
 /// used to render select list
 ///
@@ -91,11 +92,9 @@ class SelectorFormField<T>
   final SelectedItemRender<T>? selectedItemRender;
   final SelectedSorter<T>? selectedSorter;
   final SelectItemProvider<T>? selectItemProvider;
-  final SelectedItemLayoutType selectedItemLayoutType;
   final QueryFormBuilder? queryFormBuilder;
   final OnSelectDialogShow? onSelectDialogShow;
   final VoidCallback? onTap;
-  final SelectorThemeData selectorThemeData;
 
   Widget _defaultSelectedItemRender<T>(T item, bool multiSelect, bool readOnly,
       ThemeData themeData, VoidCallback? remove) {
@@ -122,18 +121,13 @@ class SelectorFormField<T>
   SelectorFormField({
     required this.selectItemProvider,
     ValueChanged<List<T>>? onChanged,
-    bool clearable = true,
-    String? labelText,
-    String? hintText,
     final double iconSize = 24,
-    bool multi = false,
     NonnullFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
     this.selectItemRender,
     this.selectedItemRender,
     this.selectedSorter,
-    this.selectedItemLayoutType = SelectedItemLayoutType.wrap,
     this.queryFormBuilder,
     this.onSelectDialogShow,
     this.onTap,
@@ -144,39 +138,31 @@ class SelectorFormField<T>
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    this.selectorThemeData = const SelectorThemeData(),
     WidgetWrapper? wrapper,
+    required SelectorModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: SelectorModel(
-            labelText: labelText,
-            hintText: hintText,
-            multi: multi,
-            clearable: clearable,
-            selectorThemeData: selectorThemeData,
-            selectedItemLayoutType: selectedItemLayoutType,
-          ),
-          visible: visible,
+          layoutParam: layoutParam,
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue ?? List<T>.empty(growable: true),
           autovalidateMode: autovalidateMode,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;
             String? labelText = state.model.labelText;
             String? hintText = state.model.hintText;
-            bool multi = state.model.multi!;
-            bool clearable = state.model.clearable!;
+            bool multi = state.model.multi ?? false;
+            bool clearable = state.model.clearable ?? true;
             SelectorThemeData selectorThemeData =
-                state.model.selectorThemeData!;
+                state.model.selectorThemeData ?? const SelectorThemeData();
             SelectedItemLayoutType selectedItemLayoutType =
-                state.model.selectedItemLayoutType!;
+                state.model.selectedItemLayoutType ??
+                    SelectedItemLayoutType.wrap;
             ThemeData themeData = Theme.of(state.context);
 
             List<Widget> icons = [];
@@ -227,11 +213,21 @@ class SelectorFormField<T>
                 switch (selectedItemLayoutType) {
                   case SelectedItemLayoutType.scroll:
                     widget = SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                        scrollDirection: state
+                                .model
+                                .singleChildScrollViewRenderData
+                                ?.scrollDirection ??
+                            Axis.horizontal,
+                        reverse: state.model.singleChildScrollViewRenderData
+                                ?.reverse ??
+                            false,
+                        padding: state
+                            .model.singleChildScrollViewRenderData?.padding,
                         child: Row(children: itemWidgets));
                     break;
                   default:
-                    widget = Wrap(children: itemWidgets);
+                    widget = FormRenderUtils.wrap(
+                        state.model.wrapRenderData, itemWidgets);
                 }
 
                 widget = ChipTheme(
@@ -589,14 +585,19 @@ class SelectorModel extends AbstractFieldStateModel {
   final bool? clearable;
   final SelectorThemeData? selectorThemeData;
   final SelectedItemLayoutType? selectedItemLayoutType;
+  final WrapRenderData? wrapRenderData;
+  final SingleChildScrollViewRenderData? singleChildScrollViewRenderData;
 
-  SelectorModel(
-      {this.labelText,
-      this.hintText,
-      this.multi,
-      this.clearable,
-      this.selectorThemeData,
-      this.selectedItemLayoutType});
+  SelectorModel({
+    this.labelText,
+    this.hintText,
+    this.multi,
+    this.clearable,
+    this.selectorThemeData,
+    this.selectedItemLayoutType,
+    this.wrapRenderData,
+    this.singleChildScrollViewRenderData,
+  });
 
   @override
   AbstractFieldStateModel merge(AbstractFieldStateModel old) {
@@ -609,6 +610,9 @@ class SelectorModel extends AbstractFieldStateModel {
       selectorThemeData: selectorThemeData ?? oldModel.selectorThemeData,
       selectedItemLayoutType:
           selectedItemLayoutType ?? oldModel.selectedItemLayoutType,
+      singleChildScrollViewRenderData: singleChildScrollViewRenderData ??
+          old.singleChildScrollViewRenderData,
+      wrapRenderData: wrapRenderData ?? oldModel.wrapRenderData,
     );
   }
 }

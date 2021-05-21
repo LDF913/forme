@@ -1,50 +1,30 @@
 import 'package:flutter/material.dart';
 
 import '../widget/clear_button.dart';
-import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
+import 'base_field.dart';
 
 enum DateTimeType { Date, DateTime }
 
 class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
   DateTimeFormField({
-    String? labelText,
-    String? hintText,
-    TextStyle? style,
-    DateTimeFormatter? dateTimeFormatter,
-    DateTimeType type = DateTimeType.Date,
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
-    int? maxLines,
     DateTime? initialValue,
-    InputDecorationTheme? inputDecorationTheme,
     FormFieldSetter<DateTime>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    DateTime? firstDate,
-    DateTime? lastDate,
     WidgetWrapper? wrapper,
+    required DateTimeFieldModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: DateTimeFieldModel(
-            labelText: labelText,
-            hintText: hintText,
-            style: style,
-            inputDecorationTheme: inputDecorationTheme,
-            type: type,
-            dateTimeFormatter: dateTimeFormatter,
-            firstDate: firstDate ?? DateTime(1970),
-            lastDate: lastDate ?? DateTime(2099),
-            maxLines: maxLines ?? 1,
-          ),
-          wrapper: wrapper,
+          layoutParam: layoutParam,
+          model: model,
           name: name,
-          flex: flex,
-          visible: visible,
-          padding: padding,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
@@ -57,15 +37,15 @@ class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
             String? labelText = state.model.labelText;
             String? hintText = state.model.hintText;
             TextStyle? style = state.model.style;
-            int maxLines = state.model.maxLines!;
+            int maxLines = state.model.maxLines ?? 1;
             InputDecorationTheme inputDecorationTheme =
                 state.model.inputDecorationTheme ??
                     themeData.inputDecorationTheme;
             TextEditingController textEditingController =
                 (state as _DateTimeFormFieldState).textEditingController;
-            DateTime firstDate = state.model.firstDate!;
-            DateTime lastDate = state.model.lastDate!;
-            DateTimeType type = state.model.type!;
+            DateTime firstDate = state.model.firstDate ?? DateTime(1970);
+            DateTime lastDate = state.model.lastDate ?? DateTime(2099);
+            DateTimeType type = state.model.type ?? DateTimeType.Date;
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
@@ -162,7 +142,8 @@ typedef DateTimeFormatter = String Function(DateTime dateTime);
 
 class _DateTimeFormFieldState
     extends BaseValueFieldState<DateTime, DateTimeFieldModel> {
-  DateTimeFormatter get _formatter => _getDateTimeFormatter(model.type!);
+  DateTimeFormatter get _formatter =>
+      _getDateTimeFormatter(model.type ?? DateTimeType.Date);
 
   late final TextEditingController textEditingController;
 

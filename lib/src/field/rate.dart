@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 /// used to transfer rate to your rate
 ///
@@ -29,22 +29,19 @@ class RateFormField extends BaseValueField<double, RateModel> {
     EdgeInsets? padding,
     RateTransfer? transfer,
     int ratio = 1,
-    String? labelText,
-    RateThemeData? rateThemeData,
     WidgetWrapper? wrapper,
+    required RateModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: RateModel(labelText: labelText, rateThemeData: rateThemeData),
-          visible: visible,
+          layoutParam: layoutParam,
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             String? labelText = state.model.labelText;

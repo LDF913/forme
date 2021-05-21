@@ -185,3 +185,39 @@ class FilterChipRenderData {
     this.tooltip,
   });
 }
+
+class WrapRenderData {
+  final Axis? direction;
+  final WrapAlignment? alignment;
+  final double? space;
+  final WrapAlignment? runAlignment;
+  final double? runSpacing;
+  final double? spacing;
+  final WrapCrossAlignment? crossAxisAlignment;
+  final TextDirection? textDirection;
+  final VerticalDirection? verticalDirection;
+
+  const WrapRenderData({
+    this.direction,
+    this.alignment,
+    this.space,
+    this.runAlignment,
+    this.runSpacing,
+    this.crossAxisAlignment,
+    this.textDirection,
+    this.verticalDirection,
+    this.spacing,
+  });
+}
+
+class SingleChildScrollViewRenderData {
+  final bool? reverse;
+  final EdgeInsets? padding;
+  final Axis? scrollDirection;
+
+  const SingleChildScrollViewRenderData({
+    this.reverse,
+    this.padding,
+    this.scrollDirection,
+  });
+}

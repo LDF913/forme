@@ -17,7 +17,10 @@ class RadioGroupPage extends StatelessWidget {
                 .key(formKey)
                 .layoutBuilder()
                 .oneRowField(ListTileFormField<String>(
-                  items: FormBuilderUtils.toListTileItems(['1', '2', '3']),
+                  model: ListTileModel(
+                    items: FormBuilderUtils.toListTileItems(['1', '2', '3'],
+                        controlAffinity: ListTileControlAffinity.trailing),
+                  ),
                   type: ListTileItemType.Radio,
                   name: 'radioGroup',
                   onChanged: (v) {
@@ -72,20 +75,21 @@ class RadioGroupPage extends StatelessWidget {
                     },
                     child: Text('update radioGroup render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('radioGroup')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('radioGroup');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('radioGroup')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('radioGroup');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -97,9 +101,10 @@ class RadioGroupPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('radioGroup')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('radioGroup')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

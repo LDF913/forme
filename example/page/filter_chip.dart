@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:form_builder/form_builder.dart';
 
 import 'change_text.dart';
+import 'package:form_builder/form_builder.dart';
 
 class FilterChipPage extends StatelessWidget {
   final FormKey formKey = FormKey();
@@ -20,15 +20,17 @@ class FilterChipPage extends StatelessWidget {
                 .layoutBuilder()
                 .oneRowField(FilterChipFormField<String>(
                     name: 'chip',
+                    model: FilterChipModel<String>(
+                      items: FormBuilderUtils.toFilterChipItems(
+                          ['flutter', 'android', 'iOS']),
+                    ),
                     onChanged: (v) async {
                       formKey.currentManagement
                               .newFormFieldManagement('text')
                               .model =
                           ChangeTextModel(
                               text: 'value changed, current value is $v');
-                    },
-                    items: FormBuilderUtils.toFilterChipItems(
-                        ['flutter', 'android', 'iOS'])))
+                    }))
                 .append(ChangeText())
                 .build(),
             Wrap(
@@ -65,20 +67,19 @@ class FilterChipPage extends StatelessWidget {
                     },
                     child: Text('update chip render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('chip')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management =
+                      formKey.currentManagement.newFormFieldManagement('chip');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('chip')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management =
+                      formKey.currentManagement.newFormFieldManagement('chip');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -90,9 +91,10 @@ class FilterChipPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('chip')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('chip')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

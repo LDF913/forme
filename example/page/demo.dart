@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-
 import 'package:form_builder/form_builder.dart';
+import 'package:form_builder/src/field/cupertino_picker.dart';
+import 'package:form_builder/src/form_state_model.dart';
 
 class DemoPage extends StatefulWidget {
   @override
@@ -65,16 +66,15 @@ class _DemoPageState extends State<DemoPage> {
         ),
         Builder(
           builder: (context) {
-            BaseFormFieldManagement management = formKey.currentManagement
-                .newFormFieldManagement('username')
-                .cast();
+            BaseLayoutFormFieldManagement management =
+                formKey.currentManagement.newFormFieldManagement('username');
+            bool visible = management.layoutParam?.visible ?? true;
             return TextButton(
-                onPressed: () async {
-                  management.visible = !management.visible;
+                onPressed: () {
+                  management.layoutParam = LayoutParam(visible: !visible);
                   (context as Element).markNeedsBuild();
                 },
-                child: Text(
-                    management.visible ? 'hide username' : 'show username'));
+                child: Text(visible ? 'hide username' : 'show username'));
           },
         ),
         TextButton(
@@ -95,11 +95,10 @@ class _DemoPageState extends State<DemoPage> {
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,
                 ));
-                CastableFormFieldManagement formFieldManagement =
+                FormFieldManagement formFieldManagement =
                     error.formFieldManagement;
                 formFieldManagement.ensureVisible().then((value) {
-                  //base value field support shaker
-                  if (formFieldManagement.canCast<BaseFormFieldManagement>()) {}
+                  formFieldManagement.focus = true;
                 });
                 return;
               }
@@ -123,6 +122,7 @@ class _DemoPageState extends State<DemoPage> {
         TextButton(
             onPressed: () {
               formKey.currentManagement.setData({
+                'picker': 10,
                 'username': 'user name',
                 'password': 'password',
                 'checkbox': ['male'],
@@ -151,21 +151,31 @@ class _DemoPageState extends State<DemoPage> {
         })
         .layoutBuilder()
         .enableLayoutManagement(true)
+        .oneRowField(CupertinoPickerFormField(
+            initialValue: 0,
+            name: 'picker',
+            validator: (value) => value < 1 ? 'select ' : null,
+            model: CupertinoPickerModel(
+                labelText: '123',
+                itemExtent: 50,
+                children: List<Widget>.generate(
+                    100, (index) => Center(child: Text(index.toString()))))))
         .oneRowField(ClearableTextFormField(
           name: 'username',
-          labelText: 'username',
-          clearable: true,
           onTap: () {
             print("??");
           },
-          selectAllOnFocus: true,
           validator: (value) =>
               value.isEmpty ? 'username can not be empty !' : null,
+          model: TextFieldModel(
+            labelText: 'username',
+            clearable: true,
+            selectAllOnFocus: true,
+          ),
         ))
         .append(Builder(builder: (context) {
-          BaseFormFieldManagement username = formKey.currentManagement
-              .newFormFieldManagement('username')
-              .cast();
+          BaseLayoutFormFieldManagement username =
+              formKey.currentManagement.newFormFieldManagement('username');
           return ButtonFormField(
               child: Text(username.readOnly ? 'editable' : 'readOnly'),
               onPressed: () {
@@ -174,6 +184,7 @@ class _DemoPageState extends State<DemoPage> {
               });
         }))
         .append(SingleSwitchFormField(
+          model: SingleSwitchModel(),
           name: 'rememberMe',
           label: Text('remember'),
         ))
@@ -205,6 +216,7 @@ class _DemoPageState extends State<DemoPage> {
                       initialValue: j,
                       name: 'num$j',
                       flex: 2,
+                      model: NumberFieldModel(),
                     ),
                     row: row);
                 formLayoutManagement.insert(
@@ -226,11 +238,13 @@ class _DemoPageState extends State<DemoPage> {
         }))
         .append(ClearableTextFormField(
           name: 'password',
-          hintText: 'password',
           obscureText: true,
           passwordVisible: true,
-          clearable: true,
-          toolbarOptions: ToolbarOptions(copy: false, paste: false),
+          model: TextFieldModel(
+            hintText: 'password',
+            clearable: true,
+            toolbarOptions: ToolbarOptions(copy: false, paste: false),
+          ),
         ))
         .append(Builder(builder: (context) {
           return ButtonFormField(
@@ -257,11 +271,13 @@ class _DemoPageState extends State<DemoPage> {
         .newRow()
         .append(NumberFormField(
           name: 'age',
-          labelText: 'age',
-          clearable: true,
           flex: 1,
-          max: 99,
-          decimal: 0,
+          model: NumberFieldModel(
+            labelText: 'age',
+            clearable: true,
+            max: 99,
+            decimal: 0,
+          ),
           validator: (value) => value == null
               ? 'not empty'
               : value < 50
@@ -283,18 +299,22 @@ class _DemoPageState extends State<DemoPage> {
             },
             child: Text('request focus')))
         .oneRowField(ListTileFormField<String>(
-          items: FormBuilderUtils.toListTileItems(['male', 'female']),
           name: 'checkbox',
-          split: 2,
-          labelText: 'sex',
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
+          model: ListTileModel(
+            items: FormBuilderUtils.toListTileItems(['male', 'female']),
+            split: 2,
+            labelText: 'sex',
+          ),
         ))
         .oneRowField(ListTileFormField<String>(
-          items: FormBuilderUtils.toListTileItems(['male', 'female']),
           name: 'checkbox2',
-          split: 1,
-          labelText: 'sex',
           validator: (value) => value.isEmpty ? 'pls select sex' : null,
+          model: ListTileModel(
+            items: FormBuilderUtils.toListTileItems(['male', 'female']),
+            split: 1,
+            labelText: 'sex',
+          ),
         ))
         .append(ButtonFormField(
             onPressed: () {
@@ -307,44 +327,59 @@ class _DemoPageState extends State<DemoPage> {
             },
             child: Text('update items')))
         .oneRowField(ListTileFormField(
-            split: 1,
-            type: ListTileItemType.Switch,
-            name: 'switchGroup',
-            labelText: 'switch',
-            validator: (value) => value.isEmpty ? 'select one pls !' : null,
+          model: ListTileModel(
             items: FormBuilderUtils.toListTileItems(
                 ['switch1', 'switch2', 'switch3'],
                 padding: const EdgeInsets.symmetric(horizontal: 5),
-                controlAffinity: ListTileControlAffinity.trailing)))
+                controlAffinity: ListTileControlAffinity.trailing),
+            split: 1,
+            labelText: 'switch',
+          ),
+          type: ListTileItemType.Switch,
+          name: 'switchGroup',
+          validator: (value) => value.isEmpty ? 'select one pls !' : null,
+        ))
         .oneRowField(ListTileFormField(
-          split: 1,
-          type: ListTileItemType.Radio,
-          items: FormBuilderUtils.toListTileItems(['1', '2']),
           name: 'radio',
-          labelText: 'single choice',
+          type: ListTileItemType.Radio,
+          model: ListTileModel(
+            items: FormBuilderUtils.toListTileItems(['1', '2']),
+            labelText: 'single choice',
+            split: 1,
+          ),
         ))
         .append(DateTimeFormField(
           name: 'startTime',
-          type: DateTimeType.DateTime,
-          hintText: 'startTime',
+          model: DateTimeFieldModel(
+            type: DateTimeType.DateTime,
+            hintText: 'startTime',
+          ),
           validator: (value) => value == null ? 'not empty1' : null,
         ))
         .append(DateTimeFormField(
           name: 'endTime',
-          hintText: 'endTime',
+          model: DateTimeFieldModel(
+            hintText: 'endTime',
+          ),
           validator: (value) => value == null ? 'not empty2' : null,
         ))
         .oneRowField(ClearableTextFormField(
-            name: 'remark',
+          name: 'remark',
+          flex: 1,
+          model: TextFieldModel(
             hintText: 'remark',
             maxLines: 5,
-            flex: 1,
             clearable: true,
-            maxLength: 500))
+            maxLength: 500,
+          ),
+        ))
         .oneRowField(SelectorFormField(
             name: 'selector',
-            labelText: 'selector',
-            multi: false,
+            model: SelectorModel(
+              labelText: 'selector',
+              multi: true,
+              selectedItemLayoutType: SelectedItemLayoutType.scroll,
+            ),
             selectItemProvider: (page, params) {
               RangeValues filter = params['filter'];
               List<int> items = List<int>.generate(100, (i) => i + 1)
@@ -362,8 +397,10 @@ class _DemoPageState extends State<DemoPage> {
             queryFormBuilder: (builder, query) {
               return builder
                   .layoutBuilder()
-                  .append(
-                      RangeSliderFormField(name: 'filter', min: 1, max: 100))
+                  .append(RangeSliderFormField(
+                    name: 'filter',
+                    model: SliderModel(min: 1, max: 100),
+                  ))
                   .append(ButtonFormField(
                       onPressed: () {
                         query();
@@ -379,20 +416,23 @@ class _DemoPageState extends State<DemoPage> {
                   .value = RangeValues(20, 50);
               return true; //return true will set params before query
             },
-            selectedItemLayoutType: SelectedItemLayoutType.scroll,
             validator: (value) => value.isEmpty ? 'select something !' : null))
         .oneRowField(SliderFormField(
           name: 'slider',
-          min: 0,
-          max: 100,
-          labelText: 'age slider',
+          model: SliderModel(
+            min: 0,
+            max: 100,
+            labelText: 'age slider',
+          ),
           validator: (value) =>
               value < 50 ? 'age slider must bigger than 50' : null,
         ))
         .append(NumberFormField(
-            max: 100,
+            model: NumberFieldModel(
+              max: 100,
+              labelText: 'inline slider',
+            ),
             name: 'sliderInlineText',
-            labelText: 'inline slider',
             flex: 2,
             onChanged: (v) => formKey.currentManagement
                 .newFormFieldManagement('sliderInline')
@@ -400,8 +440,10 @@ class _DemoPageState extends State<DemoPage> {
                 .setValue(v == null ? 0.0 : v.toDouble(), trigger: false)))
         .append(SliderFormField(
             name: 'sliderInline',
-            min: 0,
-            max: 100,
+            model: SliderModel(
+              min: 0,
+              max: 100,
+            ),
             onChanged: (v) {
               formKey.currentManagement
                   .newFormFieldManagement('sliderInlineText')
@@ -410,31 +452,33 @@ class _DemoPageState extends State<DemoPage> {
             }))
         .oneRowField(RangeSliderFormField(
           name: 'rangeSlider',
-          min: 0,
-          max: 100,
-          labelText: 'range slider',
+          model: SliderModel(min: 1, max: 100, labelText: 'range slider'),
         ))
         .oneRowField(FilterChipFormField(
-            labelText: 'Filter Chip',
-            name: 'filterChip',
-            count: 3,
-            exceedCallback: () => print('max 3 items can be selected'),
-            validator: (t) =>
-                t.length < 3 ? 'at least three items  must be selected ' : null,
-            items: FormBuilderUtils.toFilterChipItems([
-              'java',
-              'android',
-              'flutter',
-              'html',
-              'css',
-              'javascript',
-              'C#',
-              'swift',
-              'object-c'
-            ])))
+          name: 'filterChip',
+          exceedCallback: () => print('max 3 items can be selected'),
+          validator: (t) =>
+              t.length < 3 ? 'at least three items  must be selected ' : null,
+          model: FilterChipModel(
+              items: FormBuilderUtils.toFilterChipItems([
+                'java',
+                'android',
+                'flutter',
+                'html',
+                'css',
+                'javascript',
+                'C#',
+                'swift',
+                'object-c'
+              ]),
+              count: 3,
+              labelText: 'Filter Chip'),
+        ))
         .oneRowField(RateFormField(
           name: 'rate',
-          labelText: 'Rate Me!',
+          model: RateModel(
+            labelText: 'Rate Me!',
+          ),
           onChanged: (value) {
             String text = 'Rate Me!';
             if (value != null) text += 'current rate is $value';
@@ -451,7 +495,7 @@ class Label extends BaseCommonField<LabelModel> {
   Label(String label, {int flex = 1})
       : super(
           model: LabelModel(label: label),
-          flex: flex,
+          layoutParam: LayoutParam(flex: flex),
           builder: (state) {
             ThemeData themeData = Theme.of(state.context);
             return Text(

@@ -18,6 +18,7 @@ class SingleSwitchPage extends StatelessWidget {
                 .layoutBuilder()
                 .customize(mainAxisAlignment: MainAxisAlignment.center)
                 .oneRowField(SingleSwitchFormField(
+                  model: SingleSwitchModel(),
                   name: 'switch',
                   onChanged: (v) {
                     formKey.currentManagement
@@ -28,9 +29,10 @@ class SingleSwitchPage extends StatelessWidget {
                   },
                 ))
                 .oneRowField(ChangeText(
-                  wrapper: (child) => Center(
-                    child: child,
-                  ),
+                  layoutParam: LayoutParam(
+                      wrapper: (child) => Center(
+                            child: child,
+                          )),
                 ))
                 .build(),
             Wrap(
@@ -56,20 +58,21 @@ class SingleSwitchPage extends StatelessWidget {
                     },
                     child: Text('update switch render data')),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('switch')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('switch');
+                  bool visible = management.layoutParam?.visible ?? true;
                   return OutlinedButton(
                       onPressed: () {
-                        management.visible = !management.visible;
+                        management.layoutParam = LayoutParam(visible: !visible);
                         (context as Element).markNeedsBuild();
                       },
-                      child: Text(management.visible ? 'hide' : 'show'));
+                      child: Text(visible ? 'hide' : 'show'));
                 }),
                 Builder(builder: (context) {
-                  BaseFormFieldManagement management = formKey.currentManagement
-                      .newFormFieldManagement('switch')
-                      .cast<BaseFormFieldManagement>();
+                  BaseLayoutFormFieldManagement management = formKey
+                      .currentManagement
+                      .newFormFieldManagement('switch');
                   return OutlinedButton(
                       onPressed: () {
                         management.readOnly = !management.readOnly;
@@ -81,9 +84,10 @@ class SingleSwitchPage extends StatelessWidget {
                 OutlinedButton(
                     onPressed: () {
                       formKey.currentManagement
-                          .newFormFieldManagement('switch')
-                          .cast<BaseFormFieldManagement>()
-                          .padding = const EdgeInsets.all(20);
+                              .newFormFieldManagement<
+                                  BaseLayoutFormFieldManagement>('switch')
+                              .layoutParam =
+                          LayoutParam(padding: EdgeInsets.all(20));
                     },
                     child: Text('update padding')),
               ],

@@ -4,77 +4,44 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
 import '../widget/clear_button.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import '../text_selection.dart';
 import '../form_field.dart';
+import 'base_field.dart';
 
 class ClearableTextFormField
     extends BaseNonnullValueField<String, TextFieldModel> {
   final bool obscureText;
   ClearableTextFormField({
-    String? labelText,
-    String? hintText,
-    TextInputType? keyboardType,
-    bool autofocus = false,
     this.obscureText = false,
-    int? maxLines,
-    int? minLines,
-    int? maxLength,
     ValueChanged<String>? onChanged,
     GestureTapCallback? onTap,
     NonnullFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
     ValueChanged<String>? onFieldSubmitted,
-    bool clearable = true,
     bool passwordVisible = false,
-    Widget? prefixIcon,
     List<TextInputFormatter>? inputFormatters,
-    TextStyle? style,
     String? initialValue,
-    ToolbarOptions? toolbarOptions,
-    bool selectAllOnFocus = false,
-    List<Widget>? suffixIcons,
     VoidCallback? onEditingComplete,
-    TextInputAction? textInputAction,
-    InputDecorationTheme? inputDecorationTheme,
     NonnullFormFieldSetter<String>? onSaved,
     String? name,
     int flex = 1,
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    TextCapitalization? textCapitalization,
     WidgetWrapper? wrapper,
+    required TextFieldModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: TextFieldModel(
-            labelText: labelText,
-            hintText: hintText,
-            keyboardType: keyboardType,
-            autofocus: autofocus,
-            maxLines: maxLines,
-            minLines: minLines,
-            maxLength: maxLength,
-            clearable: clearable,
-            prefixIcon: prefixIcon,
-            toolbarOptions: toolbarOptions,
-            selectAllOnFocus: selectAllOnFocus,
-            style: style,
-            suffixIcons: suffixIcons,
-            textInputAction: textInputAction,
-            inputDecorationTheme: inputDecorationTheme,
-            textCapitalization: textCapitalization,
-          ),
+          layoutParam: layoutParam,
+          model: model,
           name: name,
-          flex: flex,
-          visible: visible,
           readOnly: readOnly,
-          padding: padding,
           onChanged: onChanged,
           onSaved: onSaved,
           initialValue: initialValue ?? '',
           validator: validator,
           autovalidateMode: autovalidateMode,
-          wrapper: wrapper,
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
             _TextFormFieldState state = baseState as _TextFormFieldState;
@@ -83,11 +50,11 @@ class ClearableTextFormField
             String? labelText = state.model.labelText;
             String? hintText = state.model.hintText;
             TextInputType? keyboardType = state.model.keyboardType;
-            bool autofocus = state.model.autofocus!;
+            bool autofocus = state.model.autofocus ?? false;
             int? maxLines = obscureText ? 1 : state.model.maxLines;
             int? minLines = obscureText ? 1 : state.model.minLines;
             int? maxLength = state.model.maxLength;
-            bool clearable = state.model.clearable!;
+            bool clearable = state.model.clearable ?? true;
             Widget? prefixIcon = state.model.prefixIcon;
             TextStyle? style = state.model.style;
             ToolbarOptions? toolbarOptions = state.model.toolbarOptions;
@@ -183,7 +150,7 @@ class _TextFormFieldState
   @override
   ClearableTextFormField get widget => super.widget as ClearableTextFormField;
 
-  bool get selectAllOnFocus => model.selectAllOnFocus!;
+  bool get selectAllOnFocus => model.selectAllOnFocus ?? false;
 
   void doSelectAll() {
     if (focusNode.hasFocus) {
@@ -203,11 +170,6 @@ class _TextFormFieldState
     super.initState();
     obscureText = widget.obscureText;
     textEditingController = TextEditingController(text: widget.initialValue);
-  }
-
-  @override
-  void initFormManagement() {
-    super.initFormManagement();
     if (selectAllOnFocus) {
       focusNode.addListener(doSelectAll);
     }

@@ -3,8 +3,9 @@ import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
 import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 class SingleSwitchFormField
     extends BaseNonnullValueField<bool, SingleSwitchModel> {
@@ -22,20 +23,18 @@ class SingleSwitchFormField
     SwitchRenderData? switchRenderData,
     Widget? label,
     WidgetWrapper? wrapper,
+    required SingleSwitchModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: SingleSwitchModel(
-              label: label, switchRenderData: switchRenderData),
-          visible: visible,
+          layoutParam: layoutParam ?? LayoutParam(flex: 0),
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             bool value = state.value;

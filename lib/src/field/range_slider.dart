@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import '../form_field.dart';
 import 'decoration_field.dart';
 import 'slider.dart';
+import 'base_field.dart';
 
 class RangeSubLabelRender {
   final SubLabelRender startRender;
@@ -17,10 +18,6 @@ class RangeSliderFormField
     ValueChanged<RangeValues>? onChanged,
     NonnullFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
-    required double max,
-    required double min,
-    String? labelText,
-    int? divisions,
     RangeValues? initialValue,
     RangeSubLabelRender? rangeSubLabelRender,
     NonnullFormFieldSetter<RangeValues>? onSaved,
@@ -29,39 +26,28 @@ class RangeSliderFormField
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    Color? activeColor,
-    Color? inactiveColor,
-    SliderThemeData? sliderThemeData,
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<RangeValues>? onChangeStart,
     ValueChanged<RangeValues>? onChangeEnd,
     WidgetWrapper? wrapper,
+    required SliderModel model,
+    LayoutParam? layoutParam,
   }) : super(
-            model: SliderModel(
-              labelText: labelText,
-              max: max,
-              min: min,
-              divisions: divisions ?? (max - min).toInt(),
-              activeColor: activeColor,
-              inactiveColor: inactiveColor,
-              sliderThemeData: sliderThemeData,
-            ),
-            visible: visible,
+            layoutParam: layoutParam,
+            model: model,
             readOnly: readOnly,
-            flex: flex,
-            padding: padding,
             name: name,
             onChanged: onChanged,
             onSaved: onSaved,
             validator: validator,
-            initialValue: initialValue ?? RangeValues(min, max),
+            initialValue:
+                initialValue ?? RangeValues(model.min ?? 1, model.max ?? 100),
             autovalidateMode: autovalidateMode,
-            wrapper: wrapper,
             builder: (state) {
               bool readOnly = state.readOnly;
-              int divisions = state.model.divisions!;
-              double max = state.model.max!;
-              double min = state.model.min!;
+              double max = state.model.max ?? 100;
+              double min = state.model.min ?? 1;
+              int divisions = state.model.divisions ?? (max - min).round();
               String? labelText = state.model.labelText;
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;

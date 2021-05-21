@@ -2,29 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../widget/clear_button.dart';
-import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import '../text_selection.dart';
+import 'base_field.dart';
 
 class NumberFormField extends BaseValueField<num, NumberFieldModel> {
   NumberFormField({
-    bool autofocus = false,
-    String? labelText,
-    String? hintText,
-    TextStyle? style,
     ValueChanged<num?>? onChanged,
     FormFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,
-    int decimal = 0,
-    double? max,
-    bool allowNegative = false,
-    bool clearable = true,
-    Widget? prefixIcon,
-    List<Widget>? suffixIcons,
     VoidCallback? onEditingComplete,
-    TextInputAction? textInputAction,
-    InputDecorationTheme? inputDecorationTheme,
     FormFieldSetter<num>? onSaved,
     String? name,
     int flex = 1,
@@ -32,45 +20,31 @@ class NumberFormField extends BaseValueField<num, NumberFieldModel> {
     bool readOnly = false,
     EdgeInsets? padding,
     WidgetWrapper? wrapper,
+    required NumberFieldModel model,
+    LayoutParam? layoutParam,
   }) : super(
-          model: NumberFieldModel(
-            labelText: labelText,
-            hintText: hintText,
-            autofocus: autofocus,
-            clearable: clearable,
-            prefixIcon: prefixIcon,
-            style: style,
-            suffixIcons: suffixIcons,
-            textInputAction: textInputAction,
-            inputDecorationTheme: inputDecorationTheme,
-            decimal: decimal,
-            max: max,
-            allowNegative: allowNegative,
-          ),
-          visible: visible,
+          layoutParam: layoutParam,
+          model: model,
           readOnly: readOnly,
-          flex: flex,
-          padding: padding,
           name: name,
           onSaved: onSaved,
           onChanged: onChanged,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          wrapper: wrapper,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;
             String? labelText = state.model.labelText;
             String? hintText = state.model.hintText;
-            bool clearable = state.model.clearable!;
+            bool clearable = state.model.clearable ?? true;
             Widget? prefixIcon = state.model.prefixIcon;
             TextStyle? style = state.model.style;
             List<Widget>? suffixIcons = state.model.suffixIcons;
             TextInputAction? textInputAction = state.model.textInputAction;
-            int decimal = state.model.decimal!;
-            bool allowNegative = state.model.allowNegative!;
-            bool autofocus = state.model.autofocus!;
+            int decimal = state.model.decimal ?? 0;
+            bool allowNegative = state.model.allowNegative ?? false;
+            bool autofocus = state.model.autofocus ?? false;
             InputDecorationTheme inputDecorationTheme =
                 state.model.inputDecorationTheme ??
                     Theme.of(state.context).inputDecorationTheme;

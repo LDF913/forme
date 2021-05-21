@@ -3,8 +3,9 @@ import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
 import '../form_field.dart';
-import '../state_model.dart';
+import '../form_state_model.dart';
 import 'decoration_field.dart';
+import 'base_field.dart';
 
 class ListTileItem<T> {
   final Widget title;
@@ -43,10 +44,7 @@ enum ListTileItemType { Checkbox, Switch, Radio }
 class ListTileFormField<T>
     extends BaseNonnullValueField<List<T>, ListTileModel<T>> {
   ListTileFormField({
-    required List<ListTileItem<T>> items,
-    String? labelText,
     ValueChanged<List<T>>? onChanged,
-    int split = 2,
     NonnullFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
@@ -57,28 +55,13 @@ class ListTileFormField<T>
     bool readOnly = false,
     EdgeInsets? padding,
     ListTileItemType type = ListTileItemType.Checkbox,
-    bool hasSelectAll = true,
-    CheckboxRenderData? checkboxRenderData,
-    RadioRenderData? radioRenderData,
-    SwitchRenderData? switchRenderData,
-    ListTileThemeData? listTileThemeData,
     WidgetWrapper? wrapper,
+    required ListTileModel<T> model,
+    LayoutParam? layoutParam,
   }) : super(
-            model: ListTileModel<T>(
-              labelText: labelText,
-              split: split,
-              items: items,
-              hasSelectAll: hasSelectAll,
-              listTileThemeData: listTileThemeData,
-              checkboxRenderData: checkboxRenderData,
-              radioRenderData: radioRenderData,
-              switchRenderData: switchRenderData,
-            ),
-            wrapper: wrapper,
-            visible: visible,
+            layoutParam: layoutParam,
+            model: model,
             readOnly: readOnly,
-            flex: flex,
-            padding: padding,
             name: name,
             onChanged: onChanged,
             onSaved: onSaved,
@@ -88,9 +71,9 @@ class ListTileFormField<T>
             builder: (state) {
               bool readOnly = state.readOnly;
               String? labelText = state.model.labelText;
-              int split = state.model.split!;
-              List<ListTileItem<T>> items = state.model.items!;
-              bool hasSelectAll = state.model.hasSelectAll!;
+              int split = state.model.split ?? 2;
+              List<ListTileItem<T>> items = state.model.items ?? [];
+              bool hasSelectAll = state.model.hasSelectAll ?? true;
 
               ListTileThemeData? listTileThemeData =
                   state.model.listTileThemeData;
@@ -337,7 +320,8 @@ class ListTileFormField<T>
                 }
               }
 
-              Widget child = Wrap(children: wrapWidgets);
+              Widget child =
+                  FormRenderUtils.wrap(state.model.wrapRenderData, wrapWidgets);
               if (split == 1) {
                 child = FormRenderUtils.mergeListTileTheme(
                     child, listTileThemeData);
@@ -378,15 +362,18 @@ class ListTileModel<T> extends AbstractFieldStateModel {
   final CheckboxRenderData? checkboxRenderData;
   final RadioRenderData? radioRenderData;
   final SwitchRenderData? switchRenderData;
-  ListTileModel(
-      {this.labelText,
-      this.split,
-      this.items,
-      this.hasSelectAll,
-      this.listTileThemeData,
-      this.checkboxRenderData,
-      this.radioRenderData,
-      this.switchRenderData});
+  final WrapRenderData? wrapRenderData;
+  ListTileModel({
+    this.labelText,
+    this.split,
+    this.items,
+    this.hasSelectAll,
+    this.listTileThemeData,
+    this.checkboxRenderData,
+    this.radioRenderData,
+    this.switchRenderData,
+    this.wrapRenderData,
+  });
 
   @override
   AbstractFieldStateModel merge(AbstractFieldStateModel old) {
@@ -400,6 +387,7 @@ class ListTileModel<T> extends AbstractFieldStateModel {
       checkboxRenderData: checkboxRenderData ?? oldModel.checkboxRenderData,
       radioRenderData: radioRenderData ?? oldModel.radioRenderData,
       switchRenderData: switchRenderData ?? oldModel.switchRenderData,
+      wrapRenderData: wrapRenderData ?? oldModel.wrapRenderData,
     );
   }
 }
