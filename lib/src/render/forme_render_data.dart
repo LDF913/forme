@@ -2,7 +2,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-class CheckboxRenderData {
+class FormeCheckboxRenderData {
   final MouseCursor? mouseCursor;
   final Color? activeColor;
   final MaterialStateProperty<Color?>? fillColor;
@@ -17,7 +17,7 @@ class CheckboxRenderData {
   final Color? selectedTileColor;
   final ShapeBorder? shape;
 
-  const CheckboxRenderData({
+  const FormeCheckboxRenderData({
     this.mouseCursor,
     this.activeColor,
     this.fillColor,
@@ -34,7 +34,7 @@ class CheckboxRenderData {
   });
 }
 
-class ListTileThemeData {
+class FormeListTileRenderData {
   bool? dense;
   ShapeBorder? shape;
   ListTileStyle? style;
@@ -49,7 +49,7 @@ class ListTileThemeData {
   double? minVerticalPadding;
   double? minLeadingWidth;
 
-  ListTileThemeData({
+  FormeListTileRenderData({
     this.dense,
     this.shape,
     this.style,
@@ -66,7 +66,7 @@ class ListTileThemeData {
   });
 }
 
-class SwitchRenderData {
+class FormeSwitchRenderData {
   final Color? activeColor;
   final Color? activeTrackColor;
   final Color? inactiveThumbColor;
@@ -89,7 +89,7 @@ class SwitchRenderData {
   final ShapeBorder? shape;
   final Color? selectedTileColor;
 
-  const SwitchRenderData({
+  const FormeSwitchRenderData({
     this.activeColor,
     this.activeTrackColor,
     this.inactiveThumbColor,
@@ -114,7 +114,7 @@ class SwitchRenderData {
   });
 }
 
-class RadioRenderData {
+class FormeRadioRenderData {
   final MouseCursor? mouseCursor;
   final Color? activeColor;
   final MaterialStateProperty<Color?>? fillColor;
@@ -128,7 +128,7 @@ class RadioRenderData {
   final Color? selectedTileColor;
   final ShapeBorder? shape;
 
-  const RadioRenderData({
+  const FormeRadioRenderData({
     this.mouseCursor,
     this.activeColor,
     this.fillColor,
@@ -144,7 +144,7 @@ class RadioRenderData {
   });
 }
 
-class FilterChipRenderData {
+class FormeFilterChipRenderData {
   final TextStyle? labelStyle;
   final EdgeInsets? labelPadding;
   final double? pressElevation;
@@ -164,7 +164,7 @@ class FilterChipRenderData {
   final Color? checkmarkColor;
   final CircleBorder? avatarBorder;
 
-  const FilterChipRenderData({
+  const FormeFilterChipRenderData({
     this.labelPadding,
     this.labelStyle,
     this.avatarBorder,
@@ -186,7 +186,7 @@ class FilterChipRenderData {
   });
 }
 
-class WrapRenderData {
+class FormeWrapRenderData {
   final Axis? direction;
   final WrapAlignment? alignment;
   final double? space;
@@ -197,7 +197,7 @@ class WrapRenderData {
   final TextDirection? textDirection;
   final VerticalDirection? verticalDirection;
 
-  const WrapRenderData({
+  const FormeWrapRenderData({
     this.direction,
     this.alignment,
     this.space,
@@ -210,14 +210,26 @@ class WrapRenderData {
   });
 }
 
-class SingleChildScrollViewRenderData {
-  final bool? reverse;
-  final EdgeInsets? padding;
-  final Axis? scrollDirection;
-
-  const SingleChildScrollViewRenderData({
-    this.reverse,
-    this.padding,
-    this.scrollDirection,
+class FormeDecorationRenderData {
+  const FormeDecorationRenderData({
+    this.errorStyle,
+    this.helperStyle,
+    this.labelStyle,
+    this.helperMaxLines,
+    this.errorMaxLines,
+    this.bottomPadding,
+    this.headPadding,
   });
+
+  final TextStyle? errorStyle;
+  final TextStyle? helperStyle;
+  final TextStyle? labelStyle;
+  final int? helperMaxLines;
+  final int? errorMaxLines;
+
+  /// errorText & helperText padding
+  final EdgeInsets? bottomPadding;
+
+  /// label & icon padding
+  final EdgeInsets? headPadding;
 }

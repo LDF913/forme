@@ -1,6 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:form_builder/form_builder.dart';
+import 'package:forme/forme.dart';
 
 class Demo2Page extends StatefulWidget {
   @override
@@ -8,7 +8,9 @@ class Demo2Page extends StatefulWidget {
 }
 
 class _Demo2PageState extends State<Demo2Page> {
-  final FormKey formKey = FormKey();
+  final FormeKey formKey = FormeKey();
+
+  final GlobalKey key1 = GlobalKey();
   @override
   void initState() {
     super.initState();
@@ -50,12 +52,13 @@ class _Demo2PageState extends State<Demo2Page> {
         ),
         //sliderVisible
         Builder(builder: (context) {
-          FormFieldManagement management =
-              formKey.currentManagement.newFormFieldManagement('sliderVisible');
-          bool visible = (management.model as VisibleModel).visible ?? true;
+          FormeFieldManagement management = formKey.currentManagement
+              .newFormeFieldManagement('sliderVisible');
+          bool visible =
+              (management.model as FormeVisibleModel).visible ?? true;
           return TextButton(
               onPressed: () {
-                management.model = VisibleModel(visible: !visible);
+                management.model = FormeVisibleModel(visible: !visible);
                 (context as Element).markNeedsBuild();
               },
               child: Text(
@@ -74,15 +77,15 @@ class _Demo2PageState extends State<Demo2Page> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
-              for (FormFieldManagementWithError error
+              for (FormeFieldManagementWithError error
                   in formKey.currentManagement.quietlyValidate()) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,
                 ));
-                FormFieldManagement formFieldManagement =
-                    error.formFieldManagement;
-                formFieldManagement.ensureVisible().then((value) {});
+                FormeFieldManagement formeFieldManagement =
+                    error.formeFieldManagement;
+                formeFieldManagement.ensureVisible().then((value) {});
                 return;
               }
               ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -103,22 +106,78 @@ class _Demo2PageState extends State<Demo2Page> {
           child: Text('get form data'),
         ),
         TextButton(
-            onPressed: () {
-              formKey.currentManagement.setData({
-                'username': 'user name',
-                'password': 'password',
-                'checkbox': ['male'],
-                'age': 38,
-                'radio': ['1'],
-                'startTime': DateTime.now(),
-                'switchGroup': ['switch1'],
-                'sliderInline': 50,
-                'filterChip': ['java', 'C#', 'flutter'],
-                'rangeSlider': RangeValues(10, 100),
-                'rate': 4.5
-              });
-            },
-            child: Text('set form data')),
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('column');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.append(FormeNumberTextField(
+              model: FormeNumberTextFieldModel(labelText: '123'),
+            ));
+          },
+          child: Text('append field into dynamic column'),
+        ),
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('column');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.prepend(FormeNumberTextField(
+              model: FormeNumberTextFieldModel(labelText: '456'),
+            ));
+          },
+          child: Text('prepend field into dynamic column'),
+        ),
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('column');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.swap(0, 1);
+          },
+          child: Text('swap first and second'),
+        ),
+
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('column');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.remove(0);
+          },
+          child: Text('remove first'),
+        ),
+
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('column');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.append(Container(
+              color: Colors.red,
+              child: FormeRow(children: [], name: 'row'),
+            ));
+          },
+          child: Text('append a dynamic row'),
+        ),
+
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('row');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.prepend(FormeRate());
+          },
+          child: Text('prepend field into dynamic row'),
+        ),
+        TextButton(
+          onPressed: () {
+            FormeFieldManagement fieldManagement =
+                formKey.currentManagement.newFormeFieldManagement('row');
+            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
+            fieldManagement.model = model.append(FormeSingleCheckbox());
+          },
+          child: Text('append field into dynamic row'),
+        ),
       ],
     );
     return buttons;
@@ -142,12 +201,14 @@ class _Demo2PageState extends State<Demo2Page> {
               Expanded(
                 child: Container(
                   padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: ClearableTextFormField(
-                    model: TextFieldModel(
+                  child: FormeTextField(
+                    name: 'text',
+                    model: FormeTextFieldModel(
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
+                      selectAllOnFocus: true,
                       labelText: 'username',
                       keyboardType: TextInputType.text,
                       inputDecorationTheme: InputDecorationTheme(
@@ -178,80 +239,160 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
         ),
         SizedBox(height: 10),
-        VisibleFormField(
+        FormeVisible(
           name: 'sliderVisible',
-          child: InputDecorator(
-            decoration: InputDecoration(
-              labelText: "slider",
-              border: InputBorder.none,
+          child: FormeSlider(
+            model: FormeSliderModel(
+              labelText: 'Slider',
             ),
-            child: SliderFormField(
-              name: 'slider',
-              min: 0,
-              max: 100,
-            ),
-          ),
-        ),
-        InputDecorator(
-          decoration: InputDecoration(
-            labelText: "range slider",
-            border: InputBorder.none,
-          ),
-          child: RangeSliderFormField(
-            name: 'rangeSlider',
-            min: 1,
+            name: 'slider',
+            min: 0,
             max: 100,
           ),
         ),
-        InputDecorator(
-          decoration: InputDecoration(
-            labelText: "radio list tile",
-            border: InputBorder.none,
-          ),
-          child: ListTileFormField(
-            items: FormBuilderUtils.toListTileItems(['1', '2']),
-            name: 'radioTile',
-            type: ListTileItemType.Radio,
-            model: ListTileModel(
-              hasSelectAll: false,
-              split: 1,
-            ),
+        FormeNumberTextField(
+          name: 'number',
+          model: FormeNumberTextFieldModel(
+            max: 99,
+            decimal: 2,
+            labelText: 'Number Field',
           ),
         ),
-        InputDecorator(
-          decoration: InputDecoration(
-            labelText: "checkbox list tile",
-            border: InputBorder.none,
-          ),
-          child: ListTileFormField(
-            items: FormBuilderUtils.toListTileItems(['1', '2']),
-            name: 'checkboxTile',
-            type: ListTileItemType.Checkbox,
-            model: ListTileModel(
-              hasSelectAll: false,
-              split: 1,
-            ),
+        FormeDateTime(
+          name: 'datetime',
+          model: FormeDateTimeModel(
+            labelText: 'DateTime Field',
+            type: FormeDateTimeType.DateTime,
           ),
         ),
-        InputDecorator(
-          decoration: InputDecoration(
-            labelText: "switch list tile",
-            border: InputBorder.none,
-          ),
-          child: ListTileFormField(
-            name: 'switchTile',
-            type: ListTileItemType.Switch,
-            items: FormBuilderUtils.toListTileItems(['1', '2'],
-                controlAffinity: ListTileControlAffinity.trailing),
-            model: ListTileModel(
-              hasSelectAll: false,
-              split: 1,
-            ),
+        SizedBox(
+          height: 20,
+        ),
+        FormeCupertinoPicker(
+          name: 'cupertinoPicker',
+          initialValue: 0,
+          children: List<Widget>.generate(
+              1000,
+              (index) => Center(
+                    child: Text(index.toString()),
+                  )),
+          model: FormeCupertinoPickerModel(
+            itemExtent: 50,
+            labelText: 'Cupertino Picker',
+            useMagnifier: true,
+            magnification: 1.2,
           ),
         ),
+        SizedBox(
+          height: 20,
+        ),
+        FormeFilterChip(
+          name: 'filterChip',
+          items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
+          model: FormeFilterChipModel(
+            labelText: 'Filter Chip Field',
+            formeDecorationFieldRenderData: FormeDecorationRenderData(
+                headPadding: EdgeInsets.symmetric(vertical: 10)),
+          ),
+        ),
+        FormeChoiceChip(
+          name: 'choiceChip',
+          items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
+          model: FormeChoiceChipModel(
+            labelText: 'Choice Chip Field',
+            formeDecorationFieldRenderData: FormeDecorationRenderData(
+                headPadding: EdgeInsets.symmetric(vertical: 10)),
+          ),
+        ),
+        SizedBox(
+          height: 20,
+        ),
+        FormeRangeSlider(
+          model: FormeSliderModel(
+            labelText: 'Range Slider',
+          ),
+          name: 'rangeSlider',
+          min: 1,
+          max: 100,
+        ),
+        FormeListTile(
+          items: FormeUtils.toFormeListTileItems(['1', '2']),
+          name: 'radioTile',
+          type: FormeListTileType.Radio,
+          model: FormeListTileModel(
+            labelText: 'Radio Tile List',
+            split: 1,
+          ),
+        ),
+        FormeListTile(
+          items: FormeUtils.toFormeListTileItems(['1', '2']),
+          name: 'checkboxTile',
+          type: FormeListTileType.Checkbox,
+          model: FormeListTileModel(
+            labelText: 'Checkbox Tile List',
+            hasSelectAll: true,
+            split: 1,
+          ),
+        ),
+        FormeListTile(
+          name: 'switchTile',
+          type: FormeListTileType.Switch,
+          items: FormeUtils.toFormeListTileItems(['1', '2'],
+              controlAffinity: ListTileControlAffinity.trailing),
+          model: FormeListTileModel(
+            labelText: 'Switch Tile List',
+            split: 1,
+          ),
+        ),
+        FormeDropdownButton<String>(
+            model: FormeDropdownButtonModel<String>(
+              labelText: 'Dropdown Button',
+            ),
+            items: FormeUtils.toDropdownMenuItems([
+              'Android',
+              'IOS',
+              'Flutter',
+              'Node',
+              'Java',
+              'Python',
+              'PHP',
+            ])),
+        Row(children: [
+          Flexible(
+            flex: 1,
+            child: FormeSlider(
+              onChanged: (v) {
+                (formKey.currentManagement.newFormeFieldManagement('test')
+                        as FormeValueFieldManagement)
+                    .setValue(v.round(), trigger: false);
+              },
+              min: 0,
+              max: 100,
+              name: 'testSlider',
+            ),
+          ),
+          Expanded(
+              child: FormeNumberTextField(
+            name: 'test',
+            onChanged: (v) {
+              (formKey.currentManagement.newFormeFieldManagement('testSlider')
+                      as FormeValueFieldManagement)
+                  .setValue(v?.toDouble() ?? 0.0, trigger: false);
+            },
+            model: FormeNumberTextFieldModel(allowNegative: false, max: 100),
+          ))
+        ]),
+        Text(
+          'dynamic column ',
+          style: TextStyle(fontSize: 30),
+        ),
+        FormeColumn(
+          name: 'column',
+          children: [],
+        )
       ],
     );
-    return FormBuilder(
+    return Forme(
       child: child,
       key: formKey,
     );

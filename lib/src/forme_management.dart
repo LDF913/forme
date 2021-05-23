@@ -1,17 +1,13 @@
 import 'package:flutter/widgets.dart';
 
-import '../form_builder.dart';
-import 'focus_node.dart';
-import 'form_state_model.dart';
-import 'text_selection.dart';
+import '../forme.dart';
+import 'forme_focus_node.dart';
+import 'forme_state_model.dart';
 
 /// base form management
 ///
-/// you can access a form management by [FormKey]
-///
-/// **if you are use layout form builder, you can cast this to [LayoutFormManagement] ,
-/// which can use [FormLayoutManagement] and hide|show form**
-abstract class FormManagement {
+/// you can access a form management by [FormeKey]
+abstract class FormeManagement {
   /// whether form has a name field
   bool hasField(String name);
 
@@ -23,15 +19,11 @@ abstract class FormManagement {
 
   /// create a new formfieldManagement by name
   ///
-  /// when your field is a BaseField and your form is LayoutForm,
-  /// you can cast FormFieldManagement as [BaseLayoutFormFieldManagement] , which
-  /// can used to check visible of field or get field's position
-  ///
-  /// you can override [AbstractFieldState.createFormFieldManagement] to wrap you custom
-  /// FormFieldManagement, and this method will return your wrapped.
+  /// you can override [AbstractFieldState.createFormeFieldManagement] to wrap you custom
+  /// FormeFieldManagement, and this method will return your wrapped.
   /// **when you override this method,
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
-  T newFormFieldManagement<T extends FormFieldManagement>(String name);
+  T newFormeFieldManagement<T extends FormeFieldManagement>(String name);
 
   /// get form data
   ///
@@ -42,23 +34,23 @@ abstract class FormManagement {
   /// look at [quietlyValidate]
   ///
   /// you can get errorText
-  /// via [FormFieldManagementWithError.errorText]
-  /// or request a focus via [FormFieldManagement.focus]
-  /// or ensure field visible via [FormFieldManagement.ensureVisible]
-  List<FormFieldManagementWithError> get errors;
+  /// via [FormeFieldManagementWithError.errorText]
+  /// or request a focus via [FormeFieldManagement.focus]
+  /// or ensure field visible via [FormeFieldManagement.ensureVisible]
+  List<FormeFieldManagementWithError> get errors;
 
   /// perform a quietly validate, used to get error text and without display it
   ///
   /// this method will not set errorText on field and rebuild field , so after this method called
-  /// [ValueFieldManagement.isValid] still return true even though an error text returned by
-  /// field's validator ,  also [ValueFieldManagement.errorText] will   return null too,
+  /// [FormeValueFieldManagement.isValid] still return true even though an error text returned by
+  /// field's validator ,  also [FormeValueFieldManagement.errorText] will   return null too,
   /// so value field will not display error
   ///
   /// you can get errorText
-  /// via [FormFieldManagementWithError.errorText]
-  /// or request a focus via [FormFieldManagement.focus]
-  /// or ensure field visible via [FormFieldManagement.ensureVisible]
-  List<FormFieldManagementWithError> quietlyValidate();
+  /// via [FormeFieldManagementWithError.errorText]
+  /// or request a focus via [FormeFieldManagement.focus]
+  /// or ensure field visible via [FormeFieldManagement.ensureVisible]
+  List<FormeFieldManagementWithError> quietlyValidate();
 
   /// equals to setData(data,trigger:true)
   set data(Map<String, dynamic> data) => setData(data);
@@ -92,7 +84,7 @@ abstract class FormManagement {
 }
 
 /// used to control form field
-abstract class FormFieldManagement<T extends AbstractFieldStateModel> {
+abstract class FormeFieldManagement {
   ///get field's name
   String? get name;
 
@@ -119,18 +111,8 @@ abstract class FormFieldManagement<T extends AbstractFieldStateModel> {
   /// if field does not has a focusnode ,an error will be throw
   set focusListener(FocusListener? listener);
 
-  /// if current value is valuefield return a [ValueFormFieldManagement] otherwise throw a exception
-  ValueFieldManagement get valueFieldManagement;
-
   /// whether field is value field
   bool get isValueField;
-
-  /// whether field support textselection
-  bool get supportTextSelection;
-
-  /// if field support textselection return management,
-  /// otherwise throw an exception
-  TextSelectionManagement get textSelectionManagement;
 
   /// set state model on field
   ///
@@ -145,10 +127,10 @@ abstract class FormFieldManagement<T extends AbstractFieldStateModel> {
   /// **model's all properties should be nullable**
   ///
   /// **model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
-  set model(T model);
+  set model(AbstractFormeModel model);
 
   /// get current state model;
-  T get model;
+  AbstractFormeModel get model;
 
   /// make current field visible in viewport
   Future<void> ensureVisible(
@@ -158,16 +140,16 @@ abstract class FormFieldManagement<T extends AbstractFieldStateModel> {
       double? alignment});
 }
 
-abstract class ValueFieldManagement<T> {
+abstract class FormeValueFieldManagement extends FormeFieldManagement {
   /// get current value of valuefield
-  T? get value;
+  dynamic get value;
 
   /// set newValue on valuefield,this method will trigger onChanged listener
   /// if you don't want to trigger it,you can use setValue method
-  set value(T? value) => setValue(value, trigger: true);
+  set value(dynamic value) => setValue(value, trigger: true);
 
   /// set newValue on valuefield,if trigger is false,won't trigger onChanged listener
-  setValue(T? value, {bool trigger: true});
+  setValue(dynamic value, {bool trigger: true});
 
   /// whether value field is valid,this method won't display error msg
   /// if you want to show error msg,use validate instead
@@ -188,63 +170,4 @@ abstract class ValueFieldManagement<T> {
   ///
   /// this method won't display error message
   String? quietlyValidate();
-}
-
-abstract class FormFieldManagementDelegate extends FormFieldManagement {
-  @protected
-  FormFieldManagement get delegate;
-
-  @override
-  String? get name => delegate.name;
-
-  @override
-  bool get focusable => delegate.focusable;
-
-  @override
-  bool get hasFocus => delegate.hasFocus;
-
-  @override
-  set focus(bool focus) => delegate.focus = focus;
-
-  @override
-  set focusListener(FocusListener? listener) =>
-      delegate.focusListener = listener;
-
-  @override
-  ValueFieldManagement get valueFieldManagement =>
-      delegate.valueFieldManagement;
-
-  @override
-  bool get isValueField => delegate.isValueField;
-
-  @override
-  bool get supportTextSelection => delegate.supportTextSelection;
-
-  @override
-  TextSelectionManagement get textSelectionManagement =>
-      delegate.textSelectionManagement;
-
-  @override
-  set model(AbstractFieldStateModel model) => delegate.model = model;
-
-  @override
-  AbstractFieldStateModel get model => delegate.model;
-
-  @override
-  bool get readOnly => delegate.readOnly;
-
-  @override
-  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
-
-  @override
-  Future<void> ensureVisible(
-          {Duration? duration,
-          Curve? curve,
-          ScrollPositionAlignmentPolicy? alignmentPolicy,
-          double? alignment}) =>
-      delegate.ensureVisible(
-          duration: duration,
-          curve: curve,
-          alignment: alignment,
-          alignmentPolicy: alignmentPolicy);
 }

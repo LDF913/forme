@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import '../render/theme_data.dart';
-import '../render/form_render_utils.dart';
+import '../render/forme_render_data.dart';
+import '../render/forme_render_utils.dart';
 
-import '../builder.dart';
-import '../form_state_model.dart';
-import 'decoration_field.dart';
-import '../form_field.dart';
+import '../forme_state_model.dart';
+import 'forme_decoration_field.dart';
+import '../forme_field.dart';
 
-class SingleSwitchFormField extends NonnullValueField<bool, SingleSwitchModel> {
-  SingleSwitchFormField({
+class FormeSingleSwitch
+    extends NonnullValueField<bool, FormeSingleSwitchModel> {
+  FormeSingleSwitch({
     ValueChanged<bool>? onChanged,
     NonnullFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
@@ -19,11 +19,13 @@ class SingleSwitchFormField extends NonnullValueField<bool, SingleSwitchModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    SwitchRenderData? switchRenderData,
+    FormeSwitchRenderData? formeSwitchRenderData,
     Widget? label,
-    required SingleSwitchModel model,
+    FormeSingleSwitchModel? model,
+    Key? key,
   }) : super(
-          model: model,
+          key: key,
+          model: model ?? FormeSingleSwitchModel(),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -35,12 +37,12 @@ class SingleSwitchFormField extends NonnullValueField<bool, SingleSwitchModel> {
             bool readOnly = state.readOnly;
             bool value = state.value;
 
-            return DecorationField(
+            return FormeDecoration(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   state.model.label ?? SizedBox(),
-                  FormRenderUtils.adaptiveSwitch(
+                  FormeRenderUtils.adaptiveSwitch(
                     value,
                     readOnly
                         ? null
@@ -48,28 +50,36 @@ class SingleSwitchFormField extends NonnullValueField<bool, SingleSwitchModel> {
                             state.didChange(!value);
                             state.requestFocus();
                           },
-                    state.model.switchRenderData,
+                    state.model.formeSwitchRenderData,
                   )
                 ],
               ),
               focusNode: state.focusNode,
               errorText: state.errorText,
-              readOnly: readOnly,
             );
           },
         );
 }
 
-class SingleSwitchModel extends AbstractFieldStateModel {
+class FormeSingleSwitchModel extends AbstractFormeModel {
   final Widget? label;
-  final SwitchRenderData? switchRenderData;
-  SingleSwitchModel({this.label, this.switchRenderData});
+  final FormeSwitchRenderData? formeSwitchRenderData;
+  final FormeDecorationRenderData? formeDecorationFieldRenderData;
+
+  FormeSingleSwitchModel({
+    this.label,
+    this.formeSwitchRenderData,
+    this.formeDecorationFieldRenderData,
+  });
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
-    SingleSwitchModel oldModel = old as SingleSwitchModel;
-    return SingleSwitchModel(
+  AbstractFormeModel merge(AbstractFormeModel old) {
+    FormeSingleSwitchModel oldModel = old as FormeSingleSwitchModel;
+    return FormeSingleSwitchModel(
       label: label ?? oldModel.label,
-      switchRenderData: switchRenderData ?? oldModel.switchRenderData,
+      formeSwitchRenderData:
+          formeSwitchRenderData ?? oldModel.formeSwitchRenderData,
+      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
+          oldModel.formeDecorationFieldRenderData,
     );
   }
 }

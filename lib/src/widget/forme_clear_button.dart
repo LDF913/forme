@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-class ClearButton extends StatefulWidget {
+class FormeClearButton extends StatefulWidget {
   final TextEditingController controller;
   final VoidCallback clear;
   final FocusNode focusNode;
 
-  const ClearButton(this.controller, this.focusNode, this.clear);
+  const FormeClearButton(this.controller, this.focusNode, this.clear);
   @override
-  State<StatefulWidget> createState() => _ClearButtonState();
+  State<StatefulWidget> createState() => _FormeClearButtonState();
 }
 
-class _ClearButtonState extends State<ClearButton> {
+class _FormeClearButtonState extends State<FormeClearButton> {
   bool visible = false;
 
   void changeListener() {
@@ -28,7 +28,7 @@ class _ClearButtonState extends State<ClearButton> {
   }
 
   @override
-  void didUpdateWidget(ClearButton old) {
+  void didUpdateWidget(FormeClearButton old) {
     super.didUpdateWidget(old);
     if (old.controller != widget.controller) {
       old.controller.removeListener(changeListener);

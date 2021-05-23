@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../form_state_model.dart';
-import 'decoration_field.dart';
-import '../builder.dart';
-import '../form_field.dart';
+import '../forme_state_model.dart';
+import 'forme_decoration_field.dart';
+import '../forme_field.dart';
+import '../render/forme_render_data.dart';
 
-typedef SubLabelRender = String Function(num value);
+typedef FormeLabelRender = String Function(num value);
 
-class SliderFormField extends NonnullValueField<num, SliderModel> {
-  SliderFormField({
+class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
+  FormeSlider({
     ValueChanged<num>? onChanged,
     NonnullFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    SubLabelRender? subLabelRender,
+    FormeLabelRender? subLabelRender,
     NonnullFormFieldSetter<num>? onSaved,
     String? name,
     int flex = 1,
@@ -26,9 +26,11 @@ class SliderFormField extends NonnullValueField<num, SliderModel> {
     MouseCursor? mouseCursor,
     required double min,
     required double max,
-    SliderModel? model,
+    FormeSliderModel? model,
+    Key? key,
   }) : super(
-          model: (model ?? SliderModel()).merge(SliderModel(
+          key: key,
+          model: (model ?? FormeSliderModel()).merge(FormeSliderModel(
             max: max,
             min: min,
             divisions: (max - min).toInt(),
@@ -45,7 +47,6 @@ class SliderFormField extends NonnullValueField<num, SliderModel> {
             double max = state.model.max!;
             double min = state.model.min!;
             int divisions = state.model.divisions!;
-            String? labelText = state.model.labelText;
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
 
@@ -83,59 +84,69 @@ class SliderFormField extends NonnullValueField<num, SliderModel> {
               ),
             );
 
-            return DecorationField(
+            return FormeDecoration(
+              formeDecorationFieldRenderData:
+                  state.model.formeDecorationFieldRenderData,
               child: Padding(
                 child: slider,
                 padding: const EdgeInsets.symmetric(vertical: 10),
               ),
               focusNode: state.focusNode,
               errorText: state.errorText,
-              readOnly: readOnly,
-              labelText: labelText,
+              labelText: state.model.labelText,
+              helperText: state.model.helperText,
             );
           },
         );
 
   @override
-  _SliderFormFieldState createState() => _SliderFormFieldState();
+  _FormeSliderState createState() => _FormeSliderState();
 }
 
-class _SliderFormFieldState extends NonnullValueFieldState<num, SliderModel> {
+class _FormeSliderState extends NonnullValueFieldState<num, FormeSliderModel> {
   @override
-  void beforeMerge(SliderModel old, SliderModel current) {
+  void beforeMerge(FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value < current.min!) setValue(current.min!);
     if (current.max != null && value > current.max!) setValue(current.max!);
   }
 }
 
-class SliderModel extends AbstractFieldStateModel {
+class FormeSliderModel extends AbstractFormeModel {
   final String? labelText;
+  final String? helperText;
   final double? max;
   final double? min;
   final int? divisions;
   final Color? activeColor;
   final Color? inactiveColor;
   final SliderThemeData? sliderThemeData;
+  final FormeDecorationRenderData? formeDecorationFieldRenderData;
 
-  SliderModel(
-      {this.labelText,
-      this.max,
-      this.min,
-      this.divisions,
-      this.activeColor,
-      this.inactiveColor,
-      this.sliderThemeData});
+  FormeSliderModel({
+    this.labelText,
+    this.max,
+    this.min,
+    this.divisions,
+    this.activeColor,
+    this.inactiveColor,
+    this.sliderThemeData,
+    this.formeDecorationFieldRenderData,
+    this.helperText,
+  });
   @override
-  SliderModel merge(AbstractFieldStateModel old) {
-    SliderModel oldModel = old as SliderModel;
-    return SliderModel(
+  FormeSliderModel merge(AbstractFormeModel old) {
+    FormeSliderModel oldModel = old as FormeSliderModel;
+    return FormeSliderModel(
       labelText: labelText ?? oldModel.labelText,
+      helperText: helperText ?? oldModel.helperText,
       max: max ?? oldModel.max,
       min: min ?? oldModel.min,
       divisions: divisions ?? oldModel.divisions,
       activeColor: activeColor ?? oldModel.activeColor,
       inactiveColor: inactiveColor ?? oldModel.inactiveColor,
       sliderThemeData: sliderThemeData ?? oldModel.sliderThemeData,
+      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
+          oldModel.formeDecorationFieldRenderData,
     );
   }
 }

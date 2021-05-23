@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import '../render/theme_data.dart';
-import '../render/form_render_utils.dart';
+import '../render/forme_render_data.dart';
+import '../render/forme_render_utils.dart';
 
-import '../builder.dart';
-import '../form_state_model.dart';
-import 'decoration_field.dart';
-import '../form_field.dart';
+import '../forme_state_model.dart';
+import 'forme_decoration_field.dart';
+import '../forme_field.dart';
 
-class ListTileItem<T> {
+class FormeListTileItem<T> {
   final Widget title;
   final bool readOnly;
   final bool visible;
@@ -23,7 +22,7 @@ class ListTileItem<T> {
   final T data;
   final bool ignoreSplit;
 
-  ListTileItem(
+  FormeListTileItem(
       {required this.title,
       this.subtitle,
       this.secondary,
@@ -39,11 +38,11 @@ class ListTileItem<T> {
         this.padding = padding ?? EdgeInsets.zero;
 }
 
-enum ListTileItemType { Checkbox, Switch, Radio }
+enum FormeListTileType { Checkbox, Switch, Radio }
 
-class ListTileFormField<T>
-    extends NonnullValueField<List<T>, ListTileModel<T>> {
-  ListTileFormField({
+class FormeListTile<T>
+    extends NonnullValueField<List<T>, FormeListTileModel<T>> {
+  FormeListTile({
     ValueChanged<List<T>>? onChanged,
     NonnullFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
@@ -54,12 +53,14 @@ class ListTileFormField<T>
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    ListTileItemType type = ListTileItemType.Checkbox,
-    required List<ListTileItem<T>>? items,
-    ListTileModel<T>? model,
+    FormeListTileType type = FormeListTileType.Checkbox,
+    required List<FormeListTileItem<T>>? items,
+    FormeListTileModel<T>? model,
+    Key? key,
   }) : super(
-            model: (model ?? ListTileModel<T>())
-                .merge(ListTileModel(items: items)),
+            key: key,
+            model: (model ?? FormeListTileModel<T>())
+                .merge(FormeListTileModel(items: items)),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -69,46 +70,48 @@ class ListTileFormField<T>
             validator: validator,
             builder: (state) {
               bool readOnly = state.readOnly;
-              String? labelText = state.model.labelText;
               int split = state.model.split ?? 2;
-              List<ListTileItem<T>> items = state.model.items ?? [];
+              List<FormeListTileItem<T>> items = state.model.items ?? [];
               bool hasSelectAll = state.model.hasSelectAll ?? true;
 
-              ListTileThemeData? listTileThemeData =
-                  state.model.listTileThemeData;
-              CheckboxRenderData? checkboxRenderData =
-                  state.model.checkboxRenderData;
-              RadioRenderData? radioRenderData = state.model.radioRenderData;
-              SwitchRenderData? switchRenderData = state.model.switchRenderData;
+              FormeListTileRenderData? formeListTileRenderData =
+                  state.model.formeListTileRenderData;
+              FormeCheckboxRenderData? formeCheckboxRenderData =
+                  state.model.formeCheckboxRenderData;
+              FormeRadioRenderData? formeRadioRenderData =
+                  state.model.formeRadioRenderData;
+              FormeSwitchRenderData? formeSwitchRenderData =
+                  state.model.formeSwitchRenderData;
 
               List<Widget> wrapWidgets = [];
 
               void changeValue(T value) {
                 state.requestFocus();
                 switch (type) {
-                  case ListTileItemType.Checkbox:
-                  case ListTileItemType.Switch:
+                  case FormeListTileType.Checkbox:
+                  case FormeListTileType.Switch:
                     List<T> values = List.of(state.value);
                     if (!values.remove(value)) {
                       values.add(value);
                     }
                     state.didChange(values);
                     break;
-                  case ListTileItemType.Radio:
+                  case FormeListTileType.Radio:
                     state.didChange([value]);
                     break;
                 }
               }
 
-              Widget createListTileItem(
-                  ListTileItem item, bool selected, bool readOnly) {
+              Widget createFormeListTileItem(
+                  FormeListTileItem item, bool selected, bool readOnly) {
                 switch (type) {
-                  case ListTileItemType.Radio:
+                  case FormeListTileType.Radio:
                     return RadioListTile<T>(
-                      shape: radioRenderData?.shape,
-                      tileColor: radioRenderData?.tileColor,
-                      selectedTileColor: radioRenderData?.selectedTileColor,
-                      activeColor: radioRenderData?.activeColor,
+                      shape: formeRadioRenderData?.shape,
+                      tileColor: formeRadioRenderData?.tileColor,
+                      selectedTileColor:
+                          formeRadioRenderData?.selectedTileColor,
+                      activeColor: formeRadioRenderData?.activeColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       groupValue: state.value.isEmpty ? null : state.value[0],
@@ -120,13 +123,14 @@ class ListTileFormField<T>
                       onChanged:
                           readOnly ? null : (v) => changeValue(item.data),
                     );
-                  case ListTileItemType.Checkbox:
+                  case FormeListTileType.Checkbox:
                     return CheckboxListTile(
-                      shape: checkboxRenderData?.shape,
-                      tileColor: checkboxRenderData?.tileColor,
-                      selectedTileColor: checkboxRenderData?.selectedTileColor,
-                      activeColor: checkboxRenderData?.activeColor,
-                      checkColor: checkboxRenderData?.checkColor,
+                      shape: formeCheckboxRenderData?.shape,
+                      tileColor: formeCheckboxRenderData?.tileColor,
+                      selectedTileColor:
+                          formeCheckboxRenderData?.selectedTileColor,
+                      activeColor: formeCheckboxRenderData?.activeColor,
+                      checkColor: formeCheckboxRenderData?.checkColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,
@@ -137,17 +141,21 @@ class ListTileFormField<T>
                       onChanged:
                           readOnly ? null : (v) => changeValue(item.data),
                     );
-                  case ListTileItemType.Switch:
+                  case FormeListTileType.Switch:
                     return SwitchListTile(
-                      tileColor: switchRenderData?.tileColor,
-                      activeColor: switchRenderData?.activeColor,
-                      activeTrackColor: switchRenderData?.activeTrackColor,
-                      inactiveThumbColor: switchRenderData?.inactiveThumbColor,
-                      inactiveTrackColor: switchRenderData?.inactiveTrackColor,
-                      activeThumbImage: switchRenderData?.activeThumbImage,
-                      inactiveThumbImage: switchRenderData?.inactiveThumbImage,
-                      shape: switchRenderData?.shape,
-                      selectedTileColor: switchRenderData?.selectedTileColor,
+                      tileColor: formeSwitchRenderData?.tileColor,
+                      activeColor: formeSwitchRenderData?.activeColor,
+                      activeTrackColor: formeSwitchRenderData?.activeTrackColor,
+                      inactiveThumbColor:
+                          formeSwitchRenderData?.inactiveThumbColor,
+                      inactiveTrackColor:
+                          formeSwitchRenderData?.inactiveTrackColor,
+                      activeThumbImage: formeSwitchRenderData?.activeThumbImage,
+                      inactiveThumbImage:
+                          formeSwitchRenderData?.inactiveThumbImage,
+                      shape: formeSwitchRenderData?.shape,
+                      selectedTileColor:
+                          formeSwitchRenderData?.selectedTileColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,
@@ -162,42 +170,42 @@ class ListTileFormField<T>
               }
 
               Widget createCommonItem(
-                  ListTileItem item, bool selected, bool readOnly) {
+                  FormeListTileItem item, bool selected, bool readOnly) {
                 switch (type) {
-                  case ListTileItemType.Checkbox:
-                    return FormRenderUtils.checkbox(
+                  case FormeListTileType.Checkbox:
+                    return FormeRenderUtils.checkbox(
                         selected,
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        checkboxRenderData);
-                  case ListTileItemType.Switch:
-                    return FormRenderUtils.adaptiveSwitch(
+                        formeCheckboxRenderData);
+                  case FormeListTileType.Switch:
+                    return FormeRenderUtils.adaptiveSwitch(
                         selected,
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        switchRenderData);
-                  case ListTileItemType.Radio:
-                    return FormRenderUtils.radio<T>(
+                        formeSwitchRenderData);
+                  case FormeListTileType.Radio:
+                    return FormeRenderUtils.radio<T>(
                         item.data,
                         state.value.isEmpty ? null : state.value[0],
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        radioRenderData);
+                        formeRadioRenderData);
                 }
               }
 
               for (int i = 0; i < items.length; i++) {
-                ListTileItem<T> item = items[i];
+                FormeListTileItem<T> item = items[i];
                 bool isReadOnly = readOnly || item.readOnly;
                 bool selected = state.value.contains(item.data);
                 if (split > 0) {
                   double factor = 1 / split;
                   if (factor == 1) {
-                    wrapWidgets
-                        .add(createListTileItem(item, selected, isReadOnly));
+                    wrapWidgets.add(
+                        createFormeListTileItem(item, selected, isReadOnly));
                     continue;
                   }
                 }
@@ -281,7 +289,7 @@ class ListTileFormField<T>
 
               if (items.length > 1 &&
                   hasSelectAll &&
-                  type != ListTileItemType.Radio) {
+                  type != FormeListTileType.Radio) {
                 bool selectAll = controllableItems.isNotEmpty &&
                     controllableItems
                         .every((element) => state.value.contains(element));
@@ -319,30 +327,33 @@ class ListTileFormField<T>
                 }
               }
 
-              Widget child =
-                  FormRenderUtils.wrap(state.model.wrapRenderData, wrapWidgets);
+              Widget child = FormeRenderUtils.wrap(
+                  state.model.formeWrapRenderData, wrapWidgets);
               if (split == 1) {
-                child = FormRenderUtils.mergeListTileTheme(
-                    child, listTileThemeData);
+                child = FormeRenderUtils.mergeListTileTheme(
+                    child, formeListTileRenderData);
               }
 
-              return DecorationField(
-                  labelText: labelText,
-                  readOnly: readOnly || isAllReadOnly,
-                  errorText: state.errorText,
-                  child: child,
-                  focusNode: state.focusNode,
-                  icon: icon);
+              return FormeDecoration(
+                formeDecorationFieldRenderData:
+                    state.model.formeDecorationFieldRenderData,
+                labelText: state.model.labelText,
+                helperText: state.model.helperText,
+                errorText: state.errorText,
+                child: child,
+                focusNode: state.focusNode,
+                icon: icon,
+              );
             });
 
   @override
-  _ListTileFormFieldState<T> createState() => _ListTileFormFieldState();
+  _FormeListTileState<T> createState() => _FormeListTileState();
 }
 
-class _ListTileFormFieldState<T>
-    extends NonnullValueFieldState<List<T>, ListTileModel<T>> {
+class _FormeListTileState<T>
+    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>> {
   @override
-  void beforeMerge(ListTileModel<T> old, ListTileModel<T> current) {
+  void beforeMerge(FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
       List<T> items = List.of(value);
       Iterable<T> datas = current.items!.map((e) => e.data);
@@ -352,41 +363,52 @@ class _ListTileFormFieldState<T>
   }
 }
 
-class ListTileModel<T> extends AbstractFieldStateModel {
+class FormeListTileModel<T> extends AbstractFormeModel {
   final String? labelText;
+  final String? helperText;
   final int? split;
-  final List<ListTileItem<T>>? items;
+  final List<FormeListTileItem<T>>? items;
   final bool? hasSelectAll;
-  final ListTileThemeData? listTileThemeData;
-  final CheckboxRenderData? checkboxRenderData;
-  final RadioRenderData? radioRenderData;
-  final SwitchRenderData? switchRenderData;
-  final WrapRenderData? wrapRenderData;
-  ListTileModel({
+  final FormeListTileRenderData? formeListTileRenderData;
+  final FormeCheckboxRenderData? formeCheckboxRenderData;
+  final FormeRadioRenderData? formeRadioRenderData;
+  final FormeSwitchRenderData? formeSwitchRenderData;
+  final FormeWrapRenderData? formeWrapRenderData;
+  final FormeDecorationRenderData? formeDecorationFieldRenderData;
+  FormeListTileModel({
     this.labelText,
     this.split,
     this.items,
     this.hasSelectAll,
-    this.listTileThemeData,
-    this.checkboxRenderData,
-    this.radioRenderData,
-    this.switchRenderData,
-    this.wrapRenderData,
+    this.formeListTileRenderData,
+    this.formeCheckboxRenderData,
+    this.formeRadioRenderData,
+    this.formeSwitchRenderData,
+    this.formeWrapRenderData,
+    this.formeDecorationFieldRenderData,
+    this.helperText,
   });
 
   @override
-  ListTileModel<T> merge(AbstractFieldStateModel old) {
-    ListTileModel<T> oldModel = old as ListTileModel<T>;
-    return ListTileModel<T>(
+  FormeListTileModel<T> merge(AbstractFormeModel old) {
+    FormeListTileModel<T> oldModel = old as FormeListTileModel<T>;
+    return FormeListTileModel<T>(
       labelText: labelText ?? oldModel.labelText,
+      helperText: helperText ?? oldModel.helperText,
       split: split ?? oldModel.split,
       items: items ?? oldModel.items,
       hasSelectAll: hasSelectAll ?? oldModel.hasSelectAll,
-      listTileThemeData: listTileThemeData ?? oldModel.listTileThemeData,
-      checkboxRenderData: checkboxRenderData ?? oldModel.checkboxRenderData,
-      radioRenderData: radioRenderData ?? oldModel.radioRenderData,
-      switchRenderData: switchRenderData ?? oldModel.switchRenderData,
-      wrapRenderData: wrapRenderData ?? oldModel.wrapRenderData,
+      formeListTileRenderData:
+          formeListTileRenderData ?? oldModel.formeListTileRenderData,
+      formeCheckboxRenderData:
+          formeCheckboxRenderData ?? oldModel.formeCheckboxRenderData,
+      formeRadioRenderData:
+          formeRadioRenderData ?? oldModel.formeRadioRenderData,
+      formeSwitchRenderData:
+          formeSwitchRenderData ?? oldModel.formeSwitchRenderData,
+      formeWrapRenderData: formeWrapRenderData ?? oldModel.formeWrapRenderData,
+      formeDecorationFieldRenderData:
+          formeDecorationFieldRenderData ?? old.formeDecorationFieldRenderData,
     );
   }
 }

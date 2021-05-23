@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../form_field.dart';
-import '../form_state_model.dart';
+import '../forme_field.dart';
+import '../forme_state_model.dart';
 
-enum ButtonType { Text, Elevated, Outlined }
+enum FormeButtonType { Text, Elevated, Outlined }
 
-class ButtonFormField extends CommonField<ButtonModel> {
-  ButtonFormField({
+class FormeButton extends CommonField<FormeButtonModel> {
+  FormeButton({
     String? name,
     int flex = 0,
     required VoidCallback onPressed,
@@ -15,11 +15,13 @@ class ButtonFormField extends CommonField<ButtonModel> {
     bool visible = true,
     EdgeInsets? padding,
     required Widget child,
-    ButtonType type = ButtonType.Text,
-    ButtonModel? model,
+    FormeButtonType type = FormeButtonType.Text,
+    FormeButtonModel? model,
+    Key? key,
   }) : super(
-            model: (model ?? ButtonModel())
-                .merge(ButtonModel(child: child, type: type)),
+            key: key,
+            model: (model ?? FormeButtonModel())
+                .merge(FormeButtonModel(child: child, type: type)),
             name: name,
             readOnly: readOnly,
             builder: (state) {
@@ -27,7 +29,7 @@ class ButtonFormField extends CommonField<ButtonModel> {
               Icon? icon = state.model.icon;
               Widget child = state.model.child!;
               ButtonStyle? style = state.model.style;
-              ButtonType type = state.model.type!;
+              FormeButtonType type = state.model.type!;
 
               VoidCallback? _onPressed = readOnly ? null : onPressed;
               VoidCallback? _onLongPress = readOnly ? null : onLongPress;
@@ -35,7 +37,7 @@ class ButtonFormField extends CommonField<ButtonModel> {
               Widget button;
 
               switch (type) {
-                case ButtonType.Text:
+                case FormeButtonType.Text:
                   button = icon == null
                       ? TextButton(
                           focusNode: state.focusNode,
@@ -51,7 +53,7 @@ class ButtonFormField extends CommonField<ButtonModel> {
                           focusNode: state.focusNode,
                         );
                   break;
-                case ButtonType.Elevated:
+                case FormeButtonType.Elevated:
                   button = icon == null
                       ? ElevatedButton(
                           style: style,
@@ -67,7 +69,7 @@ class ButtonFormField extends CommonField<ButtonModel> {
                           focusNode: state.focusNode,
                         );
                   break;
-                case ButtonType.Outlined:
+                case FormeButtonType.Outlined:
                   button = icon == null
                       ? OutlinedButton(
                           style: style,
@@ -86,17 +88,17 @@ class ButtonFormField extends CommonField<ButtonModel> {
               }
 
               switch (type) {
-                case ButtonType.Text:
+                case FormeButtonType.Text:
                   return TextButtonTheme(
                       data: state.model.textButtonThemeData ??
                           TextButtonTheme.of(state.context),
                       child: button);
-                case ButtonType.Elevated:
+                case FormeButtonType.Elevated:
                   return ElevatedButtonTheme(
                       data: state.model.elevatedButtonThemeData ??
                           ElevatedButtonTheme.of(state.context),
                       child: button);
-                case ButtonType.Outlined:
+                case FormeButtonType.Outlined:
                   return OutlinedButtonTheme(
                       data: state.model.outlinedButtonThemeData ??
                           OutlinedButtonTheme.of(state.context),
@@ -105,15 +107,15 @@ class ButtonFormField extends CommonField<ButtonModel> {
             });
 }
 
-class ButtonModel extends AbstractFieldStateModel {
+class FormeButtonModel extends AbstractFormeModel {
   final Widget? child;
-  final ButtonType? type;
+  final FormeButtonType? type;
   final Icon? icon;
   final ButtonStyle? style;
   final TextButtonThemeData? textButtonThemeData;
   final ElevatedButtonThemeData? elevatedButtonThemeData;
   final OutlinedButtonThemeData? outlinedButtonThemeData;
-  ButtonModel({
+  FormeButtonModel({
     this.child,
     this.type,
     this.icon,
@@ -124,9 +126,9 @@ class ButtonModel extends AbstractFieldStateModel {
   });
 
   @override
-  ButtonModel merge(AbstractFieldStateModel old) {
-    ButtonModel oldModel = old as ButtonModel;
-    return ButtonModel(
+  FormeButtonModel merge(AbstractFormeModel old) {
+    FormeButtonModel oldModel = old as FormeButtonModel;
+    return FormeButtonModel(
       child: child ?? oldModel.child,
       type: type ?? oldModel.type,
       icon: icon ?? oldModel.icon,

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../builder.dart';
-import '../widget/clear_button.dart';
-import '../form_state_model.dart';
-import '../form_field.dart';
+import '../forme_core.dart';
+import '../widget/forme_clear_button.dart';
+import '../forme_state_model.dart';
+import '../forme_field.dart';
 
-enum DateTimeType { Date, DateTime }
+enum FormeDateTimeType { Date, DateTime }
 
-class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
-  DateTimeFormField({
+class FormeDateTime extends ValueField<DateTime, FormeDateTimeModel> {
+  FormeDateTime({
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
@@ -19,9 +19,11 @@ class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    DateTimeFieldModel? model,
+    FormeDateTimeModel? model,
+    Key? key,
   }) : super(
-          model: model ?? DateTimeFieldModel(),
+          key: key,
+          model: model ?? FormeDateTimeModel(),
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
@@ -40,10 +42,10 @@ class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
                 state.model.inputDecorationTheme ??
                     themeData.inputDecorationTheme;
             TextEditingController textEditingController =
-                (state as _DateTimeFormFieldState).textEditingController;
+                (state as _FormeDateTimeState).textEditingController;
             DateTime firstDate = state.model.firstDate ?? DateTime(1970);
             DateTime lastDate = state.model.lastDate ?? DateTime(2099);
-            DateTimeType type = state.model.type ?? DateTimeType.Date;
+            FormeDateTimeType type = state.model.type ?? FormeDateTimeType.Date;
 
             void pickTime() {
               DateTime value = state.value ?? DateTime.now();
@@ -60,7 +62,7 @@ class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
                       lastDate: lastDate)
                   .then((date) {
                 if (date != null) {
-                  if (type == DateTimeType.DateTime)
+                  if (type == FormeDateTimeType.DateTime)
                     showTimePicker(
                       context: state.context,
                       initialTime: timeOfDay ??
@@ -82,7 +84,8 @@ class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
             List<Widget> suffixes = [];
 
             if (!readOnly) {
-              suffixes.add(ClearButton(textEditingController, focusNode, () {
+              suffixes
+                  .add(FormeClearButton(textEditingController, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -127,32 +130,32 @@ class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
         );
 
   @override
-  _DateTimeFormFieldState createState() => _DateTimeFormFieldState();
+  _FormeDateTimeState createState() => _FormeDateTimeState();
 
-  static DateTimeFormatter defaultDateTimeFormatter = (dateTime) =>
+  static FormeDateTimeFormatter defaultFormeDateTimeFormatter = (dateTime) =>
       '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')} ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
 
-  static DateTimeFormatter defaultDateFormatter = (dateTime) =>
+  static FormeDateTimeFormatter defaultDateFormatter = (dateTime) =>
       '${dateTime.year.toString()}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.day.toString().padLeft(2, '0')}';
 }
 
-typedef DateTimeFormatter = String Function(DateTime dateTime);
+typedef FormeDateTimeFormatter = String Function(DateTime dateTime);
 
-class _DateTimeFormFieldState
-    extends ValueFieldState<DateTime, DateTimeFieldModel> {
-  DateTimeFormatter get _formatter =>
-      _getDateTimeFormatter(model.type ?? DateTimeType.Date);
+class _FormeDateTimeState
+    extends ValueFieldState<DateTime, FormeDateTimeModel> {
+  FormeDateTimeFormatter get _formatter =>
+      _getFormeDateTimeFormatter(model.type ?? FormeDateTimeType.Date);
 
   late final TextEditingController textEditingController;
 
   @override
-  DateTimeFormField get widget => super.widget as DateTimeFormField;
+  FormeDateTime get widget => super.widget as FormeDateTime;
 
-  DateTimeFormatter _getDateTimeFormatter(DateTimeType type) {
-    return model.dateTimeFormatter ??
-        (type == DateTimeType.DateTime
-            ? DateTimeFormField.defaultDateTimeFormatter
-            : DateTimeFormField.defaultDateFormatter);
+  FormeDateTimeFormatter _getFormeDateTimeFormatter(FormeDateTimeType type) {
+    return model.formeDateTimeFormatter ??
+        (type == FormeDateTimeType.DateTime
+            ? FormeDateTime.defaultFormeDateTimeFormatter
+            : FormeDateTime.defaultDateFormatter);
   }
 
   @override
@@ -189,11 +192,12 @@ class _DateTimeFormFieldState
   }
 
   @override
-  void beforeMerge(DateTimeFieldModel old, DateTimeFieldModel current) {
+  void beforeMerge(FormeDateTimeModel old, FormeDateTimeModel current) {
     if (value == null) return;
     if (current.type != old.type && current.type != null)
-      textEditingController.text =
-          value == null ? '' : _getDateTimeFormatter(current.type!)(value!);
+      textEditingController.text = value == null
+          ? ''
+          : _getFormeDateTimeFormatter(current.type!)(value!);
     if (current.firstDate != null && current.firstDate!.isAfter(value!))
       clearValue();
     if (current.lastDate != null && current.lastDate!.isBefore(value!))
@@ -201,40 +205,41 @@ class _DateTimeFormFieldState
   }
 }
 
-class DateTimeFieldModel extends AbstractFieldStateModel {
+class FormeDateTimeModel extends AbstractFormeModel {
   final String? labelText;
   final String? hintText;
   final TextStyle? style;
-  final DateTimeType? type;
-  final DateTimeFormatter? dateTimeFormatter;
+  final FormeDateTimeType? type;
+  final FormeDateTimeFormatter? formeDateTimeFormatter;
   final DateTime? firstDate;
   final DateTime? lastDate;
   final int? maxLines;
   final InputDecorationTheme? inputDecorationTheme;
 
-  DateTimeFieldModel({
+  FormeDateTimeModel({
     this.labelText,
     this.hintText,
     this.style,
     this.inputDecorationTheme,
     this.type,
-    this.dateTimeFormatter,
+    this.formeDateTimeFormatter,
     this.firstDate,
     this.lastDate,
     this.maxLines,
   });
 
   @override
-  DateTimeFieldModel merge(AbstractFieldStateModel old) {
-    DateTimeFieldModel oldModel = old as DateTimeFieldModel;
-    return DateTimeFieldModel(
+  FormeDateTimeModel merge(AbstractFormeModel old) {
+    FormeDateTimeModel oldModel = old as FormeDateTimeModel;
+    return FormeDateTimeModel(
       labelText: labelText ?? oldModel.labelText,
       hintText: hintText ?? oldModel.hintText,
       style: style ?? oldModel.style,
       inputDecorationTheme:
           inputDecorationTheme ?? oldModel.inputDecorationTheme,
       type: type ?? oldModel.type,
-      dateTimeFormatter: dateTimeFormatter ?? oldModel.dateTimeFormatter,
+      formeDateTimeFormatter:
+          formeDateTimeFormatter ?? oldModel.formeDateTimeFormatter,
       firstDate: firstDate ?? oldModel.firstDate,
       lastDate: lastDate ?? oldModel.lastDate,
       maxLines: maxLines ?? oldModel.maxLines,

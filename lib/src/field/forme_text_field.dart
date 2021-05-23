@@ -3,15 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
-import '../widget/clear_button.dart';
-import '../form_state_model.dart';
-import '../text_selection.dart';
-import '../builder.dart';
-import '../form_field.dart';
+import '../forme_utils.dart';
+import '../widget/forme_clear_button.dart';
+import '../forme_state_model.dart';
+import '../forme_field.dart';
 
-class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
+class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
   final bool obscureText;
-  ClearableTextFormField({
+  FormeTextField({
     this.obscureText = false,
     ValueChanged<String>? onChanged,
     GestureTapCallback? onTap,
@@ -28,9 +27,11 @@ class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    TextFieldModel? model,
+    FormeTextFieldModel? model,
+    Key? key,
   }) : super(
-          model: model ?? TextFieldModel(),
+          key: key,
+          model: model ?? FormeTextFieldModel(),
           name: name,
           readOnly: readOnly,
           onChanged: onChanged,
@@ -40,7 +41,7 @@ class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
           autovalidateMode: autovalidateMode,
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
-            _TextFormFieldState state = baseState as _TextFormFieldState;
+            _TextFormeFieldState state = baseState as _TextFormeFieldState;
             ThemeData themeData = Theme.of(state.context);
             FocusNode? focusNode = baseState.focusNode;
             String? labelText = state.model.labelText;
@@ -64,8 +65,8 @@ class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
 
             List<Widget> suffixes = [];
             if (clearable && !readOnly && state.value.length > 0) {
-              suffixes
-                  .add(ClearButton(state.textEditingController, focusNode, () {
+              suffixes.add(
+                  FormeClearButton(state.textEditingController, focusNode, () {
                 state.didChange('');
               }));
             }
@@ -133,23 +134,24 @@ class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
         );
 
   @override
-  _TextFormFieldState createState() => _TextFormFieldState();
+  _TextFormeFieldState createState() => _TextFormeFieldState();
 }
 
-class _TextFormFieldState extends NonnullValueFieldState<String, TextFieldModel>
-    with TextSelectionManagement {
+class _TextFormeFieldState
+    extends NonnullValueFieldState<String, FormeTextFieldModel> {
   bool obscureText = false;
 
   late final TextEditingController textEditingController;
 
   @override
-  ClearableTextFormField get widget => super.widget as ClearableTextFormField;
+  FormeTextField get widget => super.widget as FormeTextField;
 
   bool get selectAllOnFocus => model.selectAllOnFocus ?? false;
 
   void doSelectAll() {
     if (focusNode.hasFocus) {
-      selectAll();
+      textEditingController.selection =
+          FormeUtils.selection(0, textEditingController.text.length);
     }
   }
 
@@ -180,7 +182,7 @@ class _TextFormFieldState extends NonnullValueFieldState<String, TextFieldModel>
   }
 
   @override
-  void didUpdateWidget(ClearableTextFormField oldWidget) {
+  void didUpdateWidget(FormeTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
     focusNode.removeListener(doSelectAll);
     if (selectAllOnFocus) {
@@ -202,18 +204,13 @@ class _TextFormFieldState extends NonnullValueFieldState<String, TextFieldModel>
   }
 
   @override
-  void setSelection(int start, int end) {
-    TextSelectionManagement.setSelectionWithTextEditingController(
-        start, end, textEditingController);
-  }
-
-  @override
-  void selectAll() {
-    setSelection(0, textEditingController.text.length);
+  void beforeMerge(FormeTextFieldModel old, FormeTextFieldModel current) {
+    if (current.selection != null)
+      textEditingController.selection = current.selection!;
   }
 }
 
-class TextFieldModel extends AbstractFieldStateModel {
+class FormeTextFieldModel extends AbstractFormeModel {
   final String? labelText;
   final String? hintText;
   final TextInputType? keyboardType;
@@ -230,8 +227,9 @@ class TextFieldModel extends AbstractFieldStateModel {
   final TextInputAction? textInputAction;
   final InputDecorationTheme? inputDecorationTheme;
   final TextCapitalization? textCapitalization;
+  final TextSelection? selection;
 
-  TextFieldModel({
+  FormeTextFieldModel({
     this.labelText,
     this.hintText,
     this.keyboardType,
@@ -248,12 +246,13 @@ class TextFieldModel extends AbstractFieldStateModel {
     this.textInputAction,
     this.inputDecorationTheme,
     this.textCapitalization,
+    this.selection,
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
-    TextFieldModel oldModel = old as TextFieldModel;
-    return TextFieldModel(
+  AbstractFormeModel merge(AbstractFormeModel old) {
+    FormeTextFieldModel oldModel = old as FormeTextFieldModel;
+    return FormeTextFieldModel(
       labelText: labelText ?? oldModel.labelText,
       hintText: hintText ?? oldModel.hintText,
       keyboardType: keyboardType ?? oldModel.keyboardType,

@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../builder.dart';
-import '../widget/clear_button.dart';
-import '../form_state_model.dart';
-import '../text_selection.dart';
-import '../form_field.dart';
+import '../forme_core.dart';
+import '../widget/forme_clear_button.dart';
+import '../forme_state_model.dart';
+import '../forme_field.dart';
 
-class NumberFormField extends ValueField<num, NumberFieldModel> {
-  NumberFormField({
+class FormeNumberTextField extends ValueField<num, FormeNumberTextFieldModel> {
+  FormeNumberTextField({
     ValueChanged<num?>? onChanged,
     FormFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
@@ -20,9 +19,11 @@ class NumberFormField extends ValueField<num, NumberFieldModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    NumberFieldModel? model,
+    FormeNumberTextFieldModel? model,
+    Key? key,
   }) : super(
-          model: model ?? NumberFieldModel(),
+          key: key,
+          model: model ?? FormeNumberTextFieldModel(),
           readOnly: readOnly,
           name: name,
           onSaved: onSaved,
@@ -81,8 +82,8 @@ class NumberFormField extends ValueField<num, NumberFieldModel> {
             List<Widget> suffixes = [];
 
             if (clearable && !readOnly) {
-              suffixes
-                  .add(ClearButton(state.textEditingController, focusNode, () {
+              suffixes.add(
+                  FormeClearButton(state.textEditingController, focusNode, () {
                 state.didChange(null);
               }));
             }
@@ -142,11 +143,11 @@ class NumberFormField extends ValueField<num, NumberFieldModel> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends ValueFieldState<num, NumberFieldModel>
-    with TextSelectionManagement {
+class _NumberFieldState
+    extends ValueFieldState<num, FormeNumberTextFieldModel> {
   late final TextEditingController textEditingController;
   @override
-  NumberFormField get widget => super.widget as NumberFormField;
+  FormeNumberTextField get widget => super.widget as FormeNumberTextField;
 
   @override
   num? get value => super.value == null
@@ -186,24 +187,14 @@ class _NumberFieldState extends ValueFieldState<num, NumberFieldModel>
     super.dispose();
   }
 
-  @override
-  void selectAll() {
-    setSelection(0, textEditingController.text.length);
-  }
-
-  @override
-  void setSelection(int start, int end) {
-    TextSelectionManagement.setSelectionWithTextEditingController(
-        start, end, textEditingController);
-  }
-
   void clearValue() {
     super.setValue(null);
     textEditingController.text = '';
   }
 
   @override
-  void beforeMerge(NumberFieldModel old, NumberFieldModel current) {
+  void beforeMerge(
+      FormeNumberTextFieldModel old, FormeNumberTextFieldModel current) {
     if (value == null) return;
     if (current.max != null && current.max! < value!) clearValue();
     if (current.allowNegative != null && !current.allowNegative! && value! < 0)
@@ -215,10 +206,13 @@ class _NumberFieldState extends ValueFieldState<num, NumberFieldModel>
       int decimalNum = value.toString().length - (indexOfPoint + 1);
       if (decimalNum > decimal) clearValue();
     }
+    if (current.selection != null) {
+      textEditingController.selection = current.selection!;
+    }
   }
 }
 
-class NumberFieldModel extends AbstractFieldStateModel {
+class FormeNumberTextFieldModel extends AbstractFormeModel {
   final String? labelText;
   final String? hintText;
   final bool? autofocus;
@@ -231,8 +225,9 @@ class NumberFieldModel extends AbstractFieldStateModel {
   final int? decimal;
   final double? max;
   final bool? allowNegative;
+  final TextSelection? selection;
 
-  NumberFieldModel({
+  FormeNumberTextFieldModel({
     this.labelText,
     this.hintText,
     this.autofocus,
@@ -245,12 +240,13 @@ class NumberFieldModel extends AbstractFieldStateModel {
     this.decimal,
     this.max,
     this.allowNegative,
+    this.selection,
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
-    NumberFieldModel oldModel = old as NumberFieldModel;
-    return NumberFieldModel(
+  AbstractFormeModel merge(AbstractFormeModel old) {
+    FormeNumberTextFieldModel oldModel = old as FormeNumberTextFieldModel;
+    return FormeNumberTextFieldModel(
       labelText: labelText ?? oldModel.labelText,
       hintText: hintText ?? oldModel.hintText,
       autofocus: autofocus ?? oldModel.autofocus,

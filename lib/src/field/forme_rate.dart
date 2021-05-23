@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../form_field.dart';
-import '../form_state_model.dart';
-import 'decoration_field.dart';
+import '../forme_field.dart';
+import '../forme_state_model.dart';
+import 'forme_decoration_field.dart';
+import '../render/forme_render_data.dart';
 
 /// used to transfer rate to your rate
 ///
@@ -13,10 +14,10 @@ import 'decoration_field.dart';
 /// ```
 ///
 /// **return value must be in [0,1]**
-typedef RateTransfer = double Function(double rate);
+typedef FormeRateTransfer = double Function(double rate);
 
-class RateFormField extends ValueField<double, RateModel> {
-  RateFormField({
+class FormeRate extends ValueField<double, FormeRateModel> {
+  FormeRate({
     ValueChanged<double?>? onChanged,
     FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
@@ -24,11 +25,13 @@ class RateFormField extends ValueField<double, RateModel> {
     FormFieldSetter<double>? onSaved,
     String? name,
     bool readOnly = false,
-    RateTransfer? transfer,
+    FormeRateTransfer? transfer,
     int ratio = 1,
-    RateModel? model,
+    FormeRateModel? model,
+    Key? key,
   }) : super(
-          model: model ?? RateModel(),
+          key: key,
+          model: model ?? FormeRateModel(),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -38,10 +41,9 @@ class RateFormField extends ValueField<double, RateModel> {
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
-            String? labelText = state.model.labelText;
             ThemeData themeData = Theme.of(state.context);
-            RateThemeData rateThemeData =
-                state.model.rateThemeData ?? const RateThemeData();
+            FormeRateRenderData rateThemeData =
+                state.model.rateThemeData ?? const FormeRateRenderData();
             double? value = (state.value?.toDouble() ?? 0) / ratio;
             double size = rateThemeData.iconSize;
             EdgeInsets iconPadding = rateThemeData.iconPadding;
@@ -95,18 +97,14 @@ class RateFormField extends ValueField<double, RateModel> {
                     },
             );
 
-            return DecorationField(
-              child: Align(
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  child: rateWidget,
-                ),
-              ),
+            return FormeDecoration(
+              formeDecorationFieldRenderData:
+                  state.model.formeDecorationFieldRenderData,
+              child: rateWidget,
               errorText: state.errorText,
               focusNode: state.focusNode,
-              readOnly: readOnly,
-              labelText: labelText,
+              labelText: state.model.labelText,
+              helperText: state.model.helperText,
             );
           },
         );
@@ -143,33 +141,44 @@ class _RateIcon extends StatelessWidget {
   }
 }
 
-class RateThemeData {
+class FormeRateRenderData {
   final IconData icon;
   final double iconSize;
   final Color? seletedColor;
   final Color? disabledColor;
   final EdgeInsets iconPadding;
 
-  const RateThemeData(
-      {this.icon = Icons.star,
-      this.iconSize = 36,
-      this.seletedColor,
-      this.disabledColor,
-      this.iconPadding =
-          const EdgeInsets.symmetric(horizontal: 10, vertical: 5)});
+  const FormeRateRenderData({
+    this.icon = Icons.star,
+    this.iconSize = 36,
+    this.seletedColor,
+    this.disabledColor,
+    this.iconPadding = const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+  });
 }
 
-class RateModel extends AbstractFieldStateModel {
+class FormeRateModel extends AbstractFormeModel {
   final String? labelText;
-  final RateThemeData? rateThemeData;
+  final String? helperText;
+  final FormeRateRenderData? rateThemeData;
+  final FormeDecorationRenderData? formeDecorationFieldRenderData;
 
-  RateModel({this.labelText, this.rateThemeData});
+  FormeRateModel({
+    this.labelText,
+    this.helperText,
+    this.rateThemeData,
+    this.formeDecorationFieldRenderData,
+  });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
-    RateModel oldModel = old as RateModel;
-    return RateModel(
-        labelText: labelText ?? oldModel.labelText,
-        rateThemeData: rateThemeData ?? oldModel.rateThemeData);
+  AbstractFormeModel merge(AbstractFormeModel old) {
+    FormeRateModel oldModel = old as FormeRateModel;
+    return FormeRateModel(
+      labelText: labelText ?? oldModel.labelText,
+      helperText: helperText ?? oldModel.helperText,
+      rateThemeData: rateThemeData ?? oldModel.rateThemeData,
+      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
+          oldModel.formeDecorationFieldRenderData,
+    );
   }
 }

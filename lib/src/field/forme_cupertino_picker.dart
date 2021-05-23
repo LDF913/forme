@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../builder.dart';
-import '../form_state_model.dart';
-import 'decoration_field.dart';
-import '../form_field.dart';
+import '../forme_state_model.dart';
+import 'forme_decoration_field.dart';
+import '../forme_field.dart';
+import '../render/forme_render_data.dart';
 
-class CupertinoPickerFormField
-    extends NonnullValueField<int, CupertinoPickerModel> {
-  CupertinoPickerFormField({
+class FormeCupertinoPicker
+    extends NonnullValueField<int, FormeCupertinoPickerModel> {
+  FormeCupertinoPicker({
     ValueChanged<int>? onChanged,
     NonnullFieldValidator<int>? validator,
     AutovalidateMode? autovalidateMode,
@@ -18,10 +18,13 @@ class CupertinoPickerFormField
     bool readOnly = false,
     double itemExtent = 30,
     required List<Widget> children,
-    CupertinoPickerModel? model,
+    FormeCupertinoPickerModel? model,
+    Key? key,
   }) : super(
-          model: (model ?? CupertinoPickerModel()).merge(
-              CupertinoPickerModel(children: children, itemExtent: itemExtent)),
+          key: key,
+          model: (model ?? FormeCupertinoPickerModel()).merge(
+              FormeCupertinoPickerModel(
+                  children: children, itemExtent: itemExtent)),
           name: name,
           readOnly: readOnly,
           onChanged: onChanged,
@@ -30,50 +33,58 @@ class CupertinoPickerFormField
           validator: validator,
           onSaved: onChanged,
           builder: (baseState) {
-            _CupertinoPickerFormFieldState state =
-                baseState as _CupertinoPickerFormFieldState;
+            _FormeCupertinoPickerState state =
+                baseState as _FormeCupertinoPickerState;
             Widget child = AbsorbPointer(
                 absorbing: state.readOnly,
-                child: CupertinoPicker(
-                    key: state.key,
-                    scrollController: state.scrollController,
-                    diameterRatio: state.model.diameterRatio ?? 1.07,
-                    backgroundColor: state.model.backgroundColor,
-                    offAxisFraction: state.model.offAxisFraction ?? 0.0,
-                    useMagnifier: state.model.useMagnifier ?? false,
-                    magnification: state.model.magnification ?? 1.0,
-                    squeeze: state.model.squeeze ?? 1.45,
-                    looping: state.model.looping ?? false,
-                    selectionOverlay: state.model.selectionOverlay ??
-                        const CupertinoPickerDefaultSelectionOverlay(),
-                    itemExtent: state.model.itemExtent!,
-                    onSelectedItemChanged: state.readOnly
-                        ? null
-                        : (index) {
-                            state.doChangeValue(index, scrollToItem: false);
-                            state.requestFocus();
-                          },
-                    children: state.model.children!));
-            return DecorationField(
+                child: NotificationListener<ScrollNotification>(
+                    onNotification: (scrollNotification) {
+                      if (scrollNotification is ScrollStartNotification) {
+                        state.requestFocus();
+                      }
+                      if (scrollNotification is ScrollEndNotification) {
+                        state.doChangeValue(state.scrollController.selectedItem,
+                            scrollToItem: false);
+                      }
+                      return true;
+                    },
+                    child: CupertinoPicker(
+                        key: state.key,
+                        scrollController: state.scrollController,
+                        diameterRatio: state.model.diameterRatio ?? 1.07,
+                        backgroundColor: state.model.backgroundColor,
+                        offAxisFraction: state.model.offAxisFraction ?? 0.0,
+                        useMagnifier: state.model.useMagnifier ?? false,
+                        magnification: state.model.magnification ?? 1.0,
+                        squeeze: state.model.squeeze ?? 1.45,
+                        looping: state.model.looping ?? false,
+                        selectionOverlay: state.model.selectionOverlay ??
+                            const CupertinoPickerDefaultSelectionOverlay(),
+                        itemExtent: state.model.itemExtent!,
+                        onSelectedItemChanged:
+                            state.readOnly ? null : (index) {},
+                        children: state.model.children!)));
+            return FormeDecoration(
+              formeDecorationFieldRenderData:
+                  state.model.formeDecorationFieldRenderData,
               child: AspectRatio(
                 aspectRatio: state.model.aspectRatio ?? 3,
                 child: child,
               ),
               errorText: state.errorText,
               labelText: state.model.labelText,
-              readOnly: state.readOnly,
+              helperText: state.model.helperText,
               focusNode: state.focusNode,
             );
           },
         );
 
   @override
-  _CupertinoPickerFormFieldState createState() =>
-      _CupertinoPickerFormFieldState();
+  _FormeCupertinoPickerState createState() => _FormeCupertinoPickerState();
 }
 
-class _CupertinoPickerFormFieldState
-    extends NonnullValueFieldState<int, CupertinoPickerModel> {
+class _FormeCupertinoPickerState
+    extends NonnullValueFieldState<int, FormeCupertinoPickerModel> {
   Key? key = UniqueKey();
   FixedExtentScrollController scrollController = FixedExtentScrollController();
 
@@ -85,7 +96,8 @@ class _CupertinoPickerFormFieldState
   }
 
   @override
-  void beforeMerge(CupertinoPickerModel old, CupertinoPickerModel current) {
+  void beforeMerge(
+      FormeCupertinoPickerModel old, FormeCupertinoPickerModel current) {
     bool needRebuild = current.children != null ||
         current.itemExtent != null ||
         current.selectionOverlay != null;
@@ -117,7 +129,7 @@ class _CupertinoPickerFormFieldState
   }
 }
 
-class CupertinoPickerModel extends AbstractFieldStateModel {
+class FormeCupertinoPickerModel extends AbstractFormeModel {
   final double? itemExtent;
   final double? diameterRatio;
   final Color? backgroundColor;
@@ -129,9 +141,11 @@ class CupertinoPickerModel extends AbstractFieldStateModel {
   final List<Widget>? children;
   final bool? looping;
   final String? labelText;
+  final String? helperText;
   final double? aspectRatio;
+  final FormeDecorationRenderData? formeDecorationFieldRenderData;
 
-  CupertinoPickerModel({
+  FormeCupertinoPickerModel({
     this.diameterRatio,
     this.backgroundColor,
     this.offAxisFraction,
@@ -144,12 +158,14 @@ class CupertinoPickerModel extends AbstractFieldStateModel {
     this.looping,
     this.labelText,
     this.aspectRatio,
+    this.formeDecorationFieldRenderData,
+    this.helperText,
   });
 
   @override
-  CupertinoPickerModel merge(AbstractFieldStateModel old) {
-    CupertinoPickerModel oldModel = old as CupertinoPickerModel;
-    return CupertinoPickerModel(
+  FormeCupertinoPickerModel merge(AbstractFormeModel old) {
+    FormeCupertinoPickerModel oldModel = old as FormeCupertinoPickerModel;
+    return FormeCupertinoPickerModel(
       diameterRatio: diameterRatio ?? oldModel.diameterRatio,
       backgroundColor: backgroundColor ?? oldModel.backgroundColor,
       offAxisFraction: offAxisFraction ?? oldModel.offAxisFraction,
@@ -161,6 +177,9 @@ class CupertinoPickerModel extends AbstractFieldStateModel {
       children: children ?? oldModel.children,
       looping: looping ?? oldModel.looping,
       labelText: labelText ?? oldModel.labelText,
+      helperText: helperText ?? oldModel.helperText,
+      formeDecorationFieldRenderData:
+          formeDecorationFieldRenderData ?? old.formeDecorationFieldRenderData,
     );
   }
 }

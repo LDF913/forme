@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import '../builder.dart';
-import 'decoration_field.dart';
-import 'slider.dart';
-import '../form_field.dart';
+import 'forme_decoration_field.dart';
+import 'forme_slider.dart';
+import '../forme_field.dart';
 
-class RangeSubLabelRender {
-  final SubLabelRender startRender;
-  final SubLabelRender endRender;
-  RangeSubLabelRender(this.startRender, this.endRender);
+class FormRangeLabelRender {
+  final FormeLabelRender startRender;
+  final FormeLabelRender endRender;
+  FormRangeLabelRender(this.startRender, this.endRender);
 }
 
-class RangeSliderFormField extends NonnullValueField<RangeValues, SliderModel> {
-  RangeSliderFormField({
+class FormeRangeSlider
+    extends NonnullValueField<RangeValues, FormeSliderModel> {
+  FormeRangeSlider({
     ValueChanged<RangeValues>? onChanged,
     NonnullFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
-    RangeSubLabelRender? rangeSubLabelRender,
+    FormRangeLabelRender? rangeFormeLabelRender,
     NonnullFormFieldSetter<RangeValues>? onSaved,
     String? name,
     int flex = 1,
@@ -28,11 +28,13 @@ class RangeSliderFormField extends NonnullValueField<RangeValues, SliderModel> {
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<RangeValues>? onChangeStart,
     ValueChanged<RangeValues>? onChangeEnd,
-    SliderModel? model,
+    FormeSliderModel? model,
     required double min,
     required double max,
+    Key? key,
   }) : super(
-            model: (model ?? SliderModel()).merge(SliderModel(
+            key: key,
+            model: (model ?? FormeSliderModel()).merge(FormeSliderModel(
               max: max,
               min: min,
               divisions: (max - min).toInt(),
@@ -49,17 +51,16 @@ class RangeSliderFormField extends NonnullValueField<RangeValues, SliderModel> {
               double max = state.model.max!;
               double min = state.model.min!;
               int divisions = state.model.divisions!;
-              String? labelText = state.model.labelText;
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
 
               RangeValues rangeValues = state.value;
               RangeLabels? sliderLabels;
 
-              if (rangeSubLabelRender != null) {
+              if (rangeFormeLabelRender != null) {
                 String start =
-                    rangeSubLabelRender.startRender(rangeValues.start);
-                String end = rangeSubLabelRender.endRender(rangeValues.end);
+                    rangeFormeLabelRender.startRender(rangeValues.start);
+                String end = rangeFormeLabelRender.endRender(rangeValues.end);
                 sliderLabels = RangeLabels(start, end);
               }
 
@@ -91,26 +92,28 @@ class RangeSliderFormField extends NonnullValueField<RangeValues, SliderModel> {
                 ),
               );
 
-              return DecorationField(
+              return FormeDecoration(
+                formeDecorationFieldRenderData:
+                    state.model.formeDecorationFieldRenderData,
                 child: Padding(
                   child: slider,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
                 focusNode: state.focusNode,
                 errorText: state.errorText,
-                readOnly: readOnly,
-                labelText: labelText,
+                helperText: state.model.helperText,
+                labelText: state.model.labelText,
               );
             });
 
   @override
-  _RangeSliderFormFieldState createState() => _RangeSliderFormFieldState();
+  _FormeRangeSliderState createState() => _FormeRangeSliderState();
 }
 
-class _RangeSliderFormFieldState
-    extends NonnullValueFieldState<RangeValues, SliderModel> {
+class _FormeRangeSliderState
+    extends NonnullValueFieldState<RangeValues, FormeSliderModel> {
   @override
-  void beforeMerge(SliderModel old, SliderModel current) {
+  void beforeMerge(FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value.start < current.min!)
       setValue(RangeValues(current.min!, value.end));
     if (current.max != null && value.end > current.max!)
