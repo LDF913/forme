@@ -1,7 +1,7 @@
 name: forme
 description: a powerful flutter form widget , renamed from form_builder
 version: 2.0.0-alpha3
-homepage: https://github.com/wwwqyhme/flutter-form-builder
+homepage: https://github.com/wwwqyhme/forme
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
