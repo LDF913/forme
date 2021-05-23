@@ -1,3 +1,8 @@
+## 2.0.0-alpha3
+
+1. remove `FormLayoutManagement`
+2. remove `FormLayout`
+
 ## 2.0.0-alpha
 
 1. use `formManagement.formLayoutManagement` instead of `formManagement.newFormLayoutManagement()`

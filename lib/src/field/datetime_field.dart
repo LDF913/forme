@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../builder.dart';
 import '../widget/clear_button.dart';
 import '../form_state_model.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
 enum DateTimeType { Date, DateTime }
 
-class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
+class DateTimeFormField extends ValueField<DateTime, DateTimeFieldModel> {
   DateTimeFormField({
     ValueChanged<DateTime?>? onChanged,
     FormFieldValidator<DateTime>? validator,
@@ -18,12 +19,9 @@ class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    WidgetWrapper? wrapper,
-    required DateTimeFieldModel model,
-    LayoutParam? layoutParam,
+    DateTimeFieldModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: model ?? DateTimeFieldModel(),
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
@@ -141,7 +139,7 @@ class DateTimeFormField extends BaseValueField<DateTime, DateTimeFieldModel> {
 typedef DateTimeFormatter = String Function(DateTime dateTime);
 
 class _DateTimeFormFieldState
-    extends BaseValueFieldState<DateTime, DateTimeFieldModel> {
+    extends ValueFieldState<DateTime, DateTimeFieldModel> {
   DateTimeFormatter get _formatter =>
       _getDateTimeFormatter(model.type ?? DateTimeType.Date);
 
@@ -227,7 +225,7 @@ class DateTimeFieldModel extends AbstractFieldStateModel {
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+  DateTimeFieldModel merge(AbstractFieldStateModel old) {
     DateTimeFieldModel oldModel = old as DateTimeFieldModel;
     return DateTimeFieldModel(
       labelText: labelText ?? oldModel.labelText,

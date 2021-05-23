@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
-import '../form_field.dart';
+import '../builder.dart';
 import '../form_state_model.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
-class SingleSwitchFormField
-    extends BaseNonnullValueField<bool, SingleSwitchModel> {
+class SingleSwitchFormField extends NonnullValueField<bool, SingleSwitchModel> {
   SingleSwitchFormField({
     ValueChanged<bool>? onChanged,
     NonnullFieldValidator<bool>? validator,
@@ -22,11 +21,8 @@ class SingleSwitchFormField
     EdgeInsets? padding,
     SwitchRenderData? switchRenderData,
     Widget? label,
-    WidgetWrapper? wrapper,
     required SingleSwitchModel model,
-    LayoutParam? layoutParam,
   }) : super(
-          layoutParam: layoutParam ?? LayoutParam(flex: 0),
           model: model,
           readOnly: readOnly,
           name: name,

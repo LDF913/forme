@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import '../form_field.dart';
+import '../builder.dart';
 import 'decoration_field.dart';
 import 'slider.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
 class RangeSubLabelRender {
   final SubLabelRender startRender;
@@ -12,8 +12,7 @@ class RangeSubLabelRender {
   RangeSubLabelRender(this.startRender, this.endRender);
 }
 
-class RangeSliderFormField
-    extends BaseNonnullValueField<RangeValues, SliderModel> {
+class RangeSliderFormField extends NonnullValueField<RangeValues, SliderModel> {
   RangeSliderFormField({
     ValueChanged<RangeValues>? onChanged,
     NonnullFieldValidator<RangeValues>? validator,
@@ -29,25 +28,27 @@ class RangeSliderFormField
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<RangeValues>? onChangeStart,
     ValueChanged<RangeValues>? onChangeEnd,
-    WidgetWrapper? wrapper,
-    required SliderModel model,
-    LayoutParam? layoutParam,
+    SliderModel? model,
+    required double min,
+    required double max,
   }) : super(
-            layoutParam: layoutParam,
-            model: model,
+            model: (model ?? SliderModel()).merge(SliderModel(
+              max: max,
+              min: min,
+              divisions: (max - min).toInt(),
+            )),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
             onSaved: onSaved,
             validator: validator,
-            initialValue:
-                initialValue ?? RangeValues(model.min ?? 1, model.max ?? 100),
+            initialValue: initialValue ?? RangeValues(min, max),
             autovalidateMode: autovalidateMode,
             builder: (state) {
               bool readOnly = state.readOnly;
-              double max = state.model.max ?? 100;
-              double min = state.model.min ?? 1;
-              int divisions = state.model.divisions ?? (max - min).round();
+              double max = state.model.max!;
+              double min = state.model.min!;
+              int divisions = state.model.divisions!;
               String? labelText = state.model.labelText;
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
@@ -107,7 +108,7 @@ class RangeSliderFormField
 }
 
 class _RangeSliderFormFieldState
-    extends BaseNonnullValueFieldState<RangeValues, SliderModel> {
+    extends NonnullValueFieldState<RangeValues, SliderModel> {
   @override
   void beforeMerge(SliderModel old, SliderModel current) {
     if (current.min != null && value.start < current.min!)

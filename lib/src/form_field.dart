@@ -1,12 +1,7 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'builder.dart';
 import 'form_state_model.dart';
-
-typedef NonnullFieldValidator<T> = String? Function(T value);
-typedef NonnullFormFieldSetter<T> = void Function(T newValue);
-typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
-    T state);
 
 mixin StatefulField<T extends AbstractFieldState,
     E extends AbstractFieldStateModel> on StatefulWidget {
@@ -23,68 +18,70 @@ mixin StatefulField<T extends AbstractFieldState,
   bool get readOnly;
 }
 
-abstract class AbstractCommonField<T extends AbstractCommonFieldState,
-        E extends AbstractFieldStateModel> extends StatefulWidget
-    with StatefulField<T, E> {
+class CommonField<E extends AbstractFieldStateModel> extends StatefulWidget
+    with StatefulField<CommonFieldState, E> {
   final String? name;
-  final FieldContentBuilder<AbstractCommonFieldState> builder;
-  const AbstractCommonField({
+  final FieldContentBuilder<CommonFieldState<E>> builder;
+  final E model;
+  final bool readOnly;
+  const CommonField({
     this.name,
     required this.builder,
+    required this.model,
+    this.readOnly = false,
   });
-}
 
-abstract class CommonField<T extends AbstractCommonFieldState,
-    E extends AbstractFieldStateModel> extends AbstractCommonField<T, E> {
-  CommonField({
-    String? name,
-    required FieldContentBuilder<T> builder,
-  }) : super(
-            builder: (state) {
-              return builder(state as T);
-            },
-            name: name);
   @override
-  T createState();
+  CommonFieldState<E> createState() => CommonFieldState();
 }
 
-abstract class ValueField<T, K extends ValueFieldState<T, E>,
-        E extends AbstractFieldStateModel> extends FormField<T>
+class CommonFieldState<E extends AbstractFieldStateModel>
+    extends State<CommonField<E>> with AbstractFieldState<CommonField<E>, E> {
+  @override
+  Widget build(BuildContext context) {
+    return widget.builder(this);
+  }
+}
+
+class ValueField<T, E extends AbstractFieldStateModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String? name;
   final ValueChanged<T?>? onChanged;
+  final E model;
+  final bool readOnly;
 
   ValueField({
     this.onChanged,
     this.name,
-    required FieldContentBuilder<K> builder,
+    required FieldContentBuilder<ValueFieldState<T, E>> builder,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     bool enabled = true,
     FormFieldSetter<T>? onSaved,
+    required this.model,
+    this.readOnly = false,
   }) : super(
             enabled: enabled,
             onSaved: onSaved,
             builder: (field) {
-              K state = field as K;
+              ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
               return builder(state);
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue);
 
-  @override
-  K createState();
+  ValueFieldState<T, E> createState() => ValueFieldState();
 }
 
-abstract class NonnullValueField<T, K extends NonnullValueFieldState<T, E>,
-    E extends AbstractFieldStateModel> extends ValueField<T, K, E> {
+class NonnullValueField<T, E extends AbstractFieldStateModel>
+    extends ValueField<T, E> {
   @override
   T get initialValue => super.initialValue!;
 
   NonnullValueField({
-    required FieldContentBuilder<K> builder,
+    required FieldContentBuilder<NonnullValueFieldState<T, E>> builder,
     ValueChanged<T>? onChanged,
     NonnullFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
@@ -92,21 +89,28 @@ abstract class NonnullValueField<T, K extends NonnullValueFieldState<T, E>,
     NonnullFormFieldSetter<T>? onSaved,
     bool enabled = true,
     String? name,
+    required E model,
+    bool readOnly = false,
   }) : super(
+            model: model,
+            readOnly: readOnly,
             enabled: enabled,
             onSaved: onSaved == null ? null : (value) => onSaved(value!),
             onChanged: onChanged == null ? null : (value) => onChanged(value!),
-            builder: builder,
+            builder: (field) {
+              NonnullValueFieldState<T, E> state =
+                  field as NonnullValueFieldState<T, E>;
+              return builder(state);
+            },
             validator: validator == null ? null : (value) => validator(value!),
             autovalidateMode: autovalidateMode,
             initialValue: initialValue,
             name: name);
 
-  @override
-  K createState();
+  NonnullValueFieldState<T, E> createState() => NonnullValueFieldState();
 }
 
-abstract class NonnullValueFieldState<T, E extends AbstractFieldStateModel>
+class NonnullValueFieldState<T, E extends AbstractFieldStateModel>
     extends ValueFieldState<T, E> {
   @override
   T get value => super.value!;
@@ -121,14 +125,5 @@ abstract class NonnullValueFieldState<T, E extends AbstractFieldStateModel>
   @override
   void setValue(T? value) {
     super.setValue(value == null ? widget.initialValue : value);
-  }
-}
-
-abstract class AbstractCommonFieldState<E extends AbstractFieldStateModel>
-    extends State<AbstractCommonField>
-    with AbstractFieldState<AbstractCommonField, E> {
-  @override
-  Widget build(BuildContext context) {
-    return widget.builder(this);
   }
 }

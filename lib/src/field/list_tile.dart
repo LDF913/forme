@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
-import '../form_field.dart';
+import '../builder.dart';
 import '../form_state_model.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
 class ListTileItem<T> {
   final Widget title;
@@ -42,7 +42,7 @@ class ListTileItem<T> {
 enum ListTileItemType { Checkbox, Switch, Radio }
 
 class ListTileFormField<T>
-    extends BaseNonnullValueField<List<T>, ListTileModel<T>> {
+    extends NonnullValueField<List<T>, ListTileModel<T>> {
   ListTileFormField({
     ValueChanged<List<T>>? onChanged,
     NonnullFieldValidator<List<T>>? validator,
@@ -55,12 +55,11 @@ class ListTileFormField<T>
     bool readOnly = false,
     EdgeInsets? padding,
     ListTileItemType type = ListTileItemType.Checkbox,
-    WidgetWrapper? wrapper,
-    required ListTileModel<T> model,
-    LayoutParam? layoutParam,
+    required List<ListTileItem<T>>? items,
+    ListTileModel<T>? model,
   }) : super(
-            layoutParam: layoutParam,
-            model: model,
+            model: (model ?? ListTileModel<T>())
+                .merge(ListTileModel(items: items)),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -341,7 +340,7 @@ class ListTileFormField<T>
 }
 
 class _ListTileFormFieldState<T>
-    extends BaseNonnullValueFieldState<List<T>, ListTileModel<T>> {
+    extends NonnullValueFieldState<List<T>, ListTileModel<T>> {
   @override
   void beforeMerge(ListTileModel<T> old, ListTileModel<T> current) {
     if (current.items != null) {
@@ -376,7 +375,7 @@ class ListTileModel<T> extends AbstractFieldStateModel {
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+  ListTileModel<T> merge(AbstractFieldStateModel old) {
     ListTileModel<T> oldModel = old as ListTileModel<T>;
     return ListTileModel<T>(
       labelText: labelText ?? oldModel.labelText,

@@ -6,7 +6,6 @@ import '../render/form_render_utils.dart';
 import '../builder.dart';
 import '../form_state_model.dart';
 import '../form_field.dart';
-import 'base_field.dart';
 
 /// used to render select list
 ///
@@ -58,11 +57,10 @@ typedef SelectItemProvider<T> = Future<SelectItemPage<T>> Function(
 
 /// used to build a query form
 ///
-/// [builder] form builder
-///
 /// [submit] an function used to submit query
-typedef QueryFormBuilder = Widget Function(
-    FormBuilder builder, VoidCallback submit);
+///
+/// **return a form widget **
+typedef QueryFormBuilder = Widget? Function(VoidCallback submit);
 
 /// used to listen select dialog open
 ///
@@ -86,8 +84,7 @@ class SelectorThemeData {
       {this.listTileThemeData, this.chipThemeData, this.inputDecorationTheme});
 }
 
-class SelectorFormField<T>
-    extends BaseNonnullValueField<List<T>, SelectorModel> {
+class SelectorFormField<T> extends NonnullValueField<List<T>, SelectorModel> {
   final SelectItemRender<T>? selectItemRender;
   final SelectedItemRender<T>? selectedItemRender;
   final SelectedSorter<T>? selectedSorter;
@@ -138,11 +135,8 @@ class SelectorFormField<T>
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    WidgetWrapper? wrapper,
     required SelectorModel model,
-    LayoutParam? layoutParam,
   }) : super(
-          layoutParam: layoutParam,
           model: model,
           readOnly: readOnly,
           name: name,
@@ -427,8 +421,13 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
     if (widget.queryFormBuilder == null) {
       return null;
     }
-    FormBuilder form = FormBuilder().key(_formKey);
-    return widget.queryFormBuilder!(form, query);
+    Widget? formWidget = widget.queryFormBuilder!(query);
+    if (formWidget != null) {
+      return FormBuilder(
+        key: _formKey,
+        child: formWidget,
+      );
+    }
   }
 
   void loadData(int gen, {bool decreasePageWhenError = false}) {
@@ -560,7 +559,7 @@ class _SelectorDialogState<T> extends State<_SelectorDialog> {
 }
 
 class _SelectorFormFieldState<T>
-    extends BaseNonnullValueFieldState<List<T>, SelectorModel> {
+    extends NonnullValueFieldState<List<T>, SelectorModel> {
   @override
   void beforeMerge(SelectorModel old, SelectorModel current) {
     if (current.multi != null && current.multi != old.multi) {

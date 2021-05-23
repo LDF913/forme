@@ -6,11 +6,10 @@ import 'package:flutter/services.dart';
 import '../widget/clear_button.dart';
 import '../form_state_model.dart';
 import '../text_selection.dart';
+import '../builder.dart';
 import '../form_field.dart';
-import 'base_field.dart';
 
-class ClearableTextFormField
-    extends BaseNonnullValueField<String, TextFieldModel> {
+class ClearableTextFormField extends NonnullValueField<String, TextFieldModel> {
   final bool obscureText;
   ClearableTextFormField({
     this.obscureText = false,
@@ -29,12 +28,9 @@ class ClearableTextFormField
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    WidgetWrapper? wrapper,
-    required TextFieldModel model,
-    LayoutParam? layoutParam,
+    TextFieldModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: model ?? TextFieldModel(),
           name: name,
           readOnly: readOnly,
           onChanged: onChanged,
@@ -140,8 +136,7 @@ class ClearableTextFormField
   _TextFormFieldState createState() => _TextFormFieldState();
 }
 
-class _TextFormFieldState
-    extends BaseNonnullValueFieldState<String, TextFieldModel>
+class _TextFormFieldState extends NonnullValueFieldState<String, TextFieldModel>
     with TextSelectionManagement {
   bool obscureText = false;
 

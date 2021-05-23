@@ -88,7 +88,7 @@ abstract class FormManagement {
   /// save all form fields
   ///
   /// form field's onSaved will be  called
-  void onSaved();
+  void save();
 }
 
 /// used to control form field

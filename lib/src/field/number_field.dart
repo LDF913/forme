@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../builder.dart';
 import '../widget/clear_button.dart';
 import '../form_state_model.dart';
 import '../text_selection.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
-class NumberFormField extends BaseValueField<num, NumberFieldModel> {
+class NumberFormField extends ValueField<num, NumberFieldModel> {
   NumberFormField({
     ValueChanged<num?>? onChanged,
     FormFieldValidator<num>? validator,
@@ -19,12 +20,9 @@ class NumberFormField extends BaseValueField<num, NumberFieldModel> {
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    WidgetWrapper? wrapper,
-    required NumberFieldModel model,
-    LayoutParam? layoutParam,
+    NumberFieldModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: model ?? NumberFieldModel(),
           readOnly: readOnly,
           name: name,
           onSaved: onSaved,
@@ -144,7 +142,7 @@ class NumberFormField extends BaseValueField<num, NumberFieldModel> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState extends BaseValueFieldState<num, NumberFieldModel>
+class _NumberFieldState extends ValueFieldState<num, NumberFieldModel>
     with TextSelectionManagement {
   late final TextEditingController textEditingController;
   @override

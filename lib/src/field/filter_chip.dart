@@ -3,9 +3,9 @@ import '../render/form_render_utils.dart';
 import '../render/theme_data.dart';
 
 import '../form_state_model.dart';
-import '../form_field.dart';
+import '../builder.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
 class FilterChipItem<T> {
   final Widget label;
@@ -36,7 +36,7 @@ class FilterChipItem<T> {
 enum ChipLayoutType { wrap, scroll }
 
 class FilterChipFormField<T>
-    extends BaseNonnullValueField<List<T>, FilterChipModel<T>> {
+    extends NonnullValueField<List<T>, FilterChipModel<T>> {
   FilterChipFormField({
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
@@ -49,12 +49,11 @@ class FilterChipFormField<T>
     bool readOnly = false,
     EdgeInsets? padding,
     VoidCallback? exceedCallback,
-    WidgetWrapper? wrapper,
-    required FilterChipModel<T> model,
-    LayoutParam? layoutParam,
+    required List<FilterChipItem<T>>? items,
+    FilterChipModel<T>? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: (model ?? FilterChipModel<T>())
+              .merge(FilterChipModel<T>(items: items)),
           readOnly: readOnly,
           name: name,
           validator: validator,
@@ -65,7 +64,7 @@ class FilterChipFormField<T>
           builder: (state) {
             bool readOnly = state.readOnly;
             FilterChipModel<T> model = state.model;
-            List<FilterChipItem<T>> items = model.items ?? [];
+            List<FilterChipItem<T>> items = model.items!;
             String? labelText = model.labelText;
             double? pressElevation = model.pressElevation;
             ChipLayoutType layoutType = model.layoutType ?? ChipLayoutType.wrap;
@@ -167,7 +166,7 @@ class FilterChipFormField<T>
 }
 
 class _FilterChipFormFieldState<T>
-    extends BaseNonnullValueFieldState<List<T>, FilterChipModel<T>> {
+    extends NonnullValueFieldState<List<T>, FilterChipModel<T>> {
   @override
   void beforeMerge(FilterChipModel<T> old, FilterChipModel<T> current) {
     if (current.items != null) {
@@ -203,7 +202,7 @@ class FilterChipModel<T> extends AbstractFieldStateModel {
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel oldFieldState) {
+  FilterChipModel<T> merge(AbstractFieldStateModel oldFieldState) {
     FilterChipModel<T> old = oldFieldState as FilterChipModel<T>;
     return FilterChipModel<T>(
       items: items ?? old.items,

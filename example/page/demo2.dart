@@ -1,5 +1,5 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:form_builder/form_builder.dart';
 
 class Demo2Page extends StatefulWidget {
@@ -48,6 +48,20 @@ class _Demo2PageState extends State<Demo2Page> {
                     : 'set form readonly'));
           },
         ),
+        //sliderVisible
+        Builder(builder: (context) {
+          FormFieldManagement management =
+              formKey.currentManagement.newFormFieldManagement('sliderVisible');
+          bool visible = (management.model as VisibleModel).visible ?? true;
+          return TextButton(
+              onPressed: () {
+                management.model = VisibleModel(visible: !visible);
+                (context as Element).markNeedsBuild();
+              },
+              child: Text(
+                visible ? 'hide slider' : 'show slider',
+              ));
+        }),
         TextButton(
             onPressed: () {
               setState(() {});
@@ -164,14 +178,15 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
         ),
         SizedBox(height: 10),
-        InputDecorator(
-          decoration: InputDecoration(
-            labelText: "slider",
-            border: InputBorder.none,
-          ),
-          child: SliderFormField(
-            name: 'slider',
-            model: SliderModel(
+        VisibleFormField(
+          name: 'sliderVisible',
+          child: InputDecorator(
+            decoration: InputDecoration(
+              labelText: "slider",
+              border: InputBorder.none,
+            ),
+            child: SliderFormField(
+              name: 'slider',
               min: 0,
               max: 100,
             ),
@@ -184,7 +199,8 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
           child: RangeSliderFormField(
             name: 'rangeSlider',
-            model: SliderModel(min: 1, max: 100),
+            min: 1,
+            max: 100,
           ),
         ),
         InputDecorator(
@@ -193,10 +209,10 @@ class _Demo2PageState extends State<Demo2Page> {
             border: InputBorder.none,
           ),
           child: ListTileFormField(
+            items: FormBuilderUtils.toListTileItems(['1', '2']),
             name: 'radioTile',
             type: ListTileItemType.Radio,
             model: ListTileModel(
-              items: FormBuilderUtils.toListTileItems(['1', '2']),
               hasSelectAll: false,
               split: 1,
             ),
@@ -208,10 +224,10 @@ class _Demo2PageState extends State<Demo2Page> {
             border: InputBorder.none,
           ),
           child: ListTileFormField(
+            items: FormBuilderUtils.toListTileItems(['1', '2']),
             name: 'checkboxTile',
             type: ListTileItemType.Checkbox,
             model: ListTileModel(
-              items: FormBuilderUtils.toListTileItems(['1', '2']),
               hasSelectAll: false,
               split: 1,
             ),
@@ -225,9 +241,9 @@ class _Demo2PageState extends State<Demo2Page> {
           child: ListTileFormField(
             name: 'switchTile',
             type: ListTileItemType.Switch,
+            items: FormBuilderUtils.toListTileItems(['1', '2'],
+                controlAffinity: ListTileControlAffinity.trailing),
             model: ListTileModel(
-              items: FormBuilderUtils.toListTileItems(['1', '2'],
-                  controlAffinity: ListTileControlAffinity.trailing),
               hasSelectAll: false,
               split: 1,
             ),
@@ -235,6 +251,9 @@ class _Demo2PageState extends State<Demo2Page> {
         ),
       ],
     );
-    return FormBuilder().key(formKey).build(child: child);
+    return FormBuilder(
+      child: child,
+      key: formKey,
+    );
   }
 }

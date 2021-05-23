@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../form_field.dart';
 import '../form_state_model.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
 
 /// used to transfer rate to your rate
 ///
@@ -15,7 +15,7 @@ import 'base_field.dart';
 /// **return value must be in [0,1]**
 typedef RateTransfer = double Function(double rate);
 
-class RateFormField extends BaseValueField<double, RateModel> {
+class RateFormField extends ValueField<double, RateModel> {
   RateFormField({
     ValueChanged<double?>? onChanged,
     FormFieldValidator<double>? validator,
@@ -23,18 +23,12 @@ class RateFormField extends BaseValueField<double, RateModel> {
     double? initialValue,
     FormFieldSetter<double>? onSaved,
     String? name,
-    int flex = 1,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     RateTransfer? transfer,
     int ratio = 1,
-    WidgetWrapper? wrapper,
-    required RateModel model,
-    LayoutParam? layoutParam,
+    RateModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: model ?? RateModel(),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../form_field.dart';
 import '../form_state_model.dart';
-import 'base_field.dart';
 
 enum ButtonType { Text, Elevated, Outlined }
 
-class ButtonFormField extends BaseCommonField<ButtonModel> {
+class ButtonFormField extends CommonField<ButtonModel> {
   ButtonFormField({
     String? name,
     int flex = 0,
@@ -14,23 +14,12 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
     bool readOnly = false,
     bool visible = true,
     EdgeInsets? padding,
-    TextButtonThemeData? textButtonThemeData,
-    ElevatedButtonThemeData? elevatedButtonThemeData,
-    OutlinedButtonThemeData? outlinedButtonThemeData,
     required Widget child,
-    Icon? icon,
-    ButtonStyle? style,
     ButtonType type = ButtonType.Text,
-    WidgetWrapper? wrapper,
-    LayoutParam? layoutParam,
+    ButtonModel? model,
   }) : super(
-            layoutParam: layoutParam ?? LayoutParam(flex: 0),
-            model: ButtonModel(
-              child: child,
-              icon: icon,
-              style: style,
-              type: type,
-            ),
+            model: (model ?? ButtonModel())
+                .merge(ButtonModel(child: child, type: type)),
             name: name,
             readOnly: readOnly,
             builder: (state) {
@@ -99,17 +88,17 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
               switch (type) {
                 case ButtonType.Text:
                   return TextButtonTheme(
-                      data: textButtonThemeData ??
+                      data: state.model.textButtonThemeData ??
                           TextButtonTheme.of(state.context),
                       child: button);
                 case ButtonType.Elevated:
                   return ElevatedButtonTheme(
-                      data: elevatedButtonThemeData ??
+                      data: state.model.elevatedButtonThemeData ??
                           ElevatedButtonTheme.of(state.context),
                       child: button);
                 case ButtonType.Outlined:
                   return OutlinedButtonTheme(
-                      data: outlinedButtonThemeData ??
+                      data: state.model.outlinedButtonThemeData ??
                           OutlinedButtonTheme.of(state.context),
                       child: button);
               }
@@ -117,25 +106,36 @@ class ButtonFormField extends BaseCommonField<ButtonModel> {
 }
 
 class ButtonModel extends AbstractFieldStateModel {
-  final Icon? icon;
   final Widget? child;
-  final ButtonStyle? style;
   final ButtonType? type;
-
+  final Icon? icon;
+  final ButtonStyle? style;
+  final TextButtonThemeData? textButtonThemeData;
+  final ElevatedButtonThemeData? elevatedButtonThemeData;
+  final OutlinedButtonThemeData? outlinedButtonThemeData;
   ButtonModel({
-    this.icon,
     this.child,
-    this.style,
     this.type,
+    this.icon,
+    this.style,
+    this.textButtonThemeData,
+    this.elevatedButtonThemeData,
+    this.outlinedButtonThemeData,
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+  ButtonModel merge(AbstractFieldStateModel old) {
     ButtonModel oldModel = old as ButtonModel;
     return ButtonModel(
-        child: child ?? oldModel.child,
-        icon: icon ?? oldModel.icon,
-        style: style ?? oldModel.style,
-        type: type ?? oldModel.type);
+      child: child ?? oldModel.child,
+      type: type ?? oldModel.type,
+      icon: icon ?? oldModel.icon,
+      style: style ?? oldModel.style,
+      textButtonThemeData: textButtonThemeData ?? oldModel.textButtonThemeData,
+      elevatedButtonThemeData:
+          elevatedButtonThemeData ?? oldModel.elevatedButtonThemeData,
+      outlinedButtonThemeData:
+          outlinedButtonThemeData ?? oldModel.outlinedButtonThemeData,
+    );
   }
 }

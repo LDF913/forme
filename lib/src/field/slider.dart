@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../form_state_model.dart';
-import '../form_field.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
+import '../builder.dart';
+import '../form_field.dart';
 
 typedef SubLabelRender = String Function(num value);
 
-class SliderFormField extends BaseNonnullValueField<num, SliderModel> {
+class SliderFormField extends NonnullValueField<num, SliderModel> {
   SliderFormField({
     ValueChanged<num>? onChanged,
     NonnullFieldValidator<num>? validator,
@@ -24,24 +24,27 @@ class SliderFormField extends BaseNonnullValueField<num, SliderModel> {
     ValueChanged<double>? onChangeStart,
     ValueChanged<double>? onChangeEnd,
     MouseCursor? mouseCursor,
-    WidgetWrapper? wrapper,
-    required SliderModel model,
-    LayoutParam? layoutParam,
+    required double min,
+    required double max,
+    SliderModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: (model ?? SliderModel()).merge(SliderModel(
+            max: max,
+            min: min,
+            divisions: (max - min).toInt(),
+          )),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
-          initialValue: initialValue ?? model.min ?? 1,
+          initialValue: initialValue ?? min,
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
-            double max = state.model.max ?? 100;
-            double min = state.model.min ?? 1;
-            int divisions = state.model.divisions ?? (max - min).round();
+            double max = state.model.max!;
+            double min = state.model.min!;
+            int divisions = state.model.divisions!;
             String? labelText = state.model.labelText;
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
@@ -97,8 +100,7 @@ class SliderFormField extends BaseNonnullValueField<num, SliderModel> {
   _SliderFormFieldState createState() => _SliderFormFieldState();
 }
 
-class _SliderFormFieldState
-    extends BaseNonnullValueFieldState<num, SliderModel> {
+class _SliderFormFieldState extends NonnullValueFieldState<num, SliderModel> {
   @override
   void beforeMerge(SliderModel old, SliderModel current) {
     if (current.min != null && value < current.min!) setValue(current.min!);
@@ -124,7 +126,7 @@ class SliderModel extends AbstractFieldStateModel {
       this.inactiveColor,
       this.sliderThemeData});
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+  SliderModel merge(AbstractFieldStateModel old) {
     SliderModel oldModel = old as SliderModel;
     return SliderModel(
       labelText: labelText ?? oldModel.labelText,

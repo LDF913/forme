@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-import '../form_field.dart';
+import '../builder.dart';
 import '../form_state_model.dart';
-import 'base_field.dart';
 import 'decoration_field.dart';
+import '../form_field.dart';
 
 class CupertinoPickerFormField
-    extends BaseNonnullValueField<int, CupertinoPickerModel> {
+    extends NonnullValueField<int, CupertinoPickerModel> {
   CupertinoPickerFormField({
     ValueChanged<int>? onChanged,
     NonnullFieldValidator<int>? validator,
@@ -16,11 +16,12 @@ class CupertinoPickerFormField
     FormFieldSetter<int>? onSaved,
     String? name,
     bool readOnly = false,
-    required CupertinoPickerModel model,
-    LayoutParam? layoutParam,
+    double itemExtent = 30,
+    required List<Widget> children,
+    CupertinoPickerModel? model,
   }) : super(
-          layoutParam: layoutParam,
-          model: model,
+          model: (model ?? CupertinoPickerModel()).merge(
+              CupertinoPickerModel(children: children, itemExtent: itemExtent)),
           name: name,
           readOnly: readOnly,
           onChanged: onChanged,
@@ -45,14 +46,14 @@ class CupertinoPickerFormField
                     looping: state.model.looping ?? false,
                     selectionOverlay: state.model.selectionOverlay ??
                         const CupertinoPickerDefaultSelectionOverlay(),
-                    itemExtent: state.model.itemExtent ?? 50,
+                    itemExtent: state.model.itemExtent!,
                     onSelectedItemChanged: state.readOnly
                         ? null
                         : (index) {
                             state.doChangeValue(index, scrollToItem: false);
                             state.requestFocus();
                           },
-                    children: state.model.children ?? []));
+                    children: state.model.children!));
             return DecorationField(
               child: AspectRatio(
                 aspectRatio: state.model.aspectRatio ?? 3,
@@ -72,7 +73,7 @@ class CupertinoPickerFormField
 }
 
 class _CupertinoPickerFormFieldState
-    extends BaseNonnullValueFieldState<int, CupertinoPickerModel> {
+    extends NonnullValueFieldState<int, CupertinoPickerModel> {
   Key? key = UniqueKey();
   FixedExtentScrollController scrollController = FixedExtentScrollController();
 
@@ -146,7 +147,7 @@ class CupertinoPickerModel extends AbstractFieldStateModel {
   });
 
   @override
-  AbstractFieldStateModel merge(AbstractFieldStateModel old) {
+  CupertinoPickerModel merge(AbstractFieldStateModel old) {
     CupertinoPickerModel oldModel = old as CupertinoPickerModel;
     return CupertinoPickerModel(
       diameterRatio: diameterRatio ?? oldModel.diameterRatio,

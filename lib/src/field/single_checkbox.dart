@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import '../render/theme_data.dart';
 import '../render/form_render_utils.dart';
 
-import '../form_field.dart';
+import '../builder.dart';
 import '../form_state_model.dart';
 import 'decoration_field.dart';
-import 'base_field.dart';
+import '../form_field.dart';
 
 enum InlineFieldType { Switch, Checkbox }
 
 class SingleCheckboxFormField
-    extends BaseNonnullValueField<bool, SingleCheckboxModel> {
+    extends NonnullValueField<bool, SingleCheckboxModel> {
   SingleCheckboxFormField({
     ValueChanged<bool>? onChanged,
     NonnullFieldValidator<bool>? validator,
@@ -22,11 +22,8 @@ class SingleCheckboxFormField
     bool visible = true,
     bool readOnly = false,
     EdgeInsets? padding,
-    WidgetWrapper? wrapper,
     required SingleCheckboxModel model,
-    LayoutParam? layoutParam,
   }) : super(
-          layoutParam: layoutParam ?? LayoutParam(flex: 0),
           model: model,
           readOnly: readOnly,
           name: name,
