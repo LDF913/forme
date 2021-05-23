@@ -29,7 +29,7 @@ FormeField
 
 | attribute | type |  description|
 | --- | --- | --- | 
-| name | String? | name of a field ,used to control field and get error|value from this field |
+| name | String? | name of a field ,used to control field and get error\|value from this field |
 | builder |  FormContentBuilder | used to build field widget |
 | model |  AbstractFormeModel | used to determine how to build a field widget |
 | readOnly |  bool | whether field should be readOnly |
@@ -41,9 +41,9 @@ FormeField
 | attribute | type |  description|
 | --- | --- | --- | 
 | validator | FormFieldValidator? | validator|
-| autovalidateMode |  AutovalidateMode? | |
-| initialValue |  T? | |
-| enabled |  bool | |
+| autovalidateMode |  AutovalidateMode? | -  |
+| initialValue |  T? | -  |
+| enabled |  bool | - |
 | onSaved |  FormFieldSetter? | called when save form |
 
 ### NonnullValueField
@@ -53,9 +53,9 @@ FormeField
 | attribute | type |  description|
 | --- | --- | --- | 
 | validator | NonnullFieldValidator? | validator|
-| autovalidateMode |  AutovalidateMode? | |
-| initialValue |  T | |
-| enabled |  bool | |
+| autovalidateMode |  AutovalidateMode? |-  |
+| initialValue |  T |-  |
+| enabled |  bool |-  |
 | onSaved |  NonnullFormFieldSetter? | called when save form |
 
 ## methods
