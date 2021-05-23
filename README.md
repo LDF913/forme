@@ -28,7 +28,7 @@ FormField
 ### attributes supported by all StatefulFields
 
 | attribute | type |  description|
-| -- | -- | -- | 
+| --- | --- | --- | 
 | name | String? | name of a field ,used to control field and get error|value from this field |
 | builder |  FormContentBuilder | used to build field widget |
 | model |  AbstractFieldStateModel | used to determine how to build a field widget |
@@ -39,7 +39,7 @@ FormField
 #### supported attributes
 
 | attribute | type |  description|
-| -- | -- | -- | 
+| --- | --- | --- | 
 | validator | FormFieldValidator? | validator|
 | autovalidateMode |  AutovalidateMode? | |
 | initialValue |  T? | |
