@@ -25,39 +25,6 @@ FormeField
 		- CommonField
 ```
 
-### attributes supported by all StatefulFields
-
-| attribute | type |  description|
-| --- | --- | --- | 
-| name | String? | name of a field ,used to control field and get error and value from this field |
-| builder |  FormContentBuilder | used to build field widget |
-| model |  FormeModel | used to determine how to build a field widget |
-| readOnly |  bool | whether field should be readOnly |
-
-### ValueField
-
-#### supported attributes
-
-| attribute | type |  description|
-| --- | --- | --- | 
-| validator | FormFieldValidator? | validator|
-| autovalidateMode |  AutovalidateMode? | when to perform autovalidate |
-| initialValue |  T? | initialValue |
-| enabled |  bool | whether field is enabled,if not enabled,autovalidate will not work |
-| onSaved |  FormFieldSetter? | called when save form |
-
-### NonnullValueField
-
-#### supported attributes
-
-**NonnullValueField extends ValueField,but some attributes are different**
-
-| attribute | type |  description|
-| --- | --- | --- | 
-| validator | NonnullFieldValidator? | validator|
-| initialValue |  T | initialValue |
-| onSaved |  NonnullFormFieldSetter? | called when save form |
-
 ## methods
 
 ### FormeManagement
@@ -306,6 +273,17 @@ String? errorText = valueFieldManagement.quietlyValidate();
 | FormeVisible|  make field visible\|invisible |
 | FormeColumn|  a column support insert\|swap\|remove widgets |
 | FormeRow|  a row support insert\|swap\|remove widgets |
+
+
+## currently supported widgets
+
+| field | description|
+| ---| --- |
+| FormeClearButton|  a icon button used to clear field's value |
+| FormePasswordVisibleButton|  a icon button used to toggle textfield's obscureText |
+| FormeTextFieldWidget|  a textfield . when click prefix or suffix buttons, will not trigger textfield's onTap |
+| FormeDropdownButtonClearButton|  a icon button used to clear FormeDropdownButton's value |
+| FormeCupertinoPickerLockButton|  a icon button used to enable or disable FormeCupertinoPicker's scroll |
 
 ## example for helping build a custom field
 
