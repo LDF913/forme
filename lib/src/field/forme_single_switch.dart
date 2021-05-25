@@ -3,7 +3,7 @@ import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
 
 class FormeSingleSwitch
@@ -15,11 +15,7 @@ class FormeSingleSwitch
     bool initialValue = false,
     NonnullFormFieldSetter<bool>? onSaved,
     String? name,
-    int flex = 0,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
-    FormeSwitchRenderData? formeSwitchRenderData,
     Widget? label,
     FormeSingleSwitchModel? model,
     Key? key,
@@ -61,7 +57,7 @@ class FormeSingleSwitch
         );
 }
 
-class FormeSingleSwitchModel extends AbstractFormeModel {
+class FormeSingleSwitchModel extends FormeModel {
   final Widget? label;
   final FormeSwitchRenderData? formeSwitchRenderData;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
@@ -71,15 +67,19 @@ class FormeSingleSwitchModel extends AbstractFormeModel {
     this.formeSwitchRenderData,
     this.formeDecorationFieldRenderData,
   });
+
   @override
-  AbstractFormeModel merge(AbstractFormeModel old) {
-    FormeSingleSwitchModel oldModel = old as FormeSingleSwitchModel;
+  FormeSingleSwitchModel copyWith({
+    Optional<Widget>? label,
+    Optional<FormeSwitchRenderData>? formeSwitchRenderData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeSingleSwitchModel(
-      label: label ?? oldModel.label,
+      label: Optional.copyWith(label, this.label),
       formeSwitchRenderData:
-          formeSwitchRenderData ?? oldModel.formeSwitchRenderData,
-      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
-          oldModel.formeDecorationFieldRenderData,
+          Optional.copyWith(formeSwitchRenderData, this.formeSwitchRenderData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }

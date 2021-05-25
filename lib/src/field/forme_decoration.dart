@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../render/forme_render_data.dart';
+
+import '../forme_state_model.dart';
 
 const Duration _kTransitionDuration = Duration(milliseconds: 200);
 
@@ -295,5 +296,49 @@ class _HelperErrorState extends State<_HelperError>
       );
     }
     return empty;
+  }
+}
+
+class FormeDecorationRenderData {
+  final TextStyle? errorStyle;
+  final TextStyle? helperStyle;
+  final TextStyle? labelStyle;
+  final int? helperMaxLines;
+  final int? errorMaxLines;
+
+  /// errorText & helperText padding
+  final EdgeInsets? bottomPadding;
+
+  /// label & icon padding
+  final EdgeInsets? headPadding;
+
+  const FormeDecorationRenderData({
+    this.errorStyle,
+    this.helperStyle,
+    this.labelStyle,
+    this.helperMaxLines,
+    this.errorMaxLines,
+    this.bottomPadding,
+    this.headPadding,
+  });
+
+  FormeDecorationRenderData copyWith({
+    Optional<TextStyle>? errorStyle,
+    Optional<TextStyle>? helperStyle,
+    Optional<TextStyle>? labelStyle,
+    Optional<int>? helperMaxLines,
+    Optional<int>? errorMaxLines,
+    Optional<EdgeInsets>? bottomPadding,
+    Optional<EdgeInsets>? headPadding,
+  }) {
+    return FormeDecorationRenderData(
+      errorStyle: Optional.copyWith(errorStyle, this.errorStyle),
+      helperStyle: Optional.copyWith(helperStyle, this.helperStyle),
+      labelStyle: Optional.copyWith(labelStyle, this.labelStyle),
+      helperMaxLines: Optional.copyWith(helperMaxLines, this.helperMaxLines),
+      errorMaxLines: Optional.copyWith(errorMaxLines, this.errorMaxLines),
+      bottomPadding: Optional.copyWith(bottomPadding, this.bottomPadding),
+      headPadding: Optional.copyWith(headPadding, this.headPadding),
+    );
   }
 }

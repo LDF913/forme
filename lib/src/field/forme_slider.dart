@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
-import '../render/forme_render_data.dart';
+import '../forme_core.dart';
 
 typedef FormeLabelRender = String Function(num value);
 
@@ -16,10 +16,7 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
     FormeLabelRender? subLabelRender,
     NonnullFormFieldSetter<num>? onSaved,
     String? name,
-    int flex = 1,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<double>? onChangeStart,
     ValueChanged<double>? onChangeEnd,
@@ -30,11 +27,11 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
     Key? key,
   }) : super(
           key: key,
-          model: (model ?? FormeSliderModel()).merge(FormeSliderModel(
+          model: (model ?? FormeSliderModel()).copyWith(
             max: max,
             min: min,
             divisions: (max - min).toInt(),
-          )),
+          ),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -105,13 +102,13 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
 
 class _FormeSliderState extends NonnullValueFieldState<num, FormeSliderModel> {
   @override
-  void beforeMerge(FormeSliderModel old, FormeSliderModel current) {
+  void beforeUpdateModel(FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value < current.min!) setValue(current.min!);
     if (current.max != null && value > current.max!) setValue(current.max!);
   }
 }
 
-class FormeSliderModel extends AbstractFormeModel {
+class FormeSliderModel extends FormeModel {
   final String? labelText;
   final String? helperText;
   final double? max;
@@ -134,19 +131,28 @@ class FormeSliderModel extends AbstractFormeModel {
     this.helperText,
   });
   @override
-  FormeSliderModel merge(AbstractFormeModel old) {
-    FormeSliderModel oldModel = old as FormeSliderModel;
+  FormeSliderModel copyWith({
+    Optional<String>? labelText,
+    Optional<String>? helperText,
+    double? max,
+    double? min,
+    int? divisions,
+    Optional<Color>? activeColor,
+    Optional<Color>? inactiveColor,
+    Optional<SliderThemeData>? sliderThemeData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeSliderModel(
-      labelText: labelText ?? oldModel.labelText,
-      helperText: helperText ?? oldModel.helperText,
-      max: max ?? oldModel.max,
-      min: min ?? oldModel.min,
-      divisions: divisions ?? oldModel.divisions,
-      activeColor: activeColor ?? oldModel.activeColor,
-      inactiveColor: inactiveColor ?? oldModel.inactiveColor,
-      sliderThemeData: sliderThemeData ?? oldModel.sliderThemeData,
-      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
-          oldModel.formeDecorationFieldRenderData,
+      labelText: Optional.copyWith(labelText, this.labelText),
+      helperText: Optional.copyWith(helperText, this.helperText),
+      max: max ?? this.max,
+      min: min ?? this.min,
+      divisions: divisions ?? this.divisions,
+      activeColor: Optional.copyWith(activeColor, this.activeColor),
+      inactiveColor: Optional.copyWith(inactiveColor, this.inactiveColor),
+      sliderThemeData: Optional.copyWith(sliderThemeData, this.sliderThemeData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }

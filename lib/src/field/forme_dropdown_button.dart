@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../forme_core.dart';
+import '../forme_management.dart';
+import '../widget/forme_clear_button.dart';
 
 import '../forme_field.dart';
 import '../forme_state_model.dart';
@@ -21,8 +24,8 @@ class FormeDropdownButton<T>
     Key? key,
   }) : super(
           key: key,
-          model: (model ?? FormeDropdownButtonModel<T>())
-              .merge(FormeDropdownButtonModel<T>(items: items)),
+          model:
+              (model ?? FormeDropdownButtonModel<T>()).copyWith(items: items),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -33,33 +36,10 @@ class FormeDropdownButton<T>
           builder: (state) {
             bool readOnly = state.readOnly;
             double iconSize = state.model.iconSize ?? 24;
-            InputDecoration inputDecoration = state.model.decoration ??
-                InputDecoration(
-                  focusColor: state.model.focusColor,
-                  labelText: state.model.labelText,
-                  helperText: state.model.helperText,
-                  suffixIcon: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.arrow_drop_down,
-                        size: iconSize,
-                      ),
-                      if (!readOnly)
-                        InkWell(
-                          child: IconButton(
-                              icon: Icon(Icons.clear),
-                              onPressed: readOnly
-                                  ? null
-                                  : () {
-                                      state.didChange(null);
-                                      state.requestFocus();
-                                    }),
-                        )
-                    ],
-                  ),
-                );
+
+            InputDecoration inputDecoration =
+                state.model.decoration ?? InputDecoration();
+
             DropdownButtonFormField<T> dropdownButton =
                 DropdownButtonFormField<T>(
               focusNode: state.focusNode,
@@ -68,11 +48,14 @@ class FormeDropdownButton<T>
               value: state.value,
               items: state.model.items!,
               onTap: onTap,
+              icon: state.model.icon,
+              iconSize: iconSize,
+              iconEnabledColor: state.model.iconEnabledColor,
+              iconDisabledColor: state.model.iconDisabledColor,
               hint: state.model.hint,
               disabledHint: state.model.disabledHint,
               elevation: state.model.elevation ?? 8,
               style: state.model.style,
-              icon: SizedBox.shrink(),
               isDense: state.model.isDense ?? true,
               isExpanded: state.model.isExpanded ?? true,
               itemHeight: state.model.itemHeight ?? kMinInteractiveDimension,
@@ -96,11 +79,31 @@ class FormeDropdownButton<T>
             );
           },
         );
+
+  @override
+  _FormDropdownButtonState<T> createState() => _FormDropdownButtonState();
 }
 
-class FormeDropdownButtonModel<T> extends AbstractFormeModel {
-  final String? labelText;
-  final String? helperText;
+class _FormDropdownButtonState<T>
+    extends ValueFieldState<T, FormeDropdownButtonModel<T>> {
+  void focusChange() {
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    focusNode.addListener(focusChange);
+  }
+
+  @override
+  void dispose() {
+    focusNode.removeListener(focusChange);
+    super.dispose();
+  }
+}
+
+class FormeDropdownButtonModel<T> extends FormeModel {
   final List<DropdownMenuItem<T>>? items;
   final Widget? hint;
   final Widget? disabledHint;
@@ -113,10 +116,11 @@ class FormeDropdownButtonModel<T> extends AbstractFormeModel {
   final Color? dropdownColor;
   final double? iconSize;
   final InputDecoration? decoration;
+  final Widget? icon;
+  final Color? iconDisabledColor;
+  final Color? iconEnabledColor;
 
   FormeDropdownButtonModel({
-    this.helperText,
-    this.labelText,
     this.items,
     this.hint,
     this.disabledHint,
@@ -129,26 +133,69 @@ class FormeDropdownButtonModel<T> extends AbstractFormeModel {
     this.dropdownColor,
     this.decoration,
     this.iconSize,
+    this.icon,
+    this.iconDisabledColor,
+    this.iconEnabledColor,
   });
-
   @override
-  FormeDropdownButtonModel<T> merge(AbstractFormeModel old) {
-    FormeDropdownButtonModel<T> oldModel = old as FormeDropdownButtonModel<T>;
+  FormeDropdownButtonModel<T> copyWith({
+    List<DropdownMenuItem<T>>? items,
+    Optional<Widget>? hint,
+    Optional<Widget>? disabledHint,
+    Optional<int>? elevation,
+    Optional<TextStyle>? style,
+    bool? isDense,
+    bool? isExpanded,
+    Optional<double>? itemHeight,
+    Optional<Color>? focusColor,
+    Optional<Color>? dropdownColor,
+    Optional<double>? iconSize,
+    Optional<InputDecoration>? decoration,
+    Optional<Widget>? icon,
+    Optional<Color>? iconDisabledColor,
+    Optional<Color>? iconEnabledColor,
+  }) {
     return FormeDropdownButtonModel<T>(
-      labelText: labelText ?? oldModel.labelText,
-      helperText: helperText ?? oldModel.helperText,
-      items: items ?? oldModel.items,
-      hint: hint ?? oldModel.hint,
-      disabledHint: disabledHint ?? oldModel.disabledHint,
-      elevation: elevation ?? oldModel.elevation,
-      style: style ?? oldModel.style,
-      isDense: isDense ?? oldModel.isDense,
-      iconSize: iconSize ?? oldModel.iconSize,
-      isExpanded: isExpanded ?? oldModel.isExpanded,
-      itemHeight: itemHeight ?? oldModel.itemHeight,
-      focusColor: focusColor ?? oldModel.focusColor,
-      dropdownColor: dropdownColor ?? oldModel.dropdownColor,
-      decoration: decoration ?? oldModel.decoration,
+      items: items ?? this.items,
+      hint: Optional.copyWith(hint, this.hint),
+      disabledHint: Optional.copyWith(disabledHint, this.disabledHint),
+      elevation: Optional.copyWith(elevation, this.elevation),
+      style: Optional.copyWith(style, this.style),
+      isDense: isDense ?? isDense,
+      isExpanded: isExpanded ?? isExpanded,
+      itemHeight: Optional.copyWith(itemHeight, this.itemHeight),
+      focusColor: Optional.copyWith(focusColor, this.focusColor),
+      dropdownColor: Optional.copyWith(dropdownColor, this.dropdownColor),
+      iconSize: Optional.copyWith(iconSize, this.iconSize),
+      decoration: Optional.copyWith(decoration, this.decoration),
+      icon: Optional.copyWith(icon, this.icon),
+      iconDisabledColor:
+          Optional.copyWith(iconDisabledColor, this.iconDisabledColor),
+      iconEnabledColor:
+          Optional.copyWith(iconEnabledColor, this.iconEnabledColor),
+    );
+  }
+}
+
+/// a clear button for [FormeDropdownButton] field
+class FormeDropdownButtonClearButton extends FormeClearButton {
+  FormeDropdownButtonClearButton({
+    bool visibleWhenUnfocus = true,
+    Widget clearIcon = const Icon(Icons.clear),
+  }) : super(
+          visibleWhenUnfocus: visibleWhenUnfocus,
+          clearIcon: clearIcon,
+          onPressed: (value) {
+            value.focus = true;
+            value.value = null;
+          },
+        );
+
+  @protected
+  Widget buildIcon(Widget icon, FormeValueFieldManagement valueField) {
+    return InkWell(
+      child: clearIcon,
+      onTap: valueField.readOnly ? null : () => onPressed(valueField),
     );
   }
 }

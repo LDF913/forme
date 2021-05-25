@@ -5,7 +5,7 @@ a powerful flutter form widget
 ## Simple Usage 
 
 ``` dart
-FormeKey formKey = FormeKey(); // FormeKey is a GlobalKey, used to get  a FormeManagement
+FormeKey formKey = FormeKey(); // FormeKey is a GlobalKey and also is a FormeManagement
 Forme(key:formKey,
 	readOnly:true|false,
 	onChanged:FormeValueChanged,
@@ -29,9 +29,9 @@ FormeField
 
 | attribute | type |  description|
 | --- | --- | --- | 
-| name | String? | name of a field ,used to control field and get error\|value from this field |
+| name | String? | name of a field ,used to control field and get error and value from this field |
 | builder |  FormContentBuilder | used to build field widget |
-| model |  AbstractFormeModel | used to determine how to build a field widget |
+| model |  FormeModel | used to determine how to build a field widget |
 | readOnly |  bool | whether field should be readOnly |
 
 ### ValueField
@@ -41,21 +41,21 @@ FormeField
 | attribute | type |  description|
 | --- | --- | --- | 
 | validator | FormFieldValidator? | validator|
-| autovalidateMode |  AutovalidateMode? | -  |
-| initialValue |  T? | -  |
-| enabled |  bool | - |
+| autovalidateMode |  AutovalidateMode? | when to perform autovalidate |
+| initialValue |  T? | initialValue |
+| enabled |  bool | whether field is enabled,if not enabled,autovalidate will not work |
 | onSaved |  FormFieldSetter? | called when save form |
 
 ### NonnullValueField
 
 #### supported attributes
 
+**NonnullValueField extends ValueField,but some attributes are different**
+
 | attribute | type |  description|
 | --- | --- | --- | 
 | validator | NonnullFieldValidator? | validator|
-| autovalidateMode |  AutovalidateMode? |-  |
-| initialValue |  T |-  |
-| enabled |  bool |-  |
+| initialValue |  T | initialValue |
 | onSaved |  NonnullFormFieldSetter? | called when save form |
 
 ## methods
@@ -63,6 +63,8 @@ FormeField
 ### FormeManagement
 
 #### get FormeManagement
+
+**FormeKey is a FormeManagement,but if you want to get underlying FormeManagement,you can use methods below**
 
 ``` dart
 FormeManagement formeManagement = formKey.currentFormeManagement;// return a nonnull FormeManagement
@@ -145,7 +147,7 @@ formeManagement.save();
 #### create FormeFieldManagement by name
 
 ``` dart
-FormeFieldManagement formeFieldManagement = formeManagement.newFormeFieldManagement(String name);
+FormeFieldManagement formeFieldManagement = formeManagement.field(String name);
 ```
 
 #### get field's name
@@ -196,22 +198,22 @@ formeFieldManagement.focusListener = (key,hasFocus){};
 bool isValueField = formeFieldManagement.isValueField;
 ```
 
-#### whether field support TextSelection
-
-``` dart
-bool supportTextSelection = formeFieldManagement.supportTextSelection;
-``` 
-
 #### set state model
 
 ``` dart
-formeFieldManagement.model = AbstractFormeModel();
+formeFieldManagement.model = FormeModel();
+```
+
+### update state model
+
+``` dart
+formeFieldManagement.update<T>(FormeModelUpdater<T> updater);
 ```
 
 #### get state model
 
 ``` dart
-AbstractFormeModel model = formeFieldManagement.model;
+FormeModel model = formeFieldManagement.model;
 ```
 
 #### ensure form field visible
@@ -222,12 +224,14 @@ formeFieldManagement.ensureVisible();
 
 ### FormeValueFieldManagement
 
+**FormeValueFieldManagement extend FormeFieldManagement**
+
 #### get FormeValueFieldManagement
 
 **if field is not a value field , an error will be throw**
 
 ``` dart
-FormeValueFieldManagement valueFieldManagement = formeFieldManagement.valueFieldManagement;
+FormeValueFieldManagement formeFieldManagement = formeManagement.valueField(String name);
 ```
 
 #### get field's value
@@ -278,10 +282,10 @@ String? errorText = valueFieldManagement.quietlyValidate();
 | field | return value | nullable|
 | ---| ---| --- |
 | FormeTextField|  string | false |
-| FormeDateTime|  DateTime | true |
-| FormeSelector|  List&lt; T&gt; | false |
-| FormeListTile|  List&lt; T&gt; | false |
+| FormeDateTimeTextField|  DateTime | true |
 | FormeNumberTextField|  num | true |
+| FormeTimeTextField | TimeOfDay | true | 
+| FormeDateRangeTextField | DateTimeRange | true | 
 | FormeSlider|  double | false |
 | FormeRangeSlider|  RangeValues | false|
 | FormeFilterChip|  List&lt; T&gt; | false |
@@ -290,6 +294,8 @@ String? errorText = valueFieldManagement.quietlyValidate();
 | FormeSingleCheckbox| bool | false |
 | FormeSingleSwitch| bool | false |
 | FormeCupertinoPicker | int | false | 
+| FormeDropdownButton | T | true | 
+| FormeListTile|  List&lt; T&gt; | false |
 
 
 ## currently supported other fields

@@ -1,10 +1,11 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../forme_core.dart';
+import '../forme_management.dart';
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
-import '../render/forme_render_data.dart';
 
 class FormeCupertinoPicker
     extends NonnullValueField<int, FormeCupertinoPickerModel> {
@@ -19,12 +20,12 @@ class FormeCupertinoPicker
     double itemExtent = 30,
     required List<Widget> children,
     FormeCupertinoPickerModel? model,
+    Widget? suffixIcon,
     Key? key,
   }) : super(
           key: key,
-          model: (model ?? FormeCupertinoPickerModel()).merge(
-              FormeCupertinoPickerModel(
-                  children: children, itemExtent: itemExtent)),
+          model: (model ?? FormeCupertinoPickerModel())
+              .copyWith(children: children, itemExtent: itemExtent),
           name: name,
           readOnly: readOnly,
           onChanged: onChanged,
@@ -35,21 +36,21 @@ class FormeCupertinoPicker
           builder: (baseState) {
             _FormeCupertinoPickerState state =
                 baseState as _FormeCupertinoPickerState;
-            Widget child = AbsorbPointer(
-                absorbing: state.readOnly,
-                child: NotificationListener<ScrollNotification>(
-                    onNotification: (scrollNotification) {
-                      if (scrollNotification is ScrollStartNotification) {
-                        state.requestFocus();
-                      }
-                      if (scrollNotification is ScrollEndNotification) {
-                        state.doChangeValue(state.scrollController.selectedItem,
-                            scrollToItem: false);
-                      }
-                      return true;
-                    },
+            bool locked = state.model.locked ?? false;
+            Widget child = NotificationListener<ScrollNotification>(
+                onNotification: (scrollNotification) {
+                  if (scrollNotification is ScrollUpdateNotification) {}
+                  if (scrollNotification is ScrollStartNotification) {
+                    state.requestFocus();
+                  }
+                  if (scrollNotification is ScrollEndNotification) {
+                    state.didChange(state.scrollController.selectedItem);
+                  }
+                  return true;
+                },
+                child: AbsorbPointer(
+                    absorbing: state.readOnly || locked,
                     child: CupertinoPicker(
-                        key: state.key,
                         scrollController: state.scrollController,
                         diameterRatio: state.model.diameterRatio ?? 1.07,
                         backgroundColor: state.model.backgroundColor,
@@ -64,6 +65,7 @@ class FormeCupertinoPicker
                         onSelectedItemChanged:
                             state.readOnly ? null : (index) {},
                         children: state.model.children!)));
+
             return FormeDecoration(
               formeDecorationFieldRenderData:
                   state.model.formeDecorationFieldRenderData,
@@ -71,6 +73,7 @@ class FormeCupertinoPicker
                 aspectRatio: state.model.aspectRatio ?? 3,
                 child: child,
               ),
+              icon: suffixIcon,
               errorText: state.errorText,
               labelText: state.model.labelText,
               helperText: state.model.helperText,
@@ -85,34 +88,27 @@ class FormeCupertinoPicker
 
 class _FormeCupertinoPickerState
     extends NonnullValueFieldState<int, FormeCupertinoPickerModel> {
-  Key? key = UniqueKey();
-  FixedExtentScrollController scrollController = FixedExtentScrollController();
+  late FixedExtentScrollController scrollController;
 
   @override
-  void doChangeValue(int? value,
-      {bool trigger = true, bool scrollToItem = true}) {
-    super.doChangeValue(value, trigger: trigger);
-    if (scrollToItem) scrollController.jumpToItem(super.value);
+  void afterSetInitialValue() {
+    scrollController = FixedExtentScrollController(initialItem: initialValue!);
   }
 
   @override
-  void beforeMerge(
-      FormeCupertinoPickerModel old, FormeCupertinoPickerModel current) {
-    bool needRebuild = current.children != null ||
-        current.itemExtent != null ||
-        current.selectionOverlay != null;
+  void afterValueChanged(num? oldValue, num? current) {
+    scrollController.jumpToItem(super.value);
+  }
 
+  @override
+  void beforeUpdateModel(
+      FormeCupertinoPickerModel old, FormeCupertinoPickerModel current) {
     if (current.children != null) {
       int max = current.children!.length - 1;
       if (value > max) {
         setValue(max);
+        scrollController.jumpToItem(max);
       }
-    }
-
-    if (needRebuild) {
-      key = UniqueKey();
-      scrollController.dispose();
-      scrollController = FixedExtentScrollController(initialItem: value);
     }
   }
 
@@ -129,7 +125,7 @@ class _FormeCupertinoPickerState
   }
 }
 
-class FormeCupertinoPickerModel extends AbstractFormeModel {
+class FormeCupertinoPickerModel extends FormeModel {
   final double? itemExtent;
   final double? diameterRatio;
   final Color? backgroundColor;
@@ -144,6 +140,7 @@ class FormeCupertinoPickerModel extends AbstractFormeModel {
   final String? helperText;
   final double? aspectRatio;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
+  final bool? locked;
 
   FormeCupertinoPickerModel({
     this.diameterRatio,
@@ -160,26 +157,74 @@ class FormeCupertinoPickerModel extends AbstractFormeModel {
     this.aspectRatio,
     this.formeDecorationFieldRenderData,
     this.helperText,
+    this.locked,
   });
 
   @override
-  FormeCupertinoPickerModel merge(AbstractFormeModel old) {
-    FormeCupertinoPickerModel oldModel = old as FormeCupertinoPickerModel;
+  FormeCupertinoPickerModel copyWith({
+    double? itemExtent,
+    Optional<double>? diameterRatio,
+    Optional<Color>? backgroundColor,
+    Optional<double>? offAxisFraction,
+    bool? useMagnifier,
+    Optional<double>? magnification,
+    Optional<double>? squeeze,
+    Optional<Widget>? selectionOverlay,
+    List<Widget>? children,
+    bool? looping,
+    Optional<String>? labelText,
+    Optional<String>? helperText,
+    Optional<double>? aspectRatio,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+    bool? locked,
+  }) {
     return FormeCupertinoPickerModel(
-      diameterRatio: diameterRatio ?? oldModel.diameterRatio,
-      backgroundColor: backgroundColor ?? oldModel.backgroundColor,
-      offAxisFraction: offAxisFraction ?? oldModel.offAxisFraction,
-      useMagnifier: useMagnifier ?? oldModel.useMagnifier,
-      magnification: magnification ?? oldModel.magnification,
-      squeeze: squeeze ?? oldModel.squeeze,
-      itemExtent: itemExtent ?? oldModel.itemExtent,
-      selectionOverlay: selectionOverlay ?? oldModel.selectionOverlay,
-      children: children ?? oldModel.children,
-      looping: looping ?? oldModel.looping,
-      labelText: labelText ?? oldModel.labelText,
-      helperText: helperText ?? oldModel.helperText,
-      formeDecorationFieldRenderData:
-          formeDecorationFieldRenderData ?? old.formeDecorationFieldRenderData,
+      itemExtent: itemExtent ?? this.itemExtent,
+      diameterRatio: Optional.copyWith(diameterRatio, this.diameterRatio),
+      backgroundColor: Optional.copyWith(backgroundColor, this.backgroundColor),
+      offAxisFraction: Optional.copyWith(offAxisFraction, this.offAxisFraction),
+      useMagnifier: useMagnifier ?? useMagnifier,
+      magnification: Optional.copyWith(magnification, this.magnification),
+      squeeze: Optional.copyWith(squeeze, this.squeeze),
+      selectionOverlay:
+          Optional.copyWith(selectionOverlay, this.selectionOverlay),
+      children: children ?? this.children,
+      looping: looping ?? looping,
+      labelText: Optional.copyWith(labelText, this.labelText),
+      helperText: Optional.copyWith(helperText, this.helperText),
+      aspectRatio: Optional.copyWith(aspectRatio, this.aspectRatio),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
+      locked: locked ?? locked,
     );
+  }
+}
+
+/// a lock button used to enable|disable picker scroll
+class FormeCupertinoPickerLockButton extends StatelessWidget {
+  final Widget lockedButton;
+  final Widget unlockedButton;
+
+  const FormeCupertinoPickerLockButton({
+    Key? key,
+    this.lockedButton = const Icon(Icons.lock),
+    this.unlockedButton = const Icon(Icons.lock_open),
+  }) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    FormeFieldManagement formeFieldManagement =
+        FormeFieldManagement.of(context);
+    FormeCupertinoPickerModel oldModel =
+        formeFieldManagement.model as FormeCupertinoPickerModel;
+    bool locked = oldModel.locked ?? false;
+    return IconButton(
+        icon: locked ? lockedButton : unlockedButton,
+        onPressed: formeFieldManagement.readOnly
+            ? null
+            : () {
+                formeFieldManagement.model = oldModel.copyWith(
+                  locked: !locked,
+                );
+              });
   }
 }

@@ -3,25 +3,23 @@ import 'package:flutter/material.dart';
 import '../forme_field.dart';
 import '../forme_state_model.dart';
 
+/// button type
 enum FormeButtonType { Text, Elevated, Outlined }
 
+/// Forme Button
 class FormeButton extends CommonField<FormeButtonModel> {
   FormeButton({
     String? name,
-    int flex = 0,
     required VoidCallback onPressed,
     VoidCallback? onLongPress,
     bool readOnly = false,
-    bool visible = true,
-    EdgeInsets? padding,
     required Widget child,
-    FormeButtonType type = FormeButtonType.Text,
     FormeButtonModel? model,
     Key? key,
   }) : super(
             key: key,
             model: (model ?? FormeButtonModel())
-                .merge(FormeButtonModel(child: child, type: type)),
+                .copyWith(child: child, type: FormeButtonType.Text),
             name: name,
             readOnly: readOnly,
             builder: (state) {
@@ -87,57 +85,34 @@ class FormeButton extends CommonField<FormeButtonModel> {
                   break;
               }
 
-              switch (type) {
-                case FormeButtonType.Text:
-                  return TextButtonTheme(
-                      data: state.model.textButtonThemeData ??
-                          TextButtonTheme.of(state.context),
-                      child: button);
-                case FormeButtonType.Elevated:
-                  return ElevatedButtonTheme(
-                      data: state.model.elevatedButtonThemeData ??
-                          ElevatedButtonTheme.of(state.context),
-                      child: button);
-                case FormeButtonType.Outlined:
-                  return OutlinedButtonTheme(
-                      data: state.model.outlinedButtonThemeData ??
-                          OutlinedButtonTheme.of(state.context),
-                      child: button);
-              }
+              return button;
             });
 }
 
-class FormeButtonModel extends AbstractFormeModel {
+class FormeButtonModel extends FormeModel {
   final Widget? child;
   final FormeButtonType? type;
   final Icon? icon;
   final ButtonStyle? style;
-  final TextButtonThemeData? textButtonThemeData;
-  final ElevatedButtonThemeData? elevatedButtonThemeData;
-  final OutlinedButtonThemeData? outlinedButtonThemeData;
   FormeButtonModel({
     this.child,
     this.type,
     this.icon,
     this.style,
-    this.textButtonThemeData,
-    this.elevatedButtonThemeData,
-    this.outlinedButtonThemeData,
   });
 
   @override
-  FormeButtonModel merge(AbstractFormeModel old) {
-    FormeButtonModel oldModel = old as FormeButtonModel;
+  FormeButtonModel copyWith({
+    Widget? child,
+    FormeButtonType? type,
+    Optional<Icon>? icon,
+    Optional<ButtonStyle>? style,
+  }) {
     return FormeButtonModel(
-      child: child ?? oldModel.child,
-      type: type ?? oldModel.type,
-      icon: icon ?? oldModel.icon,
-      style: style ?? oldModel.style,
-      textButtonThemeData: textButtonThemeData ?? oldModel.textButtonThemeData,
-      elevatedButtonThemeData:
-          elevatedButtonThemeData ?? oldModel.elevatedButtonThemeData,
-      outlinedButtonThemeData:
-          outlinedButtonThemeData ?? oldModel.outlinedButtonThemeData,
+      child: child ?? this.child,
+      type: type ?? this.type,
+      icon: Optional.copyWith(icon, this.icon),
+      style: Optional.copyWith(style, this.style),
     );
   }
 }

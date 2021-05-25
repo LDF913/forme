@@ -3,8 +3,9 @@ import '../render/forme_render_utils.dart';
 import '../render/forme_render_data.dart';
 
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
+import '../forme_core.dart';
 
 class FormeChipItem<T> {
   final Widget label;
@@ -41,18 +42,14 @@ class FormeFilterChip<T>
     ValueChanged<List<T>>? onChanged,
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
-    int flex = 1,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     VoidCallback? exceedCallback,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
     Key? key,
   }) : super(
           key: key,
-          model: (model ?? FormeFilterChipModel<T>())
-              .merge(FormeFilterChipModel<T>(items: items)),
+          model: (model ?? FormeFilterChipModel<T>()).copyWith(items: items),
           readOnly: readOnly,
           name: name,
           validator: validator,
@@ -68,8 +65,8 @@ class FormeFilterChip<T>
             int? count = model.count;
             ChipThemeData chipThemeData =
                 model.chipThemeData ?? ChipTheme.of(state.context);
-            FormeFilterChipRenderData? formeFilterChipRenderData =
-                model.formeFilterChipRenderData;
+            FormeChipRenderData? formeChipRenderData =
+                model.formeChipRenderData;
 
             List<Widget> chips = [];
             for (FormeChipItem<T> item in items) {
@@ -78,31 +75,28 @@ class FormeFilterChip<T>
                 selected: state.value.contains(item.data),
                 label: item.label,
                 avatar: item.avatar,
-                padding:
-                    item.contentPadding ?? formeFilterChipRenderData?.padding,
+                padding: item.contentPadding ?? formeChipRenderData?.padding,
                 pressElevation:
-                    pressElevation ?? formeFilterChipRenderData?.pressElevation,
-                tooltip: item.tooltip ?? formeFilterChipRenderData?.tooltip,
+                    pressElevation ?? formeChipRenderData?.pressElevation,
+                tooltip: item.tooltip ?? formeChipRenderData?.tooltip,
                 materialTapTargetSize:
-                    formeFilterChipRenderData?.materialTapTargetSize,
-                avatarBorder: formeFilterChipRenderData?.avatarBorder ??
-                    const CircleBorder(),
-                backgroundColor: formeFilterChipRenderData?.backgroundColor,
-                checkmarkColor: formeFilterChipRenderData?.checkmarkColor,
-                showCheckmark: formeFilterChipRenderData?.showCheckmark,
-                shadowColor: formeFilterChipRenderData?.shadowColor,
-                disabledColor: formeFilterChipRenderData?.disabledColor,
-                selectedColor: formeFilterChipRenderData?.selectedColor,
-                selectedShadowColor:
-                    formeFilterChipRenderData?.selectedShadowColor,
-                visualDensity: formeFilterChipRenderData?.visualDensity,
-                elevation: formeFilterChipRenderData?.elevation,
-                labelPadding: item.labelPadding ??
-                    formeFilterChipRenderData?.labelPadding,
-                labelStyle:
-                    item.labelStyle ?? formeFilterChipRenderData?.labelStyle,
-                shape: formeFilterChipRenderData?.shape,
-                side: formeFilterChipRenderData?.side,
+                    formeChipRenderData?.materialTapTargetSize,
+                avatarBorder:
+                    formeChipRenderData?.avatarBorder ?? const CircleBorder(),
+                backgroundColor: formeChipRenderData?.backgroundColor,
+                checkmarkColor: formeChipRenderData?.checkmarkColor,
+                showCheckmark: formeChipRenderData?.showCheckmark,
+                shadowColor: formeChipRenderData?.shadowColor,
+                disabledColor: formeChipRenderData?.disabledColor,
+                selectedColor: formeChipRenderData?.selectedColor,
+                selectedShadowColor: formeChipRenderData?.selectedShadowColor,
+                visualDensity: formeChipRenderData?.visualDensity,
+                elevation: formeChipRenderData?.elevation,
+                labelPadding:
+                    item.labelPadding ?? formeChipRenderData?.labelPadding,
+                labelStyle: item.labelStyle ?? formeChipRenderData?.labelStyle,
+                shape: formeChipRenderData?.shape,
+                side: formeChipRenderData?.side,
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
@@ -152,7 +146,7 @@ class FormeFilterChip<T>
 class _FormeFilterChipState<T>
     extends NonnullValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
-  void beforeMerge(
+  void beforeUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {
     if (current.items != null) {
       List<T> items = List.of(value);
@@ -163,13 +157,13 @@ class _FormeFilterChipState<T>
   }
 }
 
-class FormeFilterChipModel<T> extends AbstractFormeModel {
+class FormeFilterChipModel<T> extends FormeModel {
   final List<FormeChipItem<T>>? items;
   final String? labelText;
   final String? helperText;
   final int? count;
   final double? pressElevation;
-  final FormeFilterChipRenderData? formeFilterChipRenderData;
+  final FormeChipRenderData? formeChipRenderData;
   final ChipThemeData? chipThemeData;
   final FormeWrapRenderData? formeWrapRenderData;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
@@ -180,27 +174,36 @@ class FormeFilterChipModel<T> extends AbstractFormeModel {
     this.helperText,
     this.pressElevation,
     this.count,
-    this.formeFilterChipRenderData,
+    this.formeChipRenderData,
     this.chipThemeData,
     this.formeWrapRenderData,
     this.formeDecorationFieldRenderData,
   });
-
   @override
-  FormeFilterChipModel<T> merge(AbstractFormeModel oldFieldState) {
-    FormeFilterChipModel<T> old = oldFieldState as FormeFilterChipModel<T>;
+  FormeFilterChipModel<T> copyWith({
+    List<FormeChipItem<T>>? items,
+    Optional<String>? labelText,
+    Optional<String>? helperText,
+    Optional<int>? count,
+    Optional<double>? pressElevation,
+    Optional<FormeChipRenderData>? formeChipRenderData,
+    Optional<ChipThemeData>? chipThemeData,
+    Optional<FormeWrapRenderData>? formeWrapRenderData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeFilterChipModel<T>(
-      items: items ?? old.items,
-      labelText: labelText ?? old.labelText,
-      helperText: helperText ?? old.helperText,
-      pressElevation: pressElevation ?? old.pressElevation,
-      count: count ?? old.count,
-      chipThemeData: chipThemeData ?? old.chipThemeData,
-      formeFilterChipRenderData:
-          formeFilterChipRenderData ?? old.formeFilterChipRenderData,
-      formeWrapRenderData: formeWrapRenderData ?? old.formeWrapRenderData,
-      formeDecorationFieldRenderData:
-          formeDecorationFieldRenderData ?? old.formeDecorationFieldRenderData,
+      items: items ?? this.items,
+      labelText: Optional.copyWith(labelText, this.labelText),
+      helperText: Optional.copyWith(helperText, this.helperText),
+      count: Optional.copyWith(count, this.count),
+      pressElevation: Optional.copyWith(pressElevation, this.pressElevation),
+      formeChipRenderData:
+          Optional.copyWith(formeChipRenderData, this.formeChipRenderData),
+      chipThemeData: Optional.copyWith(chipThemeData, this.chipThemeData),
+      formeWrapRenderData:
+          Optional.copyWith(formeWrapRenderData, this.formeWrapRenderData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }

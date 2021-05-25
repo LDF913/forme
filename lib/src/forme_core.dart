@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
-import 'forme_focus_node.dart';
 import 'forme_utils.dart';
 import 'forme_field.dart';
 import 'forme_state_model.dart';
 import 'forme_management.dart';
 
+/// triggered when form field's value changed
 typedef FormeValueChanged = void Function(
     String name, dynamic oldValue, dynamic newValue);
 
 /// form key is a global key
 ///
 /// used to get form management
-class FormeKey extends LabeledGlobalKey<_FormeState> {
+class FormeKey extends LabeledGlobalKey<_FormeState>
+    implements FormeManagement {
   FormeKey({String? debugLabel}) : super(debugLabel);
 
   //get form management , return null if there's no form management
@@ -30,8 +31,55 @@ class FormeKey extends LabeledGlobalKey<_FormeState> {
     }
     return currentState.formeManagement;
   }
+
+  @override
+  Map<String, dynamic> get data => currentManagement.data;
+
+  @override
+  bool get readOnly => currentManagement.readOnly;
+
+  @override
+  List<FormeFieldManagementWithError> get errors => currentManagement.errors;
+
+  @override
+  T field<T extends FormeFieldManagement>(String name) =>
+      currentManagement.field<T>(name);
+
+  @override
+  bool hasField(String name) => currentManagement.hasField(name);
+
+  @override
+  bool get isValid => currentManagement.isValid;
+
+  @override
+  List<FormeFieldManagementWithError> quietlyValidate() =>
+      currentManagement.quietlyValidate();
+
+  @override
+  void reset() => currentManagement.reset();
+
+  @override
+  void save() => currentManagement.save();
+
+  @override
+  void setData(Map<String, dynamic> data, {bool trigger = true}) =>
+      currentManagement.setData(data, trigger: trigger);
+
+  @override
+  bool validate() => currentManagement.validate();
+
+  @override
+  T valueField<T extends FormeValueFieldManagement>(String name) =>
+      currentManagement.valueField<T>(name);
+
+  @override
+  set data(Map<String, dynamic> data) => currentManagement.data = data;
+
+  @override
+  set readOnly(bool readOnly) => currentManagement.readOnly = readOnly;
 }
 
+/// build your form
 class Forme extends StatefulWidget {
   /// whether form should be readOnly;
   ///
@@ -45,13 +93,20 @@ class Forme extends StatefulWidget {
   /// **only listen fields which has a name**
   final FormeValueChanged? onChanged;
 
+  /// form content
   final Widget child;
+
+  /// map initial value
+  ///
+  /// **this property will override field's initialValue**
+  final Map<String, dynamic> initialValue;
 
   Forme({
     FormeKey? key,
     this.readOnly = false,
     this.onChanged,
     required this.child,
+    this.initialValue = const {},
   }) : super(key: key);
 
   @override
@@ -99,6 +154,7 @@ class _FormeState extends State<Forme> {
         readOnly: readOnly,
         fieldStates: fieldStates,
         valueChanged: widget.onChanged,
+        formInitialValue: widget.initialValue,
       ),
       child: widget.child,
     );
@@ -125,6 +181,7 @@ class _FormScope {
   final bool readOnly;
   final List<AbstractFieldState> fieldStates;
   final FormeValueChanged? valueChanged;
+  final Map<String, dynamic> formInitialValue;
 
   void onValueChanged(String name, oldValue, newValue) {
     if (valueChanged != null) valueChanged!(name, oldValue, newValue);
@@ -134,6 +191,7 @@ class _FormScope {
     required this.readOnly,
     required this.fieldStates,
     this.valueChanged,
+    required this.formInitialValue,
   });
 
   void registerField(AbstractFieldState fieldState) {
@@ -156,11 +214,15 @@ class _FormScope {
 /// 1. make your custom field extends StatefulWidget and with [StatefulField]
 /// 2. make your custom state extends State and with [AbstractFieldState]
 ///
-mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
+mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     on State<T> {
   bool _init = false;
-  FocusNodes? _focusNode;
+  FocusNode? _focusNode;
   String? get name => _field.name;
+  ValueChanged<bool>? _focusChangeListener;
+  late final FormeFieldManagement management;
+
+  bool get init => _init;
 
   late _FormScope _formScope;
 
@@ -183,12 +245,20 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
   /// get current widget's focus node
   ///
   /// if there's no focus node,will create a new one
-  ///
-  /// call this method in builder or in [initFormeManagement]
-  FocusNodes get focusNode {
-    return _focusNode ??= FocusNodes();
+  FocusNode get focusNode {
+    if (_focusNode == null) {
+      _focusNode = FocusNode();
+      _focusNode!.addListener(_onFocusChange);
+    }
+    return _focusNode ??= FocusNode();
   }
 
+  void _onFocusChange() {
+    if (_focusChangeListener == null) return;
+    _focusChangeListener!(focusNode.hasFocus);
+  }
+
+  /// focus current field is focusable
   void requestFocus() {
     if (_focusNode == null || !_focusNode!.canRequestFocus) return;
     _focusNode!.requestFocus();
@@ -202,6 +272,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
   /// use [FormeManagement.newFormeFieldManagement] to get FormeFieldManagement that you wrapped,
   ///
   /// you can use [FormeFieldManagementDelegate] to fast wrap
+  @protected
   FormeFieldManagement createFormeFieldManagement() {
     return _FormeFieldManagement(this);
   }
@@ -212,6 +283,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
     _formScope = _FormScope.of(context);
     if (_init) return;
     _init = true;
+    management = createFormeFieldManagement();
     _formScope.registerField(this);
   }
 
@@ -222,18 +294,18 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
     super.dispose();
   }
 
-  /// used to do some logic before model merge
+  /// used to do some logic before update model
   @protected
-  void beforeMerge(E old, E current) {}
+  void beforeUpdateModel(E old, E current) {}
 
   StatefulField<AbstractFieldState, E> get _field =>
       widget as StatefulField<AbstractFieldState, E>;
 
-  _updateModel(E _model) {
+  updateModel(E _model) {
     if (_model != model) {
       setState(() {
-        beforeMerge(model, _model);
-        this._model = _model.merge(model) as E;
+        beforeUpdateModel(model, _model);
+        this._model = _model;
       });
     }
   }
@@ -241,13 +313,27 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends AbstractFormeModel>
   E get model => _model ?? _field.model;
 }
 
-class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
+class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     with AbstractFieldState<FormField<T>, E> {
   ValueChanged<T?>? get onChanged =>
       (super.widget as ValueField<T, E>).onChanged;
-
+  @protected
   FormeFieldManagement createFormeFieldManagement() {
     return _FormeValueFieldManagement(this);
+  }
+
+  @protected
+  T? get initialValue =>
+      (name == null ? null : _formScope.formInitialValue[name]) ??
+      widget.initialValue;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_init) {
+      setValue(initialValue);
+      afterSetInitialValue();
+    }
   }
 
   @override
@@ -256,6 +342,7 @@ class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
   }
 
   @protected
+  @override
   void setValue(T? newValue) {
     if (!compare(value, newValue)) {
       super.setValue(newValue);
@@ -263,6 +350,7 @@ class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
     }
   }
 
+  @visibleForTesting
   void doChangeValue(T? newValue, {bool trigger = true}) {
     T? oldValue = value;
     if (!compare(oldValue, newValue)) {
@@ -273,12 +361,10 @@ class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
 
   @override
   void reset() {
-    try {
-      if (!compare(value, widget.initialValue)) {
-        _didChange(value, widget.initialValue, true);
-      }
-    } finally {
+    if (!compare(value, initialValue)) {
       super.reset();
+      setValue(initialValue);
+      _didChange(value, initialValue, true);
     }
   }
 
@@ -292,7 +378,20 @@ class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
     return FormeUtils.compare(a, b);
   }
 
+  /// called on initialValue has been set
+  ///
+  /// **this method is called in didChangeDependencies and will only called once in state's lifecycle**
+  @protected
+  void afterSetInitialValue() {}
+
+  /// called after value changed
+  ///
+  /// when you want render value in field  after value changed ,you can override this method
+  @protected
+  void afterValueChanged(T? oldValue, T? current) {}
+
   _didChange(T? old, T? current, bool trigger) {
+    afterValueChanged(old, current);
     if (trigger) {
       ValueChanged<T?>? onChanged =
           (super.widget as ValueField<T, E>).onChanged;
@@ -306,6 +405,33 @@ class ValueFieldState<T, E extends AbstractFormeModel> extends FormFieldState<T>
   String? _quietlyValidate() {
     if (widget.validator != null) return widget.validator!(value);
   }
+}
+
+class NonnullValueFieldState<T, E extends FormeModel>
+    extends ValueFieldState<T, E> {
+  @override
+  T get value => super.value!;
+
+  @override
+  void doChangeValue(T? newValue, {bool trigger = true}) {
+    super.doChangeValue(newValue == null ? initialValue : newValue,
+        trigger: trigger);
+  }
+
+  @mustCallSuper
+  @override
+  void setValue(T? value) {
+    super.setValue(value == null ? initialValue : value);
+  }
+
+  @override
+  @visibleForTesting
+  void afterValueChanged(T? oldValue, T? current) {
+    afterNonnullValueChanged(oldValue!, current!);
+  }
+
+  @protected
+  void afterNonnullValueChanged(T oldValue, T current) {}
 }
 
 class _FormeFieldManagement extends FormeFieldManagement {
@@ -347,15 +473,15 @@ class _FormeFieldManagement extends FormeFieldManagement {
   }
 
   @override
-  set focusListener(FocusListener? listener) {
+  set focusListener(ValueChanged<bool>? listener) {
     if (state._focusNode == null) throw 'current field do not has a focusnode';
-    state._focusNode!.focusListener = listener;
+    state._focusChangeListener = listener;
   }
 
   @override
   bool get isValueField => state is ValueFieldState;
 
-  AbstractFormeModel get model => state.model;
+  FormeModel get model => state.model;
 
   @override
   String? get name => state.name;
@@ -367,19 +493,29 @@ class _FormeFieldManagement extends FormeFieldManagement {
   set readOnly(bool readOnly) => state.readOnly = readOnly;
 
   @override
-  set model(AbstractFormeModel model) {
-    state._updateModel(model);
+  set model(FormeModel model) {
+    state.updateModel(model);
+  }
+
+  @override
+  void update<T extends FormeModel>(updater) {
+    T model = updater(state.model as T);
+    state.updateModel(model);
   }
 }
 
-class _FormeValueFieldManagement extends FormeValueFieldManagement {
+class _FormeValueFieldManagement extends FormeFieldManagementDelegate
+    implements FormeValueFieldManagement {
   final ValueFieldState state;
-  final FormeFieldManagement formeFieldManagement;
+  final FormeFieldManagement delegate;
   _FormeValueFieldManagement(this.state)
-      : this.formeFieldManagement = _FormeFieldManagement(state);
+      : this.delegate = _FormeFieldManagement(state);
 
   @override
   dynamic get value => state.value;
+
+  @override
+  set value(dynamic value) => state.doChangeValue(value, trigger: true);
 
   @override
   void setValue(dynamic value, {bool trigger = true}) =>
@@ -399,49 +535,6 @@ class _FormeValueFieldManagement extends FormeValueFieldManagement {
 
   @override
   String? quietlyValidate() => state._quietlyValidate();
-
-  @override
-  AbstractFormeModel get model => formeFieldManagement.model;
-
-  @override
-  set model(AbstractFormeModel model) => formeFieldManagement.model = model;
-
-  @override
-  bool get readOnly => formeFieldManagement.readOnly;
-
-  @override
-  set readOnly(bool readOnly) => formeFieldManagement.readOnly = readOnly;
-
-  @override
-  Future<void> ensureVisible(
-          {Duration? duration,
-          Curve? curve,
-          ScrollPositionAlignmentPolicy? alignmentPolicy,
-          double? alignment}) =>
-      formeFieldManagement.ensureVisible(
-        duration: duration,
-        curve: curve,
-        alignmentPolicy: alignmentPolicy,
-        alignment: alignment,
-      );
-
-  @override
-  set focus(bool focus) => formeFieldManagement.focus = focus;
-
-  @override
-  set focusListener(listener) => formeFieldManagement.focusListener = listener;
-
-  @override
-  bool get focusable => formeFieldManagement.focusable;
-
-  @override
-  bool get hasFocus => formeFieldManagement.hasFocus;
-
-  @override
-  bool get isValueField => true;
-
-  @override
-  String? get name => formeFieldManagement.name;
 }
 
 class FormeFieldManagementWithError {
@@ -466,10 +559,15 @@ class _FormeManagement extends FormeManagement {
   set readOnly(bool readOnly) => _state.readOnly = readOnly;
 
   @override
-  T newFormeFieldManagement<T extends FormeFieldManagement>(String name) {
+  T field<T extends FormeFieldManagement>(String name) {
     T? management = _state.getFormeFieldManagement<T>(name);
     if (management == null) throw 'no field can be found by name :$name';
     return management;
+  }
+
+  @override
+  T valueField<T extends FormeValueFieldManagement>(String name) {
+    return field(name) as T;
   }
 
   @override

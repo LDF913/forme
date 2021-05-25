@@ -29,12 +29,11 @@ class FormeVisible extends CommonField<FormeVisibleModel> {
         );
 }
 
-class FormeVisibleModel extends AbstractFormeModel {
+class FormeVisibleModel extends FormeModel {
   final bool? visible;
   FormeVisibleModel({this.visible});
   @override
-  FormeVisibleModel merge(AbstractFormeModel old) {
-    FormeVisibleModel oldModel = old as FormeVisibleModel;
-    return FormeVisibleModel(visible: visible ?? oldModel.visible);
+  FormeVisibleModel copyWith({bool? visible}) {
+    return FormeVisibleModel(visible: visible);
   }
 }

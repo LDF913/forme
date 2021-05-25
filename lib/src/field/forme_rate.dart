@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../forme_field.dart';
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
-import '../render/forme_render_data.dart';
+import 'forme_decoration.dart';
 
 /// used to transfer rate to your rate
 ///
@@ -43,7 +42,7 @@ class FormeRate extends ValueField<double, FormeRateModel> {
             bool readOnly = state.readOnly;
             ThemeData themeData = Theme.of(state.context);
             FormeRateRenderData rateThemeData =
-                state.model.rateThemeData ?? const FormeRateRenderData();
+                state.model.rateRenderData ?? const FormeRateRenderData();
             double? value = (state.value?.toDouble() ?? 0) / ratio;
             double size = rateThemeData.iconSize;
             EdgeInsets iconPadding = rateThemeData.iconPadding;
@@ -157,28 +156,32 @@ class FormeRateRenderData {
   });
 }
 
-class FormeRateModel extends AbstractFormeModel {
+class FormeRateModel extends FormeModel {
   final String? labelText;
   final String? helperText;
-  final FormeRateRenderData? rateThemeData;
+  final FormeRateRenderData? rateRenderData;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
 
   FormeRateModel({
     this.labelText,
     this.helperText,
-    this.rateThemeData,
+    this.rateRenderData,
     this.formeDecorationFieldRenderData,
   });
 
   @override
-  AbstractFormeModel merge(AbstractFormeModel old) {
-    FormeRateModel oldModel = old as FormeRateModel;
+  FormeRateModel copyWith({
+    Optional<String>? labelText,
+    Optional<String>? helperText,
+    Optional<FormeRateRenderData>? rateRenderData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeRateModel(
-      labelText: labelText ?? oldModel.labelText,
-      helperText: helperText ?? oldModel.helperText,
-      rateThemeData: rateThemeData ?? oldModel.rateThemeData,
-      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
-          oldModel.formeDecorationFieldRenderData,
+      labelText: Optional.copyWith(labelText, this.labelText),
+      helperText: Optional.copyWith(helperText, this.helperText),
+      rateRenderData: Optional.copyWith(rateRenderData, this.rateRenderData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }

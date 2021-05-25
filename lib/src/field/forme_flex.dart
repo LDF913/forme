@@ -94,7 +94,7 @@ class _FormeFlexState extends CommonFieldState<FormeFlexModel> {
   }
 
   @override
-  void beforeMerge(FormeFlexModel old, FormeFlexModel current) {
+  void beforeUpdateModel(FormeFlexModel old, FormeFlexModel current) {
     widgets.clear();
     widgets.addAll(current._widgets);
   }
@@ -110,7 +110,7 @@ class _FormeFlexWidget extends StatelessWidget {
   }
 }
 
-class FormeFlexModel extends AbstractFormeModel {
+class FormeFlexModel extends FormeModel {
   final List<_FormeFlexWidget> _widgets;
   final FormeFlexRenderData? formeFlexRenderData;
 
@@ -119,10 +119,6 @@ class FormeFlexModel extends AbstractFormeModel {
   FormeFlexModel prepend(Widget widget) {
     _widgets.insert(0, _FormeFlexWidget(widget, GlobalKey()));
     return this;
-  }
-
-  FormeFlexModel renderData(FormeFlexRenderData formeFlexRenderData) {
-    return FormeFlexModel._(_widgets, formeFlexRenderData: formeFlexRenderData);
   }
 
   FormeFlexModel append(Widget widget) {
@@ -166,29 +162,12 @@ class FormeFlexModel extends AbstractFormeModel {
   }
 
   @override
-  AbstractFormeModel merge(AbstractFormeModel old) {
-    FormeFlexModel oldModel = old as FormeFlexModel;
-    FormeFlexRenderData? oldRenderData = oldModel.formeFlexRenderData;
-    if (formeFlexRenderData == null)
-      return FormeFlexModel._(_widgets, formeFlexRenderData: oldRenderData);
-    else {
-      if (oldRenderData == null) return this;
-      return FormeFlexModel._(_widgets,
-          formeFlexRenderData: FormeFlexRenderData(
-            crossAxisAlignment: formeFlexRenderData?.crossAxisAlignment ??
-                oldRenderData.crossAxisAlignment,
-            mainAxisSize:
-                formeFlexRenderData?.mainAxisSize ?? oldRenderData.mainAxisSize,
-            mainAxisAlignment: formeFlexRenderData?.mainAxisAlignment ??
-                oldRenderData.mainAxisAlignment,
-            textDirection: formeFlexRenderData?.textDirection ??
-                oldRenderData.textDirection,
-            verticalDirection: formeFlexRenderData?.verticalDirection ??
-                oldRenderData.verticalDirection,
-            textBaseline:
-                formeFlexRenderData?.textBaseline ?? oldRenderData.textBaseline,
-          ));
-    }
+  FormeModel copyWith({
+    Optional<FormeFlexRenderData>? formeFlexRenderData,
+  }) {
+    return FormeFlexModel._(_widgets,
+        formeFlexRenderData:
+            Optional.copyWith(formeFlexRenderData, this.formeFlexRenderData));
   }
 }
 
@@ -208,4 +187,25 @@ class FormeFlexRenderData {
     this.verticalDirection,
     this.textBaseline,
   });
+
+  FormeFlexRenderData copyWith({
+    Optional<MainAxisAlignment>? mainAxisAlignment,
+    Optional<MainAxisSize>? mainAxisSize,
+    Optional<CrossAxisAlignment>? crossAxisAlignment,
+    Optional<TextDirection>? textDirection,
+    Optional<VerticalDirection>? verticalDirection,
+    Optional<TextBaseline>? textBaseline,
+  }) {
+    return FormeFlexRenderData(
+      mainAxisAlignment:
+          Optional.copyWith(mainAxisAlignment, this.mainAxisAlignment),
+      mainAxisSize: Optional.copyWith(mainAxisSize, this.mainAxisSize),
+      crossAxisAlignment:
+          Optional.copyWith(crossAxisAlignment, this.crossAxisAlignment),
+      textDirection: Optional.copyWith(textDirection, this.textDirection),
+      verticalDirection:
+          Optional.copyWith(verticalDirection, this.verticalDirection),
+      textBaseline: Optional.copyWith(textBaseline, this.textBaseline),
+    );
+  }
 }

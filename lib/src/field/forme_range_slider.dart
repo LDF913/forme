@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import 'forme_slider.dart';
 import '../forme_field.dart';
+import '../forme_core.dart';
 
 class FormRangeLabelRender {
   final FormeLabelRender startRender;
@@ -21,10 +22,7 @@ class FormeRangeSlider
     FormRangeLabelRender? rangeFormeLabelRender,
     NonnullFormFieldSetter<RangeValues>? onSaved,
     String? name,
-    int flex = 1,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     SemanticFormatterCallback? semanticFormatterCallback,
     ValueChanged<RangeValues>? onChangeStart,
     ValueChanged<RangeValues>? onChangeEnd,
@@ -34,11 +32,11 @@ class FormeRangeSlider
     Key? key,
   }) : super(
             key: key,
-            model: (model ?? FormeSliderModel()).merge(FormeSliderModel(
+            model: (model ?? FormeSliderModel()).copyWith(
               max: max,
               min: min,
               divisions: (max - min).toInt(),
-            )),
+            ),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -113,7 +111,7 @@ class FormeRangeSlider
 class _FormeRangeSliderState
     extends NonnullValueFieldState<RangeValues, FormeSliderModel> {
   @override
-  void beforeMerge(FormeSliderModel old, FormeSliderModel current) {
+  void beforeUpdateModel(FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value.start < current.min!)
       setValue(RangeValues(current.min!, value.end));
     if (current.max != null && value.end > current.max!)

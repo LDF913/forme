@@ -1,8 +1,13 @@
 import 'package:flutter/widgets.dart';
+import 'forme_field.dart';
 
 import '../forme.dart';
-import 'forme_focus_node.dart';
 import 'forme_state_model.dart';
+
+/// used to update model
+///
+/// [current] current model
+typedef FormeModelUpdater<T extends FormeModel> = T Function(T current);
 
 /// base form management
 ///
@@ -17,13 +22,21 @@ abstract class FormeManagement {
   /// set form readOnly|editable
   set readOnly(bool readOnly);
 
-  /// create a new formfieldManagement by name
+  /// create a new [FormeFieldManagement] by name
   ///
   /// you can override [AbstractFieldState.createFormeFieldManagement] to wrap you custom
   /// FormeFieldManagement, and this method will return your wrapped.
   /// **when you override this method,
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
-  T newFormeFieldManagement<T extends FormeFieldManagement>(String name);
+  T field<T extends FormeFieldManagement>(String name);
+
+  /// create a new [FormeValueFieldManagement] by name
+  ///
+  /// you can override [AbstractFieldState.createFormeFieldManagement] to wrap you custom
+  /// FormeFieldManagement, and this method will return your wrapped.
+  /// **when you override this method,
+  /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
+  T valueField<T extends FormeValueFieldManagement>(String name);
 
   /// get form data
   ///
@@ -109,12 +122,15 @@ abstract class FormeFieldManagement {
   /// set focus listener on field
   ///
   /// if field does not has a focusnode ,an error will be throw
-  set focusListener(FocusListener? listener);
+  set focusListener(ValueChanged<bool>? listener);
 
   /// whether field is value field
   bool get isValueField;
 
   /// set state model on field
+  ///
+  /// directly set model will lose old model
+  /// if you want to inherit old model, you can use get update model
   ///
   /// [model] is provided by your custom [AbstractFieldState],
   /// if you no need a model,you can use [EmptyStateModel]
@@ -126,11 +142,14 @@ abstract class FormeFieldManagement {
   ///
   /// **model's all properties should be nullable**
   ///
-  /// **model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
-  set model(AbstractFormeModel model);
+  /// **the model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
+  set model(FormeModel model);
 
   /// get current state model;
-  AbstractFormeModel get model;
+  FormeModel get model;
+
+  /// update a model
+  void update<T extends FormeModel>(FormeModelUpdater<T> updater);
 
   /// make current field visible in viewport
   Future<void> ensureVisible(
@@ -138,6 +157,10 @@ abstract class FormeFieldManagement {
       Curve? curve,
       ScrollPositionAlignmentPolicy? alignmentPolicy,
       double? alignment});
+
+  static FormeFieldManagement of(BuildContext context) {
+    return InheritedFormeFieldManagement.of(context);
+  }
 }
 
 abstract class FormeValueFieldManagement extends FormeFieldManagement {
@@ -170,4 +193,60 @@ abstract class FormeValueFieldManagement extends FormeFieldManagement {
   ///
   /// this method won't display error message
   String? quietlyValidate();
+
+  static FormeValueFieldManagement of(BuildContext context) {
+    return InheritedFormeFieldManagement.of(context)
+        as FormeValueFieldManagement;
+  }
+}
+
+abstract class FormeFieldManagementDelegate extends FormeFieldManagement {
+  FormeFieldManagement get delegate;
+
+  @override
+  FormeModel get model => delegate.model;
+
+  @override
+  set model(FormeModel model) => delegate.model = model;
+
+  @override
+  bool get readOnly => delegate.readOnly;
+
+  @override
+  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
+
+  @override
+  Future<void> ensureVisible(
+          {Duration? duration,
+          Curve? curve,
+          ScrollPositionAlignmentPolicy? alignmentPolicy,
+          double? alignment}) =>
+      delegate.ensureVisible(
+        duration: duration,
+        curve: curve,
+        alignmentPolicy: alignmentPolicy,
+        alignment: alignment,
+      );
+
+  @override
+  set focus(bool focus) => delegate.focus = focus;
+
+  @override
+  set focusListener(listener) => delegate.focusListener = listener;
+
+  @override
+  bool get focusable => delegate.focusable;
+
+  @override
+  bool get hasFocus => delegate.hasFocus;
+
+  @override
+  bool get isValueField => true;
+
+  @override
+  String? get name => delegate.name;
+
+  @override
+  void update<T extends FormeModel>(FormeModelUpdater<T> updater) =>
+      delegate.update(updater);
 }

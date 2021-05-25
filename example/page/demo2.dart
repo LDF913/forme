@@ -10,10 +10,12 @@ class Demo2Page extends StatefulWidget {
 class _Demo2PageState extends State<Demo2Page> {
   final FormeKey formKey = FormeKey();
 
-  final GlobalKey key1 = GlobalKey();
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      formKey.field('text').focusListener = (v) => print('focused: $v');
+    });
   }
 
   @override
@@ -52,8 +54,8 @@ class _Demo2PageState extends State<Demo2Page> {
         ),
         //sliderVisible
         Builder(builder: (context) {
-          FormeFieldManagement management = formKey.currentManagement
-              .newFormeFieldManagement('sliderVisible');
+          FormeFieldManagement management =
+              formKey.currentManagement.field('sliderVisible');
           bool visible =
               (management.model as FormeVisibleModel).visible ?? true;
           return TextButton(
@@ -107,74 +109,72 @@ class _Demo2PageState extends State<Demo2Page> {
         ),
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('column');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.append(FormeNumberTextField(
-              model: FormeNumberTextFieldModel(labelText: '123'),
+            FormeFlexModel model =
+                formKey.field('column').model as FormeFlexModel;
+            formKey.field('column').model = model.append(FormeNumberTextField(
+              model: FormeNumberTextFieldModel(
+                textFieldModel: FormeTextFieldModel(),
+              ),
             ));
           },
           child: Text('append field into dynamic column'),
         ),
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('column');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.prepend(FormeNumberTextField(
-              model: FormeNumberTextFieldModel(labelText: '456'),
+            FormeFlexModel model =
+                formKey.field('column').model as FormeFlexModel;
+            formKey.field('column').model = model.prepend(FormeNumberTextField(
+              model: FormeNumberTextFieldModel(
+                textFieldModel: FormeTextFieldModel(
+                  decoration: InputDecoration(
+                    labelText: '456',
+                  ),
+                ),
+              ),
             ));
           },
           child: Text('prepend field into dynamic column'),
         ),
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('column');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.swap(0, 1);
+            FormeFlexModel model =
+                formKey.field('column').model as FormeFlexModel;
+            formKey.field('column').model = model.swap(0, 1);
           },
           child: Text('swap first and second'),
         ),
 
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('column');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.remove(0);
+            FormeFlexModel model =
+                formKey.field('column').model as FormeFlexModel;
+            formKey.field('column').model = model.remove(0);
           },
           child: Text('remove first'),
         ),
 
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('column');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.append(Container(
-              color: Colors.red,
-              child: FormeRow(children: [], name: 'row'),
-            ));
+            FormeFlexModel model =
+                formKey.field('column').model as FormeFlexModel;
+            formKey.field('column').model = model.append(
+              FormeRow(children: [], name: 'row'),
+            );
           },
           child: Text('append a dynamic row'),
         ),
 
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('row');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.prepend(FormeRate());
+            FormeFlexModel model = formKey.field('row').model as FormeFlexModel;
+            formKey.field('row').model = model.prepend(FormeRate());
           },
           child: Text('prepend field into dynamic row'),
         ),
         TextButton(
           onPressed: () {
-            FormeFieldManagement fieldManagement =
-                formKey.currentManagement.newFormeFieldManagement('row');
-            FormeFlexModel model = fieldManagement.model as FormeFlexModel;
-            fieldManagement.model = model.append(FormeSingleCheckbox());
+            FormeFlexModel model = formKey.field('row').model as FormeFlexModel;
+            formKey.field('row').model = model.append(FormeSingleCheckbox());
           },
           child: Text('append field into dynamic row'),
         ),
@@ -186,83 +186,100 @@ class _Demo2PageState extends State<Demo2Page> {
   Widget createForm() {
     Widget child = Column(
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: const BorderRadius.only(
-              bottomRight: Radius.circular(13.0),
-              bottomLeft: Radius.circular(13.0),
-              topLeft: Radius.circular(13.0),
-              topRight: Radius.circular(13.0),
+        FormeTextField(
+          name: 'text',
+          model: FormeTextFieldModel(
+            selectAllOnFocus: true,
+            decoration: InputDecoration(
+              labelText: 'Text',
             ),
           ),
-          child: Row(
-            children: <Widget>[
-              Expanded(
-                child: Container(
-                  padding: const EdgeInsets.only(left: 16, right: 16),
-                  child: FormeTextField(
-                    name: 'text',
-                    model: FormeTextFieldModel(
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      selectAllOnFocus: true,
-                      labelText: 'username',
-                      keyboardType: TextInputType.text,
-                      inputDecorationTheme: InputDecorationTheme(
-                        border: InputBorder.none,
-                        helperStyle: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        labelStyle: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                    onEditingComplete: () {},
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: Icon(
-                  Icons.search,
-                ),
-              )
-            ],
-          ),
+          onEditingComplete: () {},
         ),
-        SizedBox(height: 10),
-        FormeVisible(
-          name: 'sliderVisible',
-          child: FormeSlider(
-            model: FormeSliderModel(
-              labelText: 'Slider',
+        FormeTextField(
+          name: 'obscureText',
+          model: FormeTextFieldModel(
+            obscureText: true,
+            maxLines: 1,
+            toolbarOptions: ToolbarOptions(),
+            decoration: InputDecoration(
+              labelText: 'Obscure Text',
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FormeClearButton(onPressed: (valueField) {
+                    valueField.value = '';
+                  }),
+                  FormePasswordVisibleButton(),
+                ],
+              ),
             ),
-            name: 'slider',
-            min: 0,
-            max: 100,
           ),
+          onEditingComplete: () {},
         ),
         FormeNumberTextField(
           name: 'number',
           model: FormeNumberTextFieldModel(
             max: 99,
             decimal: 2,
-            labelText: 'Number Field',
+            textFieldModel: FormeTextFieldModel(
+              decoration: InputDecoration(
+                labelText: 'Number',
+                suffixIcon: FormeClearButton(
+                  onPressed: (valueField) {
+                    valueField.value = null;
+                  },
+                ),
+              ),
+            ),
           ),
         ),
-        FormeDateTime(
+        FormeDateRangeTextField(
+          name: 'dateRange',
+          model: FormeDateRangeTextFieldModel(
+              textFieldModel: FormeTextFieldModel(
+            decoration: InputDecoration(
+              labelText: 'Date Range',
+              suffixIcon: FormeClearButton(
+                visibleWhenUnfocus: true,
+                onPressed: (valueField) {
+                  valueField.value = null;
+                },
+              ),
+            ),
+          )),
+        ),
+        FormeDateTimeTextField(
           name: 'datetime',
-          model: FormeDateTimeModel(
-            labelText: 'DateTime Field',
-            type: FormeDateTimeType.DateTime,
+          model: FormeDateTimeTextFieldModel(
+            type: FormeDateTimeTextFieldType.DateTime,
+            textFieldModel: FormeTextFieldModel(
+              decoration: InputDecoration(
+                labelText: 'DateTime',
+                suffixIcon: FormeClearButton(
+                  visibleWhenUnfocus: true,
+                  onPressed: (valueField) {
+                    valueField.value = null;
+                  },
+                ),
+              ),
+            ),
+          ),
+        ),
+        FormeTimeTextField(
+          name: 'time',
+          model: FormeTimeTextFieldModel(
+            textFieldModel: FormeTextFieldModel(
+              decoration: InputDecoration(
+                labelText: 'Time',
+                suffixIcon: FormeClearButton(
+                  visibleWhenUnfocus: true,
+                  onPressed: (valueField) {
+                    valueField.value = null;
+                  },
+                ),
+              ),
+            ),
           ),
         ),
         SizedBox(
@@ -270,7 +287,7 @@ class _Demo2PageState extends State<Demo2Page> {
         ),
         FormeCupertinoPicker(
           name: 'cupertinoPicker',
-          initialValue: 0,
+          initialValue: 20,
           children: List<Widget>.generate(
               1000,
               (index) => Center(
@@ -282,6 +299,7 @@ class _Demo2PageState extends State<Demo2Page> {
             useMagnifier: true,
             magnification: 1.2,
           ),
+          suffixIcon: FormeCupertinoPickerLockButton(),
         ),
         SizedBox(
           height: 20,
@@ -307,6 +325,17 @@ class _Demo2PageState extends State<Demo2Page> {
         SizedBox(
           height: 20,
         ),
+        FormeVisible(
+          name: 'sliderVisible',
+          child: FormeSlider(
+            model: FormeSliderModel(
+              labelText: 'Slider',
+            ),
+            name: 'slider',
+            min: 0,
+            max: 100,
+          ),
+        ),
         FormeRangeSlider(
           model: FormeSliderModel(
             labelText: 'Range Slider',
@@ -314,6 +343,10 @@ class _Demo2PageState extends State<Demo2Page> {
           name: 'rangeSlider',
           min: 1,
           max: 100,
+        ),
+        FormeColumn(
+          name: 'column',
+          children: [],
         ),
         FormeListTile(
           items: FormeUtils.toFormeListTileItems(['1', '2']),
@@ -330,7 +363,7 @@ class _Demo2PageState extends State<Demo2Page> {
           type: FormeListTileType.Checkbox,
           model: FormeListTileModel(
             labelText: 'Checkbox Tile List',
-            hasSelectAll: true,
+            allowSelectAll: true,
             split: 1,
           ),
         ),
@@ -345,26 +378,33 @@ class _Demo2PageState extends State<Demo2Page> {
           ),
         ),
         FormeDropdownButton<String>(
+            name: 'dropdown',
             model: FormeDropdownButtonModel<String>(
-              labelText: 'Dropdown Button',
-            ),
+                icon: Row(
+                  children: [
+                    FormeDropdownButtonClearButton(
+                      visibleWhenUnfocus: true,
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Icon(Icons.arrow_drop_down)
+                  ],
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Dropdown Button',
+                )),
             items: FormeUtils.toDropdownMenuItems([
+              'Flutter',
               'Android',
               'IOS',
-              'Flutter',
-              'Node',
-              'Java',
-              'Python',
-              'PHP',
             ])),
         Row(children: [
           Flexible(
             flex: 1,
             child: FormeSlider(
               onChanged: (v) {
-                (formKey.currentManagement.newFormeFieldManagement('test')
-                        as FormeValueFieldManagement)
-                    .setValue(v.round(), trigger: false);
+                formKey.valueField('test').setValue(v.round(), trigger: false);
               },
               min: 0,
               max: 100,
@@ -375,21 +415,13 @@ class _Demo2PageState extends State<Demo2Page> {
               child: FormeNumberTextField(
             name: 'test',
             onChanged: (v) {
-              (formKey.currentManagement.newFormeFieldManagement('testSlider')
-                      as FormeValueFieldManagement)
+              formKey
+                  .valueField('testSlider')
                   .setValue(v?.toDouble() ?? 0.0, trigger: false);
             },
             model: FormeNumberTextFieldModel(allowNegative: false, max: 100),
           ))
-        ]),
-        Text(
-          'dynamic column ',
-          style: TextStyle(fontSize: 30),
-        ),
-        FormeColumn(
-          name: 'column',
-          children: [],
-        )
+        ])
       ],
     );
     return Forme(

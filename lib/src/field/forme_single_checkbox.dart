@@ -3,7 +3,7 @@ import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
 
 class FormeSingleCheckbox
@@ -15,10 +15,7 @@ class FormeSingleCheckbox
     bool initialValue = false,
     NonnullFormFieldSetter<bool>? onSaved,
     String? name,
-    int flex = 0,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     FormeSingleCheckboxModel? model,
     Key? key,
   }) : super(
@@ -61,7 +58,7 @@ class FormeSingleCheckbox
         );
 }
 
-class FormeSingleCheckboxModel extends AbstractFormeModel {
+class FormeSingleCheckboxModel extends FormeModel {
   final Widget? label;
   final FormeCheckboxRenderData? formeCheckboxRenderData;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
@@ -71,14 +68,17 @@ class FormeSingleCheckboxModel extends AbstractFormeModel {
     this.formeDecorationFieldRenderData,
   });
   @override
-  AbstractFormeModel merge(AbstractFormeModel old) {
-    FormeSingleCheckboxModel oldModel = old as FormeSingleCheckboxModel;
+  FormeSingleCheckboxModel copyWith({
+    Optional<Widget>? label,
+    Optional<FormeCheckboxRenderData>? formeCheckboxRenderData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeSingleCheckboxModel(
-      label: label ?? oldModel.label,
-      formeCheckboxRenderData:
-          formeCheckboxRenderData ?? oldModel.formeCheckboxRenderData,
-      formeDecorationFieldRenderData: formeDecorationFieldRenderData ??
-          oldModel.formeDecorationFieldRenderData,
+      label: Optional.copyWith(label, this.label),
+      formeCheckboxRenderData: Optional.copyWith(
+          formeCheckboxRenderData, this.formeCheckboxRenderData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }

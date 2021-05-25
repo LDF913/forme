@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'forme_management.dart';
 
 import 'forme_core.dart';
 import 'forme_state_model.dart';
@@ -7,8 +8,7 @@ typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
-
-mixin StatefulField<T extends AbstractFieldState, E extends AbstractFormeModel>
+mixin StatefulField<T extends AbstractFieldState, E extends FormeModel>
     on StatefulWidget {
   /// field's name
   ///
@@ -23,7 +23,8 @@ mixin StatefulField<T extends AbstractFieldState, E extends AbstractFormeModel>
   bool get readOnly;
 }
 
-class CommonField<E extends AbstractFormeModel> extends StatefulWidget
+/// if you want to create a stateful form field, but don't want to return a value,you can override this field
+class CommonField<E extends FormeModel> extends StatefulWidget
     with StatefulField<CommonFieldState, E> {
   final String? name;
   final FieldContentBuilder<CommonFieldState<E>> builder;
@@ -41,15 +42,18 @@ class CommonField<E extends AbstractFormeModel> extends StatefulWidget
   CommonFieldState<E> createState() => CommonFieldState();
 }
 
-class CommonFieldState<E extends AbstractFormeModel>
-    extends State<CommonField<E>> with AbstractFieldState<CommonField<E>, E> {
+class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
+    with AbstractFieldState<CommonField<E>, E> {
   @override
   Widget build(BuildContext context) {
     return widget.builder(this);
   }
 }
 
-class ValueField<T, E extends AbstractFormeModel> extends FormField<T>
+/// base field used to return a value
+///
+/// if your return value is nonnull,use [NonnullValueField]
+class ValueField<T, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String? name;
   final ValueChanged<T?>? onChanged;
@@ -74,7 +78,8 @@ class ValueField<T, E extends AbstractFormeModel> extends FormField<T>
             onSaved: onSaved,
             builder: (field) {
               ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
-              return builder(state);
+              return InheritedFormeFieldManagement._(
+                  state.management, builder(state));
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -83,8 +88,8 @@ class ValueField<T, E extends AbstractFormeModel> extends FormField<T>
   ValueFieldState<T, E> createState() => ValueFieldState();
 }
 
-class NonnullValueField<T, E extends AbstractFormeModel>
-    extends ValueField<T, E> {
+/// base field used to return a nonnull value
+class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
   @override
   T get initialValue => super.initialValue!;
 
@@ -110,7 +115,8 @@ class NonnullValueField<T, E extends AbstractFormeModel>
             builder: (field) {
               NonnullValueFieldState<T, E> state =
                   field as NonnullValueFieldState<T, E>;
-              return builder(state);
+              return InheritedFormeFieldManagement._(
+                  state.management, builder(state));
             },
             validator: validator == null ? null : (value) => validator(value!),
             autovalidateMode: autovalidateMode,
@@ -120,20 +126,17 @@ class NonnullValueField<T, E extends AbstractFormeModel>
   NonnullValueFieldState<T, E> createState() => NonnullValueFieldState();
 }
 
-class NonnullValueFieldState<T, E extends AbstractFormeModel>
-    extends ValueFieldState<T, E> {
+/// share FormFieldManagement in sub tree
+class InheritedFormeFieldManagement extends InheritedWidget {
+  final FormeFieldManagement management;
+  const InheritedFormeFieldManagement._(this.management, Widget child)
+      : super(child: child);
   @override
-  T get value => super.value!;
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) => true;
 
-  @override
-  void doChangeValue(T? newValue, {bool trigger = true}) {
-    super.doChangeValue(newValue == null ? widget.initialValue : newValue,
-        trigger: trigger);
-  }
-
-  @mustCallSuper
-  @override
-  void setValue(T? value) {
-    super.setValue(value == null ? widget.initialValue : value);
+  static FormeFieldManagement of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldManagement>()!
+        .management;
   }
 }

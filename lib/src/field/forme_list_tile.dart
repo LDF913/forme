@@ -3,8 +3,9 @@ import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
 import '../forme_state_model.dart';
-import 'forme_decoration_field.dart';
+import 'forme_decoration.dart';
 import '../forme_field.dart';
+import '../forme_core.dart';
 
 class FormeListTileItem<T> {
   final Widget title;
@@ -49,18 +50,14 @@ class FormeListTile<T>
     List<T>? initialValue,
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
-    int flex = 1,
-    bool visible = true,
     bool readOnly = false,
-    EdgeInsets? padding,
     FormeListTileType type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
     Key? key,
   }) : super(
             key: key,
-            model: (model ?? FormeListTileModel<T>())
-                .merge(FormeListTileModel(items: items)),
+            model: (model ?? FormeListTileModel<T>()).copyWith(items: items),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -72,7 +69,7 @@ class FormeListTile<T>
               bool readOnly = state.readOnly;
               int split = state.model.split ?? 2;
               List<FormeListTileItem<T>> items = state.model.items ?? [];
-              bool hasSelectAll = state.model.hasSelectAll ?? true;
+              bool allowSelectAll = state.model.allowSelectAll ?? true;
 
               FormeListTileRenderData? formeListTileRenderData =
                   state.model.formeListTileRenderData;
@@ -288,15 +285,13 @@ class FormeListTile<T>
               Widget? icon;
 
               if (items.length > 1 &&
-                  hasSelectAll &&
+                  allowSelectAll &&
                   type != FormeListTileType.Radio) {
                 bool selectAll = controllableItems.isNotEmpty &&
                     controllableItems
                         .every((element) => state.value.contains(element));
 
                 if (!isAllInvisible) {
-                  IconData iconData =
-                      selectAll ? Icons.switch_right : Icons.switch_left;
                   void toggleValues() {
                     state.requestFocus();
                     List<T> values = List.of(state.value);
@@ -317,9 +312,12 @@ class FormeListTile<T>
 
                   icon = InkWell(
                     child: IconButton(
-                      icon: Icon(
-                        iconData,
-                      ),
+                      icon: (selectAll
+                              ? state.model.selectAllIcon
+                              : state.model.unselectAllIcon) ??
+                          Icon(selectAll
+                              ? Icons.switch_right
+                              : Icons.switch_left),
                       onPressed:
                           readOnly || isAllReadOnly ? null : toggleValues,
                     ),
@@ -353,7 +351,8 @@ class FormeListTile<T>
 class _FormeListTileState<T>
     extends NonnullValueFieldState<List<T>, FormeListTileModel<T>> {
   @override
-  void beforeMerge(FormeListTileModel<T> old, FormeListTileModel<T> current) {
+  void beforeUpdateModel(
+      FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
       List<T> items = List.of(value);
       Iterable<T> datas = current.items!.map((e) => e.data);
@@ -363,23 +362,26 @@ class _FormeListTileState<T>
   }
 }
 
-class FormeListTileModel<T> extends AbstractFormeModel {
+class FormeListTileModel<T> extends FormeModel {
   final String? labelText;
   final String? helperText;
   final int? split;
   final List<FormeListTileItem<T>>? items;
-  final bool? hasSelectAll;
+  final bool? allowSelectAll;
+  final Widget? selectAllIcon;
+  final Widget? unselectAllIcon;
   final FormeListTileRenderData? formeListTileRenderData;
   final FormeCheckboxRenderData? formeCheckboxRenderData;
   final FormeRadioRenderData? formeRadioRenderData;
   final FormeSwitchRenderData? formeSwitchRenderData;
   final FormeWrapRenderData? formeWrapRenderData;
   final FormeDecorationRenderData? formeDecorationFieldRenderData;
+
   FormeListTileModel({
     this.labelText,
     this.split,
     this.items,
-    this.hasSelectAll,
+    this.allowSelectAll,
     this.formeListTileRenderData,
     this.formeCheckboxRenderData,
     this.formeRadioRenderData,
@@ -387,28 +389,46 @@ class FormeListTileModel<T> extends AbstractFormeModel {
     this.formeWrapRenderData,
     this.formeDecorationFieldRenderData,
     this.helperText,
+    this.selectAllIcon,
+    this.unselectAllIcon,
   });
 
   @override
-  FormeListTileModel<T> merge(AbstractFormeModel old) {
-    FormeListTileModel<T> oldModel = old as FormeListTileModel<T>;
+  FormeListTileModel<T> copyWith({
+    Optional<String>? labelText,
+    Optional<String>? helperText,
+    Optional<int>? split,
+    List<FormeListTileItem<T>>? items,
+    bool? allowSelectAll,
+    Optional<Widget>? selectAllIcon,
+    Optional<Widget>? unselectAllIcon,
+    Optional<FormeListTileRenderData>? formeListTileRenderData,
+    Optional<FormeCheckboxRenderData>? formeCheckboxRenderData,
+    Optional<FormeRadioRenderData>? formeRadioRenderData,
+    Optional<FormeSwitchRenderData>? formeSwitchRenderData,
+    Optional<FormeWrapRenderData>? formeWrapRenderData,
+    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
+  }) {
     return FormeListTileModel<T>(
-      labelText: labelText ?? oldModel.labelText,
-      helperText: helperText ?? oldModel.helperText,
-      split: split ?? oldModel.split,
-      items: items ?? oldModel.items,
-      hasSelectAll: hasSelectAll ?? oldModel.hasSelectAll,
-      formeListTileRenderData:
-          formeListTileRenderData ?? oldModel.formeListTileRenderData,
-      formeCheckboxRenderData:
-          formeCheckboxRenderData ?? oldModel.formeCheckboxRenderData,
+      labelText: Optional.copyWith(labelText, this.labelText),
+      helperText: Optional.copyWith(helperText, this.helperText),
+      split: Optional.copyWith(split, this.split),
+      items: items ?? this.items,
+      allowSelectAll: allowSelectAll ?? allowSelectAll,
+      selectAllIcon: Optional.copyWith(selectAllIcon, this.selectAllIcon),
+      unselectAllIcon: Optional.copyWith(unselectAllIcon, this.unselectAllIcon),
+      formeListTileRenderData: Optional.copyWith(
+          formeListTileRenderData, this.formeListTileRenderData),
+      formeCheckboxRenderData: Optional.copyWith(
+          formeCheckboxRenderData, this.formeCheckboxRenderData),
       formeRadioRenderData:
-          formeRadioRenderData ?? oldModel.formeRadioRenderData,
+          Optional.copyWith(formeRadioRenderData, this.formeRadioRenderData),
       formeSwitchRenderData:
-          formeSwitchRenderData ?? oldModel.formeSwitchRenderData,
-      formeWrapRenderData: formeWrapRenderData ?? oldModel.formeWrapRenderData,
-      formeDecorationFieldRenderData:
-          formeDecorationFieldRenderData ?? old.formeDecorationFieldRenderData,
+          Optional.copyWith(formeSwitchRenderData, this.formeSwitchRenderData),
+      formeWrapRenderData:
+          Optional.copyWith(formeWrapRenderData, this.formeWrapRenderData),
+      formeDecorationFieldRenderData: Optional.copyWith(
+          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
     );
   }
 }
