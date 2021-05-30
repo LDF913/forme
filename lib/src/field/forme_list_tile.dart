@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../forme_management.dart';
 import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
 import '../forme_state_model.dart';
-import 'forme_decoration.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
 
@@ -43,6 +43,7 @@ enum FormeListTileType { Checkbox, Switch, Radio }
 
 class FormeListTile<T>
     extends NonnullValueField<List<T>, FormeListTileModel<T>> {
+  final FormeListTileType type;
   FormeListTile({
     ValueChanged<List<T>>? onChanged,
     NonnullFieldValidator<List<T>>? validator,
@@ -51,13 +52,20 @@ class FormeListTile<T>
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
     bool readOnly = false,
-    FormeListTileType type = FormeListTileType.Checkbox,
+    this.type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
+    ValidateErrorListener<
+            FormeValueFieldManagement<List<T>, FormeListTileModel<T>>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeListTileModel<T>>>? focusListener,
     Key? key,
   }) : super(
+            focusListener: focusListener,
+            validateErrorListener: validateErrorListener,
             key: key,
-            model: (model ?? FormeListTileModel<T>()).copyWith(items: items),
+            model: (model ?? FormeListTileModel<T>())
+                .copyWith(FormeListTileModel(items: items)),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -69,16 +77,15 @@ class FormeListTile<T>
               bool readOnly = state.readOnly;
               int split = state.model.split ?? 2;
               List<FormeListTileItem<T>> items = state.model.items ?? [];
-              bool allowSelectAll = state.model.allowSelectAll ?? true;
 
-              FormeListTileRenderData? formeListTileRenderData =
-                  state.model.formeListTileRenderData;
-              FormeCheckboxRenderData? formeCheckboxRenderData =
-                  state.model.formeCheckboxRenderData;
-              FormeRadioRenderData? formeRadioRenderData =
-                  state.model.formeRadioRenderData;
-              FormeSwitchRenderData? formeSwitchRenderData =
-                  state.model.formeSwitchRenderData;
+              FormeListTileRenderData? listTileRenderData =
+                  state.model.listTileRenderData;
+              FormeCheckboxRenderData? checkboxRenderData =
+                  state.model.checkboxRenderData;
+              FormeRadioRenderData? radioRenderData =
+                  state.model.radioRenderData;
+              FormeSwitchRenderData? switchRenderData =
+                  state.model.switchRenderData;
 
               List<Widget> wrapWidgets = [];
 
@@ -104,11 +111,10 @@ class FormeListTile<T>
                 switch (type) {
                   case FormeListTileType.Radio:
                     return RadioListTile<T>(
-                      shape: formeRadioRenderData?.shape,
-                      tileColor: formeRadioRenderData?.tileColor,
-                      selectedTileColor:
-                          formeRadioRenderData?.selectedTileColor,
-                      activeColor: formeRadioRenderData?.activeColor,
+                      shape: radioRenderData?.shape,
+                      tileColor: radioRenderData?.tileColor,
+                      selectedTileColor: radioRenderData?.selectedTileColor,
+                      activeColor: radioRenderData?.activeColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       groupValue: state.value.isEmpty ? null : state.value[0],
@@ -122,12 +128,11 @@ class FormeListTile<T>
                     );
                   case FormeListTileType.Checkbox:
                     return CheckboxListTile(
-                      shape: formeCheckboxRenderData?.shape,
-                      tileColor: formeCheckboxRenderData?.tileColor,
-                      selectedTileColor:
-                          formeCheckboxRenderData?.selectedTileColor,
-                      activeColor: formeCheckboxRenderData?.activeColor,
-                      checkColor: formeCheckboxRenderData?.checkColor,
+                      shape: checkboxRenderData?.shape,
+                      tileColor: checkboxRenderData?.tileColor,
+                      selectedTileColor: checkboxRenderData?.selectedTileColor,
+                      activeColor: checkboxRenderData?.activeColor,
+                      checkColor: checkboxRenderData?.checkColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,
@@ -140,19 +145,15 @@ class FormeListTile<T>
                     );
                   case FormeListTileType.Switch:
                     return SwitchListTile(
-                      tileColor: formeSwitchRenderData?.tileColor,
-                      activeColor: formeSwitchRenderData?.activeColor,
-                      activeTrackColor: formeSwitchRenderData?.activeTrackColor,
-                      inactiveThumbColor:
-                          formeSwitchRenderData?.inactiveThumbColor,
-                      inactiveTrackColor:
-                          formeSwitchRenderData?.inactiveTrackColor,
-                      activeThumbImage: formeSwitchRenderData?.activeThumbImage,
-                      inactiveThumbImage:
-                          formeSwitchRenderData?.inactiveThumbImage,
-                      shape: formeSwitchRenderData?.shape,
-                      selectedTileColor:
-                          formeSwitchRenderData?.selectedTileColor,
+                      tileColor: switchRenderData?.tileColor,
+                      activeColor: switchRenderData?.activeColor,
+                      activeTrackColor: switchRenderData?.activeTrackColor,
+                      inactiveThumbColor: switchRenderData?.inactiveThumbColor,
+                      inactiveTrackColor: switchRenderData?.inactiveTrackColor,
+                      activeThumbImage: switchRenderData?.activeThumbImage,
+                      inactiveThumbImage: switchRenderData?.inactiveThumbImage,
+                      shape: switchRenderData?.shape,
+                      selectedTileColor: switchRenderData?.selectedTileColor,
                       secondary: item.secondary,
                       subtitle: item.subtitle,
                       controlAffinity: item.controlAffinity,
@@ -175,14 +176,14 @@ class FormeListTile<T>
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        formeCheckboxRenderData);
+                        checkboxRenderData);
                   case FormeListTileType.Switch:
                     return FormeRenderUtils.adaptiveSwitch(
                         selected,
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        formeSwitchRenderData);
+                        switchRenderData);
                   case FormeListTileType.Radio:
                     return FormeRenderUtils.radio<T>(
                         item.data,
@@ -190,7 +191,7 @@ class FormeListTile<T>
                         readOnly || item.readOnly
                             ? null
                             : (v) => changeValue(item.data),
-                        formeRadioRenderData);
+                        radioRenderData);
                 }
               }
 
@@ -265,82 +266,16 @@ class FormeListTile<T>
                 }
               }
 
-              bool isAllReadOnly = true;
-              bool isAllInvisible = true;
-              List<T> controllableItems = [];
-              items.forEach((element) {
-                bool readOnly = element.readOnly;
-                bool visible = element.visible;
-                if (!readOnly) {
-                  isAllReadOnly = false;
-                }
-                if (visible) {
-                  isAllInvisible = false;
-                }
-                if (!readOnly && visible) {
-                  controllableItems.add(element.data);
-                }
-              });
-
-              Widget? icon;
-
-              if (items.length > 1 &&
-                  allowSelectAll &&
-                  type != FormeListTileType.Radio) {
-                bool selectAll = controllableItems.isNotEmpty &&
-                    controllableItems
-                        .every((element) => state.value.contains(element));
-
-                if (!isAllInvisible) {
-                  void toggleValues() {
-                    state.requestFocus();
-                    List<T> values = List.of(state.value);
-                    if (selectAll) {
-                      state.didChange(values
-                          .where(
-                              (element) => !controllableItems.contains(element))
-                          .toList());
-                    } else {
-                      state.didChange(values
-                        ..removeWhere(
-                            (element) => controllableItems.contains(element))
-                        ..addAll(controllableItems)
-                        ..toSet()
-                        ..toList());
-                    }
-                  }
-
-                  icon = InkWell(
-                    child: IconButton(
-                      icon: (selectAll
-                              ? state.model.selectAllIcon
-                              : state.model.unselectAllIcon) ??
-                          Icon(selectAll
-                              ? Icons.switch_right
-                              : Icons.switch_left),
-                      onPressed:
-                          readOnly || isAllReadOnly ? null : toggleValues,
-                    ),
-                  );
-                }
-              }
-
               Widget child = FormeRenderUtils.wrap(
-                  state.model.formeWrapRenderData, wrapWidgets);
+                  state.model.wrapRenderData, wrapWidgets);
               if (split == 1) {
                 child = FormeRenderUtils.mergeListTileTheme(
-                    child, formeListTileRenderData);
+                    child, listTileRenderData);
               }
 
-              return FormeDecoration(
-                formeDecorationFieldRenderData:
-                    state.model.formeDecorationFieldRenderData,
-                labelText: state.model.labelText,
-                helperText: state.model.helperText,
-                errorText: state.errorText,
-                child: child,
+              return Focus(
                 focusNode: state.focusNode,
-                icon: icon,
+                child: child,
               );
             });
 
@@ -349,86 +284,72 @@ class FormeListTile<T>
 }
 
 class _FormeListTileState<T>
-    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>> {
+    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>>
+    with FormeDecoratorState {
+  bool allowSelectAll = false;
+
   @override
-  void beforeUpdateModel(
+  FormeListTileModel<T> beforeUpdateModel(
       FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
       List<T> items = List.of(value);
       Iterable<T> datas = current.items!.map((e) => e.data);
-      items.removeWhere((element) => !datas.contains(element));
-      setValue(items);
+      bool removed = false;
+      items.removeWhere((element) {
+        if (!datas.contains(element)) {
+          removed = true;
+          return true;
+        }
+        return false;
+      });
+      if (removed) setValue(items);
     }
+    return current;
+  }
+
+  @override
+  FormeListTileModel<T> beforeSetModel(
+      FormeListTileModel<T> old, FormeListTileModel<T> current) {
+    if (current.items == null) {
+      return current.copyWith(FormeListTileModel<T>(items: old.items));
+    }
+    return current;
   }
 }
 
 class FormeListTileModel<T> extends FormeModel {
-  final String? labelText;
-  final String? helperText;
   final int? split;
   final List<FormeListTileItem<T>>? items;
-  final bool? allowSelectAll;
-  final Widget? selectAllIcon;
-  final Widget? unselectAllIcon;
-  final FormeListTileRenderData? formeListTileRenderData;
-  final FormeCheckboxRenderData? formeCheckboxRenderData;
-  final FormeRadioRenderData? formeRadioRenderData;
-  final FormeSwitchRenderData? formeSwitchRenderData;
-  final FormeWrapRenderData? formeWrapRenderData;
-  final FormeDecorationRenderData? formeDecorationFieldRenderData;
+  final FormeListTileRenderData? listTileRenderData;
+  final FormeCheckboxRenderData? checkboxRenderData;
+  final FormeRadioRenderData? radioRenderData;
+  final FormeSwitchRenderData? switchRenderData;
+  final FormeWrapRenderData? wrapRenderData;
 
   FormeListTileModel({
-    this.labelText,
     this.split,
     this.items,
-    this.allowSelectAll,
-    this.formeListTileRenderData,
-    this.formeCheckboxRenderData,
-    this.formeRadioRenderData,
-    this.formeSwitchRenderData,
-    this.formeWrapRenderData,
-    this.formeDecorationFieldRenderData,
-    this.helperText,
-    this.selectAllIcon,
-    this.unselectAllIcon,
+    this.listTileRenderData,
+    this.checkboxRenderData,
+    this.radioRenderData,
+    this.switchRenderData,
+    this.wrapRenderData,
   });
-
-  @override
-  FormeListTileModel<T> copyWith({
-    Optional<String>? labelText,
-    Optional<String>? helperText,
-    Optional<int>? split,
-    List<FormeListTileItem<T>>? items,
-    bool? allowSelectAll,
-    Optional<Widget>? selectAllIcon,
-    Optional<Widget>? unselectAllIcon,
-    Optional<FormeListTileRenderData>? formeListTileRenderData,
-    Optional<FormeCheckboxRenderData>? formeCheckboxRenderData,
-    Optional<FormeRadioRenderData>? formeRadioRenderData,
-    Optional<FormeSwitchRenderData>? formeSwitchRenderData,
-    Optional<FormeWrapRenderData>? formeWrapRenderData,
-    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
-  }) {
+  FormeListTileModel<T> copyWith(FormeModel oldModel) {
+    FormeListTileModel<T> old = oldModel as FormeListTileModel<T>;
     return FormeListTileModel<T>(
-      labelText: Optional.copyWith(labelText, this.labelText),
-      helperText: Optional.copyWith(helperText, this.helperText),
-      split: Optional.copyWith(split, this.split),
-      items: items ?? this.items,
-      allowSelectAll: allowSelectAll ?? allowSelectAll,
-      selectAllIcon: Optional.copyWith(selectAllIcon, this.selectAllIcon),
-      unselectAllIcon: Optional.copyWith(unselectAllIcon, this.unselectAllIcon),
-      formeListTileRenderData: Optional.copyWith(
-          formeListTileRenderData, this.formeListTileRenderData),
-      formeCheckboxRenderData: Optional.copyWith(
-          formeCheckboxRenderData, this.formeCheckboxRenderData),
-      formeRadioRenderData:
-          Optional.copyWith(formeRadioRenderData, this.formeRadioRenderData),
-      formeSwitchRenderData:
-          Optional.copyWith(formeSwitchRenderData, this.formeSwitchRenderData),
-      formeWrapRenderData:
-          Optional.copyWith(formeWrapRenderData, this.formeWrapRenderData),
-      formeDecorationFieldRenderData: Optional.copyWith(
-          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
+      split: split ?? old.split,
+      items: items ?? old.items,
+      listTileRenderData: FormeListTileRenderData.copy(
+          old.listTileRenderData, listTileRenderData),
+      checkboxRenderData: FormeCheckboxRenderData.copy(
+          old.checkboxRenderData, checkboxRenderData),
+      radioRenderData:
+          FormeRadioRenderData.copy(old.radioRenderData, radioRenderData),
+      switchRenderData:
+          FormeSwitchRenderData.copy(old.switchRenderData, switchRenderData),
+      wrapRenderData:
+          FormeWrapRenderData.copy(old.wrapRenderData, wrapRenderData),
     );
   }
 }

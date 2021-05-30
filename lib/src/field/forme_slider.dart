@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import '../render/forme_render_utils.dart';
+import '../forme_management.dart';
 import '../forme_state_model.dart';
-import 'forme_decoration.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
 
-typedef FormeLabelRender = String Function(num value);
+typedef FormeLabelRender = String Function(double value);
 
-class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
+class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
   FormeSlider({
-    ValueChanged<num>? onChanged,
-    NonnullFieldValidator<num>? validator,
+    ValueChanged<double>? onChanged,
+    NonnullFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    FormeLabelRender? subLabelRender,
-    NonnullFormFieldSetter<num>? onSaved,
+    NonnullFormFieldSetter<double>? onSaved,
     String? name,
     bool readOnly = false,
-    SemanticFormatterCallback? semanticFormatterCallback,
-    ValueChanged<double>? onChangeStart,
-    ValueChanged<double>? onChangeEnd,
-    MouseCursor? mouseCursor,
     required double min,
     required double max,
     FormeSliderModel? model,
+    ValidateErrorListener<FormeValueFieldManagement<double, FormeSliderModel>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeSliderModel>>? focusListener,
     Key? key,
   }) : super(
           key: key,
-          model: (model ?? FormeSliderModel()).copyWith(
+          focusListener: focusListener,
+          validateErrorListener: validateErrorListener,
+          model: (model ?? FormeSliderModel()).copyWith(FormeSliderModel(
             max: max,
             min: min,
-            divisions: (max - min).toInt(),
-          ),
+          )),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -43,35 +43,37 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
             bool readOnly = state.readOnly;
             double max = state.model.max!;
             double min = state.model.min!;
-            int divisions = state.model.divisions!;
+            int divisions = state.model.divisions ?? (max - min).floor();
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
 
-            num value = state.value;
+            double value = state.value;
 
-            String? sliderLabel =
-                subLabelRender == null ? null : subLabelRender(value);
+            String? sliderLabel = state.model.labelRender == null
+                ? null
+                : state.model.labelRender!(value);
 
             SliderThemeData sliderThemeData =
                 state.model.sliderThemeData ?? SliderTheme.of(state.context);
             if (sliderThemeData.thumbShape == null)
               sliderThemeData = sliderThemeData.copyWith(
-                  thumbShape:
-                      CustomSliderThumbCircle(value: state.value.toDouble()));
+                  thumbShape: CustomSliderThumbCircle(value: state.value));
             Widget slider = SliderTheme(
               data: sliderThemeData,
               child: Slider(
-                value: value.toDouble(),
+                value: value,
                 min: min,
                 max: max,
+                focusNode: state.focusNode,
                 label: sliderLabel,
                 divisions: divisions,
                 activeColor: activeColor,
                 inactiveColor: inactiveColor,
-                onChangeStart: onChangeStart,
-                onChangeEnd: onChangeEnd,
-                semanticFormatterCallback: semanticFormatterCallback,
-                mouseCursor: mouseCursor,
+                onChangeStart: state.model.onChangeStart,
+                onChangeEnd: state.model.onChangeEnd,
+                semanticFormatterCallback:
+                    state.model.semanticFormatterCallback,
+                mouseCursor: state.model.mouseCursor,
                 onChanged: readOnly
                     ? null
                     : (double value) {
@@ -81,18 +83,7 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
               ),
             );
 
-            return FormeDecoration(
-              formeDecorationFieldRenderData:
-                  state.model.formeDecorationFieldRenderData,
-              child: Padding(
-                child: slider,
-                padding: const EdgeInsets.symmetric(vertical: 10),
-              ),
-              focusNode: state.focusNode,
-              errorText: state.errorText,
-              labelText: state.model.labelText,
-              helperText: state.model.helperText,
-            );
+            return slider;
           },
         );
 
@@ -100,59 +91,73 @@ class FormeSlider extends NonnullValueField<num, FormeSliderModel> {
   _FormeSliderState createState() => _FormeSliderState();
 }
 
-class _FormeSliderState extends NonnullValueFieldState<num, FormeSliderModel> {
+class _FormeSliderState extends NonnullValueFieldState<double, FormeSliderModel>
+    with FormeDecoratorState {
   @override
-  void beforeUpdateModel(FormeSliderModel old, FormeSliderModel current) {
+  FormeSliderModel beforeUpdateModel(
+      FormeSliderModel old, FormeSliderModel current) {
     if (current.min != null && value < current.min!) setValue(current.min!);
     if (current.max != null && value > current.max!) setValue(current.max!);
+    return current;
+  }
+
+  @override
+  FormeSliderModel beforeSetModel(
+      FormeSliderModel old, FormeSliderModel current) {
+    if (current.min == null) {
+      return current.copyWith(FormeSliderModel(min: old.min));
+    }
+    if (current.max == null) {
+      return current.copyWith(FormeSliderModel(max: old.max));
+    }
+    return current;
   }
 }
 
 class FormeSliderModel extends FormeModel {
-  final String? labelText;
-  final String? helperText;
+  final SemanticFormatterCallback? semanticFormatterCallback;
+  final ValueChanged<double>? onChangeStart;
+  final ValueChanged<double>? onChangeEnd;
   final double? max;
   final double? min;
   final int? divisions;
   final Color? activeColor;
   final Color? inactiveColor;
   final SliderThemeData? sliderThemeData;
-  final FormeDecorationRenderData? formeDecorationFieldRenderData;
+  final MouseCursor? mouseCursor;
+  final FormeLabelRender? labelRender;
 
   FormeSliderModel({
-    this.labelText,
     this.max,
     this.min,
     this.divisions,
     this.activeColor,
     this.inactiveColor,
     this.sliderThemeData,
-    this.formeDecorationFieldRenderData,
-    this.helperText,
+    this.mouseCursor,
+    this.onChangeEnd,
+    this.onChangeStart,
+    this.semanticFormatterCallback,
+    this.labelRender,
   });
+
   @override
-  FormeSliderModel copyWith({
-    Optional<String>? labelText,
-    Optional<String>? helperText,
-    double? max,
-    double? min,
-    int? divisions,
-    Optional<Color>? activeColor,
-    Optional<Color>? inactiveColor,
-    Optional<SliderThemeData>? sliderThemeData,
-    Optional<FormeDecorationRenderData>? formeDecorationFieldRenderData,
-  }) {
+  FormeSliderModel copyWith(FormeModel oldModel) {
+    FormeSliderModel old = oldModel as FormeSliderModel;
     return FormeSliderModel(
-      labelText: Optional.copyWith(labelText, this.labelText),
-      helperText: Optional.copyWith(helperText, this.helperText),
-      max: max ?? this.max,
-      min: min ?? this.min,
-      divisions: divisions ?? this.divisions,
-      activeColor: Optional.copyWith(activeColor, this.activeColor),
-      inactiveColor: Optional.copyWith(inactiveColor, this.inactiveColor),
-      sliderThemeData: Optional.copyWith(sliderThemeData, this.sliderThemeData),
-      formeDecorationFieldRenderData: Optional.copyWith(
-          formeDecorationFieldRenderData, this.formeDecorationFieldRenderData),
+      semanticFormatterCallback:
+          semanticFormatterCallback ?? old.semanticFormatterCallback,
+      onChangeStart: onChangeStart ?? old.onChangeStart,
+      onChangeEnd: onChangeEnd ?? old.onChangeEnd,
+      max: max ?? old.max,
+      min: min ?? old.min,
+      divisions: divisions ?? old.divisions,
+      activeColor: activeColor ?? old.activeColor,
+      inactiveColor: inactiveColor ?? old.inactiveColor,
+      sliderThemeData: FormeRenderUtils.copySliderThemeData(
+          old.sliderThemeData, sliderThemeData),
+      mouseCursor: mouseCursor ?? old.mouseCursor,
+      labelRender: labelRender ?? old.labelRender,
     );
   }
 }

@@ -94,9 +94,17 @@ class _FormeFlexState extends CommonFieldState<FormeFlexModel> {
   }
 
   @override
-  void beforeUpdateModel(FormeFlexModel old, FormeFlexModel current) {
+  FormeFlexModel beforeUpdateModel(FormeFlexModel old, FormeFlexModel current) {
     widgets.clear();
     widgets.addAll(current._widgets);
+    return current;
+  }
+
+  @override
+  FormeFlexModel beforeSetModel(FormeFlexModel old, FormeFlexModel current) {
+    widgets.clear();
+    widgets.addAll(current._widgets);
+    return current;
   }
 }
 
@@ -155,6 +163,10 @@ class FormeFlexModel extends FormeModel {
     return this;
   }
 
+  FormeFlexModel renderData(FormeFlexRenderData renderData) {
+    return FormeFlexModel._(_widgets, formeFlexRenderData: renderData);
+  }
+
   _rangeCheck(int index) {
     if (index < 0 || index > _widgets.length - 1) {
       throw 'index out of range , range is [0,${_widgets.length - 1}]';
@@ -162,12 +174,13 @@ class FormeFlexModel extends FormeModel {
   }
 
   @override
-  FormeModel copyWith({
-    Optional<FormeFlexRenderData>? formeFlexRenderData,
-  }) {
+  FormeModel copyWith(
+    FormeModel oldModel,
+  ) {
+    FormeFlexModel old = oldModel as FormeFlexModel;
     return FormeFlexModel._(_widgets,
-        formeFlexRenderData:
-            Optional.copyWith(formeFlexRenderData, this.formeFlexRenderData));
+        formeFlexRenderData: FormeFlexRenderData.copy(
+            old.formeFlexRenderData, formeFlexRenderData));
   }
 }
 
@@ -188,24 +201,17 @@ class FormeFlexRenderData {
     this.textBaseline,
   });
 
-  FormeFlexRenderData copyWith({
-    Optional<MainAxisAlignment>? mainAxisAlignment,
-    Optional<MainAxisSize>? mainAxisSize,
-    Optional<CrossAxisAlignment>? crossAxisAlignment,
-    Optional<TextDirection>? textDirection,
-    Optional<VerticalDirection>? verticalDirection,
-    Optional<TextBaseline>? textBaseline,
-  }) {
+  static FormeFlexRenderData? copy(
+      FormeFlexRenderData? old, FormeFlexRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeFlexRenderData(
-      mainAxisAlignment:
-          Optional.copyWith(mainAxisAlignment, this.mainAxisAlignment),
-      mainAxisSize: Optional.copyWith(mainAxisSize, this.mainAxisSize),
-      crossAxisAlignment:
-          Optional.copyWith(crossAxisAlignment, this.crossAxisAlignment),
-      textDirection: Optional.copyWith(textDirection, this.textDirection),
-      verticalDirection:
-          Optional.copyWith(verticalDirection, this.verticalDirection),
-      textBaseline: Optional.copyWith(textBaseline, this.textBaseline),
+      mainAxisAlignment: current.mainAxisAlignment ?? old.mainAxisAlignment,
+      mainAxisSize: current.mainAxisSize ?? old.mainAxisSize,
+      crossAxisAlignment: current.crossAxisAlignment ?? old.crossAxisAlignment,
+      textDirection: current.textDirection ?? old.textDirection,
+      verticalDirection: current.verticalDirection ?? old.verticalDirection,
+      textBaseline: current.textBaseline ?? old.textBaseline,
     );
   }
 }

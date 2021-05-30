@@ -15,15 +15,12 @@ class FormeUtils {
   }
 
   static List<FormeChipItem<String>> toFormeChipItems(List<String> items,
-      {EdgeInsets? padding,
-      EdgeInsets? contentPadding,
-      EdgeInsets? labelPadding}) {
+      {EdgeInsets? padding, EdgeInsets? labelPadding}) {
     return items
         .map((e) => FormeChipItem<String>(
             label: Text(e),
             padding: padding,
             data: e,
-            contentPadding: contentPadding,
             labelPadding: labelPadding))
         .toList();
   }

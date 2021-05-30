@@ -2,11 +2,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import '../forme_state_model.dart';
-
 class FormeCheckboxRenderData {
-  final MouseCursor? mouseCursor;
   final Color? activeColor;
+  final MouseCursor? mouseCursor;
   final MaterialStateProperty<Color?>? fillColor;
   final Color? checkColor;
   final Color? focusColor;
@@ -35,37 +33,25 @@ class FormeCheckboxRenderData {
     this.shape,
   });
 
-  FormeCheckboxRenderData copyWith({
-    Optional<MouseCursor>? mouseCursor,
-    Optional<Color>? activeColor,
-    Optional<MaterialStateProperty<Color>>? fillColor,
-    Optional<Color>? checkColor,
-    Optional<Color>? focusColor,
-    Optional<Color>? hoverColor,
-    Optional<MaterialStateProperty<Color>>? overlayColor,
-    Optional<double>? splashRadius,
-    Optional<VisualDensity>? visualDensity,
-    Optional<MaterialTapTargetSize>? materialTapTargetSize,
-    Optional<Color>? tileColor,
-    Optional<Color>? selectedTileColor,
-    Optional<ShapeBorder>? shape,
-  }) {
+  static FormeCheckboxRenderData? copy(
+      FormeCheckboxRenderData? old, FormeCheckboxRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeCheckboxRenderData(
-      mouseCursor: Optional.copyWith(mouseCursor, this.mouseCursor),
-      activeColor: Optional.copyWith(activeColor, this.activeColor),
-      fillColor: Optional.copyWith(fillColor, this.fillColor),
-      checkColor: Optional.copyWith(checkColor, this.checkColor),
-      focusColor: Optional.copyWith(focusColor, this.focusColor),
-      hoverColor: Optional.copyWith(hoverColor, this.hoverColor),
-      overlayColor: Optional.copyWith(overlayColor, this.overlayColor),
-      splashRadius: Optional.copyWith(splashRadius, this.splashRadius),
-      visualDensity: Optional.copyWith(visualDensity, this.visualDensity),
+      activeColor: current.activeColor ?? old.activeColor,
+      mouseCursor: current.mouseCursor ?? old.mouseCursor,
+      fillColor: current.fillColor ?? old.fillColor,
+      checkColor: current.checkColor ?? old.checkColor,
+      focusColor: current.focusColor ?? old.focusColor,
+      hoverColor: current.hoverColor ?? old.hoverColor,
+      overlayColor: current.overlayColor ?? old.overlayColor,
+      splashRadius: current.splashRadius ?? old.splashRadius,
+      visualDensity: current.visualDensity ?? old.visualDensity,
       materialTapTargetSize:
-          Optional.copyWith(materialTapTargetSize, this.materialTapTargetSize),
-      tileColor: Optional.copyWith(tileColor, this.tileColor),
-      selectedTileColor:
-          Optional.copyWith(selectedTileColor, this.selectedTileColor),
-      shape: Optional.copyWith(shape, this.shape),
+          current.materialTapTargetSize ?? old.materialTapTargetSize,
+      tileColor: current.tileColor ?? old.tileColor,
+      selectedTileColor: current.selectedTileColor ?? old.selectedTileColor,
+      shape: current.shape ?? old.shape,
     );
   }
 }
@@ -85,7 +71,7 @@ class FormeListTileRenderData {
   final double? minVerticalPadding;
   final double? minLeadingWidth;
 
-  FormeListTileRenderData({
+  const FormeListTileRenderData({
     this.dense,
     this.shape,
     this.style,
@@ -101,38 +87,24 @@ class FormeListTileRenderData {
     this.minLeadingWidth,
   });
 
-  FormeListTileRenderData copyWith({
-    bool? dense,
-    Optional<ShapeBorder>? shape,
-    Optional<ListTileStyle>? style,
-    Optional<Color>? selectedColor,
-    Optional<Color>? iconColor,
-    Optional<Color>? textColor,
-    Optional<EdgeInsetsGeometry>? contentPadding,
-    Optional<Color>? tileColor,
-    Optional<Color>? selectedTileColor,
-    bool? enableFeedback,
-    Optional<double>? horizontalTitleGap,
-    Optional<double>? minVerticalPadding,
-    Optional<double>? minLeadingWidth,
-  }) {
+  static FormeListTileRenderData? copy(
+      FormeListTileRenderData? old, FormeListTileRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeListTileRenderData(
-      dense: dense ?? dense,
-      shape: Optional.copyWith(shape, this.shape),
-      style: Optional.copyWith(style, this.style),
-      selectedColor: Optional.copyWith(selectedColor, this.selectedColor),
-      iconColor: Optional.copyWith(iconColor, this.iconColor),
-      textColor: Optional.copyWith(textColor, this.textColor),
-      contentPadding: Optional.copyWith(contentPadding, this.contentPadding),
-      tileColor: Optional.copyWith(tileColor, this.tileColor),
-      selectedTileColor:
-          Optional.copyWith(selectedTileColor, this.selectedTileColor),
-      enableFeedback: enableFeedback ?? enableFeedback,
-      horizontalTitleGap:
-          Optional.copyWith(horizontalTitleGap, this.horizontalTitleGap),
-      minVerticalPadding:
-          Optional.copyWith(minVerticalPadding, this.minVerticalPadding),
-      minLeadingWidth: Optional.copyWith(minLeadingWidth, this.minLeadingWidth),
+      dense: current.dense ?? old.dense,
+      shape: current.shape ?? old.shape,
+      style: current.style ?? old.style,
+      selectedColor: current.selectedColor ?? old.selectedColor,
+      iconColor: current.iconColor ?? old.iconColor,
+      textColor: current.textColor ?? old.textColor,
+      contentPadding: current.contentPadding ?? old.contentPadding,
+      tileColor: current.tileColor ?? old.tileColor,
+      selectedTileColor: current.selectedTileColor ?? old.selectedTileColor,
+      enableFeedback: current.enableFeedback ?? old.enableFeedback,
+      horizontalTitleGap: current.horizontalTitleGap ?? old.horizontalTitleGap,
+      minVerticalPadding: current.minVerticalPadding ?? old.minVerticalPadding,
+      minLeadingWidth: current.minLeadingWidth ?? old.minLeadingWidth,
     );
   }
 }
@@ -183,69 +155,42 @@ class FormeSwitchRenderData {
     this.shape,
     this.selectedTileColor,
   });
-
-  FormeSwitchRenderData copyWith({
-    Optional<Color>? activeColor,
-    Optional<Color>? activeTrackColor,
-    Optional<Color>? inactiveThumbColor,
-    Optional<Color>? inactiveTrackColor,
-    Optional<ImageProvider>? imageProvider,
-    Optional<ImageProvider>? activeThumbImage,
-    Optional<ImageProvider>? inactiveThumbImage,
-    Optional<MaterialStateProperty<Color>>? thumbColor,
-    Optional<MaterialStateProperty<Color>>? trackColor,
-    Optional<DragStartBehavior>? dragStartBehavior,
-    Optional<MaterialTapTargetSize>? materialTapTargetSize,
-    Optional<MouseCursor>? mouseCursor,
-    Optional<Color>? focusColor,
-    Optional<Color>? hoverColor,
-    Optional<MaterialStateProperty<Color>>? overlayColor,
-    Optional<double>? splashRadius,
-    Optional<ImageErrorListener>? onActiveThumbImageError,
-    Optional<ImageErrorListener>? onInactiveThumbImageError,
-    Optional<Color>? tileColor,
-    Optional<ShapeBorder>? shape,
-    Optional<Color>? selectedTileColor,
-  }) {
+  static FormeSwitchRenderData? copy(
+      FormeSwitchRenderData? old, FormeSwitchRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeSwitchRenderData(
-      activeColor: Optional.copyWith(activeColor, this.activeColor),
-      activeTrackColor:
-          Optional.copyWith(activeTrackColor, this.activeTrackColor),
-      inactiveThumbColor:
-          Optional.copyWith(inactiveThumbColor, this.inactiveThumbColor),
-      inactiveTrackColor:
-          Optional.copyWith(inactiveTrackColor, this.inactiveTrackColor),
-      imageProvider: Optional.copyWith(imageProvider, this.imageProvider),
-      activeThumbImage:
-          Optional.copyWith(activeThumbImage, this.activeThumbImage),
-      inactiveThumbImage:
-          Optional.copyWith(inactiveThumbImage, this.inactiveThumbImage),
-      thumbColor: Optional.copyWith(thumbColor, this.thumbColor),
-      trackColor: Optional.copyWith(trackColor, this.trackColor),
-      dragStartBehavior:
-          Optional.copyWith(dragStartBehavior, this.dragStartBehavior),
+      activeColor: current.activeColor ?? old.activeColor,
+      activeTrackColor: current.activeTrackColor ?? old.activeTrackColor,
+      inactiveThumbColor: current.inactiveThumbColor ?? old.inactiveThumbColor,
+      inactiveTrackColor: current.inactiveTrackColor ?? old.inactiveTrackColor,
+      imageProvider: current.imageProvider ?? old.imageProvider,
+      activeThumbImage: current.activeThumbImage ?? old.activeThumbImage,
+      inactiveThumbImage: current.inactiveThumbImage ?? old.inactiveThumbImage,
+      thumbColor: current.thumbColor ?? old.thumbColor,
+      trackColor: current.trackColor ?? old.trackColor,
+      dragStartBehavior: current.dragStartBehavior ?? old.dragStartBehavior,
       materialTapTargetSize:
-          Optional.copyWith(materialTapTargetSize, this.materialTapTargetSize),
-      mouseCursor: Optional.copyWith(mouseCursor, this.mouseCursor),
-      focusColor: Optional.copyWith(focusColor, this.focusColor),
-      hoverColor: Optional.copyWith(hoverColor, this.hoverColor),
-      overlayColor: Optional.copyWith(overlayColor, this.overlayColor),
-      splashRadius: Optional.copyWith(splashRadius, this.splashRadius),
-      onActiveThumbImageError: Optional.copyWith(
-          onActiveThumbImageError, this.onActiveThumbImageError),
-      onInactiveThumbImageError: Optional.copyWith(
-          onInactiveThumbImageError, this.onInactiveThumbImageError),
-      tileColor: Optional.copyWith(tileColor, this.tileColor),
-      shape: Optional.copyWith(shape, this.shape),
-      selectedTileColor:
-          Optional.copyWith(selectedTileColor, this.selectedTileColor),
+          current.materialTapTargetSize ?? old.materialTapTargetSize,
+      mouseCursor: current.mouseCursor ?? old.mouseCursor,
+      focusColor: current.focusColor ?? old.focusColor,
+      hoverColor: current.hoverColor ?? old.hoverColor,
+      overlayColor: current.overlayColor ?? old.overlayColor,
+      splashRadius: current.splashRadius ?? old.splashRadius,
+      onActiveThumbImageError:
+          current.onActiveThumbImageError ?? old.onActiveThumbImageError,
+      onInactiveThumbImageError:
+          current.onInactiveThumbImageError ?? old.onInactiveThumbImageError,
+      tileColor: current.tileColor ?? old.tileColor,
+      shape: current.shape ?? old.shape,
+      selectedTileColor: current.selectedTileColor ?? old.selectedTileColor,
     );
   }
 }
 
 class FormeRadioRenderData {
-  final MouseCursor? mouseCursor;
   final Color? activeColor;
+  final MouseCursor? mouseCursor;
   final MaterialStateProperty<Color?>? fillColor;
   final Color? focusColor;
   final Color? hoverColor;
@@ -271,35 +216,24 @@ class FormeRadioRenderData {
     this.selectedTileColor,
     this.shape,
   });
-  FormeRadioRenderData copyWith({
-    Optional<MouseCursor>? mouseCursor,
-    Optional<Color>? activeColor,
-    Optional<MaterialStateProperty<Color>>? fillColor,
-    Optional<Color>? focusColor,
-    Optional<Color>? hoverColor,
-    Optional<MaterialStateProperty<Color>>? overlayColor,
-    Optional<double>? splashRadius,
-    Optional<VisualDensity>? visualDensity,
-    Optional<MaterialTapTargetSize>? materialTapTargetSize,
-    Optional<Color>? tileColor,
-    Optional<Color>? selectedTileColor,
-    Optional<ShapeBorder>? shape,
-  }) {
+  static FormeRadioRenderData? copy(
+      FormeRadioRenderData? old, FormeRadioRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeRadioRenderData(
-      mouseCursor: Optional.copyWith(mouseCursor, this.mouseCursor),
-      activeColor: Optional.copyWith(activeColor, this.activeColor),
-      fillColor: Optional.copyWith(fillColor, this.fillColor),
-      focusColor: Optional.copyWith(focusColor, this.focusColor),
-      hoverColor: Optional.copyWith(hoverColor, this.hoverColor),
-      overlayColor: Optional.copyWith(overlayColor, this.overlayColor),
-      splashRadius: Optional.copyWith(splashRadius, this.splashRadius),
-      visualDensity: Optional.copyWith(visualDensity, this.visualDensity),
+      activeColor: current.activeColor ?? old.activeColor,
+      mouseCursor: current.mouseCursor ?? old.mouseCursor,
+      fillColor: current.fillColor ?? old.fillColor,
+      focusColor: current.focusColor ?? old.focusColor,
+      hoverColor: current.hoverColor ?? old.hoverColor,
+      overlayColor: current.overlayColor ?? old.overlayColor,
+      splashRadius: current.splashRadius ?? old.splashRadius,
+      visualDensity: current.visualDensity ?? old.visualDensity,
       materialTapTargetSize:
-          Optional.copyWith(materialTapTargetSize, this.materialTapTargetSize),
-      tileColor: Optional.copyWith(tileColor, this.tileColor),
-      selectedTileColor:
-          Optional.copyWith(selectedTileColor, this.selectedTileColor),
-      shape: Optional.copyWith(shape, this.shape),
+          current.materialTapTargetSize ?? old.materialTapTargetSize,
+      tileColor: current.tileColor ?? old.tileColor,
+      selectedTileColor: current.selectedTileColor ?? old.selectedTileColor,
+      shape: current.shape ?? old.shape,
     );
   }
 }
@@ -326,115 +260,20 @@ class FormeWrapRenderData {
     this.verticalDirection,
     this.spacing,
   });
-  FormeWrapRenderData copyWith({
-    Optional<Axis>? direction,
-    Optional<WrapAlignment>? alignment,
-    Optional<double>? space,
-    Optional<WrapAlignment>? runAlignment,
-    Optional<double>? runSpacing,
-    Optional<double>? spacing,
-    Optional<WrapCrossAlignment>? crossAxisAlignment,
-    Optional<TextDirection>? textDirection,
-    Optional<VerticalDirection>? verticalDirection,
-  }) {
+  static FormeWrapRenderData? copy(
+      FormeWrapRenderData? old, FormeWrapRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
     return FormeWrapRenderData(
-      direction: Optional.copyWith(direction, this.direction),
-      alignment: Optional.copyWith(alignment, this.alignment),
-      space: Optional.copyWith(space, this.space),
-      runAlignment: Optional.copyWith(runAlignment, this.runAlignment),
-      runSpacing: Optional.copyWith(runSpacing, this.runSpacing),
-      spacing: Optional.copyWith(spacing, this.spacing),
-      crossAxisAlignment:
-          Optional.copyWith(crossAxisAlignment, this.crossAxisAlignment),
-      textDirection: Optional.copyWith(textDirection, this.textDirection),
-      verticalDirection:
-          Optional.copyWith(verticalDirection, this.verticalDirection),
-    );
-  }
-}
-
-class FormeChipRenderData {
-  final TextStyle? labelStyle;
-  final EdgeInsets? labelPadding;
-  final double? pressElevation;
-  final Color? disabledColor;
-  final Color? selectedColor;
-  final String? tooltip;
-  final BorderSide? side;
-  final OutlinedBorder? shape;
-  final Color? backgroundColor;
-  final EdgeInsets? padding;
-  final VisualDensity? visualDensity;
-  final MaterialTapTargetSize? materialTapTargetSize;
-  final double? elevation;
-  final Color? shadowColor;
-  final Color? selectedShadowColor;
-  final bool? showCheckmark;
-  final Color? checkmarkColor;
-  final CircleBorder? avatarBorder;
-
-  const FormeChipRenderData({
-    this.labelPadding,
-    this.labelStyle,
-    this.avatarBorder,
-    this.backgroundColor,
-    this.checkmarkColor,
-    this.showCheckmark,
-    this.shadowColor,
-    this.disabledColor,
-    this.selectedColor,
-    this.selectedShadowColor,
-    this.visualDensity,
-    this.elevation,
-    this.pressElevation,
-    this.materialTapTargetSize,
-    this.padding,
-    this.shape,
-    this.side,
-    this.tooltip,
-  });
-
-  FormeChipRenderData copyWith({
-    Optional<TextStyle>? labelStyle,
-    Optional<EdgeInsets>? labelPadding,
-    Optional<double>? pressElevation,
-    Optional<Color>? disabledColor,
-    Optional<Color>? selectedColor,
-    Optional<String>? tooltip,
-    Optional<BorderSide>? side,
-    Optional<OutlinedBorder>? shape,
-    Optional<Color>? backgroundColor,
-    Optional<EdgeInsets>? padding,
-    Optional<VisualDensity>? visualDensity,
-    Optional<MaterialTapTargetSize>? materialTapTargetSize,
-    Optional<double>? elevation,
-    Optional<Color>? shadowColor,
-    Optional<Color>? selectedShadowColor,
-    bool? showCheckmark,
-    Optional<Color>? checkmarkColor,
-    Optional<CircleBorder>? avatarBorder,
-  }) {
-    return FormeChipRenderData(
-      labelStyle: Optional.copyWith(labelStyle, this.labelStyle),
-      labelPadding: Optional.copyWith(labelPadding, this.labelPadding),
-      pressElevation: Optional.copyWith(pressElevation, this.pressElevation),
-      disabledColor: Optional.copyWith(disabledColor, this.disabledColor),
-      selectedColor: Optional.copyWith(selectedColor, this.selectedColor),
-      tooltip: Optional.copyWith(tooltip, this.tooltip),
-      side: Optional.copyWith(side, this.side),
-      shape: Optional.copyWith(shape, this.shape),
-      backgroundColor: Optional.copyWith(backgroundColor, this.backgroundColor),
-      padding: Optional.copyWith(padding, this.padding),
-      visualDensity: Optional.copyWith(visualDensity, this.visualDensity),
-      materialTapTargetSize:
-          Optional.copyWith(materialTapTargetSize, this.materialTapTargetSize),
-      elevation: Optional.copyWith(elevation, this.elevation),
-      shadowColor: Optional.copyWith(shadowColor, this.shadowColor),
-      selectedShadowColor:
-          Optional.copyWith(selectedShadowColor, this.selectedShadowColor),
-      showCheckmark: showCheckmark ?? showCheckmark,
-      checkmarkColor: Optional.copyWith(checkmarkColor, this.checkmarkColor),
-      avatarBorder: Optional.copyWith(avatarBorder, this.avatarBorder),
+      direction: current.direction ?? old.direction,
+      alignment: current.alignment ?? old.alignment,
+      space: current.space ?? old.space,
+      runAlignment: current.runAlignment ?? old.runAlignment,
+      runSpacing: current.runSpacing ?? old.runSpacing,
+      spacing: current.spacing ?? old.spacing,
+      crossAxisAlignment: current.crossAxisAlignment ?? old.crossAxisAlignment,
+      textDirection: current.textDirection ?? old.textDirection,
+      verticalDirection: current.verticalDirection ?? old.verticalDirection,
     );
   }
 }

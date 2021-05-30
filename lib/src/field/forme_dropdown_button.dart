@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import '../render/forme_render_utils.dart';
 import '../forme_core.dart';
-import '../forme_management.dart';
-import '../widget/forme_clear_button.dart';
 
 import '../forme_field.dart';
+import '../forme_management.dart';
 import '../forme_state_model.dart';
 
 class FormeDropdownButton<T>
@@ -18,14 +18,20 @@ class FormeDropdownButton<T>
     String? name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
-    VoidCallback? onTap,
-    DropdownButtonBuilder? selectedItemBuilder,
-    bool autofocus = false,
+    ValidateErrorListener<
+            FormeValueFieldManagement<T, FormeDropdownButtonModel<T>>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeDropdownButtonModel<T>>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
-          model:
-              (model ?? FormeDropdownButtonModel<T>()).copyWith(items: items),
+          focusListener: focusListener,
+          validateErrorListener: validateErrorListener,
+          model: (model ?? FormeDropdownButtonModel<T>())
+              .copyWith(FormeDropdownButtonModel<T>(
+            items: items,
+          )),
           readOnly: readOnly,
           name: name,
           onChanged: onChanged,
@@ -43,11 +49,11 @@ class FormeDropdownButton<T>
             DropdownButtonFormField<T> dropdownButton =
                 DropdownButtonFormField<T>(
               focusNode: state.focusNode,
-              autofocus: autofocus,
-              selectedItemBuilder: selectedItemBuilder,
+              autofocus: state.model.autofocus ?? false,
+              selectedItemBuilder: state.model.selectedItemBuilder,
               value: state.value,
               items: state.model.items!,
-              onTap: onTap,
+              onTap: state.model.onTap,
               icon: state.model.icon,
               iconSize: iconSize,
               iconEnabledColor: state.model.iconEnabledColor,
@@ -86,24 +92,31 @@ class FormeDropdownButton<T>
 
 class _FormDropdownButtonState<T>
     extends ValueFieldState<T, FormeDropdownButtonModel<T>> {
-  void focusChange() {
-    setState(() {});
+  @override
+  FormeDropdownButtonModel<T> beforeUpdateModel(
+      FormeDropdownButtonModel<T> old, FormeDropdownButtonModel<T> current) {
+    if (value == null) return current;
+    if (current.items != null &&
+        !current.items!.any((element) => element.value == value)) {
+      setValue(null);
+    }
+    return current;
   }
 
   @override
-  void initState() {
-    super.initState();
-    focusNode.addListener(focusChange);
-  }
-
-  @override
-  void dispose() {
-    focusNode.removeListener(focusChange);
-    super.dispose();
+  FormeDropdownButtonModel<T> beforeSetModel(
+      FormeDropdownButtonModel<T> old, FormeDropdownButtonModel<T> current) {
+    if (current.items == null) {
+      return current.copyWith(FormeDropdownButtonModel<T>(items: old.items));
+    }
+    return current;
   }
 }
 
 class FormeDropdownButtonModel<T> extends FormeModel {
+  final DropdownButtonBuilder? selectedItemBuilder;
+  final VoidCallback? onTap;
+  final bool? autofocus;
   final List<DropdownMenuItem<T>>? items;
   final Widget? hint;
   final Widget? disabledHint;
@@ -119,7 +132,6 @@ class FormeDropdownButtonModel<T> extends FormeModel {
   final Widget? icon;
   final Color? iconDisabledColor;
   final Color? iconEnabledColor;
-
   FormeDropdownButtonModel({
     this.items,
     this.hint,
@@ -136,66 +148,32 @@ class FormeDropdownButtonModel<T> extends FormeModel {
     this.icon,
     this.iconDisabledColor,
     this.iconEnabledColor,
+    this.autofocus,
+    this.onTap,
+    this.selectedItemBuilder,
   });
-  @override
-  FormeDropdownButtonModel<T> copyWith({
-    List<DropdownMenuItem<T>>? items,
-    Optional<Widget>? hint,
-    Optional<Widget>? disabledHint,
-    Optional<int>? elevation,
-    Optional<TextStyle>? style,
-    bool? isDense,
-    bool? isExpanded,
-    Optional<double>? itemHeight,
-    Optional<Color>? focusColor,
-    Optional<Color>? dropdownColor,
-    Optional<double>? iconSize,
-    Optional<InputDecoration>? decoration,
-    Optional<Widget>? icon,
-    Optional<Color>? iconDisabledColor,
-    Optional<Color>? iconEnabledColor,
-  }) {
+  FormeDropdownButtonModel<T> copyWith(FormeModel oldModel) {
+    FormeDropdownButtonModel<T> old = oldModel as FormeDropdownButtonModel<T>;
     return FormeDropdownButtonModel<T>(
-      items: items ?? this.items,
-      hint: Optional.copyWith(hint, this.hint),
-      disabledHint: Optional.copyWith(disabledHint, this.disabledHint),
-      elevation: Optional.copyWith(elevation, this.elevation),
-      style: Optional.copyWith(style, this.style),
-      isDense: isDense ?? isDense,
-      isExpanded: isExpanded ?? isExpanded,
-      itemHeight: Optional.copyWith(itemHeight, this.itemHeight),
-      focusColor: Optional.copyWith(focusColor, this.focusColor),
-      dropdownColor: Optional.copyWith(dropdownColor, this.dropdownColor),
-      iconSize: Optional.copyWith(iconSize, this.iconSize),
-      decoration: Optional.copyWith(decoration, this.decoration),
-      icon: Optional.copyWith(icon, this.icon),
-      iconDisabledColor:
-          Optional.copyWith(iconDisabledColor, this.iconDisabledColor),
-      iconEnabledColor:
-          Optional.copyWith(iconEnabledColor, this.iconEnabledColor),
-    );
-  }
-}
-
-/// a clear button for [FormeDropdownButton] field
-class FormeDropdownButtonClearButton extends FormeClearButton {
-  FormeDropdownButtonClearButton({
-    bool visibleWhenUnfocus = true,
-    Widget clearIcon = const Icon(Icons.clear),
-  }) : super(
-          visibleWhenUnfocus: visibleWhenUnfocus,
-          clearIcon: clearIcon,
-          onPressed: (value) {
-            value.focus = true;
-            value.value = null;
-          },
-        );
-
-  @protected
-  Widget buildIcon(Widget icon, FormeValueFieldManagement valueField) {
-    return InkWell(
-      child: clearIcon,
-      onTap: valueField.readOnly ? null : () => onPressed(valueField),
+      selectedItemBuilder: selectedItemBuilder ?? old.selectedItemBuilder,
+      onTap: onTap ?? old.onTap,
+      autofocus: autofocus ?? old.autofocus,
+      items: items ?? old.items,
+      hint: hint ?? old.hint,
+      disabledHint: disabledHint ?? old.disabledHint,
+      elevation: elevation ?? old.elevation,
+      style: style ?? old.style,
+      isDense: isDense ?? old.isDense,
+      isExpanded: isExpanded ?? old.isExpanded,
+      itemHeight: itemHeight ?? old.itemHeight,
+      focusColor: focusColor ?? old.focusColor,
+      dropdownColor: dropdownColor ?? old.dropdownColor,
+      iconSize: iconSize ?? old.iconSize,
+      decoration:
+          FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
+      icon: icon ?? old.icon,
+      iconDisabledColor: iconDisabledColor ?? old.iconDisabledColor,
+      iconEnabledColor: iconEnabledColor ?? old.iconEnabledColor,
     );
   }
 }

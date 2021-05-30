@@ -33,7 +33,10 @@ class FormeVisibleModel extends FormeModel {
   final bool? visible;
   FormeVisibleModel({this.visible});
   @override
-  FormeVisibleModel copyWith({bool? visible}) {
-    return FormeVisibleModel(visible: visible);
+  FormeVisibleModel copyWith(FormeModel oldModel) {
+    FormeVisibleModel old = oldModel as FormeVisibleModel;
+    return FormeVisibleModel(
+      visible: visible ?? old.visible,
+    );
   }
 }

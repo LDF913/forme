@@ -4,11 +4,6 @@ import 'forme_field.dart';
 import '../forme.dart';
 import 'forme_state_model.dart';
 
-/// used to update model
-///
-/// [current] current model
-typedef FormeModelUpdater<T extends FormeModel> = T Function(T current);
-
 /// base form management
 ///
 /// you can access a form management by [FormeKey]
@@ -97,7 +92,7 @@ abstract class FormeManagement {
 }
 
 /// used to control form field
-abstract class FormeFieldManagement {
+abstract class FormeFieldManagement<E extends FormeModel> {
   ///get field's name
   String? get name;
 
@@ -119,18 +114,13 @@ abstract class FormeFieldManagement {
   /// if field is not focusable ,an error will be throw
   set focus(bool focus);
 
-  /// set focus listener on field
-  ///
-  /// if field does not has a focusnode ,an error will be throw
-  set focusListener(ValueChanged<bool>? listener);
-
   /// whether field is value field
   bool get isValueField;
 
   /// set state model on field
   ///
   /// directly set model will lose old model
-  /// if you want to inherit old model, you can use get update model
+  /// if you want to inherit old model, you can use  update model
   ///
   /// [model] is provided by your custom [AbstractFieldState],
   /// if you no need a model,you can use [EmptyStateModel]
@@ -143,13 +133,27 @@ abstract class FormeFieldManagement {
   /// **model's all properties should be nullable**
   ///
   /// **the model's runtimetype must be  a child or same as  your custom [AbstractFieldState]'s generic model type**
-  set model(FormeModel model);
+  set model(E model);
 
   /// get current state model;
-  FormeModel get model;
+  E get model;
 
   /// update a model
-  void update<T extends FormeModel>(FormeModelUpdater<T> updater);
+  ///
+  /// you needn't to call `model.copyWith(oldModel)` manually ,
+  /// when you want to update something,just create a new model with the attributes
+  /// you want to update,Forme will auto copy old model's attributes to new model
+  ///
+  /// ```
+  /// FormeFieldManagement<FormeTextFieldModel> m;
+  /// // update field's labelText to '123'
+  /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelText:'123')));
+  /// // update field's labelText size to 20, you won't lose labelText!
+  /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelStyle:TextStyle(fontSize:20))));
+  /// ```
+  ///
+  /// **update a null value will not work! if you update some attributes to null,use [set model] instead**
+  void update(E model);
 
   /// make current field visible in viewport
   Future<void> ensureVisible(
@@ -158,21 +162,26 @@ abstract class FormeFieldManagement {
       ScrollPositionAlignmentPolicy? alignmentPolicy,
       double? alignment});
 
-  static FormeFieldManagement of(BuildContext context) {
-    return InheritedFormeFieldManagement.of(context);
+  static T of<T extends FormeFieldManagement>(BuildContext context) {
+    return InheritedFormeFieldManagement.of(context) as T;
+  }
+
+  static T? maybeOf<T extends FormeFieldManagement>(BuildContext context) {
+    return InheritedFormeFieldManagement.of(context) as T;
   }
 }
 
-abstract class FormeValueFieldManagement extends FormeFieldManagement {
+abstract class FormeValueFieldManagement<T, E extends FormeModel>
+    extends FormeFieldManagement<E> {
   /// get current value of valuefield
-  dynamic get value;
+  T? get value;
 
   /// set newValue on valuefield,this method will trigger onChanged listener
   /// if you don't want to trigger it,you can use setValue method
-  set value(dynamic value) => setValue(value, trigger: true);
+  set value(T? value) => setValue(value, trigger: true);
 
   /// set newValue on valuefield,if trigger is false,won't trigger onChanged listener
-  setValue(dynamic value, {bool trigger: true});
+  setValue(T? value, {bool trigger: true});
 
   /// whether value field is valid,this method won't display error msg
   /// if you want to show error msg,use validate instead
@@ -193,21 +202,17 @@ abstract class FormeValueFieldManagement extends FormeFieldManagement {
   ///
   /// this method won't display error message
   String? quietlyValidate();
-
-  static FormeValueFieldManagement of(BuildContext context) {
-    return InheritedFormeFieldManagement.of(context)
-        as FormeValueFieldManagement;
-  }
 }
 
-abstract class FormeFieldManagementDelegate extends FormeFieldManagement {
-  FormeFieldManagement get delegate;
+abstract class FormeFieldManagementDelegate<E extends FormeModel>
+    implements FormeFieldManagement<E> {
+  FormeFieldManagement<E> get delegate;
 
   @override
-  FormeModel get model => delegate.model;
+  E get model => delegate.model;
 
   @override
-  set model(FormeModel model) => delegate.model = model;
+  set model(E model) => delegate.model = model;
 
   @override
   bool get readOnly => delegate.readOnly;
@@ -232,9 +237,6 @@ abstract class FormeFieldManagementDelegate extends FormeFieldManagement {
   set focus(bool focus) => delegate.focus = focus;
 
   @override
-  set focusListener(listener) => delegate.focusListener = listener;
-
-  @override
   bool get focusable => delegate.focusable;
 
   @override
@@ -247,6 +249,63 @@ abstract class FormeFieldManagementDelegate extends FormeFieldManagement {
   String? get name => delegate.name;
 
   @override
-  void update<T extends FormeModel>(FormeModelUpdater<T> updater) =>
-      delegate.update(updater);
+  void update(E model) => delegate.update(model);
+}
+
+class FormeValueFieldManagementDelegate<T, E extends FormeModel>
+    extends FormeFieldManagementDelegate<E>
+    implements FormeValueFieldManagement<T, E> {
+  final FormeValueFieldManagement<T, E> delegate;
+
+  FormeValueFieldManagementDelegate(this.delegate);
+
+  @override
+  T? get value => delegate.value;
+
+  @override
+  set value(T? value) => setValue(value, trigger: true);
+
+  @override
+  setValue(T? value, {bool trigger: true}) =>
+      delegate.setValue(value, trigger: true);
+
+  @override
+  bool get isValid => delegate.isValid;
+
+  @override
+  bool validate() => delegate.validate();
+
+  @override
+  void reset() => delegate.reset();
+
+  @override
+  String? get errorText => delegate.errorText;
+
+  @override
+  String? quietlyValidate() => delegate.quietlyValidate();
+}
+
+/// a decorator management
+///
+/// [FormeDecoratorState]
+abstract class FormeDecoratorManagement<T, E extends FormeModel>
+    extends FormeValueFieldManagementDelegate<T, E> {
+  FormeDecoratorManagement(FormeValueFieldManagement<T, E> delegate)
+      : super(delegate);
+  set decoratorModel(FormeDecoratorModel? model);
+  FormeDecoratorModel? get decoratorModel;
+}
+
+class FormeDecoratorManagementDelegate<T, E extends FormeModel>
+    extends FormeDecoratorManagement<T, E> {
+  FormeDecoratorManagementDelegate(FormeDecoratorManagement<T, E> delegate)
+      : super(delegate);
+
+  @override
+  FormeDecoratorModel? get decoratorModel =>
+      (delegate as FormeDecoratorManagement).decoratorModel;
+
+  @override
+  set decoratorModel(FormeDecoratorModel? model) =>
+      (delegate as FormeDecoratorManagement).decoratorModel = model;
 }

@@ -5,6 +5,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+
+import '../render/forme_render_utils.dart';
+import '../../forme.dart';
 import '../widget/forme_text_field_widget.dart';
 
 import '../forme_utils.dart';
@@ -14,23 +17,23 @@ import '../forme_core.dart';
 
 class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
   FormeTextField({
-    GestureTapCallback? onTap,
     NonnullFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
-    ValueChanged<String>? onChanged,
-    ValueChanged<String>? onSubmitted,
     NonnullFormFieldSetter<String>? onSaved,
     String? initialValue,
-    VoidCallback? onEditingComplete,
     String? name,
     bool readOnly = false,
+    ValueChanged<String>? onChanged,
     FormeTextFieldModel? model,
-    List<TextInputFormatter>? inputFormatters,
-    AppPrivateCommandCallback? appPrivateCommandCallback,
-    InputCounterWidgetBuilder? buildCounter,
+    ValidateErrorListener<
+            FormeValueFieldManagement<String, FormeTextFieldModel>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeTextFieldModel>>? focusListener,
     Key? key,
   }) : super(
           key: key,
+          focusListener: focusListener,
+          validateErrorListener: validateErrorListener,
           model: model ?? FormeTextFieldModel(),
           name: name,
           readOnly: readOnly,
@@ -42,23 +45,20 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
           builder: (baseState) {
             bool readOnly = baseState.readOnly;
             _TextFormeFieldState state = baseState as _TextFormeFieldState;
-            FocusNode? focusNode = baseState.focusNode;
+            FocusNode focusNode = baseState.focusNode;
+
+            onChanged(String v) {
+              state.didChange(v);
+            }
 
             return FormeTextFieldWidget(
               textEditingController: state.textEditingController,
               focusNode: focusNode,
-              readOnly: readOnly,
               errorText: state.errorText,
-              data: FormTextFieldWidgetRenderData(
-                appPrivateCommandCallback: appPrivateCommandCallback,
-                buildCounter: buildCounter,
-                formatters: inputFormatters,
-                onTap: readOnly ? null : onTap,
-                onChanged: onChanged,
-                onEditingComplete: readOnly ? null : onEditingComplete,
-                onSubmitted: readOnly ? null : onSubmitted,
-                model: state.model,
-              ),
+              model: state.model.copyWith(FormeTextFieldModel(
+                  onChanged: onChanged,
+                  onTap: readOnly ? () {} : state.model.onTap,
+                  readOnly: readOnly)),
             );
           },
         );
@@ -86,7 +86,8 @@ class _TextFormeFieldState
   }
 
   @override
-  void afterSetInitialValue() {
+  void afterInitiation() {
+    super.afterInitiation();
     textEditingController = TextEditingController(text: initialValue);
     focusNode.addListener(focusChange);
   }
@@ -105,9 +106,12 @@ class _TextFormeFieldState
   }
 
   @override
-  void beforeUpdateModel(FormeTextFieldModel old, FormeTextFieldModel current) {
-    if (current.selection != null)
+  FormeTextFieldModel beforeUpdateModel(
+      FormeTextFieldModel old, FormeTextFieldModel current) {
+    if (current.selection != null) {
       textEditingController.selection = current.selection!;
+    }
+    return current;
   }
 }
 
@@ -151,6 +155,14 @@ class FormeTextFieldModel extends FormeModel {
   final Iterable<String>? autofillHints;
   final bool? enableInteractiveSelection;
   final bool? enabled;
+  final VoidCallback? onEditingComplete;
+  final List<TextInputFormatter>? inputFormatters;
+  final AppPrivateCommandCallback? appPrivateCommandCallback;
+  final InputCounterWidgetBuilder? buildCounter;
+  final GestureTapCallback? onTap;
+  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onSubmitted;
+  final bool? readOnly;
 
   FormeTextFieldModel({
     this.keyboardType,
@@ -192,99 +204,77 @@ class FormeTextFieldModel extends FormeModel {
     this.selection,
     this.enableInteractiveSelection,
     this.enabled,
+    this.onEditingComplete,
+    this.inputFormatters,
+    this.appPrivateCommandCallback,
+    this.buildCounter,
+    this.onTap,
+    this.onChanged,
+    this.onSubmitted,
+    this.readOnly,
   });
 
+  static FormeTextFieldModel? copy(
+      FormeTextFieldModel? old, FormeTextFieldModel? current) {
+    if (current == null) return old;
+    if (old == null) return current;
+    return current.copyWith(old);
+  }
+
   @override
-  FormeTextFieldModel copyWith({
-    bool? selectAllOnFocus,
-    Optional<TextSelection>? selection,
-    Optional<InputDecoration>? decoration,
-    Optional<TextInputType>? keyboardType,
-    bool? autofocus,
-    Optional<int>? maxLines,
-    Optional<int>? minLines,
-    Optional<int>? maxLength,
-    Optional<TextStyle>? style,
-    Optional<ToolbarOptions>? toolbarOptions,
-    Optional<TextInputAction>? textInputAction,
-    Optional<TextCapitalization>? textCapitalization,
-    bool? obscureText,
-    Optional<StrutStyle>? strutStyle,
-    Optional<TextAlign>? textAlign,
-    Optional<TextAlignVertical>? textAlignVertical,
-    Optional<TextDirection>? textDirection,
-    bool? showCursor,
-    Optional<String>? obscuringCharacter,
-    bool? autocorrect,
-    Optional<SmartDashesType>? smartDashesType,
-    Optional<SmartQuotesType>? smartQuotesType,
-    bool? enableSuggestions,
-    bool? expands,
-    Optional<MaxLengthEnforcement>? maxLengthEnforcement,
-    Optional<double>? cursorWidth,
-    Optional<double>? cursorHeight,
-    Optional<Radius>? cursorRadius,
-    Optional<Color>? cursorColor,
-    Optional<BoxHeightStyle>? selectionHeightStyle,
-    Optional<BoxWidthStyle>? selectionWidthStyle,
-    Optional<Brightness>? keyboardAppearance,
-    Optional<EdgeInsets>? scrollPadding,
-    Optional<DragStartBehavior>? dragStartBehavior,
-    Optional<MouseCursor>? mouseCursor,
-    Optional<ScrollPhysics>? scrollPhysics,
-    Optional<Iterable<String>>? autofillHints,
-    bool? enableInteractiveSelection,
-    bool? enabled,
-  }) {
+  FormeTextFieldModel copyWith(FormeModel oldModel) {
+    FormeTextFieldModel old = oldModel as FormeTextFieldModel;
     return FormeTextFieldModel(
-      selectAllOnFocus: selectAllOnFocus ?? selectAllOnFocus,
-      selection: Optional.copyWith(selection, this.selection),
-      decoration: Optional.copyWith(decoration, this.decoration),
-      keyboardType: Optional.copyWith(keyboardType, this.keyboardType),
-      autofocus: autofocus ?? autofocus,
-      maxLines: Optional.copyWith(maxLines, this.maxLines),
-      minLines: Optional.copyWith(minLines, this.minLines),
-      maxLength: Optional.copyWith(maxLength, this.maxLength),
-      style: Optional.copyWith(style, this.style),
-      toolbarOptions: Optional.copyWith(toolbarOptions, this.toolbarOptions),
-      textInputAction: Optional.copyWith(textInputAction, this.textInputAction),
-      textCapitalization:
-          Optional.copyWith(textCapitalization, this.textCapitalization),
-      obscureText: obscureText ?? obscureText,
-      strutStyle: Optional.copyWith(strutStyle, this.strutStyle),
-      textAlign: Optional.copyWith(textAlign, this.textAlign),
-      textAlignVertical:
-          Optional.copyWith(textAlignVertical, this.textAlignVertical),
-      textDirection: Optional.copyWith(textDirection, this.textDirection),
-      showCursor: showCursor ?? showCursor,
-      obscuringCharacter:
-          Optional.copyWith(obscuringCharacter, this.obscuringCharacter),
-      autocorrect: autocorrect ?? autocorrect,
-      smartDashesType: Optional.copyWith(smartDashesType, this.smartDashesType),
-      smartQuotesType: Optional.copyWith(smartQuotesType, this.smartQuotesType),
-      enableSuggestions: enableSuggestions ?? enableSuggestions,
-      expands: expands ?? expands,
-      maxLengthEnforcement:
-          Optional.copyWith(maxLengthEnforcement, this.maxLengthEnforcement),
-      cursorWidth: Optional.copyWith(cursorWidth, this.cursorWidth),
-      cursorHeight: Optional.copyWith(cursorHeight, this.cursorHeight),
-      cursorRadius: Optional.copyWith(cursorRadius, this.cursorRadius),
-      cursorColor: Optional.copyWith(cursorColor, this.cursorColor),
-      selectionHeightStyle:
-          Optional.copyWith(selectionHeightStyle, this.selectionHeightStyle),
-      selectionWidthStyle:
-          Optional.copyWith(selectionWidthStyle, this.selectionWidthStyle),
-      keyboardAppearance:
-          Optional.copyWith(keyboardAppearance, this.keyboardAppearance),
-      scrollPadding: Optional.copyWith(scrollPadding, this.scrollPadding),
-      dragStartBehavior:
-          Optional.copyWith(dragStartBehavior, this.dragStartBehavior),
-      mouseCursor: Optional.copyWith(mouseCursor, this.mouseCursor),
-      scrollPhysics: Optional.copyWith(scrollPhysics, this.scrollPhysics),
-      autofillHints: Optional.copyWith(autofillHints, this.autofillHints),
+      selectAllOnFocus: selectAllOnFocus ?? old.selectAllOnFocus,
+      selection: selection,
+      decoration:
+          FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
+      keyboardType: keyboardType ?? old.keyboardType,
+      autofocus: autofocus ?? old.autofocus,
+      maxLines: maxLines ?? old.maxLines,
+      minLines: minLines ?? old.minLines,
+      maxLength: maxLength ?? old.maxLength,
+      style: style ?? old.style,
+      toolbarOptions: toolbarOptions ?? old.toolbarOptions,
+      textInputAction: textInputAction ?? old.textInputAction,
+      textCapitalization: textCapitalization ?? old.textCapitalization,
+      obscureText: obscureText ?? old.obscureText,
+      strutStyle: strutStyle ?? old.strutStyle,
+      textAlign: textAlign ?? old.textAlign,
+      textAlignVertical: textAlignVertical ?? old.textAlignVertical,
+      textDirection: textDirection ?? old.textDirection,
+      showCursor: showCursor ?? old.showCursor,
+      obscuringCharacter: obscuringCharacter ?? old.obscuringCharacter,
+      autocorrect: autocorrect ?? old.autocorrect,
+      smartDashesType: smartDashesType ?? old.smartDashesType,
+      smartQuotesType: smartQuotesType ?? old.smartQuotesType,
+      enableSuggestions: enableSuggestions ?? old.enableSuggestions,
+      expands: expands ?? old.expands,
+      maxLengthEnforcement: maxLengthEnforcement ?? old.maxLengthEnforcement,
+      cursorWidth: cursorWidth ?? old.cursorWidth,
+      cursorHeight: cursorHeight ?? old.cursorHeight,
+      cursorRadius: cursorRadius ?? old.cursorRadius,
+      cursorColor: cursorColor ?? old.cursorColor,
+      selectionHeightStyle: selectionHeightStyle ?? old.selectionHeightStyle,
+      selectionWidthStyle: selectionWidthStyle ?? old.selectionWidthStyle,
+      keyboardAppearance: keyboardAppearance ?? old.keyboardAppearance,
+      scrollPadding: scrollPadding ?? old.scrollPadding,
+      dragStartBehavior: dragStartBehavior ?? old.dragStartBehavior,
+      mouseCursor: mouseCursor ?? old.mouseCursor,
+      scrollPhysics: scrollPhysics ?? old.scrollPhysics,
+      autofillHints: autofillHints ?? old.autofillHints,
       enableInteractiveSelection:
-          enableInteractiveSelection ?? enableInteractiveSelection,
-      enabled: enabled ?? enabled,
+          enableInteractiveSelection ?? old.enableInteractiveSelection,
+      enabled: enabled ?? old.enabled,
+      onEditingComplete: onEditingComplete ?? old.onEditingComplete,
+      inputFormatters: inputFormatters ?? old.inputFormatters,
+      appPrivateCommandCallback:
+          appPrivateCommandCallback ?? old.appPrivateCommandCallback,
+      buildCounter: buildCounter ?? old.buildCounter,
+      onTap: onTap ?? old.onTap,
+      onChanged: onChanged ?? old.onChanged,
+      onSubmitted: onSubmitted ?? old.onSubmitted,
+      readOnly: readOnly ?? old.readOnly,
     );
   }
 }

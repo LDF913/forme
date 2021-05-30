@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
-import 'forme_decoration.dart';
+import '../render/forme_render_utils.dart';
+import '../forme_management.dart';
+import '../forme_state_model.dart';
 import 'forme_slider.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
@@ -13,30 +15,32 @@ class FormRangeLabelRender {
 }
 
 class FormeRangeSlider
-    extends NonnullValueField<RangeValues, FormeSliderModel> {
+    extends NonnullValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
     ValueChanged<RangeValues>? onChanged,
     NonnullFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
-    FormRangeLabelRender? rangeFormeLabelRender,
     NonnullFormFieldSetter<RangeValues>? onSaved,
     String? name,
     bool readOnly = false,
-    SemanticFormatterCallback? semanticFormatterCallback,
-    ValueChanged<RangeValues>? onChangeStart,
-    ValueChanged<RangeValues>? onChangeEnd,
-    FormeSliderModel? model,
+    FormeRangeSliderModel? model,
     required double min,
     required double max,
+    ValidateErrorListener<
+            FormeValueFieldManagement<RangeValues, FormeRangeSliderModel>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeRangeSliderModel>>? focusListener,
     Key? key,
   }) : super(
+            focusListener: focusListener,
+            validateErrorListener: validateErrorListener,
             key: key,
-            model: (model ?? FormeSliderModel()).copyWith(
+            model: (model ?? FormeRangeSliderModel())
+                .copyWith(FormeRangeSliderModel(
               max: max,
               min: min,
-              divisions: (max - min).toInt(),
-            ),
+            )),
             readOnly: readOnly,
             name: name,
             onChanged: onChanged,
@@ -48,17 +52,18 @@ class FormeRangeSlider
               bool readOnly = state.readOnly;
               double max = state.model.max!;
               double min = state.model.min!;
-              int divisions = state.model.divisions!;
+              int divisions = state.model.divisions ?? (max - min).floor();
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
 
               RangeValues rangeValues = state.value;
               RangeLabels? sliderLabels;
 
-              if (rangeFormeLabelRender != null) {
-                String start =
-                    rangeFormeLabelRender.startRender(rangeValues.start);
-                String end = rangeFormeLabelRender.endRender(rangeValues.end);
+              if (state.model.rangeLabelRender != null) {
+                String start = state.model.rangeLabelRender!
+                    .startRender(rangeValues.start);
+                String end =
+                    state.model.rangeLabelRender!.endRender(rangeValues.end);
                 sliderLabels = RangeLabels(start, end);
               }
 
@@ -78,9 +83,10 @@ class FormeRangeSlider
                   labels: sliderLabels,
                   activeColor: activeColor,
                   inactiveColor: inactiveColor,
-                  onChangeStart: onChangeStart,
-                  onChangeEnd: onChangeEnd,
-                  semanticFormatterCallback: semanticFormatterCallback,
+                  onChangeStart: state.model.onChangeStart,
+                  onChangeEnd: state.model.onChangeEnd,
+                  semanticFormatterCallback:
+                      state.model.semanticFormatterCallback,
                   onChanged: readOnly
                       ? null
                       : (RangeValues values) {
@@ -90,17 +96,9 @@ class FormeRangeSlider
                 ),
               );
 
-              return FormeDecoration(
-                formeDecorationFieldRenderData:
-                    state.model.formeDecorationFieldRenderData,
-                child: Padding(
-                  child: slider,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                ),
+              return Focus(
                 focusNode: state.focusNode,
-                errorText: state.errorText,
-                helperText: state.model.helperText,
-                labelText: state.model.labelText,
+                child: slider,
               );
             });
 
@@ -109,13 +107,74 @@ class FormeRangeSlider
 }
 
 class _FormeRangeSliderState
-    extends NonnullValueFieldState<RangeValues, FormeSliderModel> {
+    extends NonnullValueFieldState<RangeValues, FormeRangeSliderModel>
+    with FormeDecoratorState {
   @override
-  void beforeUpdateModel(FormeSliderModel old, FormeSliderModel current) {
+  FormeRangeSliderModel beforeUpdateModel(
+      FormeRangeSliderModel old, FormeRangeSliderModel current) {
     if (current.min != null && value.start < current.min!)
       setValue(RangeValues(current.min!, value.end));
     if (current.max != null && value.end > current.max!)
       setValue(RangeValues(value.start, current.max!));
+    return current;
+  }
+
+  @override
+  FormeRangeSliderModel beforeSetModel(
+      FormeRangeSliderModel old, FormeRangeSliderModel current) {
+    if (current.min == null) {
+      return current.copyWith(FormeRangeSliderModel(min: old.min));
+    }
+    if (current.max == null) {
+      return current.copyWith(FormeRangeSliderModel(max: old.max));
+    }
+    return current;
+  }
+}
+
+class FormeRangeSliderModel extends FormeModel {
+  final SemanticFormatterCallback? semanticFormatterCallback;
+  final ValueChanged<RangeValues>? onChangeStart;
+  final ValueChanged<RangeValues>? onChangeEnd;
+  final double? max;
+  final double? min;
+  final int? divisions;
+  final Color? activeColor;
+  final Color? inactiveColor;
+  final SliderThemeData? sliderThemeData;
+  final MouseCursor? mouseCursor;
+  final FormRangeLabelRender? rangeLabelRender;
+  FormeRangeSliderModel({
+    this.max,
+    this.min,
+    this.divisions,
+    this.activeColor,
+    this.inactiveColor,
+    this.sliderThemeData,
+    this.mouseCursor,
+    this.onChangeEnd,
+    this.onChangeStart,
+    this.semanticFormatterCallback,
+    this.rangeLabelRender,
+  });
+
+  FormeRangeSliderModel copyWith(FormeModel oldModel) {
+    FormeRangeSliderModel old = oldModel as FormeRangeSliderModel;
+    return FormeRangeSliderModel(
+      semanticFormatterCallback:
+          semanticFormatterCallback ?? old.semanticFormatterCallback,
+      onChangeStart: onChangeStart ?? old.onChangeStart,
+      onChangeEnd: onChangeEnd ?? old.onChangeEnd,
+      max: max ?? old.max,
+      min: min ?? old.min,
+      divisions: divisions ?? old.divisions,
+      activeColor: activeColor ?? old.activeColor,
+      inactiveColor: inactiveColor ?? old.inactiveColor,
+      sliderThemeData: FormeRenderUtils.copySliderThemeData(
+          old.sliderThemeData, sliderThemeData),
+      mouseCursor: mouseCursor ?? old.mouseCursor,
+      rangeLabelRender: rangeLabelRender ?? old.rangeLabelRender,
+    );
   }
 }
 

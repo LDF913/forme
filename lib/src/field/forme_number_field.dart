@@ -1,10 +1,8 @@
-import 'dart:ui';
-
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import '../forme_management.dart';
 import '../widget/forme_text_field_widget.dart';
 
 import '../forme_core.dart';
@@ -12,26 +10,27 @@ import '../forme_state_model.dart';
 import '../forme_field.dart';
 import 'forme_text_field.dart';
 
-class FormeNumberTextField extends ValueField<num, FormeNumberTextFieldModel> {
-  FormeNumberTextField({
-    GestureTapCallback? onTap,
+class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
+  FormeNumberField({
     ValueChanged<num?>? onChanged,
     FormFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,
-    VoidCallback? onEditingComplete,
     ValueChanged<num?>? onSubmitted,
     FormFieldSetter<num>? onSaved,
     String? name,
     bool readOnly = false,
-    FormeNumberTextFieldModel? model,
-    List<TextInputFormatter>? inputFormatters,
-    AppPrivateCommandCallback? appPrivateCommandCallback,
-    InputCounterWidgetBuilder? buildCounter,
+    FormeNumberFieldModel? model,
+    ValidateErrorListener<
+            FormeValueFieldManagement<num, FormeNumberFieldModel>>?
+        validateErrorListener,
+    FocusListener<FormeFieldManagement<FormeNumberFieldModel>>? focusListener,
     Key? key,
   }) : super(
+          focusListener: focusListener,
+          validateErrorListener: validateErrorListener,
           key: key,
-          model: model ?? FormeNumberTextFieldModel(),
+          model: model ?? FormeNumberFieldModel(),
           readOnly: readOnly,
           name: name,
           onSaved: onSaved,
@@ -77,42 +76,37 @@ class FormeNumberTextField extends ValueField<num, FormeNumberTextFieldModel> {
               FilteringTextInputFormatter.allow(RegExp(regex))
             ];
 
-            if (inputFormatters != null) {
-              formatters.addAll(inputFormatters);
+            if (state.model.textFieldModel?.inputFormatters != null) {
+              formatters.addAll(state.model.textFieldModel!.inputFormatters!);
+            }
+
+            void onChanged(String value) {
+              num? parsed = num.tryParse(value);
+              if (parsed != null && parsed != state.value) {
+                state.updateController = false;
+                state.didChange(parsed);
+              } else {
+                if (value.isEmpty && state.value != null) {
+                  state.didChange(null);
+                }
+              }
             }
 
             return FormeTextFieldWidget(
-              textEditingController: textEditingController,
-              focusNode: focusNode,
-              readOnly: readOnly,
-              errorText: state.errorText,
-              data: FormTextFieldWidgetRenderData(
-                appPrivateCommandCallback: appPrivateCommandCallback,
-                buildCounter: buildCounter,
-                formatters: formatters,
-                onTap: readOnly ? null : onTap,
-                onChanged: (value) {
-                  num? parsed = num.tryParse(value);
-                  if (parsed != null && parsed != state.value) {
-                    state.updateController = false;
-                    state.didChange(parsed);
-                  } else {
-                    if (value.isEmpty && state.value != null) {
-                      state.didChange(null);
-                    }
-                  }
-                },
-                onEditingComplete: readOnly ? null : onEditingComplete,
-                onSubmitted: readOnly
-                    ? null
-                    : onSubmitted == null
-                        ? null
-                        : (v) => onSubmitted(state.value),
-                model: state.model.textFieldModel?.copyWith(
-                    keyboardType:
-                        Optional<TextInputType>(TextInputType.number)),
-              ),
-            );
+                textEditingController: textEditingController,
+                focusNode: focusNode,
+                errorText: state.errorText,
+                model: (state.model.textFieldModel ?? FormeTextFieldModel())
+                    .copyWith(FormeTextFieldModel(
+                  inputFormatters: formatters,
+                  readOnly: readOnly,
+                  onTap: readOnly ? () {} : state.model.textFieldModel?.onTap,
+                  onChanged: onChanged,
+                  keyboardType: TextInputType.number,
+                  onSubmitted: onSubmitted == null
+                      ? null
+                      : (v) => onSubmitted(state.value),
+                )));
           },
         );
 
@@ -120,11 +114,10 @@ class FormeNumberTextField extends ValueField<num, FormeNumberTextFieldModel> {
   _NumberFieldState createState() => _NumberFieldState();
 }
 
-class _NumberFieldState
-    extends ValueFieldState<num, FormeNumberTextFieldModel> {
+class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
   late final TextEditingController textEditingController;
   @override
-  FormeNumberTextField get widget => super.widget as FormeNumberTextField;
+  FormeNumberField get widget => super.widget as FormeNumberField;
 
   bool updateController = true;
 
@@ -140,7 +133,8 @@ class _NumberFieldState
   }
 
   @override
-  void afterSetInitialValue() {
+  void afterInitiation() {
+    super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : initialValue.toString());
     focusNode.addListener(focusChange);
@@ -167,54 +161,50 @@ class _NumberFieldState
 
   void clearValue() {
     super.setValue(null);
-    textEditingController.text = '';
   }
 
   @override
-  void beforeUpdateModel(
-      FormeNumberTextFieldModel old, FormeNumberTextFieldModel current) {
-    if (value == null) return;
+  FormeNumberFieldModel beforeUpdateModel(
+      FormeNumberFieldModel old, FormeNumberFieldModel current) {
+    if (value == null) return current;
     if (current.max != null && current.max! < value!) clearValue();
     if (current.allowNegative != null && !current.allowNegative! && value! < 0)
       clearValue();
     int? decimal = current.decimal;
     if (decimal != null) {
       int indexOfPoint = value.toString().indexOf(".");
-      if (indexOfPoint == -1) return;
+      if (indexOfPoint == -1) return current;
       int decimalNum = value.toString().length - (indexOfPoint + 1);
       if (decimalNum > decimal) clearValue();
     }
     if (current.textFieldModel?.selection != null) {
       textEditingController.selection = current.textFieldModel!.selection!;
     }
+    return current;
   }
 }
 
-class FormeNumberTextFieldModel extends FormeModel {
+class FormeNumberFieldModel extends FormeModel {
   final int? decimal;
   final double? max;
   final bool? allowNegative;
   final FormeTextFieldModel? textFieldModel;
 
-  FormeNumberTextFieldModel({
+  FormeNumberFieldModel({
     this.decimal,
     this.max,
     this.allowNegative,
     this.textFieldModel,
   });
 
-  @override
-  FormeNumberTextFieldModel copyWith({
-    Optional<int>? decimal,
-    Optional<double>? max,
-    bool? allowNegative,
-    Optional<FormeTextFieldModel>? textFieldModel,
-  }) {
-    return FormeNumberTextFieldModel(
-      decimal: Optional.copyWith(decimal, this.decimal),
-      max: Optional.copyWith(max, this.max),
-      allowNegative: allowNegative ?? allowNegative,
-      textFieldModel: Optional.copyWith(textFieldModel, this.textFieldModel),
+  FormeNumberFieldModel copyWith(FormeModel oldModel) {
+    FormeNumberFieldModel old = oldModel as FormeNumberFieldModel;
+    return FormeNumberFieldModel(
+      decimal: decimal ?? old.decimal,
+      max: max ?? old.max,
+      allowNegative: allowNegative ?? old.allowNegative,
+      textFieldModel:
+          FormeTextFieldModel.copy(old.textFieldModel, textFieldModel),
     );
   }
 }

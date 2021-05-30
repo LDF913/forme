@@ -1,6 +1,6 @@
 # Forme
 
-a powerful flutter form widget
+a powerful flutter form widget , for me,for you
 
 ## Simple Usage 
 
@@ -29,13 +29,8 @@ FormeField
 
 ### FormeManagement
 
-#### get FormeManagement
-
-**FormeKey is a FormeManagement,but if you want to get underlying FormeManagement,you can use methods below**
-
 ``` dart
-FormeManagement formeManagement = formKey.currentFormeManagement;// return a nonnull FormeManagement
-FormeManagement? formeManagement = formKey.quietlyManagement;// return a FormeManagement , return null if not find
+FormeManagement formeManagement = formKey;
 ```
 
 #### check whether form has a name field
@@ -257,10 +252,8 @@ String? errorText = valueFieldManagement.quietlyValidate();
 | FormeRangeSlider|  RangeValues | false|
 | FormeFilterChip|  List&lt; T&gt; | false |
 | FormeChoiceChip|  T | true |
-| FormeRate| dobule | true |
 | FormeSingleCheckbox| bool | false |
 | FormeSingleSwitch| bool | false |
-| FormeCupertinoPicker | int | false | 
 | FormeDropdownButton | T | true | 
 | FormeListTile|  List&lt; T&gt; | false |
 
@@ -269,21 +262,9 @@ String? errorText = valueFieldManagement.quietlyValidate();
 
 | field | description|
 | ---| --- |
-| FormeButton|  button |
 | FormeVisible|  make field visible\|invisible |
 | FormeColumn|  a column support insert\|swap\|remove widgets |
 | FormeRow|  a row support insert\|swap\|remove widgets |
-
-
-## currently supported widgets
-
-| field | description|
-| ---| --- |
-| FormeClearButton|  a icon button used to clear field's value |
-| FormePasswordVisibleButton|  a icon button used to toggle textfield's obscureText |
-| FormeTextFieldWidget|  a textfield . when click prefix or suffix buttons, will not trigger textfield's onTap |
-| FormeDropdownButtonClearButton|  a icon button used to clear FormeDropdownButton's value |
-| FormeCupertinoPickerLockButton|  a icon button used to enable or disable FormeCupertinoPicker's scroll |
 
 ## example for helping build a custom field
 
