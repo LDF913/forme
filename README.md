@@ -2,6 +2,10 @@
 
 a powerful flutter form widget , for me,for you
 
+## screenshot
+
+![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-2-4c5414cc2d89.gif)
+
 ## Simple Usage 
 
 ``` dart
@@ -270,7 +274,7 @@ String? errorText = valueFieldManagement.quietlyValidate();
 
 ### build  a common field
 
-https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_button.dart
+https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_flex.dart
 
 ### build a nonnull value field
 
@@ -278,4 +282,4 @@ https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_single_switch.da
 
 ### build a value field
 
-https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_rate.dart
+https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_choice_chip.dart
