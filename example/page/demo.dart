@@ -221,13 +221,7 @@ class _DemoPageState extends State<DemoPage> {
             max: 99,
             decimal: 2,
             textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(
-                labelText: 'Number',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () => formKey.valueField('number').value = null,
-                ),
-              ),
+              decoration: InputDecoration(labelText: 'Number'),
             ),
           ),
         ),
@@ -315,7 +309,9 @@ class _DemoPageState extends State<DemoPage> {
         ),
         FormeInputDecorator(
           decoration: InputDecoration(
-              labelText: 'Choice Chip', border: InputBorder.none),
+            labelText: 'Choice Chip',
+            border: InputBorder.none,
+          ),
           child: FormeChoiceChip(
             name: 'choiceChip',
             items: [
@@ -366,7 +362,6 @@ class _DemoPageState extends State<DemoPage> {
             decoration: InputDecoration(
               labelText: 'Slider',
               border: InputBorder.none,
-              contentPadding: EdgeInsets.zero,
             ),
           ),
         ),
@@ -388,17 +383,23 @@ class _DemoPageState extends State<DemoPage> {
         FormeInputDecorator(
           decoration:
               InputDecoration(labelText: 'Radios', border: InputBorder.none),
-          child: FormeListTile(
+          child: FormeRadioGroup<String>(
             items: FormeUtils.toFormeListTileItems(['1', '2', '3', '4'],
                 style: Theme.of(context).textTheme.subtitle1),
-            name: 'radioTile',
-            type: FormeListTileType.Radio,
-            model: FormeListTileModel(
+            name: 'radioGroup',
+            model: FormeRadioGroupModel(
               radioRenderData: FormeRadioRenderData(
                 activeColor: Color(0xFF6200EE),
               ),
               split: 2,
             ),
+            onChanged: (m, oldValue, newValue) => print(newValue),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validator: (value) => value != '2' ? 'pls select 2' : null,
+            validateErrorListener: (field, errorText) => print(errorText),
+            focusListener: (field, hasFocus) {
+              print((field as FormeValueFieldManagement).errorText);
+            },
           ),
         ),
         FormeInputDecorator(
@@ -485,7 +486,7 @@ class _DemoPageState extends State<DemoPage> {
               decoration: InputDecoration(
                   labelText: 'Switch Tile', border: InputBorder.none),
               child: FormeSlider(
-                onChanged: (v) {
+                onChanged: (m, o, v) {
                   formKey
                       .valueField('test')
                       .setValue(v.round(), trigger: false);
@@ -499,7 +500,7 @@ class _DemoPageState extends State<DemoPage> {
           Expanded(
               child: FormeNumberField(
             name: 'test',
-            onChanged: (v) {
+            onChanged: (m, o, v) {
               formKey
                   .valueField('testSlider')
                   .setValue(v?.toDouble() ?? 0.0, trigger: false);
@@ -512,6 +513,21 @@ class _DemoPageState extends State<DemoPage> {
     return Forme(
       child: child,
       key: formKey,
+      initialValue: {
+        'text': '',
+        'number': null,
+        'dateRange': null,
+        'datetime': DateTime.now(),
+        'time': TimeOfDay(hour: 12, minute: 12),
+        'filterChip': <String>['Gamer'],
+        'choiceChip': null,
+        'slider': 40.0,
+        'rangeSlider': RangeValues(1.0, 10.0),
+        'switchTile': ['1'],
+        'testSlider': 0.0,
+        'test': null,
+        'dropdown': 'Flutter'
+      },
     );
   }
 }

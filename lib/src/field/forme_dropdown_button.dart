@@ -10,7 +10,7 @@ class FormeDropdownButton<T>
     extends ValueField<T, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
-    ValueChanged<T?>? onChanged,
+    FormeFieldValueChanged<T, FormeDropdownButtonModel<T>>? onChanged,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,

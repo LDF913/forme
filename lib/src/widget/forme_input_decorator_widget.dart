@@ -1,16 +1,26 @@
 import 'package:flutter/material.dart';
+import '../forme_field.dart';
+import '../render/forme_render_utils.dart';
+import '../forme_state_model.dart';
 
-import 'forme_decoration_widget.dart';
-
-class FormeInputDecoratorModel extends FormeDecoratorModel {
+class FormeInputDecoratorModel extends FormeModel {
   final InputDecoration? decoration;
 
   FormeInputDecoratorModel({this.decoration});
+
+  @override
+  FormeModel copyWith(FormeModel oldModel) {
+    FormeInputDecoratorModel old = oldModel as FormeInputDecoratorModel;
+    return FormeInputDecoratorModel(
+      decoration:
+          FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
+    );
+  }
 }
 
 /// wrap your field in a [InputDecorator]
 ///
-/// **NOT SUPPORT prefixIcon & suffixIcon & prefix & sufix**
+/// **worked well if you no need to support prefixIcon & suffixIcon & prefix & sufix**
 class FormeInputDecorator extends StatefulWidget {
   final InputDecoration? decoration;
   final Widget child;
@@ -20,9 +30,40 @@ class FormeInputDecorator extends StatefulWidget {
   State<StatefulWidget> createState() => _FormeInputDecoratorState();
 }
 
-class _FormeInputDecoratorState extends State<FormeInputDecorator>
-    with FormeDecorationState {
+class _FormeInputDecoratorState extends State<FormeInputDecorator> {
+  bool _focus = false;
+  String? _errorText;
+
   late FormeInputDecoratorModel model;
+
+  _onFocusChanged(bool focus) {
+    setState(() {
+      this._focus = focus;
+    });
+  }
+
+  _onErrorChanged(String? errorText) {
+    setState(() {
+      this._errorText = errorText;
+    });
+  }
+
+  _updateModel(FormeModel model) {
+    FormeInputDecoratorModel decoratorModel = model as FormeInputDecoratorModel;
+    if (this.model != decoratorModel)
+      setState(() {
+        this.model =
+            decoratorModel.copyWith(this.model) as FormeInputDecoratorModel;
+      });
+  }
+
+  _setModel(FormeModel model) {
+    FormeInputDecoratorModel decoratorModel = model as FormeInputDecoratorModel;
+    if (this.model != decoratorModel)
+      setState(() {
+        this.model = decoratorModel;
+      });
+  }
 
   @override
   void initState() {
@@ -31,31 +72,22 @@ class _FormeInputDecoratorState extends State<FormeInputDecorator>
   }
 
   @override
-  FormeDecoratorModel? get decoratorModel => model;
-
-  @override
-  Widget get child {
+  Widget build(BuildContext context) {
     return InputDecorator(
-      isEmpty: false,
-      isFocused: focus,
+      isEmpty: true,
+      isFocused: _focus,
       decoration: (model.decoration ?? const InputDecoration())
-          .copyWith(errorText: errorText),
-      child: widget.child,
+          .copyWith(errorText: _errorText),
+      child: FormeDecoration(
+        onFocusChanged: _onFocusChanged,
+        onErrorChanged: _onErrorChanged,
+        child: widget.child,
+        management: FormeDecoratorModelManagement(
+          model: model,
+          updateModel: _updateModel,
+          setModel: _setModel,
+        ),
+      ),
     );
-  }
-
-  @override
-  onModelChanged(FormeDecoratorModel? model) {
-    if (model == null) {
-      setState(() {
-        this.model = FormeInputDecoratorModel(decoration: widget.decoration);
-      });
-      return;
-    }
-    if (model is! FormeInputDecoratorModel)
-      throw 'model need be FormeInputDecoratorModel current model is ${model.runtimeType}';
-    setState(() {
-      this.model = model;
-    });
   }
 }

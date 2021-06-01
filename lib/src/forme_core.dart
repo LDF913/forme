@@ -7,7 +7,7 @@ import 'forme_management.dart';
 
 /// triggered when form field's value changed
 typedef FormeValueChanged = void Function(
-    String name, dynamic oldValue, dynamic newValue);
+    FormeValueFieldManagement field, dynamic oldValue, dynamic newValue);
 
 // listen focus change
 typedef FocusListener<T extends FormeFieldManagement> = void Function(
@@ -95,8 +95,6 @@ class Forme extends StatefulWidget {
   /// listen form value changed
   ///
   /// this listener will be always triggered when field'value changed
-  ///
-  /// **only listen fields which has a name**
   final FormeValueChanged? onChanged;
 
   /// form content
@@ -133,7 +131,7 @@ class Forme extends StatefulWidget {
 class _FormeState extends State<Forme> {
   late final FormeManagement formeManagement;
 
-  final List<AbstractFieldState> fieldStates = [];
+  final List<FormeFieldManagement> fieldManagements = [];
 
   bool? _readOnly;
 
@@ -157,9 +155,9 @@ class _FormeState extends State<Forme> {
   }
 
   T? getFormeFieldManagement<T extends FormeFieldManagement>(String name) {
-    Iterable<AbstractFieldState> iterable =
-        fieldStates.where((element) => element.name == name);
-    if (iterable.isNotEmpty) return iterable.first.management as T;
+    Iterable<FormeFieldManagement> iterable =
+        fieldManagements.where((element) => element.name == name);
+    if (iterable.isNotEmpty) return iterable.first as T;
   }
 
   @override
@@ -172,8 +170,9 @@ class _FormeState extends State<Forme> {
     return _InheritedFormScope(
       gen: gen,
       formScope: _FormScope(
+        formeManagement: formeManagement,
         readOnly: readOnly,
-        fieldStates: fieldStates,
+        fieldManagements: fieldManagements,
         valueChanged: widget.onChanged,
         formInitialValue: widget.initialValue,
         validateErrorListener: widget.validateErrorListener,
@@ -200,15 +199,17 @@ class _InheritedFormScope extends InheritedWidget {
 }
 
 class _FormScope {
+  final FormeManagement formeManagement;
   final bool readOnly;
-  final List<AbstractFieldState> fieldStates;
+  final List<FormeFieldManagement> fieldManagements;
   final FormeValueChanged? valueChanged;
   final Map<String, dynamic> formInitialValue;
   final ValidateErrorListener? validateErrorListener;
   final Map<String, String> errorMap = {};
 
-  void onValueChanged(String name, oldValue, newValue) {
-    if (valueChanged != null) valueChanged!(name, oldValue, newValue);
+  void onValueChanged(
+      FormeValueFieldManagement management, oldValue, newValue) {
+    if (valueChanged != null) valueChanged!(management, oldValue, newValue);
   }
 
   void onValidateError(FormeValueFieldManagement field, String? errorText) {
@@ -217,18 +218,19 @@ class _FormScope {
 
   _FormScope({
     required this.readOnly,
-    required this.fieldStates,
+    required this.fieldManagements,
     this.valueChanged,
     required this.formInitialValue,
     this.validateErrorListener,
+    required this.formeManagement,
   });
 
-  void registerField(AbstractFieldState fieldState) {
-    this.fieldStates.add(fieldState);
+  void registerField(FormeFieldManagement management) {
+    this.fieldManagements.add(management);
   }
 
-  void unregisterField(AbstractFieldState fieldState) {
-    this.fieldStates.remove(fieldState);
+  void unregisterField(FormeFieldManagement management) {
+    this.fieldManagements.remove(management);
   }
 
   static _FormScope of(BuildContext context) => context
@@ -238,8 +240,7 @@ class _FormScope {
   bool hasInitialValue(String? name) =>
       name != null && formInitialValue.containsKey(name);
 
-  dynamic getInitialValue(String? name) =>
-      hasInitialValue(name) ? null : formInitialValue[name];
+  dynamic getInitialValue(String? name) => formInitialValue[name];
 }
 
 /// state for all stateful form field
@@ -311,10 +312,18 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _formScope = _FormScope.of(context);
+    FormeFieldManagement? formeFieldManagement =
+        InheritedFormeFieldManagement.maybeOf(context);
+    bool proxy = formeFieldManagement != null &&
+        formeFieldManagement is FormeProxyFieldManagment;
     if (_init) return;
     _init = true;
     management = createFormeFieldManagement();
-    _formScope.registerField(this);
+    if (!proxy) {
+      _formScope.registerField(management);
+    } else {
+      formeFieldManagement.proxyManagement = management;
+    }
     afterInitiation();
   }
 
@@ -329,7 +338,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @override
   void dispose() {
     _focusNode?.dispose();
-    _formScope.unregisterField(this);
+    _formScope.unregisterField(management);
     super.dispose();
   }
 
@@ -371,6 +380,8 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   ValueField<T, E> get widget => super.widget as ValueField<T, E>;
 
+  FormeDecoration? _decoration;
+
   @override
   FormeValueFieldManagement<T, E> get management =>
       super.management as FormeValueFieldManagement<T, E>;
@@ -381,13 +392,31 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
 
   bool get enabled => widget.enabled;
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _decoration = FormeDecoration.of(context);
+    focusNode.removeListener(_focusChange);
+    if (_decoration != null) focusNode.addListener(_focusChange);
+  }
+
+  void _focusChange() {
+    if (_decoration != null) _decoration!.onFocusChanged(focusNode.hasFocus);
+  }
+
+  @override
+  _setModel(E _model) {
+    if (_model != model) {
+      setState(() {
+        this._model = beforeSetModel(model, _model);
+      });
+    }
+  }
+
   /// get initialValue
-  ///
-  /// since widget's initialValue maybe overwritten by Form's ,so used this method get initialValue rather than widget.initialValue
   @protected
-  T? get initialValue => _formScope.hasInitialValue(name)
-      ? _formScope.getInitialValue(name)
-      : widget.initialValue;
+  T? get initialValue =>
+      widget.initialValue ?? _formScope.getInitialValue(name);
 
   /// **when you want to init something that relies on initialValue,
   /// you should do that in [afterInitiation] rather than in this method**
@@ -436,8 +465,8 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     super.reset();
     if (_formScope.hasInitialValue(name)) super.setValue(initialValue);
     if (!compare(oldValue, value)) {
-      afterValueChanged(value, initialValue);
-      _didChange(value, initialValue, true);
+      afterValueChanged(oldValue, value);
+      _didChange(oldValue, value, true);
     }
     _onErrorTextChange(currentErrorText, errorText);
   }
@@ -462,12 +491,10 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
 
   _didChange(T? old, T? current, bool trigger) {
     if (trigger) {
-      ValueChanged<T?>? onChanged = widget.onChanged;
-      if (onChanged != null) onChanged(current);
+      FormeFieldValueChanged<T, E>? onChanged = widget.onChanged;
+      if (onChanged != null) onChanged(management, old, current);
     }
-    if (name != null) {
-      _formScope.onValueChanged(name!, old, current);
-    }
+    _formScope.onValueChanged(this.management, old, current);
   }
 
   String? _quietlyValidate() {
@@ -484,6 +511,7 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
 
   void _onErrorTextChange(String? currentErrorText, String? errorText) {
     if (currentErrorText != errorText) {
+      if (_decoration != null) _decoration!.onErrorChanged(currentErrorText);
       onErrorTextChange(currentErrorText, errorText);
       if (widget.validateErrorListener != null)
         widget.validateErrorListener!(management, errorText);
@@ -603,6 +631,10 @@ class _FormeFieldManagement<E extends FormeModel>
   void update(E model) {
     state._updateModel(model);
   }
+
+  @override
+  FormeManagement get management =>
+      _FormScope.of(state.context).formeManagement;
 }
 
 class _FormeValueFieldManagement<T, E extends FormeModel>
@@ -637,6 +669,25 @@ class _FormeValueFieldManagement<T, E extends FormeModel>
 
   @override
   String? quietlyValidate() => state._quietlyValidate();
+
+  @override
+  void save() => state.save();
+
+  @override
+  FormeModel? get currentDecoratorModel =>
+      state._decoration == null ? null : state._decoration!.management.model;
+
+  @override
+  void updateDecoratorModel(FormeModel model) {
+    if (state._decoration == null) return;
+    state._decoration!.management.updateModel(model);
+  }
+
+  @override
+  set decoratorModel(FormeModel model) {
+    if (state._decoration == null) return;
+    state._decoration!.management.setModel(model);
+  }
 }
 
 class FormeFieldManagementWithError {
@@ -675,7 +726,7 @@ class _FormeManagement extends FormeManagement {
   @override
   Map<String, dynamic> get data {
     Map<String, dynamic> map = {};
-    _valueFieldStates.forEach((element) {
+    _valueFieldManagements.forEach((element) {
       String? name = element.name;
       if (name == null) return;
       dynamic value = element.value;
@@ -691,13 +742,13 @@ class _FormeManagement extends FormeManagement {
 
   @override
   List<FormeFieldManagementWithError> quietlyValidate() {
-    return _readErrors((state) => state._quietlyValidate());
+    return _readErrors((state) => state.quietlyValidate());
   }
 
   List<FormeFieldManagementWithError> _readErrors(
-      String? f(ValueFieldState e)) {
+      String? f(FormeValueFieldManagement e)) {
     List<FormeFieldManagementWithError> errors = [];
-    for (ValueFieldState state in _valueFieldStates) {
+    for (FormeValueFieldManagement state in _valueFieldManagements) {
       if (state.name == null) continue;
       String? errorText = f(state);
       if (errorText == null) continue;
@@ -724,7 +775,7 @@ class _FormeManagement extends FormeManagement {
 
   @override
   void reset() {
-    _valueFieldStates.forEach((element) {
+    _valueFieldManagements.forEach((element) {
       element.reset();
     });
   }
@@ -732,7 +783,7 @@ class _FormeManagement extends FormeManagement {
   @override
   bool validate() {
     bool hasError = false;
-    for (final ValueFieldState field in _valueFieldStates)
+    for (final FormeValueFieldManagement field in _valueFieldManagements)
       hasError = !field.validate() || hasError;
     return !hasError;
   }
@@ -740,19 +791,20 @@ class _FormeManagement extends FormeManagement {
   @override
   bool get isValid {
     bool hasError = false;
-    for (final ValueFieldState field in _valueFieldStates)
+    for (final FormeValueFieldManagement field in _valueFieldManagements)
       hasError = !field.isValid || hasError;
     return !hasError;
   }
 
   @override
   void save() {
-    _valueFieldStates.forEach((element) {
+    _valueFieldManagements.forEach((element) {
       element.save();
     });
   }
 
-  Iterable<ValueFieldState> get _valueFieldStates => _state.fieldStates
-      .where((element) => element is ValueFieldState)
-      .map((e) => e as ValueFieldState);
+  Iterable<FormeValueFieldManagement> get _valueFieldManagements =>
+      _state.fieldManagements
+          .where((element) => element is FormeValueFieldManagement)
+          .map((e) => e as FormeValueFieldManagement);
 }

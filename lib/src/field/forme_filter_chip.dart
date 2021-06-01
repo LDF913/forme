@@ -65,7 +65,7 @@ class FormeFilterChip<T>
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
     NonnullFieldValidator<List<T>>? validator,
-    ValueChanged<List<T>>? onChanged,
+    FormeFieldValueChanged<List<T>, FormeFilterChipModel<T>>? onChanged,
     NonnullFormFieldSetter<List<T>>? onSaved,
     String? name,
     bool readOnly = false,
@@ -165,8 +165,7 @@ class FormeFilterChip<T>
 }
 
 class _FormeFilterChipState<T>
-    extends NonnullValueFieldState<List<T>, FormeFilterChipModel<T>>
-    with FormeDecoratorState {
+    extends NonnullValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
   FormeFilterChipModel<T> beforeUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {

@@ -10,7 +10,7 @@ import '../forme_core.dart';
 class FormeSingleSwitch
     extends NonnullValueField<bool, FormeSingleSwitchModel> {
   FormeSingleSwitch({
-    ValueChanged<bool>? onChanged,
+    NonnullFormeFieldValueChanged<bool, FormeSingleSwitchModel>? onChanged,
     NonnullFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,

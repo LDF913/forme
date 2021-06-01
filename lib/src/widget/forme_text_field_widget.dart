@@ -94,13 +94,13 @@ class _FormeTextFieldWidgetState extends State<FormeTextFieldWidget> {
   @override
   Widget build(BuildContext context) {
     bool useProxy = this.useProxy;
-    InputDecoration decoration = (model?.decoration ?? const InputDecoration())
-        .copyWith(errorText: widget.errorText);
+    InputDecoration? decoration =
+        model?.decoration?.copyWith(errorText: widget.errorText);
 
     if (useProxy) {
       counter = 0;
       update = false;
-      decoration = decoration.copyWith(
+      decoration = decoration?.copyWith(
         suffixIcon: wrap(model?.decoration?.suffixIcon, 'suffixIcon'),
         suffix: wrap(model?.decoration?.suffix, 'suffix'),
         prefixIcon: wrap(model?.decoration?.prefixIcon, 'prefixIcon'),
@@ -228,7 +228,7 @@ class FormeTextFieldOnTapProxyWidget extends InheritedWidget {
 
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) {
-    return true;
+    return false;
   }
 
   static bool isProxyOnTap(BuildContext context) {

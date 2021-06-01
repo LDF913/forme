@@ -93,6 +93,9 @@ abstract class FormeManagement {
 
 /// used to control form field
 abstract class FormeFieldManagement<E extends FormeModel> {
+  /// get forme management
+  FormeManagement get management;
+
   ///get field's name
   String? get name;
 
@@ -202,6 +205,29 @@ abstract class FormeValueFieldManagement<T, E extends FormeModel>
   ///
   /// this method won't display error message
   String? quietlyValidate();
+
+  /// save field
+  ///
+  /// trigger save listener
+  void save();
+
+  /// set decorator model
+  ///
+  /// see [FormeInputDecorator]
+  set decoratorModel(FormeModel model);
+
+  /// get current decorator model;
+  ///
+  /// if you field not wrapped by any FormeDecorator ,this method will return null
+  /// see [FormeInputDecorator]
+  FormeModel? get currentDecoratorModel;
+
+  /// update a decorator model
+  ///
+  /// no need to call `model.copyWith(oldModel)` manually
+  ///
+  /// see [FormeInputDecorator]
+  void updateDecoratorModel(FormeModel model);
 }
 
 abstract class FormeFieldManagementDelegate<E extends FormeModel>
@@ -209,17 +235,15 @@ abstract class FormeFieldManagementDelegate<E extends FormeModel>
   FormeFieldManagement<E> get delegate;
 
   @override
+  FormeManagement get management => delegate.management;
+  @override
   E get model => delegate.model;
-
   @override
   set model(E model) => delegate.model = model;
-
   @override
   bool get readOnly => delegate.readOnly;
-
   @override
   set readOnly(bool readOnly) => delegate.readOnly = readOnly;
-
   @override
   Future<void> ensureVisible(
           {Duration? duration,
@@ -232,22 +256,16 @@ abstract class FormeFieldManagementDelegate<E extends FormeModel>
         alignmentPolicy: alignmentPolicy,
         alignment: alignment,
       );
-
   @override
   set focus(bool focus) => delegate.focus = focus;
-
   @override
   bool get focusable => delegate.focusable;
-
   @override
   bool get hasFocus => delegate.hasFocus;
-
   @override
   bool get isValueField => true;
-
   @override
   String? get name => delegate.name;
-
   @override
   void update(E model) => delegate.update(model);
 }
@@ -261,51 +279,144 @@ class FormeValueFieldManagementDelegate<T, E extends FormeModel>
 
   @override
   T? get value => delegate.value;
-
   @override
   set value(T? value) => setValue(value, trigger: true);
-
   @override
   setValue(T? value, {bool trigger: true}) =>
       delegate.setValue(value, trigger: true);
-
   @override
   bool get isValid => delegate.isValid;
-
   @override
   bool validate() => delegate.validate();
-
   @override
   void reset() => delegate.reset();
-
   @override
   String? get errorText => delegate.errorText;
-
   @override
   String? quietlyValidate() => delegate.quietlyValidate();
+  @override
+  void save() => delegate.save();
+  @override
+  FormeModel? get currentDecoratorModel => delegate.currentDecoratorModel;
+  @override
+  void updateDecoratorModel(FormeModel decoratorModel) =>
+      delegate.updateDecoratorModel(decoratorModel);
+  @override
+  set decoratorModel(FormeModel decoratorModel) =>
+      delegate.decoratorModel = decoratorModel;
 }
 
-/// a decorator management
-///
-/// [FormeDecoratorState]
-abstract class FormeDecoratorManagement<T, E extends FormeModel>
-    extends FormeValueFieldManagementDelegate<T, E> {
-  FormeDecoratorManagement(FormeValueFieldManagement<T, E> delegate)
-      : super(delegate);
-  set decoratorModel(FormeDecoratorModel? model);
-  FormeDecoratorModel? get decoratorModel;
+abstract class FormeProxyFieldManagment<
+    E extends FormeModel,
+    N extends FormeModel,
+    K extends FormeFieldManagement<N>> implements FormeFieldManagement<E> {
+  set proxyManagement(K proxyManagement);
 }
 
-class FormeDecoratorManagementDelegate<T, E extends FormeModel>
-    extends FormeDecoratorManagement<T, E> {
-  FormeDecoratorManagementDelegate(FormeDecoratorManagement<T, E> delegate)
+/// proxy value field management
+/// [FormeRadioGroup]
+abstract class FormeProxyValueFieldManagement<T, E extends FormeModel, M,
+        N extends FormeModel, K extends FormeValueFieldManagement<M, N>>
+    implements
+        FormeValueFieldManagement<T, E>,
+        FormeProxyFieldManagment<E, N, K> {}
+
+/// an proxy management
+abstract class FormeProxyFieldManagmentDelegate<E extends FormeModel,
+        N extends FormeModel, K extends FormeFieldManagement<N>>
+    implements FormeProxyFieldManagment<E, N, K> {
+  final FormeFieldManagement<E> delegate;
+  FormeProxyFieldManagmentDelegate(this.delegate);
+  late K _proxyManagement;
+  @override
+  set proxyManagement(K proxyManagement) {
+    _proxyManagement = proxyManagement;
+  }
+
+  @protected
+  K get proxyManagement => _proxyManagement;
+
+  @override
+  String? get name => delegate.name;
+  @override
+  set model(E model) => _proxyManagement.model = deconvertModel(model);
+  @override
+  update(E model) => _proxyManagement.update(deconvertModel(model));
+  @override
+  E get model => convertModel(_proxyManagement.model);
+  @override
+  FormeManagement get management => delegate.management;
+  @override
+  bool get isValueField => false;
+  @override
+  bool get readOnly => delegate.readOnly;
+  @override
+  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
+  @override
+  Future<void> ensureVisible(
+          {Duration? duration,
+          Curve? curve,
+          ScrollPositionAlignmentPolicy? alignmentPolicy,
+          double? alignment}) =>
+      delegate.ensureVisible(
+          duration: duration,
+          curve: curve,
+          alignment: alignment,
+          alignmentPolicy: alignmentPolicy);
+  @override
+  set focus(bool focus) => _proxyManagement.focus = focus;
+  @override
+  bool get focusable => _proxyManagement.focusable;
+  @override
+  bool get hasFocus => _proxyManagement.hasFocus;
+
+  N deconvertModel(E model);
+
+  E convertModel(N model);
+}
+
+abstract class FormeProxyValueFieldManagementDelegate<T, E extends FormeModel,
+        M, N extends FormeModel, K extends FormeValueFieldManagement<M, N>>
+    extends FormeProxyFieldManagmentDelegate<E, N, K>
+    implements FormeProxyValueFieldManagement<T, E, M, N, K> {
+  FormeProxyValueFieldManagementDelegate(
+      FormeValueFieldManagement<T, E> delegate)
       : super(delegate);
+  @override
+  FormeValueFieldManagement<T, E> get delegate =>
+      super.delegate as FormeValueFieldManagement<T, E>;
 
   @override
-  FormeDecoratorModel? get decoratorModel =>
-      (delegate as FormeDecoratorManagement).decoratorModel;
-
+  T? get value => convertValue(_proxyManagement.value);
   @override
-  set decoratorModel(FormeDecoratorModel? model) =>
-      (delegate as FormeDecoratorManagement).decoratorModel = model;
+  set value(T? value) => _proxyManagement.value = deconvertValue(value);
+  @override
+  setValue(T? value, {bool trigger: true}) =>
+      _proxyManagement.setValue(deconvertValue(value), trigger: trigger);
+  @override
+  String? get errorText => _proxyManagement.errorText;
+  @override
+  bool get isValid => _proxyManagement.isValid;
+  @override
+  String? quietlyValidate() => _proxyManagement.quietlyValidate();
+  @override
+  void reset() => _proxyManagement.reset();
+  @override
+  bool validate() => _proxyManagement.validate();
+  @override
+  bool get isValueField => true;
+  @override
+  void save() => _proxyManagement.save();
+  @override
+  FormeModel? get currentDecoratorModel => delegate.currentDecoratorModel;
+  @override
+  void updateDecoratorModel(FormeModel decoratorModel) =>
+      delegate.updateDecoratorModel(decoratorModel);
+  @override
+  set decoratorModel(FormeModel decoratorModel) =>
+      delegate.decoratorModel = decoratorModel;
+
+  T? convertValue(M? value);
+
+  M? deconvertValue(T? value);
 }

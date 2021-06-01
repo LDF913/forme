@@ -15,7 +15,7 @@ enum FormeDateTimeFieldType { Date, DateTime }
 ///used to pick datetime and date
 class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
   FormeDateTimeField({
-    ValueChanged<DateTime?>? onChanged,
+    FormeFieldValueChanged<DateTime, FormeDateTimeFieldModel>? onChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,

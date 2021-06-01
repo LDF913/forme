@@ -17,13 +17,13 @@ import '../forme_core.dart';
 
 class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
   FormeTextField({
+    NonnullFormeFieldValueChanged<String, FormeTextFieldModel>? onChanged,
     NonnullFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
     NonnullFormFieldSetter<String>? onSaved,
     String? initialValue,
     String? name,
     bool readOnly = false,
-    ValueChanged<String>? onChanged,
     FormeTextFieldModel? model,
     ValidateErrorListener<
             FormeValueFieldManagement<String, FormeTextFieldModel>>?

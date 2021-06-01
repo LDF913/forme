@@ -12,7 +12,7 @@ import '../forme_field.dart';
 class FormeDateRangeField
     extends ValueField<DateTimeRange, FormeDateRangeFieldModel> {
   FormeDateRangeField({
-    ValueChanged<DateTimeRange?>? onChanged,
+    FormeFieldValueChanged<DateTimeRange, FormeDateRangeFieldModel>? onChanged,
     FormFieldValidator<DateTimeRange>? validator,
     AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,

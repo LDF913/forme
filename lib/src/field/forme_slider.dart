@@ -10,7 +10,7 @@ typedef FormeLabelRender = String Function(double value);
 
 class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
   FormeSlider({
-    ValueChanged<double>? onChanged,
+    NonnullFormeFieldValueChanged<double, FormeSliderModel>? onChanged,
     NonnullFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
@@ -91,8 +91,8 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
   _FormeSliderState createState() => _FormeSliderState();
 }
 
-class _FormeSliderState extends NonnullValueFieldState<double, FormeSliderModel>
-    with FormeDecoratorState {
+class _FormeSliderState
+    extends NonnullValueFieldState<double, FormeSliderModel> {
   @override
   FormeSliderModel beforeUpdateModel(
       FormeSliderModel old, FormeSliderModel current) {
@@ -105,10 +105,10 @@ class _FormeSliderState extends NonnullValueFieldState<double, FormeSliderModel>
   FormeSliderModel beforeSetModel(
       FormeSliderModel old, FormeSliderModel current) {
     if (current.min == null) {
-      return current.copyWith(FormeSliderModel(min: old.min));
+      current = current.copyWith(FormeSliderModel(min: old.min));
     }
     if (current.max == null) {
-      return current.copyWith(FormeSliderModel(max: old.max));
+      current = current.copyWith(FormeSliderModel(max: old.max));
     }
     return current;
   }

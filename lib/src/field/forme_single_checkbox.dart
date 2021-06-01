@@ -10,7 +10,7 @@ import '../forme_core.dart';
 class FormeSingleCheckbox
     extends NonnullValueField<bool, FormeSingleCheckboxModel> {
   FormeSingleCheckbox({
-    ValueChanged<bool>? onChanged,
+    NonnullFormeFieldValueChanged<bool, FormeSingleCheckboxModel>? onChanged,
     NonnullFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,

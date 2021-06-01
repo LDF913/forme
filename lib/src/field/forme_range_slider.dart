@@ -17,7 +17,8 @@ class FormRangeLabelRender {
 class FormeRangeSlider
     extends NonnullValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
-    ValueChanged<RangeValues>? onChanged,
+    NonnullFormeFieldValueChanged<RangeValues, FormeRangeSliderModel>?
+        onChanged,
     NonnullFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
@@ -107,8 +108,7 @@ class FormeRangeSlider
 }
 
 class _FormeRangeSliderState
-    extends NonnullValueFieldState<RangeValues, FormeRangeSliderModel>
-    with FormeDecoratorState {
+    extends NonnullValueFieldState<RangeValues, FormeRangeSliderModel> {
   @override
   FormeRangeSliderModel beforeUpdateModel(
       FormeRangeSliderModel old, FormeRangeSliderModel current) {
@@ -123,10 +123,10 @@ class _FormeRangeSliderState
   FormeRangeSliderModel beforeSetModel(
       FormeRangeSliderModel old, FormeRangeSliderModel current) {
     if (current.min == null) {
-      return current.copyWith(FormeRangeSliderModel(min: old.min));
+      current = current.copyWith(FormeRangeSliderModel(min: old.min));
     }
     if (current.max == null) {
-      return current.copyWith(FormeRangeSliderModel(max: old.max));
+      current = current.copyWith(FormeRangeSliderModel(max: old.max));
     }
     return current;
   }

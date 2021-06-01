@@ -12,7 +12,7 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
     T? initialValue,
     AutovalidateMode? autovalidateMode,
     FormFieldValidator<T>? validator,
-    ValueChanged<T?>? onChanged,
+    FormeFieldValueChanged<T, FormeChoiceChipModel<T>>? onChanged,
     FormFieldSetter<T>? onSaved,
     String? name,
     bool readOnly = false,
@@ -103,8 +103,7 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
 }
 
 class _FormeChoiceChipState<T>
-    extends ValueFieldState<T, FormeChoiceChipModel<T>>
-    with FormeDecoratorState {
+    extends ValueFieldState<T, FormeChoiceChipModel<T>> {
   @override
   FormeChoiceChipModel<T> beforeUpdateModel(
       FormeChoiceChipModel<T> old, FormeChoiceChipModel<T> current) {

@@ -12,7 +12,7 @@ import 'forme_text_field.dart';
 
 class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
   FormeNumberField({
-    ValueChanged<num?>? onChanged,
+    FormeFieldValueChanged<num, FormeNumberFieldModel>? onChanged,
     FormFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,

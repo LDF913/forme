@@ -27,15 +27,20 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
     ));
   }
 
-  void updateDecoration(Updater<InputDecoration> updater) {
-    FormeDecoratorManagement management =
-        this.management as FormeDecoratorManagement;
-    FormeInputDecoratorModel decoratorModel =
-        management.decoratorModel as FormeInputDecoratorModel;
-    InputDecoration decoration =
-        updater(decoratorModel.decoration ?? const InputDecoration());
-    management.decoratorModel =
-        FormeInputDecoratorModel(decoration: decoration);
+  void updateLabel() {
+    management.updateDecoratorModel(FormeInputDecoratorModel(
+        decoration: InputDecoration(labelText: 'New Label Text')));
+  }
+
+  void updateLabelStyle() {
+    management.updateDecoratorModel(FormeInputDecoratorModel(
+        decoration: InputDecoration(
+            labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent))));
+  }
+
+  void updateHelperStyle() {
+    management.updateDecoratorModel(FormeInputDecoratorModel(
+        decoration: InputDecoration(helperText: 'helper text')));
   }
 
   @override

@@ -4,14 +4,14 @@ import 'package:forme/forme.dart';
 import 'base_page.dart';
 
 class RadioTileFieldPage
-    extends BasePage<List<String>, FormeListTileModel<String>> {
+    extends BasePage<String, FormeRadioGroupModel<String>> {
   @override
   Widget get body {
     return Column(
       children: [
         FormeInputDecorator(
           decoration: InputDecoration(labelText: 'Radio Tile'),
-          child: FormeListTile<String>(
+          child: FormeRadioGroup<String>(
             items: [
               FormeListTileItem(
                 title: Text('java'),
@@ -32,33 +32,30 @@ class RadioTileFieldPage
                 subtitle: Text('subtitle'),
               ),
             ],
-            type: FormeListTileType.Radio,
-            model: FormeListTileModel<String>(),
+            model: FormeRadioGroupModel<String>(),
             autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
-            validator: (value) => value.isEmpty ? 'select one item!' : null,
+            validator: (value) => value == null ? 'select one item!' : null,
           ),
         ),
         Wrap(
           children: [
             createButton('update items', () async {
-              management.update(FormeListTileModel<String>(
+              management.update(FormeRadioGroupModel<String>(
                   items: FormeUtils.toFormeListTileItems(
                       ['flutter', 'dart', 'pub'])));
             }),
             createButton('to List Tile', () async {
-              management.update(FormeListTileModel<String>(split: 1));
+              management.update(FormeRadioGroupModel<String>(split: 1));
             }),
             createButton('update labelText', () async {
-              updateDecoration((_) => _.copyWith(labelText: 'New Label Text'));
+              updateLabel();
             }),
             createButton('update labelStyle', () {
-              updateDecoration((_) => _.copyWith(
-                  labelStyle:
-                      TextStyle(fontSize: 30, color: Colors.pinkAccent)));
+              updateLabelStyle();
             }),
             createButton('set helper text', () {
-              updateDecoration((_) => _.copyWith(helperText: 'helper text'));
+              updateHelperStyle();
             }),
             createButton('validate', () {
               management.validate();

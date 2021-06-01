@@ -11,7 +11,7 @@ typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 /// used to pick time only
 class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
   FormeTimeField({
-    ValueChanged<TimeOfDay?>? onChanged,
+    FormeFieldValueChanged<TimeOfDay, FormeTimeFieldModel>? onChanged,
     FormFieldValidator<TimeOfDay>? validator,
     AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,

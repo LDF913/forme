@@ -59,6 +59,14 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                       prefixIcon: IconButton(
                           onPressed: () {
                             management.value = 'prefix icon';
+                            WidgetsBinding.instance!
+                                .addPostFrameCallback((timeStamp) {
+                              management.update(FormeTextFieldModel(
+                                selection: FormeUtils.selection(
+                                    management.value!.length,
+                                    management.value!.length),
+                              ));
+                            });
                           },
                           icon: Icon(Icons.set_meal)))));
             }),

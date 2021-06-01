@@ -36,16 +36,13 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
                 ));
               }),
               createButton('update labelText', () async {
-                updateDecoration(
-                    (_) => _.copyWith(labelText: 'New Label Text'));
+                updateLabel();
               }),
               createButton('update labelStyle', () {
-                updateDecoration((_) => _.copyWith(
-                    labelStyle:
-                        TextStyle(fontSize: 30, color: Colors.pinkAccent)));
+                updateLabelStyle();
               }),
               createButton('set helper text', () {
-                updateDecoration((_) => _.copyWith(helperText: 'helper text'));
+                updateHelperStyle();
               }),
               createButton('validate', () {
                 management.validate();

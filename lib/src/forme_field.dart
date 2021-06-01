@@ -3,10 +3,18 @@ import 'forme_management.dart';
 
 import 'forme_core.dart';
 import 'forme_state_model.dart';
-import 'widget/forme_decoration_widget.dart';
 
+/// form field value changed listener
+typedef FormeFieldValueChanged<T, E extends FormeModel> = void Function(
+    FormeValueFieldManagement<T, E>, T? oldValue, T? newValue);
+
+typedef NonnullFormeFieldValueChanged<T, E extends FormeModel> = void Function(
+    FormeValueFieldManagement<T, E>, T oldValue, T newValue);
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
+
+typedef NullValueReplacement<T> = T Function(T? value);
+
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
 mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
@@ -61,7 +69,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
 class ValueField<T, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String? name;
-  final ValueChanged<T?>? onChanged;
+  final FormeFieldValueChanged<T, E>? onChanged;
   final E model;
   final bool readOnly;
 
@@ -116,7 +124,7 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
 
   NonnullValueField({
     required FieldContentBuilder<NonnullValueFieldState<T, E>> builder,
-    ValueChanged<T>? onChanged,
+    NonnullFormeFieldValueChanged<T, E>? onChanged,
     NonnullFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     required T initialValue,
@@ -137,7 +145,10 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
             readOnly: readOnly,
             enabled: enabled,
             onSaved: onSaved == null ? null : (value) => onSaved(value!),
-            onChanged: onChanged == null ? null : (value) => onChanged(value!),
+            onChanged: onChanged == null
+                ? null
+                : (management, oldValue, newValue) =>
+                    onChanged(management, oldValue!, newValue!),
             builder: (field) {
               NonnullValueFieldState<T, E> state =
                   field as NonnullValueFieldState<T, E>;
@@ -158,7 +169,7 @@ class InheritedFormeFieldManagement extends InheritedWidget {
   const InheritedFormeFieldManagement._(this.management, Widget child)
       : super(child: child);
   @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => true;
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
 
   static FormeFieldManagement of(BuildContext context) {
     return context
@@ -173,67 +184,48 @@ class InheritedFormeFieldManagement extends InheritedWidget {
   }
 }
 
-/// when you want to create your custom `FormeDecorator`
+/// an inherited widget used to connect `FormeField` and `FormeDecorator`
 ///
-/// 1. make your field's state extends this
-/// 2. create your `FormeDecorator` widget
-/// 3. your `FormeDecorator` widget must provide a [FormeDecoration]
+/// this widget should be provided by `FormeDecorator`
+///
+/// when `FormeField`'s errorText or focus changed , `FormeField`
+/// should call [FormeDecoration]'s onFocusChanged or onErrorChanged
+/// to notify `FormeDecorator` rebuild
 ///
 /// see
-///    1. [FormeInputDecorator]
-///    2. [FormeDecoration]
-mixin FormeDecoratorState<T, E extends FormeModel,
-    K extends FormeDecoratorManagement<T, E>> on ValueFieldState<T, E> {
-  FormeDecoration? _decoration;
+///   1. [FormeInputDecorator]
+///   2. [FormeDecoratorState]
+class FormeDecoration extends InheritedWidget {
+  final ValueChanged<bool> onFocusChanged;
+  final ValueChanged<String?> onErrorChanged;
+  final FormeDecoratorModelManagement management;
+
+  FormeDecoration({
+    required this.onFocusChanged,
+    required this.onErrorChanged,
+    required Widget child,
+    required this.management,
+  }) : super(child: child);
 
   @override
-  FormeDecoratorManagement<T, E> get management =>
-      super.management as FormeDecoratorManagement<T, E>;
-
-  @override
-  FormeDecoratorManagement<T, E> createFormeFieldManagement() =>
-      _FormeDecoratorManagement(super.createFormeFieldManagement(), this);
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _decoration = FormeDecoration.of(context);
-    focusNode.removeListener(_focusChange);
-    if (_decoration != null) focusNode.addListener(_focusChange);
+  bool updateShouldNotify(covariant FormeDecoration oldWidget) {
+    return management.model != oldWidget.management.model;
   }
 
-  @override
-  void onErrorTextChange(String? oldErrorText, String? currentErrorText) {
-    if (_decoration != null) _decoration!.onErrorChanged(currentErrorText);
-  }
-
-  void _focusChange() {
-    if (_decoration != null) _decoration!.onFocusChanged(focusNode.hasFocus);
-  }
-
-  @override
-  void dispose() {
-    if (_decoration != null) {
-      focusNode.removeListener(_focusChange);
-    }
-    super.dispose();
+  static FormeDecoration? of(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<FormeDecoration>();
   }
 }
 
-class _FormeDecoratorManagement<T, E extends FormeModel>
-    extends FormeDecoratorManagement<T, E> {
-  final FormeDecoratorState _state;
+/// used to update decorator model
+class FormeDecoratorModelManagement {
+  final ValueChanged<FormeModel> updateModel;
+  final ValueChanged<FormeModel> setModel;
+  final FormeModel model;
 
-  _FormeDecoratorManagement(
-      FormeValueFieldManagement<T, E> delegate, this._state)
-      : super(delegate);
-  @override
-  set decoratorModel(FormeDecoratorModel? model) {
-    if (_state._decoration != null) {
-      _state._decoration!.onModelChanged(model);
-    }
-  }
-
-  @override
-  FormeDecoratorModel? get decoratorModel => _state._decoration?.decoratorModel;
+  FormeDecoratorModelManagement({
+    required this.updateModel,
+    required this.setModel,
+    required this.model,
+  });
 }

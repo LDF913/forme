@@ -45,7 +45,7 @@ class FormeListTile<T>
     extends NonnullValueField<List<T>, FormeListTileModel<T>> {
   final FormeListTileType type;
   FormeListTile({
-    ValueChanged<List<T>>? onChanged,
+    NonnullFormeFieldValueChanged<List<T>, FormeListTileModel<T>>? onChanged,
     NonnullFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
@@ -284,8 +284,7 @@ class FormeListTile<T>
 }
 
 class _FormeListTileState<T>
-    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>>
-    with FormeDecoratorState {
+    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>> {
   bool allowSelectAll = false;
 
   @override
