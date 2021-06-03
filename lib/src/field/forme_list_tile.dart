@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
@@ -56,9 +56,10 @@ class FormeListTile<T>
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<List<T>, FormeListTileModel<T>>>?
+            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeListTileModel<T>>>? focusListener,
+    FocusListener<FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
+        focusListener,
     Key? key,
   }) : super(
             focusListener: focusListener,
@@ -310,9 +311,9 @@ class _FormeListTileState<T>
   FormeListTileModel<T> beforeSetModel(
       FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items == null) {
-      return current.copyWith(FormeListTileModel<T>(items: old.items));
+      current = current.copyWith(FormeListTileModel<T>(items: old.items));
     }
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

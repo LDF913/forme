@@ -1,7 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../widget/forme_text_field_widget.dart';
 import 'forme_datetime_field.dart';
 import '../field/forme_text_field.dart';
@@ -21,9 +21,10 @@ class FormeDateRangeField
     bool visible = true,
     FormeDateRangeFieldModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<DateTimeRange, FormeDateRangeFieldModel>>?
+            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeDateRangeFieldModel>>?
+    FocusListener<
+            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
         focusListener,
     Key? key,
   }) : super(
@@ -90,7 +91,7 @@ class FormeDateRangeField
   _FormeDateRangeFieldState createState() => _FormeDateRangeFieldState();
 
   static final FormeDateRangeFieldFormatter defaultRangeDateFormatter = (range) =>
-      '${FormeDateTimeField.defaultDateFormatter(range.start)} - ${FormeDateTimeField.defaultDateFormatter(range.end)}';
+      '${FormeDateTimeField.defaultDateTimeFormatter(FormeDateTimeFieldType.Date, range.start)} - ${FormeDateTimeField.defaultDateTimeFormatter(FormeDateTimeFieldType.Date, range.end)}';
 }
 
 typedef FormeDateRangeFieldFormatter = String Function(DateTimeRange range);
@@ -105,8 +106,11 @@ class _FormeDateRangeFieldState
   @override
   FormeDateRangeField get widget => super.widget as FormeDateRangeField;
 
-  void focusChange() {
-    setState(() {});
+  @override
+  DateTimeRange? beforeSetValue(DateTimeRange? newValue) {
+    if (newValue == null) return null;
+    return DateTimeRange(
+        start: simple(newValue.start), end: simple(newValue.end));
   }
 
   @override
@@ -114,7 +118,6 @@ class _FormeDateRangeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
-    focusNode.addListener(focusChange);
   }
 
   @override
@@ -124,7 +127,6 @@ class _FormeDateRangeFieldState
 
   @override
   void dispose() {
-    focusNode.removeListener(focusChange);
     textEditingController.dispose();
     super.dispose();
   }
@@ -135,14 +137,20 @@ class _FormeDateRangeFieldState
   }
 
   @override
+  FormeDateRangeFieldModel beforeSetModel(
+      FormeDateRangeFieldModel old, FormeDateRangeFieldModel current) {
+    return beforeUpdateModel(old, current);
+  }
+
+  @override
   FormeDateRangeFieldModel beforeUpdateModel(
       FormeDateRangeFieldModel old, FormeDateRangeFieldModel current) {
     if (value == null) return current;
-    if (current.firstDate != null &&
-        simple(current.firstDate!).isAfter(value!.start)) clearValue();
+    if (current.firstDate != null && current.firstDate!.isAfter(value!.start))
+      clearValue();
     if (value != null &&
         current.lastDate != null &&
-        simple(current.lastDate!).isBefore(value!.end)) clearValue();
+        current.lastDate!.isBefore(value!.end)) clearValue();
     if (current.formatter != null && value != null)
       textEditingController.text = current.formatter!(value!);
     return current;

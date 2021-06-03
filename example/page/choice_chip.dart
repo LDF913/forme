@@ -21,7 +21,7 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
         Wrap(
           children: [
             createButton('update items', () async {
-              management.update(FormeChoiceChipModel<String>(
+              controller.updateModel(FormeChoiceChipModel<String>(
                 items: FormeUtils.toFormeChipItems(['java', 'c#', 'python']),
               ));
             }),
@@ -35,11 +35,11 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
               updateHelperStyle();
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

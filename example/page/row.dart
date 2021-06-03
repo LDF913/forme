@@ -5,7 +5,7 @@ class RowPage extends StatelessWidget {
   final String name = 'row';
   final FormeKey formKey = FormeKey();
 
-  FormeFieldManagement<FormeFlexModel> get management => formKey.field(name);
+  FormeFieldController<FormeFlexModel> get controller => formKey.field(name);
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +28,8 @@ class RowPage extends StatelessWidget {
                   padding: EdgeInsets.all(5),
                   child: TextButton.icon(
                     onPressed: () {
-                      management.model =
-                          management.model.append(FormeSingleCheckbox());
+                      controller.model =
+                          controller.model.append(FormeSingleCheckbox());
                     },
                     icon: Icon(Icons.add),
                     label: Text('append a checkbox'),
@@ -38,8 +38,8 @@ class RowPage extends StatelessWidget {
                   padding: EdgeInsets.all(5),
                   child: TextButton.icon(
                     onPressed: () {
-                      management.model =
-                          management.model.prepend(Text('prepend!'));
+                      controller.model =
+                          controller.model.prepend(Text('prepend!'));
                     },
                     icon: Icon(Icons.add),
                     label: Text('preappend a widget'),
@@ -48,7 +48,7 @@ class RowPage extends StatelessWidget {
                   padding: EdgeInsets.all(5),
                   child: TextButton.icon(
                     onPressed: () {
-                      management.model = management.model.swap(0, 1);
+                      controller.model = controller.model.swap(0, 1);
                     },
                     icon: Icon(Icons.add),
                     label: Text('swap first and second widget'),
@@ -57,7 +57,7 @@ class RowPage extends StatelessWidget {
                   padding: EdgeInsets.all(5),
                   child: TextButton.icon(
                     onPressed: () {
-                      management.model = management.model.remove(0);
+                      controller.model = controller.model.remove(0);
                     },
                     icon: Icon(Icons.remove),
                     label: Text('delete first widget'),

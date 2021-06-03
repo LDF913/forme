@@ -5,7 +5,7 @@ class ColumnPage extends StatelessWidget {
   final String name = 'row';
   final FormeKey formKey = FormeKey();
 
-  FormeFieldManagement<FormeFlexModel> get management => formKey.field(name);
+  FormeFieldController<FormeFlexModel> get controller => formKey.field(name);
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class ColumnPage extends StatelessWidget {
                       padding: EdgeInsets.all(5),
                       child: TextButton.icon(
                         onPressed: () {
-                          FormeFlexModel model = management.model;
+                          FormeFlexModel model = controller.model;
                           if (!formKey.hasField('row1')) {
                             for (int i = 0; i < 10; i++) {
                               model.append(
@@ -45,7 +45,7 @@ class ColumnPage extends StatelessWidget {
                                 ], name: 'row$i'),
                               );
                             }
-                            management.model = model;
+                            controller.model = model;
                           }
                         },
                         icon: Icon(Icons.add),
@@ -55,7 +55,7 @@ class ColumnPage extends StatelessWidget {
                       padding: EdgeInsets.all(5),
                       child: TextButton.icon(
                         onPressed: () {
-                          management.model = management.model.prepend(Row(
+                          controller.model = controller.model.prepend(Row(
                             children: [
                               Expanded(child: FormeTextField()),
                               FormeSingleCheckbox(),
@@ -70,7 +70,7 @@ class ColumnPage extends StatelessWidget {
                       padding: EdgeInsets.all(5),
                       child: TextButton.icon(
                         onPressed: () {
-                          management.model = management.model.swap(0, 1);
+                          controller.model = controller.model.swap(0, 1);
                         },
                         icon: Icon(Icons.add),
                         label: Text('swap first and second widget'),
@@ -79,7 +79,7 @@ class ColumnPage extends StatelessWidget {
                       padding: EdgeInsets.all(5),
                       child: TextButton.icon(
                         onPressed: () {
-                          management.model = management.model.remove(0);
+                          controller.model = controller.model.remove(0);
                         },
                         icon: Icon(Icons.remove),
                         label: Text('delete first widget'),

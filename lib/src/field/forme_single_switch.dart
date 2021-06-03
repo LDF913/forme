@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
@@ -20,9 +20,10 @@ class FormeSingleSwitch
     Widget? label,
     FormeSingleSwitchModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<bool, FormeSingleSwitchModel>>?
+            FormeValueFieldController<bool, FormeSingleSwitchModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeSingleSwitchModel>>? focusListener,
+    FocusListener<FormeValueFieldController<bool, FormeSingleSwitchModel>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,

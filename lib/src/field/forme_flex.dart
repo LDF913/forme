@@ -102,9 +102,7 @@ class _FormeFlexState extends CommonFieldState<FormeFlexModel> {
 
   @override
   FormeFlexModel beforeSetModel(FormeFlexModel old, FormeFlexModel current) {
-    widgets.clear();
-    widgets.addAll(current._widgets);
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

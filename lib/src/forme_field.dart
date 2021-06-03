@@ -1,19 +1,17 @@
 import 'package:flutter/material.dart';
-import 'forme_management.dart';
+import 'forme_controller.dart';
 
 import 'forme_core.dart';
 import 'forme_state_model.dart';
 
 /// form field value changed listener
 typedef FormeFieldValueChanged<T, E extends FormeModel> = void Function(
-    FormeValueFieldManagement<T, E>, T? oldValue, T? newValue);
+    FormeValueFieldController<T, E>, T? oldValue, T? newValue);
 
 typedef NonnullFormeFieldValueChanged<T, E extends FormeModel> = void Function(
-    FormeValueFieldManagement<T, E>, T oldValue, T newValue);
+    FormeValueFieldController<T, E>, T oldValue, T newValue);
 typedef NonnullFieldValidator<T> = String? Function(T value);
 typedef NonnullFormFieldSetter<T> = void Function(T newValue);
-
-typedef NullValueReplacement<T> = T Function(T? value);
 
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
@@ -31,7 +29,7 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
 
   bool get readOnly;
 
-  FocusListener<FormeFieldManagement<E>>? get focusListener;
+  FocusListener<FormeFieldController<E>>? get focusListener;
 }
 
 /// if you want to create a stateful form field, but don't want to return a value,you can override this field
@@ -41,7 +39,7 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   final FieldContentBuilder<CommonFieldState<E>> builder;
   final E model;
   final bool readOnly;
-  final FocusListener<FormeFieldManagement<E>>? focusListener;
+  final FocusListener<FormeFieldController<E>>? focusListener;
   const CommonField({
     Key? key,
     this.name,
@@ -59,7 +57,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
     with AbstractFieldState<CommonField<E>, E> {
   @override
   Widget build(BuildContext context) {
-    return widget.builder(this);
+    return InheritedFormeFieldController._(controller, widget.builder(this));
   }
 }
 
@@ -74,7 +72,7 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   final bool readOnly;
 
   /// used to listen focus changed
-  final FocusListener<FormeFieldManagement<E>>? focusListener;
+  final FocusListener<FormeFieldController<E>>? focusListener;
 
   /// used to listen field's validate errorText changed
   ///
@@ -84,7 +82,7 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   /// 2. after called [validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
-  final ValidateErrorListener<FormeValueFieldManagement<T, E>>?
+  final ValidateErrorListener<FormeValueFieldController<T, E>>?
       validateErrorListener;
 
   ValueField({
@@ -100,21 +98,29 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
     required this.model,
     this.readOnly = false,
     this.validateErrorListener,
-    this.focusListener,
-  }) : super(
+    FocusListener<FormeValueFieldController<T, E>>? focusListener,
+  })  : this.focusListener = _convertFocusListener(focusListener),
+        super(
             key: key,
             enabled: enabled,
             onSaved: onSaved,
             builder: (field) {
               ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
-              return InheritedFormeFieldManagement._(
-                  state.management, builder(state));
+              return InheritedFormeFieldController._(
+                  state.controller, builder(state));
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue);
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
+
+  static FocusListener<FormeFieldController<E>>?
+      _convertFocusListener<T, E extends FormeModel>(
+          FocusListener<FormeValueFieldController<T, E>>? listener) {
+    if (listener == null) return null;
+    return (v, focus) => listener(v as FormeValueFieldController<T, E>, focus);
+  }
 }
 
 /// base field used to return a nonnull value
@@ -134,9 +140,9 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
     required E model,
     bool readOnly = false,
     Key? key,
-    ValidateErrorListener<FormeValueFieldManagement<T, E>>?
+    ValidateErrorListener<FormeValueFieldController<T, E>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<E>>? focusListener,
+    FocusListener<FormeValueFieldController<T, E>>? focusListener,
   }) : super(
             focusListener: focusListener,
             validateErrorListener: validateErrorListener,
@@ -147,13 +153,13 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
             onSaved: onSaved == null ? null : (value) => onSaved(value!),
             onChanged: onChanged == null
                 ? null
-                : (management, oldValue, newValue) =>
-                    onChanged(management, oldValue!, newValue!),
+                : (controller, oldValue, newValue) =>
+                    onChanged(controller, oldValue!, newValue!),
             builder: (field) {
               NonnullValueFieldState<T, E> state =
                   field as NonnullValueFieldState<T, E>;
-              return InheritedFormeFieldManagement._(
-                  state.management, builder(state));
+              return InheritedFormeFieldController._(
+                  state.controller, builder(state));
             },
             validator: validator == null ? null : (value) => validator(value!),
             autovalidateMode: autovalidateMode,
@@ -163,24 +169,24 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
   NonnullValueFieldState<T, E> createState() => NonnullValueFieldState();
 }
 
-/// share FormFieldManagement in sub tree
-class InheritedFormeFieldManagement extends InheritedWidget {
-  final FormeFieldManagement management;
-  const InheritedFormeFieldManagement._(this.management, Widget child)
+/// share FormFieldController in sub tree
+class InheritedFormeFieldController extends InheritedWidget {
+  final FormeFieldController controller;
+  const InheritedFormeFieldController._(this.controller, Widget child)
       : super(child: child);
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
 
-  static FormeFieldManagement of(BuildContext context) {
+  static FormeFieldController of(BuildContext context) {
     return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldManagement>()!
-        .management;
+        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()!
+        .controller;
   }
 
-  static FormeFieldManagement? maybeOf(BuildContext context) {
+  static FormeFieldController? maybeOf(BuildContext context) {
     return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldManagement>()
-        ?.management;
+        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()
+        ?.controller;
   }
 }
 
@@ -198,18 +204,18 @@ class InheritedFormeFieldManagement extends InheritedWidget {
 class FormeDecoration extends InheritedWidget {
   final ValueChanged<bool> onFocusChanged;
   final ValueChanged<String?> onErrorChanged;
-  final FormeDecoratorModelManagement management;
+  final FormeDecoratorModelController controller;
 
   FormeDecoration({
     required this.onFocusChanged,
     required this.onErrorChanged,
     required Widget child,
-    required this.management,
+    required this.controller,
   }) : super(child: child);
 
   @override
   bool updateShouldNotify(covariant FormeDecoration oldWidget) {
-    return management.model != oldWidget.management.model;
+    return controller.model != oldWidget.controller.model;
   }
 
   static FormeDecoration? of(BuildContext context) {
@@ -218,12 +224,12 @@ class FormeDecoration extends InheritedWidget {
 }
 
 /// used to update decorator model
-class FormeDecoratorModelManagement {
+class FormeDecoratorModelController {
   final ValueChanged<FormeModel> updateModel;
   final ValueChanged<FormeModel> setModel;
   final FormeModel model;
 
-  FormeDecoratorModelManagement({
+  FormeDecoratorModelController({
     required this.updateModel,
     required this.setModel,
     required this.model,

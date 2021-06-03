@@ -7,6 +7,33 @@ import 'forme_render_data.dart';
 class FormeRenderUtils {
   FormeRenderUtils._();
 
+  static Future<T?> showFormeModalBottomSheet<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+    FormeBottomSheetRenderData? bottomSheetRenderData,
+  }) {
+    if (bottomSheetRenderData?.beforeOpen != null)
+      bottomSheetRenderData!.beforeOpen!();
+    return showModalBottomSheet<T>(
+      transitionAnimationController:
+          bottomSheetRenderData?.transitionAnimationController,
+      elevation: bottomSheetRenderData?.elevation,
+      isDismissible: bottomSheetRenderData?.isDismissible ?? true,
+      enableDrag: bottomSheetRenderData?.enableDrag ?? true,
+      barrierColor: bottomSheetRenderData?.barrierColor,
+      useRootNavigator: bottomSheetRenderData?.useRootNavigator ?? false,
+      routeSettings: bottomSheetRenderData?.routeSettings,
+      isScrollControlled: bottomSheetRenderData?.isScrollControlled ?? true,
+      shape: bottomSheetRenderData?.shape,
+      backgroundColor: bottomSheetRenderData?.backgroundColor,
+      context: context,
+      builder: builder,
+    ).whenComplete(() {
+      if (bottomSheetRenderData?.afterClose != null)
+        bottomSheetRenderData!.afterClose!();
+    });
+  }
+
   static SliderThemeData? copySliderThemeData(
       SliderThemeData? old, SliderThemeData? current) {
     if (old == null) return current;

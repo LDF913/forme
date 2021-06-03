@@ -11,7 +11,7 @@ class DropdownButtonFieldPage
       children: [
         FormeTextFieldOnTapProxyWidget(
           child: FormeDropdownButton<String>(
-            items: FormeUtils.toDropdownMenuItems(['flutter', 'react native']),
+            items: [],
             autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
             model: FormeDropdownButtonModel(
@@ -22,67 +22,79 @@ class DropdownButtonFieldPage
         ),
         Wrap(
           children: [
-            createButton('update items', () async {
-              management.update(FormeDropdownButtonModel<String>(
-                  items: FormeUtils.toDropdownMenuItems(
-                      ['java', 'dart', 'c#', 'python', 'flutter'])));
+            createButton('load items', () async {
+              controller.updateModel(FormeDropdownButtonModel<String>(
+                  icon: SizedBox(
+                width: 14,
+                height: 14,
+                child: CircularProgressIndicator(),
+              )));
+              Future<List<DropdownMenuItem<String>>> future =
+                  Future.delayed(Duration(seconds: 2), () {
+                return FormeUtils.toDropdownMenuItems(
+                    ['java', 'dart', 'c#', 'python', 'flutter']);
+              });
+              future.then((value) {
+                controller.updateModel(FormeDropdownButtonModel<String>(
+                    icon: Icon(Icons.arrow_drop_down), items: value));
+              });
             }),
             createButton('update labelText', () async {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 decoration: InputDecoration(
                   labelText: 'New Label Text',
                 ),
               ));
             }),
             createButton('update labelStyle', () {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 decoration: InputDecoration(
                   labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent),
                 ),
               ));
             }),
             createButton('update style', () {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
               ));
             }),
             createButton('set helper text', () {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 decoration: InputDecoration(
                   helperText: 'helper text',
                 ),
               ));
             }),
             createButton('set prefix icon', () {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 decoration: InputDecoration(
                   prefixIcon: IconButton(
                     icon: Icon(Icons.arrow_drop_down_circle),
                     onPressed: () {
-                      management.value = 'flutter';
+                      controller.value = 'flutter';
                     },
                   ),
                 ),
               ));
             }),
             createButton('set suffix icon', () {
-              management.update(FormeDropdownButtonModel<String>(
+              controller.updateModel(FormeDropdownButtonModel<String>(
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      management.value = null;
+                      controller.value = null;
                     },
                   ),
                 ),
               ));
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),
@@ -93,5 +105,5 @@ class DropdownButtonFieldPage
   }
 
   @override
-  String get title => 'FormeNumberField';
+  String get title => 'FormeDropdown';
 }

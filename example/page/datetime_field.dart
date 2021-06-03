@@ -22,22 +22,27 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
         Wrap(
           children: [
             createButton('change type to DateTime', () async {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                 type: FormeDateTimeFieldType.DateTime,
               ));
             }),
+            createButton('change type to Date', () async {
+              controller.updateModel(FormeDateTimeFieldModel(
+                type: FormeDateTimeFieldType.Date,
+              ));
+            }),
             createButton('change picker entry mode', () async {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                 initialEntryMode: TimePickerEntryMode.input,
               ));
             }),
             createButton('change formatter', () async {
-              management.update(FormeDateTimeFieldModel(
-                formatter: (time) => time.toString(),
+              controller.updateModel(FormeDateTimeFieldModel(
+                formatter: (type, time) => time.toString(),
               ));
             }),
             createButton('update labelText', () async {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelText: 'New Label Text',
@@ -45,7 +50,7 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
               )));
             }),
             createButton('update labelStyle', () {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent),
@@ -53,13 +58,13 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
               )));
             }),
             createButton('update style', () {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
               )));
             }),
             createButton('set helper text', () {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   helperText: 'helper text',
@@ -67,37 +72,37 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
               )));
             }),
             createButton('set prefix icon', () {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   prefixIcon: IconButton(
                     icon: Icon(Icons.timer),
                     onPressed: () {
-                      management.value = DateTime.now();
+                      controller.value = DateTime.now();
                     },
                   ),
                 ),
               )));
             }),
             createButton('set suffix icon', () {
-              management.update(FormeDateTimeFieldModel(
+              controller.updateModel(FormeDateTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      management.value = null;
+                      controller.value = null;
                     },
                   ),
                 ),
               )));
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

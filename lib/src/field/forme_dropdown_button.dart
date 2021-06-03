@@ -3,7 +3,7 @@ import '../render/forme_render_utils.dart';
 import '../forme_core.dart';
 
 import '../forme_field.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../forme_state_model.dart';
 
 class FormeDropdownButton<T>
@@ -19,9 +19,9 @@ class FormeDropdownButton<T>
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<T, FormeDropdownButtonModel<T>>>?
+            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeDropdownButtonModel<T>>>?
+    FocusListener<FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
         focusListener,
     Key? key,
   }) : super(
@@ -107,9 +107,9 @@ class _FormDropdownButtonState<T>
   FormeDropdownButtonModel<T> beforeSetModel(
       FormeDropdownButtonModel<T> old, FormeDropdownButtonModel<T> current) {
     if (current.items == null) {
-      return current.copyWith(FormeDropdownButtonModel<T>(items: old.items));
+      current = current.copyWith(FormeDropdownButtonModel<T>(items: old.items));
     }
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../render/forme_render_data.dart';
 import '../render/forme_render_utils.dart';
 
@@ -19,9 +19,9 @@ class FormeSingleCheckbox
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<bool, FormeSingleCheckboxModel>>?
+            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeSingleCheckboxModel>>?
+    FocusListener<FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         focusListener,
     Key? key,
   }) : super(

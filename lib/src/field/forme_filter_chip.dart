@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../render/forme_render_utils.dart';
 import '../render/forme_render_data.dart';
 
@@ -72,9 +72,10 @@ class FormeFilterChip<T>
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<List<T>, FormeFilterChipModel<T>>>?
+            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeFilterChipModel<T>>>? focusListener,
+    FocusListener<FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
@@ -194,9 +195,9 @@ class _FormeFilterChipState<T>
   FormeFilterChipModel<T> beforeSetModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {
     if (current.items == null) {
-      return current.copyWith(FormeFilterChipModel<T>(items: old.items));
+      current = current.copyWith(FormeFilterChipModel<T>(items: old.items));
     }
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

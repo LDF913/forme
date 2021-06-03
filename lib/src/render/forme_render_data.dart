@@ -2,6 +2,57 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+class FormeBottomSheetRenderData {
+  final Color? backgroundColor;
+  final double? elevation;
+  final ShapeBorder? shape;
+  final Color? barrierColor;
+  final bool? isScrollControlled;
+  final bool? useRootNavigator;
+  final bool? isDismissible;
+  final bool? enableDrag;
+  final RouteSettings? routeSettings;
+
+  /// **you need to handle controller's dispose by yourself!!**
+  final AnimationController? transitionAnimationController;
+  final VoidCallback? beforeOpen;
+  final VoidCallback? afterClose;
+  const FormeBottomSheetRenderData({
+    this.backgroundColor,
+    this.elevation,
+    this.shape,
+    this.barrierColor,
+    this.isScrollControlled,
+    this.useRootNavigator,
+    this.isDismissible,
+    this.enableDrag,
+    this.routeSettings,
+    this.transitionAnimationController,
+    this.beforeOpen,
+    this.afterClose,
+  });
+  static FormeBottomSheetRenderData? copy(
+      FormeBottomSheetRenderData? old, FormeBottomSheetRenderData? current) {
+    if (old == null) return current;
+    if (current == null) return old;
+    return FormeBottomSheetRenderData(
+      backgroundColor: current.backgroundColor ?? old.backgroundColor,
+      elevation: current.elevation ?? old.elevation,
+      shape: current.shape ?? old.shape,
+      barrierColor: current.barrierColor ?? old.barrierColor,
+      isScrollControlled: current.isScrollControlled ?? old.isScrollControlled,
+      useRootNavigator: current.useRootNavigator ?? old.useRootNavigator,
+      isDismissible: current.isDismissible ?? old.isDismissible,
+      enableDrag: current.enableDrag ?? old.enableDrag,
+      routeSettings: current.routeSettings ?? old.routeSettings,
+      transitionAnimationController: current.transitionAnimationController ??
+          old.transitionAnimationController,
+      beforeOpen: current.beforeOpen ?? old.beforeOpen,
+      afterClose: current.afterClose ?? old.afterClose,
+    );
+  }
+}
+
 class FormeCheckboxRenderData {
   final Color? activeColor;
   final MouseCursor? mouseCursor;

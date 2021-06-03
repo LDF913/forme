@@ -26,9 +26,10 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
     bool readOnly = false,
     FormeTextFieldModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<String, FormeTextFieldModel>>?
+            FormeValueFieldController<String, FormeTextFieldModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeTextFieldModel>>? focusListener,
+    FocusListener<FormeValueFieldController<String, FormeTextFieldModel>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,

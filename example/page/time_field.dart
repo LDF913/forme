@@ -22,17 +22,17 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
         Wrap(
           children: [
             createButton('change picker entry mode', () async {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                 initialEntryMode: TimePickerEntryMode.input,
               ));
             }),
             createButton('change formatter', () async {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                 formatter: (timeOfDay) => timeOfDay.toString(),
               ));
             }),
             createButton('update labelText', () async {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelText: 'New Label Text',
@@ -40,7 +40,7 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
               )));
             }),
             createButton('update labelStyle', () {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent),
@@ -48,13 +48,13 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
               )));
             }),
             createButton('update style', () {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
               )));
             }),
             createButton('set helper text', () {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   helperText: 'helper text',
@@ -62,37 +62,37 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
               )));
             }),
             createButton('set prefix icon', () {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   prefixIcon: IconButton(
                     icon: Icon(Icons.timer),
                     onPressed: () {
-                      management.value = TimeOfDay.fromDateTime(DateTime.now());
+                      controller.value = TimeOfDay.fromDateTime(DateTime.now());
                     },
                   ),
                 ),
               )));
             }),
             createButton('set suffix icon', () {
-              management.update(FormeTimeFieldModel(
+              controller.updateModel(FormeTimeFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
                     icon: Icon(Icons.clear),
                     onPressed: () {
-                      management.value = null;
+                      controller.value = null;
                     },
                   ),
                 ),
               )));
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

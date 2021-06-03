@@ -1,13 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'forme_field.dart';
 
 import '../forme.dart';
 import 'forme_state_model.dart';
 
-/// base form management
+/// base form controller
 ///
-/// you can access a form management by [FormeKey]
-abstract class FormeManagement {
+/// you can access a form controller by [FormeKey]
+abstract class FormeController {
   /// whether form has a name field
   bool hasField(String name);
 
@@ -17,21 +18,21 @@ abstract class FormeManagement {
   /// set form readOnly|editable
   set readOnly(bool readOnly);
 
-  /// create a new [FormeFieldManagement] by name
+  /// create a new [FormeFieldController] by name
   ///
-  /// you can override [AbstractFieldState.createFormeFieldManagement] to wrap you custom
-  /// FormeFieldManagement, and this method will return your wrapped.
+  /// you can override [AbstractFieldState.createFormeFieldController] to wrap you custom
+  /// FormeFieldController, and this method will return your wrapped.
   /// **when you override this method,
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
-  T field<T extends FormeFieldManagement>(String name);
+  T field<T extends FormeFieldController>(String name);
 
-  /// create a new [FormeValueFieldManagement] by name
+  /// create a new [FormeValueFieldController] by name
   ///
-  /// you can override [AbstractFieldState.createFormeFieldManagement] to wrap you custom
-  /// FormeFieldManagement, and this method will return your wrapped.
+  /// you can override [AbstractFieldState.createFormeFieldController] to wrap you custom
+  /// FormeFieldController, and this method will return your wrapped.
   /// **when you override this method,
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
-  T valueField<T extends FormeValueFieldManagement>(String name);
+  T valueField<T extends FormeValueFieldController>(String name);
 
   /// get form data
   ///
@@ -42,23 +43,23 @@ abstract class FormeManagement {
   /// look at [quietlyValidate]
   ///
   /// you can get errorText
-  /// via [FormeFieldManagementWithError.errorText]
-  /// or request a focus via [FormeFieldManagement.focus]
-  /// or ensure field visible via [FormeFieldManagement.ensureVisible]
-  List<FormeFieldManagementWithError> get errors;
+  /// via [FormeFieldControllerWithError.errorText]
+  /// or request a focus via [FormeFieldController.focus]
+  /// or ensure field visible via [FormeFieldController.ensureVisible]
+  List<FormeFieldControllerWithError> get errors;
 
   /// perform a quietly validate, used to get error text and without display it
   ///
   /// this method will not set errorText on field and rebuild field , so after this method called
-  /// [FormeValueFieldManagement.isValid] still return true even though an error text returned by
-  /// field's validator ,  also [FormeValueFieldManagement.errorText] will   return null too,
+  /// [FormeValueFieldController.isValid] still return true even though an error text returned by
+  /// field's validator ,  also [FormeValueFieldController.errorText] will   return null too,
   /// so value field will not display error
   ///
   /// you can get errorText
-  /// via [FormeFieldManagementWithError.errorText]
-  /// or request a focus via [FormeFieldManagement.focus]
-  /// or ensure field visible via [FormeFieldManagement.ensureVisible]
-  List<FormeFieldManagementWithError> quietlyValidate();
+  /// via [FormeFieldControllerWithError.errorText]
+  /// or request a focus via [FormeFieldController.focus]
+  /// or ensure field visible via [FormeFieldController.ensureVisible]
+  List<FormeFieldControllerWithError> quietlyValidate();
 
   /// equals to setData(data,trigger:true)
   set data(Map<String, dynamic> data) => setData(data);
@@ -92,9 +93,9 @@ abstract class FormeManagement {
 }
 
 /// used to control form field
-abstract class FormeFieldManagement<E extends FormeModel> {
-  /// get forme management
-  FormeManagement get management;
+abstract class FormeFieldController<E extends FormeModel> {
+  /// get forme controller
+  FormeController get controller;
 
   ///get field's name
   String? get name;
@@ -148,7 +149,7 @@ abstract class FormeFieldManagement<E extends FormeModel> {
   /// you want to update,Forme will auto copy old model's attributes to new model
   ///
   /// ```
-  /// FormeFieldManagement<FormeTextFieldModel> m;
+  /// FormeFieldController<FormeTextFieldModel> m;
   /// // update field's labelText to '123'
   /// m.update(FormeTextFieldModel(inputDecoration:InputDecoration(labelText:'123')));
   /// // update field's labelText size to 20, you won't lose labelText!
@@ -156,7 +157,7 @@ abstract class FormeFieldManagement<E extends FormeModel> {
   /// ```
   ///
   /// **update a null value will not work! if you update some attributes to null,use [set model] instead**
-  void update(E model);
+  void updateModel(E model);
 
   /// make current field visible in viewport
   Future<void> ensureVisible(
@@ -165,17 +166,22 @@ abstract class FormeFieldManagement<E extends FormeModel> {
       ScrollPositionAlignmentPolicy? alignmentPolicy,
       double? alignment});
 
-  static T of<T extends FormeFieldManagement>(BuildContext context) {
-    return InheritedFormeFieldManagement.of(context) as T;
+  /// focus listenable
+  ///
+  /// it's lifecycle is same as field
+  ReadOnlyValueNotifier<bool> get focusNotifier;
+
+  static T of<T extends FormeFieldController>(BuildContext context) {
+    return InheritedFormeFieldController.of(context) as T;
   }
 
-  static T? maybeOf<T extends FormeFieldManagement>(BuildContext context) {
-    return InheritedFormeFieldManagement.of(context) as T;
+  static T? maybeOf<T extends FormeFieldController>(BuildContext context) {
+    return InheritedFormeFieldController.of(context) as T;
   }
 }
 
-abstract class FormeValueFieldManagement<T, E extends FormeModel>
-    extends FormeFieldManagement<E> {
+abstract class FormeValueFieldController<T, E extends FormeModel>
+    extends FormeFieldController<E> {
   /// get current value of valuefield
   T? get value;
 
@@ -228,14 +234,44 @@ abstract class FormeValueFieldManagement<T, E extends FormeModel>
   ///
   /// see [FormeInputDecorator]
   void updateDecoratorModel(FormeModel model);
+
+  /// get error listenable
+  ///
+  /// it's useful when you want to display error by your custom way!
+  ///
+  /// this notifier is used for [ValueListenableBuilder]
+  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier;
+
+  /// get value listenable
+  ///
+  /// same as widget's onChanged , but it is more useful
+  /// when you want to build a widget relies on field's value change
+  ///
+  /// eg: if you want to build a clear icon on textfield , but don't want to display it
+  /// when textfield's value is empty ,you can do like this :
+  ///
+  /// ``` dart
+  ///  return ValueListenableBuilder<String?>(
+  ///         valueListenable:formeKey.valueField(name).valueNotifier,
+  ///         builder: (context, a, b) {
+  ///           return a == null || a.length == 0
+  ///               ? SizedBox()
+  ///               : IconButton(icon:Icon(Icons.clear),onPressed:(){
+  ///                 formeKey.valueField(name).value = '';
+  ///               });
+  ///         });
+  /// ```
+  ///
+  /// this notifier is used for [ValueListenableBuilder]
+  ReadOnlyValueNotifier<T?> get valueNotifier;
 }
 
-abstract class FormeFieldManagementDelegate<E extends FormeModel>
-    implements FormeFieldManagement<E> {
-  FormeFieldManagement<E> get delegate;
+abstract class FormeFieldControllerDelegate<E extends FormeModel>
+    implements FormeFieldController<E> {
+  FormeFieldController<E> get delegate;
 
   @override
-  FormeManagement get management => delegate.management;
+  FormeController get controller => delegate.controller;
   @override
   E get model => delegate.model;
   @override
@@ -267,15 +303,17 @@ abstract class FormeFieldManagementDelegate<E extends FormeModel>
   @override
   String? get name => delegate.name;
   @override
-  void update(E model) => delegate.update(model);
+  void updateModel(E model) => delegate.updateModel(model);
+  @override
+  ReadOnlyValueNotifier<bool> get focusNotifier => delegate.focusNotifier;
 }
 
-class FormeValueFieldManagementDelegate<T, E extends FormeModel>
-    extends FormeFieldManagementDelegate<E>
-    implements FormeValueFieldManagement<T, E> {
-  final FormeValueFieldManagement<T, E> delegate;
+class FormeValueFieldControllerDelegate<T, E extends FormeModel>
+    extends FormeFieldControllerDelegate<E>
+    implements FormeValueFieldController<T, E> {
+  final FormeValueFieldController<T, E> delegate;
 
-  FormeValueFieldManagementDelegate(this.delegate);
+  FormeValueFieldControllerDelegate(this.delegate);
 
   @override
   T? get value => delegate.value;
@@ -304,48 +342,53 @@ class FormeValueFieldManagementDelegate<T, E extends FormeModel>
   @override
   set decoratorModel(FormeModel decoratorModel) =>
       delegate.decoratorModel = decoratorModel;
+  @override
+  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier =>
+      delegate.errorTextNotifier;
+  @override
+  ReadOnlyValueNotifier<T?> get valueNotifier => delegate.valueNotifier;
 }
 
-abstract class FormeProxyFieldManagment<
+abstract class FormeProxyFieldController<
     E extends FormeModel,
     N extends FormeModel,
-    K extends FormeFieldManagement<N>> implements FormeFieldManagement<E> {
-  set proxyManagement(K proxyManagement);
+    K extends FormeFieldController<N>> implements FormeFieldController<E> {
+  set proxyController(K proxyController);
 }
 
-/// proxy value field management
+/// proxy value field controller
 /// [FormeRadioGroup]
-abstract class FormeProxyValueFieldManagement<T, E extends FormeModel, M,
-        N extends FormeModel, K extends FormeValueFieldManagement<M, N>>
+abstract class FormeProxyValueFieldController<T, E extends FormeModel, M,
+        N extends FormeModel, K extends FormeValueFieldController<M, N>>
     implements
-        FormeValueFieldManagement<T, E>,
-        FormeProxyFieldManagment<E, N, K> {}
+        FormeValueFieldController<T, E>,
+        FormeProxyFieldController<E, N, K> {}
 
-/// an proxy management
-abstract class FormeProxyFieldManagmentDelegate<E extends FormeModel,
-        N extends FormeModel, K extends FormeFieldManagement<N>>
-    implements FormeProxyFieldManagment<E, N, K> {
-  final FormeFieldManagement<E> delegate;
-  FormeProxyFieldManagmentDelegate(this.delegate);
-  late K _proxyManagement;
+/// an proxy controller
+abstract class FormeProxyFieldControllerDelegate<E extends FormeModel,
+        N extends FormeModel, K extends FormeFieldController<N>>
+    implements FormeProxyFieldController<E, N, K> {
+  final FormeFieldController<E> delegate;
+  FormeProxyFieldControllerDelegate(this.delegate);
+  late K _proxyController;
   @override
-  set proxyManagement(K proxyManagement) {
-    _proxyManagement = proxyManagement;
+  set proxyController(K proxyController) {
+    _proxyController = proxyController;
   }
 
   @protected
-  K get proxyManagement => _proxyManagement;
+  K get proxyController => _proxyController;
 
   @override
   String? get name => delegate.name;
   @override
-  set model(E model) => _proxyManagement.model = deconvertModel(model);
+  set model(E model) => _proxyController.model = deconvertModel(model);
   @override
-  update(E model) => _proxyManagement.update(deconvertModel(model));
+  updateModel(E model) => _proxyController.updateModel(deconvertModel(model));
   @override
-  E get model => convertModel(_proxyManagement.model);
+  E get model => convertModel(_proxyController.model);
   @override
-  FormeManagement get management => delegate.management;
+  FormeController get controller => delegate.controller;
   @override
   bool get isValueField => false;
   @override
@@ -364,49 +407,51 @@ abstract class FormeProxyFieldManagmentDelegate<E extends FormeModel,
           alignment: alignment,
           alignmentPolicy: alignmentPolicy);
   @override
-  set focus(bool focus) => _proxyManagement.focus = focus;
+  set focus(bool focus) => _proxyController.focus = focus;
   @override
-  bool get focusable => _proxyManagement.focusable;
+  bool get focusable => _proxyController.focusable;
   @override
-  bool get hasFocus => _proxyManagement.hasFocus;
+  bool get hasFocus => _proxyController.hasFocus;
+  @override
+  ReadOnlyValueNotifier<bool> get focusNotifier => delegate.focusNotifier;
 
   N deconvertModel(E model);
 
   E convertModel(N model);
 }
 
-abstract class FormeProxyValueFieldManagementDelegate<T, E extends FormeModel,
-        M, N extends FormeModel, K extends FormeValueFieldManagement<M, N>>
-    extends FormeProxyFieldManagmentDelegate<E, N, K>
-    implements FormeProxyValueFieldManagement<T, E, M, N, K> {
-  FormeProxyValueFieldManagementDelegate(
-      FormeValueFieldManagement<T, E> delegate)
+abstract class FormeProxyValueFieldControllerDelegate<T, E extends FormeModel,
+        M, N extends FormeModel, K extends FormeValueFieldController<M, N>>
+    extends FormeProxyFieldControllerDelegate<E, N, K>
+    implements FormeProxyValueFieldController<T, E, M, N, K> {
+  FormeProxyValueFieldControllerDelegate(
+      FormeValueFieldController<T, E> delegate)
       : super(delegate);
   @override
-  FormeValueFieldManagement<T, E> get delegate =>
-      super.delegate as FormeValueFieldManagement<T, E>;
+  FormeValueFieldController<T, E> get delegate =>
+      super.delegate as FormeValueFieldController<T, E>;
 
   @override
-  T? get value => convertValue(_proxyManagement.value);
+  T? get value => convertValue(_proxyController.value);
   @override
-  set value(T? value) => _proxyManagement.value = deconvertValue(value);
+  set value(T? value) => _proxyController.value = deconvertValue(value);
   @override
   setValue(T? value, {bool trigger: true}) =>
-      _proxyManagement.setValue(deconvertValue(value), trigger: trigger);
+      _proxyController.setValue(deconvertValue(value), trigger: trigger);
   @override
-  String? get errorText => _proxyManagement.errorText;
+  String? get errorText => _proxyController.errorText;
   @override
-  bool get isValid => _proxyManagement.isValid;
+  bool get isValid => _proxyController.isValid;
   @override
-  String? quietlyValidate() => _proxyManagement.quietlyValidate();
+  String? quietlyValidate() => _proxyController.quietlyValidate();
   @override
-  void reset() => _proxyManagement.reset();
+  void reset() => _proxyController.reset();
   @override
-  bool validate() => _proxyManagement.validate();
+  bool validate() => _proxyController.validate();
   @override
   bool get isValueField => true;
   @override
-  void save() => _proxyManagement.save();
+  void save() => _proxyController.save();
   @override
   FormeModel? get currentDecoratorModel => delegate.currentDecoratorModel;
   @override
@@ -415,6 +460,11 @@ abstract class FormeProxyValueFieldManagementDelegate<T, E extends FormeModel,
   @override
   set decoratorModel(FormeModel decoratorModel) =>
       delegate.decoratorModel = decoratorModel;
+  @override
+  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier =>
+      delegate.errorTextNotifier;
+  @override
+  ReadOnlyValueNotifier<T?> get valueNotifier => delegate.valueNotifier;
 
   T? convertValue(M? value);
 

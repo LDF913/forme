@@ -12,7 +12,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
           child: FormeTextField(
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validateErrorListener: (field, errorText) {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                   decoration: InputDecoration(
                 labelStyle: TextStyle(
                   fontSize: 30,
@@ -32,69 +32,69 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
         Wrap(
           children: [
             createButton('update labelText', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(labelText: 'New Label Text'),
               ));
             }),
             createButton('update labelStyle', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(
                     labelStyle:
                         TextStyle(fontSize: 30, color: Colors.pinkAccent)),
               ));
             }),
             createButton('update style', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
               ));
             }),
             createButton('set helper text', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(helperText: 'helper text'),
               ));
             }),
             createButton('set prefix icon', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                   decoration: InputDecoration(
                       prefixIcon: IconButton(
                           onPressed: () {
-                            management.value = 'prefix icon';
+                            controller.value = 'prefix icon';
                             WidgetsBinding.instance!
                                 .addPostFrameCallback((timeStamp) {
-                              management.update(FormeTextFieldModel(
+                              controller.updateModel(FormeTextFieldModel(
                                 selection: FormeUtils.selection(
-                                    management.value!.length,
-                                    management.value!.length),
+                                    controller.value!.length,
+                                    controller.value!.length),
                               ));
                             });
                           },
                           icon: Icon(Icons.set_meal)))));
             }),
             createButton('set suffix icon', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                   decoration: InputDecoration(
                       suffixIcon: IconButton(
                           onPressed: () {
-                            management.value = '';
+                            controller.value = '';
                           },
                           icon: Icon(Icons.clear)))));
             }),
             createButton('set maxLines to 1', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 maxLines: 1,
               ));
             }),
             createButton('set maxLength to 10', () {
-              management.update(FormeTextFieldModel(
+              controller.updateModel(FormeTextFieldModel(
                 maxLength: 10,
               ));
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

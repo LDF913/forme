@@ -6,7 +6,7 @@ import '../forme_state_model.dart';
 /// a form field which can control visible of child
 ///
 /// ``` dart
-/// formeManagement.newFormeFieldManagement(nameOfVisibleField).model = FormeVisibleModel(visible:true|false);
+/// formeController.newFormeFieldController(nameOfVisibleField).model = FormeVisibleModel(visible:true|false);
 /// ```
 class FormeVisible extends CommonField<FormeVisibleModel> {
   FormeVisible({

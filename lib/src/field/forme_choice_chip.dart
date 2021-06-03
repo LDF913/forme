@@ -19,9 +19,10 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
     required List<FormeChipItem<T>>? items,
     FormeChoiceChipModel<T>? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<T, FormeChoiceChipModel<T>>>?
+            FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeChoiceChipModel<T>>>? focusListener,
+    FocusListener<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
@@ -40,7 +41,6 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
             bool readOnly = state.readOnly;
             FormeChoiceChipModel<T> model = state.model;
             List<FormeChipItem<T>> items = model.items!;
-            double? pressElevation = model.pressElevation;
             ChipThemeData chipThemeData =
                 model.chipThemeData ?? ChipTheme.of(state.context);
             List<Widget> chips = [];
@@ -51,7 +51,7 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
                 label: item.label,
                 avatar: item.avatar,
                 padding: item.padding,
-                pressElevation: pressElevation ?? item.pressElevation,
+                pressElevation: item.pressElevation,
                 tooltip: item.tooltip ?? item.tooltip,
                 materialTapTargetSize: item.materialTapTargetSize,
                 avatarBorder: item.avatarBorder ?? const CircleBorder(),
@@ -128,13 +128,11 @@ class _FormeChoiceChipState<T>
 
 class FormeChoiceChipModel<T> extends FormeModel {
   final List<FormeChipItem<T>>? items;
-  final double? pressElevation;
   final ChipThemeData? chipThemeData;
   final FormeWrapRenderData? wrapRenderData;
 
   FormeChoiceChipModel({
     this.items,
-    this.pressElevation,
     this.chipThemeData,
     this.wrapRenderData,
   });
@@ -144,7 +142,6 @@ class FormeChoiceChipModel<T> extends FormeModel {
     FormeChoiceChipModel<T> old = oldModel as FormeChoiceChipModel<T>;
     return FormeChoiceChipModel<T>(
       items: items ?? old.items,
-      pressElevation: pressElevation ?? old.pressElevation,
       chipThemeData:
           FormeRenderUtils.copyChipThemeData(old.chipThemeData, chipThemeData),
       wrapRenderData:

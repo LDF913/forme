@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../widget/forme_text_field_widget.dart';
 
 import '../forme_core.dart';
@@ -22,9 +22,10 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
     bool readOnly = false,
     FormeNumberFieldModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<num, FormeNumberFieldModel>>?
+            FormeValueFieldController<num, FormeNumberFieldModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeNumberFieldModel>>? focusListener,
+    FocusListener<FormeValueFieldController<num, FormeNumberFieldModel>>?
+        focusListener,
     Key? key,
   }) : super(
           focusListener: focusListener,
@@ -128,16 +129,11 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
           ? super.value!.toInt()
           : super.value!.toDouble();
 
-  void focusChange() {
-    setState(() {});
-  }
-
   @override
   void afterInitiation() {
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : initialValue.toString());
-    focusNode.addListener(focusChange);
   }
 
   @override
@@ -154,13 +150,18 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
 
   @override
   void dispose() {
-    focusNode.removeListener(focusChange);
     textEditingController.dispose();
     super.dispose();
   }
 
   void clearValue() {
     super.setValue(null);
+  }
+
+  @override
+  FormeNumberFieldModel beforeSetModel(
+      FormeNumberFieldModel old, FormeNumberFieldModel current) {
+    return beforeUpdateModel(old, current);
   }
 
   @override

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../widget/forme_text_field_widget.dart';
 import '../forme_core.dart';
 import '../forme_state_model.dart';
@@ -20,9 +20,10 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     bool readOnly = false,
     FormeTimeFieldModel? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<TimeOfDay, FormeTimeFieldModel>>?
+            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeTimeFieldModel>>? focusListener,
+    FocusListener<FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
@@ -119,6 +120,12 @@ class _FormeTimeFieldState
           value == null ? '' : current.formatter!(value!);
     }
     return current;
+  }
+
+  @override
+  FormeTimeFieldModel beforeSetModel(
+      FormeTimeFieldModel old, FormeTimeFieldModel current) {
+    return beforeUpdateModel(old, current);
   }
 }
 

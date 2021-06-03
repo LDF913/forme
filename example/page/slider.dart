@@ -24,22 +24,22 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
         Wrap(
           children: [
             createButton('set min to 20', () async {
-              management.update(FormeSliderModel(
+              controller.updateModel(FormeSliderModel(
                 min: 20,
               ));
             }),
             createButton('set max to 150', () async {
-              management.update(FormeSliderModel(
+              controller.updateModel(FormeSliderModel(
                 max: 150,
               ));
             }),
             createButton('set divisions to 5', () async {
-              management.update(FormeSliderModel(
+              controller.updateModel(FormeSliderModel(
                 divisions: 5,
               ));
             }),
             createButton('update theme data', () async {
-              management.update(FormeSliderModel(
+              controller.updateModel(FormeSliderModel(
                 sliderThemeData: SliderThemeData(
                   thumbColor: Colors.red,
                   activeTrackColor: Colors.green,
@@ -57,11 +57,11 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
               updateHelperStyle();
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

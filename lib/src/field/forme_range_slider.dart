@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../render/forme_render_utils.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../forme_state_model.dart';
 import 'forme_slider.dart';
 import '../forme_field.dart';
@@ -29,9 +29,11 @@ class FormeRangeSlider
     required double min,
     required double max,
     ValidateErrorListener<
-            FormeValueFieldManagement<RangeValues, FormeRangeSliderModel>>?
+            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeRangeSliderModel>>? focusListener,
+    FocusListener<
+            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
+        focusListener,
     Key? key,
   }) : super(
             focusListener: focusListener,
@@ -128,7 +130,7 @@ class _FormeRangeSliderState
     if (current.max == null) {
       current = current.copyWith(FormeRangeSliderModel(max: old.max));
     }
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

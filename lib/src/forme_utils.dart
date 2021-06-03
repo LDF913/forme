@@ -8,10 +8,11 @@ class FormeUtils {
   FormeUtils._();
 
   static bool compare(dynamic a, dynamic b) {
+    if (a == b) return true;
     if (a is List && b is List) return listEquals(a, b);
     if (a is Set && b is Set) return setEquals(a, b);
     if (a is Map && b is Map) return mapEquals(a, b);
-    return a == b;
+    return false;
   }
 
   static List<FormeChipItem<String>> toFormeChipItems(List<String> items,

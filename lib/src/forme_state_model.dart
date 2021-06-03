@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
-/// this model can be changed at runtime var[FormeFieldManagement.model]
+/// this model can be changed at runtime var[FormeFieldController.model]
 @immutable
 abstract class FormeModel {
   FormeModel copyWith(FormeModel old);

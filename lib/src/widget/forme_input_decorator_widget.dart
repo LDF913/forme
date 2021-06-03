@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../forme_field.dart';
+
 import '../render/forme_render_utils.dart';
+import '../forme_field.dart';
 import '../forme_state_model.dart';
 
 class FormeInputDecoratorModel extends FormeModel {
@@ -74,7 +75,7 @@ class _FormeInputDecoratorState extends State<FormeInputDecorator> {
   @override
   Widget build(BuildContext context) {
     return InputDecorator(
-      isEmpty: true,
+      isEmpty: false,
       isFocused: _focus,
       decoration: (model.decoration ?? const InputDecoration())
           .copyWith(errorText: _errorText),
@@ -82,7 +83,7 @@ class _FormeInputDecoratorState extends State<FormeInputDecorator> {
         onFocusChanged: _onFocusChanged,
         onErrorChanged: _onErrorChanged,
         child: widget.child,
-        management: FormeDecoratorModelManagement(
+        controller: FormeDecoratorModelController(
           model: model,
           updateModel: _updateModel,
           setModel: _setModel,

@@ -7,7 +7,7 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
   final String name = 'field';
   final FormeKey formKey = FormeKey();
 
-  FormeValueFieldManagement<T, E> get management => formKey.valueField(name);
+  FormeValueFieldController<T, E> get controller => formKey.valueField(name);
 
   String get title;
 
@@ -28,18 +28,18 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
   }
 
   void updateLabel() {
-    management.updateDecoratorModel(FormeInputDecoratorModel(
+    controller.updateDecoratorModel(FormeInputDecoratorModel(
         decoration: InputDecoration(labelText: 'New Label Text')));
   }
 
   void updateLabelStyle() {
-    management.updateDecoratorModel(FormeInputDecoratorModel(
+    controller.updateDecoratorModel(FormeInputDecoratorModel(
         decoration: InputDecoration(
             labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent))));
   }
 
   void updateHelperStyle() {
-    management.updateDecoratorModel(FormeInputDecoratorModel(
+    controller.updateDecoratorModel(FormeInputDecoratorModel(
         decoration: InputDecoration(helperText: 'helper text')));
   }
 

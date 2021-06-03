@@ -3,7 +3,7 @@ import '../render/forme_render_data.dart';
 import '../forme_core.dart';
 
 import '../forme_field.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../forme_state_model.dart';
 import 'forme_list_tile.dart';
 
@@ -19,9 +19,10 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
     bool readOnly = false,
     FormeRadioGroupModel<T>? model,
     ValidateErrorListener<
-            FormeValueFieldManagement<T, FormeRadioGroupModel<T>>>?
+            FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeRadioGroupModel<T>>>? focusListener,
+    FocusListener<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
@@ -35,11 +36,11 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
                 baseState as _FormeRadioGroupState<T>;
             bool readOnly = state.readOnly;
 
-            T? getValue(List<T> list) => state.management.convertValue(list);
+            T? getValue(List<T> list) => state.controller.convertValue(list);
 
             return FormeListTile<T>(
               type: FormeListTileType.Radio,
-              model: state.management.deconvertModel(state.widget.model),
+              model: state.controller.deconvertModel(state.widget.model),
               onSaved: onSaved == null ? null : (v) => onSaved(getValue(v)),
               autovalidateMode: autovalidateMode,
               initialValue: initialValue == null ? null : [initialValue],
@@ -50,14 +51,14 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
               onChanged: onChanged == null
                   ? null
                   : (m, o, c) =>
-                      onChanged(state.management, getValue(o), getValue(c)),
+                      onChanged(state.controller, getValue(o), getValue(c)),
               validateErrorListener: validateErrorListener == null
                   ? null
                   : (m, errorText) =>
-                      validateErrorListener(state.management, errorText),
+                      validateErrorListener(state.controller, errorText),
               focusListener: focusListener == null
                   ? null
-                  : (m, f) => focusListener(state.management, f),
+                  : (m, f) => focusListener(state.controller, f),
             );
           },
         );
@@ -69,24 +70,24 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
 class _FormeRadioGroupState<T>
     extends ValueFieldState<T, FormeRadioGroupModel<T>> {
   @override
-  _ProxyManagement<T> get management => super.management as _ProxyManagement<T>;
+  _ProxyController<T> get controller => super.controller as _ProxyController<T>;
 
   @override
-  FormeValueFieldManagement<T, FormeRadioGroupModel<T>>
-      createFormeFieldManagement() {
-    return _ProxyManagement(super.createFormeFieldManagement());
+  FormeValueFieldController<T, FormeRadioGroupModel<T>>
+      createFormeFieldController() {
+    return _ProxyController(super.createFormeFieldController());
   }
 }
 
-class _ProxyManagement<T> extends FormeProxyValueFieldManagementDelegate<
+class _ProxyController<T> extends FormeProxyValueFieldControllerDelegate<
         T,
         FormeRadioGroupModel<T>,
         List<T>,
         FormeListTileModel<T>,
-        FormeValueFieldManagement<List<T>, FormeListTileModel<T>>>
-    implements FormeValueFieldManagement<T, FormeRadioGroupModel<T>> {
-  _ProxyManagement(
-      FormeValueFieldManagement<T, FormeRadioGroupModel<T>> delegate)
+        FormeValueFieldController<List<T>, FormeListTileModel<T>>>
+    implements FormeValueFieldController<T, FormeRadioGroupModel<T>> {
+  _ProxyController(
+      FormeValueFieldController<T, FormeRadioGroupModel<T>> delegate)
       : super(delegate);
   @override
   FormeRadioGroupModel<T> convertModel(FormeListTileModel<T> model) =>

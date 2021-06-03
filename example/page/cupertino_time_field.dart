@@ -1,51 +1,43 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+
 import 'package:forme/forme.dart';
 
 import 'base_page.dart';
 
-class DateRangeFieldPage
-    extends BasePage<DateTimeRange, FormeDateRangeFieldModel> {
+class CupertinoTimerFieldPage
+    extends BasePage<Duration, FormeCupertinoTimerFieldModel> {
   @override
   Widget get body {
     return Column(
       children: [
         FormeTextFieldOnTapProxyWidget(
-          child: FormeDateRangeField(
+          child: FormeCupertinoTimerField(
             autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
-            model: FormeDateRangeFieldModel(
+            model: FormeCupertinoTimerFieldModel(
                 textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'DateRange'),
+              decoration: InputDecoration(labelText: 'Cupertino Timer'),
             )),
-            validator: (value) => value == null ? 'select a date range!' : null,
+            validator: (value) => value == null ? 'select a duration!' : null,
           ),
         ),
         Wrap(
           children: [
-            createButton('set firstDate to tomorrow', () async {
-              DateTime now = DateTime.now();
-              controller.updateModel(FormeDateRangeFieldModel(
-                firstDate: DateTime(now.year, now.month, now.day + 1),
+            createButton('change mode to ms', () async {
+              controller.updateModel(FormeCupertinoTimerFieldModel(
+                mode: CupertinoTimerPickerMode.ms,
               ));
             }),
-            createButton('set lastDate to next month', () async {
-              DateTime now = DateTime.now();
-              controller.updateModel(FormeDateRangeFieldModel(
-                lastDate: DateTime(now.year, now.month + 1, now.day),
-              ));
-            }),
-            createButton('change picker entry mode', () async {
-              controller.updateModel(FormeDateRangeFieldModel(
-                initialEntryMode: DatePickerEntryMode.input,
-              ));
-            }),
-            createButton('change formatter', () async {
-              controller.updateModel(FormeDateRangeFieldModel(
-                formatter: (range) => range.toString(),
+            createButton('update', () async {
+              controller.updateModel(FormeCupertinoTimerFieldModel(
+                minuteInterval: 10,
+                secondInterval: 10,
+                backgroundColor: Colors.purple.withOpacity(0.3),
               ));
             }),
             createButton('update labelText', () async {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelText: 'New Label Text',
@@ -53,7 +45,7 @@ class DateRangeFieldPage
               )));
             }),
             createButton('update labelStyle', () {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent),
@@ -61,13 +53,13 @@ class DateRangeFieldPage
               )));
             }),
             createButton('update style', () {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 style: TextStyle(fontSize: 20, color: Colors.purpleAccent),
               )));
             }),
             createButton('set helper text', () {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   helperText: 'helper text',
@@ -75,23 +67,20 @@ class DateRangeFieldPage
               )));
             }),
             createButton('set prefix icon', () {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   prefixIcon: IconButton(
                     icon: Icon(Icons.timer),
                     onPressed: () {
-                      DateTime now = DateTime.now();
-                      controller.value = DateTimeRange(
-                          start: now,
-                          end: DateTime(now.year, now.month + 1, now.day));
+                      controller.value = Duration(minutes: 72);
                     },
                   ),
                 ),
               )));
             }),
             createButton('set suffix icon', () {
-              controller.updateModel(FormeDateRangeFieldModel(
+              controller.updateModel(FormeCupertinoTimerFieldModel(
                   textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(
                   suffixIcon: IconButton(
@@ -119,5 +108,5 @@ class DateRangeFieldPage
   }
 
   @override
-  String get title => 'FormeTimeField';
+  String get title => 'FormeCupertinoTimerField';
 }

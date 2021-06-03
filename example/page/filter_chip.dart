@@ -26,12 +26,12 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
           Wrap(
             children: [
               createButton('set selectable count to 1', () async {
-                management.update(FormeFilterChipModel<String>(
+                controller.updateModel(FormeFilterChipModel<String>(
                   count: 1,
                 ));
               }),
               createButton('update items', () async {
-                management.update(FormeFilterChipModel<String>(
+                controller.updateModel(FormeFilterChipModel<String>(
                   items: FormeUtils.toFormeChipItems(['java', 'c#', 'python']),
                 ));
               }),
@@ -45,11 +45,11 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
                 updateHelperStyle();
               }),
               createButton('validate', () {
-                management.validate();
+                controller.validate();
               }),
               Builder(builder: (context) {
                 return createButton('quietly validate', () {
-                  String? error = management.quietlyValidate();
+                  String? error = controller.quietlyValidate();
                   if (error != null) showError(context, error);
                 });
               }),

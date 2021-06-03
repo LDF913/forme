@@ -41,12 +41,12 @@ class RadioTileFieldPage
         Wrap(
           children: [
             createButton('update items', () async {
-              management.update(FormeRadioGroupModel<String>(
+              controller.updateModel(FormeRadioGroupModel<String>(
                   items: FormeUtils.toFormeListTileItems(
                       ['flutter', 'dart', 'pub'])));
             }),
             createButton('to List Tile', () async {
-              management.update(FormeRadioGroupModel<String>(split: 1));
+              controller.updateModel(FormeRadioGroupModel<String>(split: 1));
             }),
             createButton('update labelText', () async {
               updateLabel();
@@ -58,11 +58,11 @@ class RadioTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../render/forme_render_utils.dart';
-import '../forme_management.dart';
+import '../forme_controller.dart';
 import '../forme_state_model.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
@@ -20,9 +20,10 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
     required double min,
     required double max,
     FormeSliderModel? model,
-    ValidateErrorListener<FormeValueFieldManagement<double, FormeSliderModel>>?
+    ValidateErrorListener<FormeValueFieldController<double, FormeSliderModel>>?
         validateErrorListener,
-    FocusListener<FormeFieldManagement<FormeSliderModel>>? focusListener,
+    FocusListener<FormeValueFieldController<double, FormeSliderModel>>?
+        focusListener,
     Key? key,
   }) : super(
           key: key,
@@ -110,7 +111,7 @@ class _FormeSliderState
     if (current.max == null) {
       current = current.copyWith(FormeSliderModel(max: old.max));
     }
-    return current;
+    return beforeUpdateModel(old, current);
   }
 }
 

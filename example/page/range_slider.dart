@@ -25,22 +25,22 @@ class RangeSliderFieldPage
         Wrap(
           children: [
             createButton('set min to 20', () async {
-              management.update(FormeRangeSliderModel(
+              controller.updateModel(FormeRangeSliderModel(
                 min: 20,
               ));
             }),
             createButton('set max to 150', () async {
-              management.update(FormeRangeSliderModel(
+              controller.updateModel(FormeRangeSliderModel(
                 max: 150,
               ));
             }),
             createButton('set divisions to 5', () async {
-              management.update(FormeRangeSliderModel(
+              controller.updateModel(FormeRangeSliderModel(
                 divisions: 5,
               ));
             }),
             createButton('update theme data', () async {
-              management.update(FormeRangeSliderModel(
+              controller.updateModel(FormeRangeSliderModel(
                 sliderThemeData: SliderThemeData(
                   thumbColor: Colors.red,
                   activeTrackColor: Colors.green,
@@ -58,11 +58,11 @@ class RangeSliderFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),

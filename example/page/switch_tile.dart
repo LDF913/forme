@@ -42,12 +42,12 @@ class SwitchTileFieldPage
         Wrap(
           children: [
             createButton('update items', () async {
-              management.update(FormeListTileModel<String>(
+              controller.updateModel(FormeListTileModel<String>(
                   items: FormeUtils.toFormeListTileItems(
                       ['flutter', 'dart', 'pub'])));
             }),
             createButton('to List Tile', () async {
-              management.update(FormeListTileModel<String>(split: 1));
+              controller.updateModel(FormeListTileModel<String>(split: 1));
             }),
             createButton('update labelText', () async {
               updateLabel();
@@ -59,11 +59,11 @@ class SwitchTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              management.validate();
+              controller.validate();
             }),
             Builder(builder: (context) {
               return createButton('quietly validate', () {
-                String? error = management.quietlyValidate();
+                String? error = controller.quietlyValidate();
                 if (error != null) showError(context, error);
               });
             }),
