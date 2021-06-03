@@ -6,6 +6,8 @@ a powerful flutter form widget , for me,for you
 
 ![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-2-4c5414cc2d89.gif)
 
+![screenshot2](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-3-fe95b1d8ade9.gif)
+
 ## Simple Usage 
 
 ``` dart
