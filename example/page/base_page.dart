@@ -28,19 +28,23 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
   }
 
   void updateLabel() {
-    controller.updateDecoratorModel(FormeInputDecoratorModel(
-        decoration: InputDecoration(labelText: 'New Label Text')));
+    controller.getFormeDecoratorController<FormeInputDecoratorModel>()?.update(
+        FormeInputDecoratorModel(
+            decoration: InputDecoration(labelText: 'New Label Text')));
   }
 
   void updateLabelStyle() {
-    controller.updateDecoratorModel(FormeInputDecoratorModel(
-        decoration: InputDecoration(
-            labelStyle: TextStyle(fontSize: 30, color: Colors.pinkAccent))));
+    controller.getFormeDecoratorController<FormeInputDecoratorModel>()?.update(
+        FormeInputDecoratorModel(
+            decoration: InputDecoration(
+                labelStyle:
+                    TextStyle(fontSize: 30, color: Colors.pinkAccent))));
   }
 
   void updateHelperStyle() {
-    controller.updateDecoratorModel(FormeInputDecoratorModel(
-        decoration: InputDecoration(helperText: 'helper text')));
+    controller.getFormeDecoratorController<FormeInputDecoratorModel>()?.update(
+        FormeInputDecoratorModel(
+            decoration: InputDecoration(helperText: 'helper text')));
   }
 
   @override

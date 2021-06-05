@@ -10,6 +10,7 @@ class SwitchTileFieldPage
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Switch Tile'),
           child: FormeListTile<String>(
             items: [

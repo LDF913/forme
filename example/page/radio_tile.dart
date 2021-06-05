@@ -10,6 +10,7 @@ class RadioTileFieldPage
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Radio Tile'),
           child: FormeRadioGroup<String>(
             items: [

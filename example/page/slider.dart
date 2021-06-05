@@ -9,6 +9,7 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Slider'),
           child: FormeSlider(
             min: 1,

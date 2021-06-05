@@ -9,6 +9,7 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Choice Chip'),
           child: FormeChoiceChip<String>(
             autovalidateMode: AutovalidateMode.onUserInteraction,

@@ -343,6 +343,7 @@ class _DemoPageState extends State<DemoPage> {
           height: 20,
         ),
         FormeInputDecorator(
+          name: 'filterChip',
           decoration: InputDecoration(
               labelText: 'Filter Chip', border: InputBorder.none),
           child: FormeFilterChip(
@@ -355,6 +356,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ),
         FormeInputDecorator(
+          name: 'choiceChip',
           decoration: InputDecoration(
             labelText: 'Choice Chip',
             border: InputBorder.none,
@@ -376,6 +378,7 @@ class _DemoPageState extends State<DemoPage> {
         FormeVisible(
           name: 'sliderVisible',
           child: FormeInputDecorator(
+            name: 'slider',
             child: FormeSlider(
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (value) {
@@ -415,6 +418,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ),
         FormeInputDecorator(
+          name: 'rangeSlider',
           child: FormeRangeSlider(
             name: 'rangeSlider',
             min: 1,
@@ -430,11 +434,13 @@ class _DemoPageState extends State<DemoPage> {
           children: [],
         ),
         FormeInputDecorator(
+          name: 'cupertinoPicker',
           decoration: InputDecoration(labelText: 'CupertinoPicker'),
           child: FormeCupertinoPicker(
               validator: (value) => value < 100
                   ? 'value must bigger than 100,current is $value'
                   : null,
+              name: 'cupertinoPicker',
               autovalidateMode: AutovalidateMode.onUserInteraction,
               initialValue: 50,
               itemExtent: 50,
@@ -442,6 +448,7 @@ class _DemoPageState extends State<DemoPage> {
                   1000, (index) => Text(index.toString()))),
         ),
         FormeInputDecorator(
+          name: 'radioGroup',
           decoration:
               InputDecoration(labelText: 'Radios', border: InputBorder.none),
           child: FormeRadioGroup<String>(
@@ -461,6 +468,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ),
         FormeInputDecorator(
+          name: 'checkboxTile',
           decoration: InputDecoration(
               labelText: 'Checkbox Tile', border: InputBorder.none),
           child: FormeListTile(
@@ -471,7 +479,14 @@ class _DemoPageState extends State<DemoPage> {
                   secondary: OutlinedButton(
                     child: Text("Say Hi"),
                     onPressed: () {
-                      print("Say Hello");
+                      formKey
+                          .valueField('checkboxTile')
+                          .getFormeDecoratorController<
+                              FormeInputDecoratorModel>()
+                          ?.update(
+                            FormeInputDecoratorModel(
+                                decoration: InputDecoration(labelText: 'xxx')),
+                          );
                     },
                   ),
                   data: 'Checkbox 1'),
@@ -499,6 +514,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ),
         FormeInputDecorator(
+          name: 'switchTile',
           decoration: InputDecoration(
             labelText: 'Switch Tile',
           ),
@@ -541,6 +557,7 @@ class _DemoPageState extends State<DemoPage> {
           Flexible(
             flex: 1,
             child: FormeInputDecorator(
+              name: 'testSlider',
               decoration: InputDecoration(
                   labelText: 'Switch Tile', border: InputBorder.none),
               child: FormeSlider(

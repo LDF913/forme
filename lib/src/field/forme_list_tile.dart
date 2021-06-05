@@ -39,7 +39,7 @@ class FormeListTileItem<T> {
         this.padding = padding ?? EdgeInsets.zero;
 }
 
-enum FormeListTileType { Checkbox, Switch, Radio }
+enum FormeListTileType { Checkbox, Switch }
 
 class FormeListTile<T>
     extends NonnullValueField<List<T>, FormeListTileModel<T>> {
@@ -83,8 +83,6 @@ class FormeListTile<T>
                   state.model.listTileRenderData;
               FormeCheckboxRenderData? checkboxRenderData =
                   state.model.checkboxRenderData;
-              FormeRadioRenderData? radioRenderData =
-                  state.model.radioRenderData;
               FormeSwitchRenderData? switchRenderData =
                   state.model.switchRenderData;
 
@@ -92,41 +90,16 @@ class FormeListTile<T>
 
               void changeValue(T value) {
                 state.requestFocus();
-                switch (type) {
-                  case FormeListTileType.Checkbox:
-                  case FormeListTileType.Switch:
-                    List<T> values = List.of(state.value);
-                    if (!values.remove(value)) {
-                      values.add(value);
-                    }
-                    state.didChange(values);
-                    break;
-                  case FormeListTileType.Radio:
-                    state.didChange([value]);
-                    break;
+                List<T> values = List.of(state.value);
+                if (!values.remove(value)) {
+                  values.add(value);
                 }
+                state.didChange(values);
               }
 
               Widget createFormeListTileItem(
                   FormeListTileItem item, bool selected, bool readOnly) {
                 switch (type) {
-                  case FormeListTileType.Radio:
-                    return RadioListTile<T>(
-                      shape: radioRenderData?.shape,
-                      tileColor: radioRenderData?.tileColor,
-                      selectedTileColor: radioRenderData?.selectedTileColor,
-                      activeColor: radioRenderData?.activeColor,
-                      secondary: item.secondary,
-                      subtitle: item.subtitle,
-                      groupValue: state.value.isEmpty ? null : state.value[0],
-                      controlAffinity: item.controlAffinity,
-                      contentPadding: item.padding,
-                      dense: item.dense,
-                      title: item.title,
-                      value: item.data,
-                      onChanged:
-                          readOnly ? null : (v) => changeValue(item.data),
-                    );
                   case FormeListTileType.Checkbox:
                     return CheckboxListTile(
                       shape: checkboxRenderData?.shape,
@@ -185,14 +158,6 @@ class FormeListTile<T>
                             ? null
                             : (v) => changeValue(item.data),
                         switchRenderData);
-                  case FormeListTileType.Radio:
-                    return FormeRenderUtils.radio<T>(
-                        item.data,
-                        state.value.isEmpty ? null : state.value[0],
-                        readOnly || item.readOnly
-                            ? null
-                            : (v) => changeValue(item.data),
-                        radioRenderData);
                 }
               }
 

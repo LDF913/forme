@@ -10,6 +10,7 @@ class CheckboxTileFieldPage
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Checkbox Tile'),
           child: FormeListTile<String>(
             items: [

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../render/forme_render_data.dart';
-import '../forme_core.dart';
-
-import '../forme_field.dart';
 import '../forme_controller.dart';
+import '../render/forme_render_data.dart';
+import '../render/forme_render_utils.dart';
+
 import '../forme_state_model.dart';
+import '../forme_field.dart';
+import '../forme_core.dart';
 import 'forme_list_tile.dart';
 
 class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
-    required List<FormeListTileItem<T>> items,
     FormeFieldValueChanged<T, FormeRadioGroupModel<T>>? onChanged,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
@@ -17,6 +17,7 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
     FormFieldSetter<T>? onSaved,
     String? name,
     bool readOnly = false,
+    required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,
     ValidateErrorListener<
             FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
@@ -25,43 +26,148 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
         focusListener,
     Key? key,
   }) : super(
-          key: key,
-          model: (model ?? FormeRadioGroupModel<T>())
-              .copyWith(FormeRadioGroupModel<T>(
-            items: items,
-          )),
-          name: name,
-          builder: (baseState) {
-            _FormeRadioGroupState<T> state =
-                baseState as _FormeRadioGroupState<T>;
-            bool readOnly = state.readOnly;
+            focusListener: focusListener,
+            validateErrorListener: validateErrorListener,
+            key: key,
+            model: (model ?? FormeRadioGroupModel<T>())
+                .copyWith(FormeRadioGroupModel(items: items)),
+            readOnly: readOnly,
+            name: name,
+            onChanged: onChanged,
+            onSaved: onSaved,
+            autovalidateMode: autovalidateMode,
+            initialValue: initialValue,
+            validator: validator,
+            builder: (state) {
+              bool readOnly = state.readOnly;
+              int split = state.model.split ?? 2;
+              List<FormeListTileItem<T>> items = state.model.items ?? [];
 
-            T? getValue(List<T> list) => state.controller.convertValue(list);
+              FormeListTileRenderData? listTileRenderData =
+                  state.model.listTileRenderData;
+              FormeRadioRenderData? radioRenderData =
+                  state.model.radioRenderData;
 
-            return FormeListTile<T>(
-              type: FormeListTileType.Radio,
-              model: state.controller.deconvertModel(state.widget.model),
-              onSaved: onSaved == null ? null : (v) => onSaved(getValue(v)),
-              autovalidateMode: autovalidateMode,
-              initialValue: initialValue == null ? null : [initialValue],
-              validator:
-                  validator == null ? null : (v) => validator(getValue(v)),
-              items: items,
-              readOnly: readOnly,
-              onChanged: onChanged == null
-                  ? null
-                  : (m, o, c) =>
-                      onChanged(state.controller, getValue(o), getValue(c)),
-              validateErrorListener: validateErrorListener == null
-                  ? null
-                  : (m, errorText) =>
-                      validateErrorListener(state.controller, errorText),
-              focusListener: focusListener == null
-                  ? null
-                  : (m, f) => focusListener(state.controller, f),
-            );
-          },
-        );
+              List<Widget> wrapWidgets = [];
+
+              void changeValue(T value) {
+                state.didChange(value);
+                state.requestFocus();
+              }
+
+              Widget createFormeListTileItem(
+                  FormeListTileItem item, bool selected, bool readOnly) {
+                return RadioListTile<T>(
+                  shape: radioRenderData?.shape,
+                  tileColor: radioRenderData?.tileColor,
+                  selectedTileColor: radioRenderData?.selectedTileColor,
+                  activeColor: radioRenderData?.activeColor,
+                  secondary: item.secondary,
+                  subtitle: item.subtitle,
+                  groupValue: state.value,
+                  controlAffinity: item.controlAffinity,
+                  contentPadding: item.padding,
+                  dense: item.dense,
+                  title: item.title,
+                  value: item.data,
+                  onChanged: readOnly ? null : (v) => changeValue(item.data),
+                );
+              }
+
+              Widget createCommonItem(
+                  FormeListTileItem item, bool selected, bool readOnly) {
+                return FormeRenderUtils.radio<T>(
+                    item.data,
+                    state.value,
+                    readOnly || item.readOnly
+                        ? null
+                        : (v) => changeValue(item.data),
+                    radioRenderData);
+              }
+
+              for (int i = 0; i < items.length; i++) {
+                FormeListTileItem<T> item = items[i];
+                bool isReadOnly = readOnly || item.readOnly;
+                bool selected = state.value == item.data;
+                if (split > 0) {
+                  double factor = 1 / split;
+                  if (factor == 1) {
+                    wrapWidgets.add(
+                        createFormeListTileItem(item, selected, isReadOnly));
+                    continue;
+                  }
+                }
+
+                Widget tileItem = createCommonItem(item, selected, readOnly);
+
+                final Widget title = split == 0
+                    ? item.title
+                    : Flexible(
+                        child: item.title,
+                      );
+
+                List<Widget> children;
+                switch (item.controlAffinity) {
+                  case ListTileControlAffinity.leading:
+                    children = [tileItem, title];
+                    break;
+                  default:
+                    children = [title, tileItem];
+                    break;
+                }
+
+                Row tileItemRow = Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: children,
+                );
+
+                Widget groupItemWidget = Padding(
+                  padding: item.padding,
+                  child: InkWell(
+                      borderRadius:
+                          const BorderRadius.all(Radius.circular(4.0)),
+                      onTap: isReadOnly
+                          ? null
+                          : () {
+                              changeValue(item.data);
+                            },
+                      child: tileItemRow),
+                );
+
+                bool visible = item.visible;
+                if (split <= 0) {
+                  wrapWidgets.add(Visibility(
+                    child: groupItemWidget,
+                    visible: visible,
+                  ));
+                  if (visible && i < items.length - 1)
+                    wrapWidgets.add(SizedBox(
+                      width: 8.0,
+                    ));
+                } else {
+                  double factor = item.ignoreSplit ? 1 : 1 / split;
+                  wrapWidgets.add(Visibility(
+                    child: FractionallySizedBox(
+                      widthFactor: factor,
+                      child: groupItemWidget,
+                    ),
+                    visible: visible,
+                  ));
+                }
+              }
+
+              Widget child = FormeRenderUtils.wrap(
+                  state.model.wrapRenderData, wrapWidgets);
+              if (split == 1) {
+                child = FormeRenderUtils.mergeListTileTheme(
+                    child, listTileRenderData);
+              }
+
+              return Focus(
+                focusNode: state.focusNode,
+                child: child,
+              );
+            });
 
   @override
   _FormeRadioGroupState<T> createState() => _FormeRadioGroupState();
@@ -70,51 +176,24 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
 class _FormeRadioGroupState<T>
     extends ValueFieldState<T, FormeRadioGroupModel<T>> {
   @override
-  _ProxyController<T> get controller => super.controller as _ProxyController<T>;
-
-  @override
-  FormeValueFieldController<T, FormeRadioGroupModel<T>>
-      createFormeFieldController() {
-    return _ProxyController(super.createFormeFieldController());
+  FormeRadioGroupModel<T> beforeUpdateModel(
+      FormeRadioGroupModel<T> old, FormeRadioGroupModel<T> current) {
+    if (value == null) return current;
+    if (current.items != null &&
+        !current.items!.any((element) => element.data == value)) {
+      setValue(null);
+    }
+    return current;
   }
-}
-
-class _ProxyController<T> extends FormeProxyValueFieldControllerDelegate<
-        T,
-        FormeRadioGroupModel<T>,
-        List<T>,
-        FormeListTileModel<T>,
-        FormeValueFieldController<List<T>, FormeListTileModel<T>>>
-    implements FormeValueFieldController<T, FormeRadioGroupModel<T>> {
-  _ProxyController(
-      FormeValueFieldController<T, FormeRadioGroupModel<T>> delegate)
-      : super(delegate);
-  @override
-  FormeRadioGroupModel<T> convertModel(FormeListTileModel<T> model) =>
-      FormeRadioGroupModel<T>(
-        items: model.items,
-        radioRenderData: model.radioRenderData,
-        wrapRenderData: model.wrapRenderData,
-        split: model.split,
-        listTileRenderData: model.listTileRenderData,
-      );
 
   @override
-  T? convertValue(List<T>? value) =>
-      value == null || value.isEmpty ? null : value.first;
-
-  @override
-  FormeListTileModel<T> deconvertModel(FormeRadioGroupModel<T> model) =>
-      FormeListTileModel<T>(
-        items: model.items,
-        wrapRenderData: model.wrapRenderData,
-        radioRenderData: model.radioRenderData,
-        listTileRenderData: model.listTileRenderData,
-        split: model.split,
-      );
-
-  @override
-  List<T>? deconvertValue(T? value) => value == null ? [] : [value];
+  FormeRadioGroupModel<T> beforeSetModel(
+      FormeRadioGroupModel<T> old, FormeRadioGroupModel<T> current) {
+    if (current.items == null) {
+      current = current.copyWith(FormeRadioGroupModel<T>(items: old.items));
+    }
+    return beforeUpdateModel(old, current);
+  }
 }
 
 class FormeRadioGroupModel<T> extends FormeModel {

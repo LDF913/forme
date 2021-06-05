@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'forme_field.dart';
 
 import '../forme.dart';
 import 'forme_state_model.dart';
+import 'widget/forme_field_decorator.dart';
 
 /// base form controller
 ///
@@ -33,6 +33,18 @@ abstract class FormeController {
   /// **when you override this method,
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
   T valueField<T extends FormeValueFieldController>(String name);
+
+  /// notifiers of form field's focus|errorText|value
+  ///
+  ///
+  /// **unlike [FormeFieldController]'s notifier , this controller's notifier will auto find last alived [FormeFieldController] by name,
+  /// in another words , this controller's lifestyle is same as form,but [FormeFieldController]'s lifecycle is same as field,
+  /// so it's safe to use this controller out of form field**
+  ///
+  /// **do not use this notifier out of forme**
+  ///
+  /// see [FormeInputDecorator]
+  FormeFieldNotifier<T> fieldNotifier<T>(String name);
 
   /// get form data
   ///
@@ -169,6 +181,8 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// focus listenable
   ///
   /// it's lifecycle is same as field
+  ///
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
   ReadOnlyValueNotifier<bool> get focusNotifier;
 
   static T of<T extends FormeFieldController>(BuildContext context) {
@@ -217,29 +231,19 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// trigger save listener
   void save();
 
-  /// set decorator model
+  /// get forme decorator controller
   ///
-  /// see [FormeInputDecorator]
-  set decoratorModel(FormeModel model);
-
-  /// get current decorator model;
-  ///
-  /// if you field not wrapped by any FormeDecorator ,this method will return null
-  /// see [FormeInputDecorator]
-  FormeModel? get currentDecoratorModel;
-
-  /// update a decorator model
-  ///
-  /// no need to call `model.copyWith(oldModel)` manually
-  ///
-  /// see [FormeInputDecorator]
-  void updateDecoratorModel(FormeModel model);
+  /// maybe null if field not wrapped by a [FormeDecorator]
+  FormeDecoratorController<T>?
+      getFormeDecoratorController<T extends FormeModel>();
 
   /// get error listenable
   ///
   /// it's useful when you want to display error by your custom way!
   ///
   /// this notifier is used for [ValueListenableBuilder]
+  ///
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
   ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier;
 
   /// get value listenable
@@ -263,6 +267,8 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// ```
   ///
   /// this notifier is used for [ValueListenableBuilder]
+  ///
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
   ReadOnlyValueNotifier<T?> get valueNotifier;
 }
 
@@ -308,12 +314,10 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
   ReadOnlyValueNotifier<bool> get focusNotifier => delegate.focusNotifier;
 }
 
-class FormeValueFieldControllerDelegate<T, E extends FormeModel>
+abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
     extends FormeFieldControllerDelegate<E>
     implements FormeValueFieldController<T, E> {
-  final FormeValueFieldController<T, E> delegate;
-
-  FormeValueFieldControllerDelegate(this.delegate);
+  FormeValueFieldController<T, E> get delegate;
 
   @override
   T? get value => delegate.value;
@@ -335,138 +339,12 @@ class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   @override
   void save() => delegate.save();
   @override
-  FormeModel? get currentDecoratorModel => delegate.currentDecoratorModel;
-  @override
-  void updateDecoratorModel(FormeModel decoratorModel) =>
-      delegate.updateDecoratorModel(decoratorModel);
-  @override
-  set decoratorModel(FormeModel decoratorModel) =>
-      delegate.decoratorModel = decoratorModel;
+  FormeDecoratorController<T>?
+      getFormeDecoratorController<T extends FormeModel>() =>
+          delegate.getFormeDecoratorController<T>();
   @override
   ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier =>
       delegate.errorTextNotifier;
   @override
   ReadOnlyValueNotifier<T?> get valueNotifier => delegate.valueNotifier;
-}
-
-abstract class FormeProxyFieldController<
-    E extends FormeModel,
-    N extends FormeModel,
-    K extends FormeFieldController<N>> implements FormeFieldController<E> {
-  set proxyController(K proxyController);
-}
-
-/// proxy value field controller
-/// [FormeRadioGroup]
-abstract class FormeProxyValueFieldController<T, E extends FormeModel, M,
-        N extends FormeModel, K extends FormeValueFieldController<M, N>>
-    implements
-        FormeValueFieldController<T, E>,
-        FormeProxyFieldController<E, N, K> {}
-
-/// an proxy controller
-abstract class FormeProxyFieldControllerDelegate<E extends FormeModel,
-        N extends FormeModel, K extends FormeFieldController<N>>
-    implements FormeProxyFieldController<E, N, K> {
-  final FormeFieldController<E> delegate;
-  FormeProxyFieldControllerDelegate(this.delegate);
-  late K _proxyController;
-  @override
-  set proxyController(K proxyController) {
-    _proxyController = proxyController;
-  }
-
-  @protected
-  K get proxyController => _proxyController;
-
-  @override
-  String? get name => delegate.name;
-  @override
-  set model(E model) => _proxyController.model = deconvertModel(model);
-  @override
-  updateModel(E model) => _proxyController.updateModel(deconvertModel(model));
-  @override
-  E get model => convertModel(_proxyController.model);
-  @override
-  FormeController get controller => delegate.controller;
-  @override
-  bool get isValueField => false;
-  @override
-  bool get readOnly => delegate.readOnly;
-  @override
-  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
-  @override
-  Future<void> ensureVisible(
-          {Duration? duration,
-          Curve? curve,
-          ScrollPositionAlignmentPolicy? alignmentPolicy,
-          double? alignment}) =>
-      delegate.ensureVisible(
-          duration: duration,
-          curve: curve,
-          alignment: alignment,
-          alignmentPolicy: alignmentPolicy);
-  @override
-  set focus(bool focus) => _proxyController.focus = focus;
-  @override
-  bool get focusable => _proxyController.focusable;
-  @override
-  bool get hasFocus => _proxyController.hasFocus;
-  @override
-  ReadOnlyValueNotifier<bool> get focusNotifier => delegate.focusNotifier;
-
-  N deconvertModel(E model);
-
-  E convertModel(N model);
-}
-
-abstract class FormeProxyValueFieldControllerDelegate<T, E extends FormeModel,
-        M, N extends FormeModel, K extends FormeValueFieldController<M, N>>
-    extends FormeProxyFieldControllerDelegate<E, N, K>
-    implements FormeProxyValueFieldController<T, E, M, N, K> {
-  FormeProxyValueFieldControllerDelegate(
-      FormeValueFieldController<T, E> delegate)
-      : super(delegate);
-  @override
-  FormeValueFieldController<T, E> get delegate =>
-      super.delegate as FormeValueFieldController<T, E>;
-
-  @override
-  T? get value => convertValue(_proxyController.value);
-  @override
-  set value(T? value) => _proxyController.value = deconvertValue(value);
-  @override
-  setValue(T? value, {bool trigger: true}) =>
-      _proxyController.setValue(deconvertValue(value), trigger: trigger);
-  @override
-  String? get errorText => _proxyController.errorText;
-  @override
-  bool get isValid => _proxyController.isValid;
-  @override
-  String? quietlyValidate() => _proxyController.quietlyValidate();
-  @override
-  void reset() => _proxyController.reset();
-  @override
-  bool validate() => _proxyController.validate();
-  @override
-  bool get isValueField => true;
-  @override
-  void save() => _proxyController.save();
-  @override
-  FormeModel? get currentDecoratorModel => delegate.currentDecoratorModel;
-  @override
-  void updateDecoratorModel(FormeModel decoratorModel) =>
-      delegate.updateDecoratorModel(decoratorModel);
-  @override
-  set decoratorModel(FormeModel decoratorModel) =>
-      delegate.decoratorModel = decoratorModel;
-  @override
-  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier =>
-      delegate.errorTextNotifier;
-  @override
-  ReadOnlyValueNotifier<T?> get valueNotifier => delegate.valueNotifier;
-
-  T? convertValue(M? value);
-
-  M? deconvertValue(T? value);
 }

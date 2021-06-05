@@ -10,6 +10,7 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
       return Column(
         children: [
           FormeInputDecorator(
+            name: name,
             decoration: InputDecoration(labelText: 'Filter Chip'),
             child: FormeFilterChip<String>(
               autovalidateMode: AutovalidateMode.onUserInteraction,

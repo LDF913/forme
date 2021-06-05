@@ -10,6 +10,7 @@ class RangeSliderFieldPage
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'Slider'),
           child: FormeRangeSlider(
             min: 1,

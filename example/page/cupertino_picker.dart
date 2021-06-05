@@ -10,6 +10,7 @@ class CupertinoPickerFieldPage
     return Column(
       children: [
         FormeInputDecorator(
+          name: name,
           decoration: InputDecoration(labelText: 'CupertinoPicker'),
           child: FormeCupertinoPicker(
               validator: (value) => value < 100

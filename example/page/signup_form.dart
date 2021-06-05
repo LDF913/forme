@@ -33,6 +33,9 @@ class _SignUpScreenState extends State<SignupFormPage> {
             width: _width,
             margin: EdgeInsets.only(bottom: 5),
             child: Forme(
+              onWillPop: () async {
+                return true;
+              },
               key: formeKey,
               child: SingleChildScrollView(
                 child: Column(
@@ -225,7 +228,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
                 Builder(builder: (context) {
                   return ValueListenableBuilder<Optional<String>?>(
                       valueListenable:
-                          formeKey.valueField('accept').errorTextNotifier,
+                          formeKey.fieldNotifier('accept').errorTextNotifier,
                       builder: (context, a, b) {
                         if (a != null && a.isPresent)
                           return Text(
@@ -497,6 +500,24 @@ class CustomTextField extends StatelessWidget {
         elevation: large ? 12 : (medium ? 10 : 8),
         child: Stack(
           children: [
+            if (validator != null)
+              Positioned(
+                  bottom: 5,
+                  left: 48,
+                  child: Builder(builder: (context) {
+                    return ValueListenableBuilder<Optional<String>?>(
+                        valueListenable:
+                            formeKey.fieldNotifier(name).errorTextNotifier,
+                        builder: (context, a, b) {
+                          return a == null || a.isNotPresent
+                              ? SizedBox()
+                              : Text(a.value!,
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: large ? 12 : 10,
+                                  ));
+                        });
+                  })),
             FormeTextField(
               name: name,
               validator: validator,
@@ -605,23 +626,6 @@ class CustomTextField extends StatelessWidget {
                 ),
               ),
             ),
-            Positioned(
-                bottom: 5,
-                left: 48,
-                child: Builder(builder: (context) {
-                  return ValueListenableBuilder<Optional<String>?>(
-                      valueListenable:
-                          formeKey.valueField(name).errorTextNotifier,
-                      builder: (context, a, b) {
-                        return a == null || a.isNotPresent
-                            ? SizedBox()
-                            : Text(a.value!,
-                                style: TextStyle(
-                                  color: Colors.red,
-                                  fontSize: large ? 12 : 10,
-                                ));
-                      });
-                }))
           ],
         ));
   }

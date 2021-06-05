@@ -1,5 +1,6 @@
 
-## screenshot
+
+## Screenshot
 
 ![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-2-4c5414cc2d89.gif)
 
@@ -34,7 +35,17 @@ Widget forme = Forme(
 | onChanged | false | `FormeValueChanged` | listen form field's value change |
 | initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
 | validateErrorListener  | false | `ValidateErrorListener` | listen form field's errorText change  |
+|onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
 
+## Differences Between Form and Forme
+
+Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't want to  refresh whole form after field's value changed or a validate performed , so it is a bit more complexable than `Form`.
+
+|    Difference      |   Form   |  Forme   |
+|  ----- |  ----- | ----- |
+| AutovalidateMode | support both Form and field| only support field   |
+| onChanged |   won't fired if value changed via `state.didChange` or `state.setValue`  | fired whenever field's value changed |
+|   rebuild strategy      |  when field value changed or perform a validation on  field , all form fields will be rebuilded   |  only rebuild field that value changed or validated |
 
 ## Forme Fields
 
@@ -102,6 +113,90 @@ Widget forme = Forme(
 | FormeCupertinoTimerField|  Duration | true |
 | FormeCupertinoDateField| DateTime | true |
 
+
+## Control Form Field 
+
+TODO
+
+## Custom way display error text
+
+if default error text display can not fit your needs , you can implementing a custom error display via `ValueField`'s `validateErrorListener` or `FormeValueFieldController`'s  `errorTextNotifier`
+
+### via validateErrorListener
+
+`validateErrorListener` will triggered whenever errorText of field changes , it is suitable when you want to update field according to error state of field 
+
+eg: change border color when error state changes
+
+``` Dart
+FormeTextField(
+	validator: validator,
+	validateErrorListener: (m, a) {
+		InputBorder border = OutlineInputBorder(
+				borderRadius: BorderRadius.circular(30.0),
+				borderSide: BorderSide(color: a == null ? Colors.green : Colors.red, width: 1));
+		m.updateModel(FormeTextFieldModel(
+			decoration: InputDecoration(
+				focusedBorder: border, enabledBorder: border)));
+	},
+),
+```
+
+### via errorTextNotifier
+
+`errorTextNotifier` is more smart than `validateErrorListener`.
+
+eg: when your want to display an valid or invalid suffix icon according to error state of field, in `validateErrorListener` , update model will rebuild whole field,
+but with `errorTextNotifier`, you can only rebuild the suffix icon, below is an example to do this:
+
+``` dart
+suffixicon: Builder(
+	builder: (context) {
+		FormeValueFieldController<String, FormeModel>
+			controller = FormeFieldController.of(context);
+		return ValueListenableBuilder<Optional<String>?>(
+			valueListenable: controller.errorTextNotifier,
+			child: const IconButton(
+				onPressed: null,
+				icon: const Icon(
+				Icons.check,
+				color: Colors.green,
+				)),
+			builder: (context, errorText, child) {
+			if (errorText == null)
+				return SizedBox();
+			else
+				return errorText.isPresent
+					? const IconButton(
+						onPressed: null,
+						icon: const Icon(
+						Icons.error,
+						color: Colors.red,
+						))
+					: child!;
+			});
+	},
+),
+```
+
+**you shouldn't use FormeValueFieldController's errorTextNotifier  out of field ,use `FormFieldNotifier.errorTextNotifier` instead**
+
+lifecycle of FormeValueFieldController's errorTextNotifier  is same as field,when used it on another widget , `errorTextNotifier` will disposed before removeListener , which will cause an error in debug mode
+
+`FormFieldNotifier` is from `formKey.fieldNotifier(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a singleton Text Widget
+
+``` Dart
+Column(
+	children:[
+		FormeTextField(validator:validator,name:name),
+		ValueListenableBuilder<Optional<String>?>(
+			valueListenable: formeKey.fieldNotifier(name).errorTextNotifier,
+			build: (context,errorText,child){
+				return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
+			},
+		),
+])
+```
 
 ## FormeKey Methods
 

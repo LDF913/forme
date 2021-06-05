@@ -5,6 +5,7 @@ import 'forme_utils.dart';
 import 'forme_field.dart';
 import 'forme_state_model.dart';
 import 'forme_controller.dart';
+import 'widget/forme_field_decorator.dart';
 
 /// triggered when form field's value changed
 typedef FormeValueChanged = void Function(
@@ -84,6 +85,14 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
 
   @override
   set readOnly(bool readOnly) => _currentController.readOnly = readOnly;
+
+  @override
+  FormeFieldNotifier<T> fieldNotifier<T>(String name) =>
+      _currentController.fieldNotifier<T>(name);
+
+  static FormeController of(BuildContext context) {
+    return _FormScope.of(context).formeController;
+  }
 }
 
 /// build your form
@@ -117,6 +126,8 @@ class Forme extends StatefulWidget {
   /// **errorText will be null if field's errorText from nonnull to null**
   final ValidateErrorListener? validateErrorListener;
 
+  final WillPopCallback? onWillPop;
+
   Forme({
     FormeKey? key,
     this.readOnly = false,
@@ -124,6 +135,7 @@ class Forme extends StatefulWidget {
     required this.child,
     this.initialValue = const {},
     this.validateErrorListener,
+    this.onWillPop,
   }) : super(key: key);
 
   @override
@@ -131,7 +143,7 @@ class Forme extends StatefulWidget {
 }
 
 class _FormeState extends State<Forme> {
-  late final FormeController formeController;
+  late final _FormeController formeController;
   final ValueNotifier<List<FormeFieldController>> controllerAliveNotifier =
       ValueNotifier([]);
 
@@ -164,23 +176,27 @@ class _FormeState extends State<Forme> {
 
   @override
   void dispose() {
+    formeController._dispose();
     controllerAliveNotifier.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _InheritedFormScope(
-      gen: gen,
-      formScope: _FormScope(
-        formeController: formeController,
-        readOnly: readOnly,
-        controllerAliveNotifier: controllerAliveNotifier,
-        valueChanged: widget.onChanged,
-        formInitialValue: widget.initialValue,
-        validateErrorListener: widget.validateErrorListener,
+    return WillPopScope(
+      child: _InheritedFormScope(
+        gen: gen,
+        formScope: _FormScope(
+          formeController: formeController,
+          readOnly: readOnly,
+          controllerAliveNotifier: controllerAliveNotifier,
+          valueChanged: widget.onChanged,
+          formInitialValue: widget.initialValue,
+          validateErrorListener: widget.validateErrorListener,
+        ),
+        child: widget.child,
       ),
-      child: widget.child,
+      onWillPop: widget.onWillPop,
     );
   }
 }
@@ -229,12 +245,12 @@ class _FormScope {
   });
 
   void registerField(FormeFieldController controller) {
-    controllerAliveNotifier.value = controllerAliveNotifier.value
+    controllerAliveNotifier.value = List.of(controllerAliveNotifier.value)
       ..add(controller);
   }
 
   void unregisterField(FormeFieldController controller) {
-    controllerAliveNotifier.value = controllerAliveNotifier.value
+    controllerAliveNotifier.value = List.of(controllerAliveNotifier.value)
       ..remove(controller);
   }
 
@@ -318,18 +334,10 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _formScope = _FormScope.of(context);
-    FormeFieldController? formeFieldController =
-        InheritedFormeFieldController.maybeOf(context);
-    bool proxy = formeFieldController != null &&
-        formeFieldController is FormeProxyFieldController;
     if (_init) return;
     _init = true;
     controller = createFormeFieldController();
-    if (!proxy) {
-      _formScope.registerField(controller);
-    } else {
-      formeFieldController.proxyController = controller;
-    }
+    _formScope.registerField(controller);
     afterInitiation();
   }
 
@@ -400,8 +408,6 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   ValueField<T, E> get widget => super.widget as ValueField<T, E>;
 
-  FormeDecoration? _decoration;
-
   @override
   FormeValueFieldController<T, E> get controller =>
       super.controller as FormeValueFieldController<T, E>;
@@ -411,18 +417,6 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
       _FormeValueFieldController(this);
 
   bool get enabled => widget.enabled;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _decoration = FormeDecoration.of(context);
-    focusNode.removeListener(_focusChange);
-    if (_decoration != null) focusNode.addListener(_focusChange);
-  }
-
-  void _focusChange() {
-    if (_decoration != null) _decoration!.onFocusChanged(focusNode.hasFocus);
-  }
 
   @override
   _setModel(E _model) {
@@ -493,7 +487,7 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
       afterValueChanged(oldValue, value);
       _didChange(oldValue, value, true);
     }
-    _onErrorTextChange(super.errorText, reset: true);
+    _onErrorTextChange(null, reset: true);
   }
 
   @override
@@ -541,7 +535,7 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   bool validate() {
     bool isValid = super.validate();
-    _onErrorTextChange(null);
+    _onErrorTextChange(super.errorText);
     return isValid;
   }
 
@@ -556,7 +550,6 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
       } else {
         controller.errorTextNotifier._setValue(null);
       }
-      if (_decoration != null) _decoration!.onErrorChanged(nowErrorText);
       onErrorTextChange(oldErrorText, nowErrorText);
       if (widget.validateErrorListener != null)
         widget.validateErrorListener!(controller, nowErrorText);
@@ -721,19 +714,9 @@ class _FormeValueFieldController<T, E extends FormeModel>
   void save() => state.save();
 
   @override
-  FormeModel? get currentDecoratorModel =>
-      state._decoration == null ? null : state._decoration!.controller.model;
-
-  @override
-  void updateDecoratorModel(FormeModel model) {
-    if (state._decoration == null) return;
-    state._decoration!.controller.updateModel(model);
-  }
-
-  @override
-  set decoratorModel(FormeModel model) {
-    if (state._decoration == null) return;
-    state._decoration!.controller.setModel(model);
+  FormeDecoratorController<T>?
+      getFormeDecoratorController<T extends FormeModel>() {
+    return FormeDecoratorController.of<T>(state.context);
   }
 }
 
@@ -747,6 +730,7 @@ class FormeFieldControllerWithError {
 class _FormeController extends FormeController {
   final _FormeState _state;
 
+  List<FormeFieldNotifier> notifiers = [];
   _FormeController(this._state);
 
   @override
@@ -848,10 +832,106 @@ class _FormeController extends FormeController {
     });
   }
 
+  @override
+  FormeFieldNotifier<T> fieldNotifier<T>(String name) {
+    for (FormeFieldNotifier notifier in notifiers) {
+      if (notifier.name == name) return notifier as FormeFieldNotifier<T>;
+    }
+    FormeFieldNotifier<T> newNotifier = FormeFieldNotifier<T>._(name, _state);
+    notifiers.add(newNotifier);
+    return newNotifier;
+  }
+
+  void _dispose() {
+    notifiers.removeWhere((element) {
+      element._dispose();
+      return true;
+    });
+  }
+
   Iterable<FormeValueFieldController> get _valueFieldControllers =>
       _state.controllerAliveNotifier.value
           .where((element) => element is FormeValueFieldController)
           .map((e) => e as FormeValueFieldController);
+}
+
+class FormeFieldNotifier<T> {
+  final _FormeState _state;
+  final String name;
+
+  final ReadOnlyValueNotifier<bool> focusNotifier =
+      ReadOnlyValueNotifier(false);
+  final ReadOnlyValueNotifier<Optional<String>?> errorTextNotifier =
+      ReadOnlyValueNotifier(null);
+  final ReadOnlyValueNotifier<T?> valueNotifier = ReadOnlyValueNotifier(null);
+
+  ReadOnlyValueNotifier<Optional<String>?>? _delegateErrorTextNotifier;
+  ReadOnlyValueNotifier<bool>? _delegateFocusNotifier;
+  ReadOnlyValueNotifier<T?>? _delegateValueNotifier;
+
+  FormeFieldNotifier._(this.name, this._state) {
+    _state.controllerAliveNotifier.addListener(_updateAlive);
+    _updateAlive();
+  }
+
+  _updateAlive() {
+    bool alive = _state.controllerAliveNotifier.value
+        .any((element) => element.name == name);
+    if (alive) {
+      FormeFieldController controller = _state.controllerAliveNotifier.value
+          .where((element) => element.name == name)
+          .first;
+
+      if (_delegateFocusNotifier == null) {
+        _delegateFocusNotifier = controller.focusNotifier;
+        _delegateFocusNotifier!.addListener(_listenFocusNotifier);
+      }
+
+      if (controller is! FormeValueFieldController) {
+        return;
+      }
+
+      FormeValueFieldController<T, FormeModel> cast =
+          controller as FormeValueFieldController<T, FormeModel>;
+
+      if (_delegateErrorTextNotifier == null) {
+        _delegateErrorTextNotifier = cast.errorTextNotifier;
+        _delegateErrorTextNotifier!.addListener(_listenErrorTextNotifier);
+      }
+
+      if (_delegateValueNotifier == null) {
+        _delegateValueNotifier = cast.valueNotifier;
+        _delegateValueNotifier!.addListener(_listenValueNotifier);
+      }
+    } else {
+      //no need to removeListener here , delegate notifier has been disposed !
+      _delegateFocusNotifier = null;
+      _delegateValueNotifier = null;
+      _delegateErrorTextNotifier = null;
+    }
+  }
+
+  _listenFocusNotifier() {
+    if (_delegateFocusNotifier != null)
+      focusNotifier._setValue(_delegateFocusNotifier!.value);
+  }
+
+  _listenValueNotifier() {
+    if (_delegateValueNotifier != null)
+      valueNotifier._setValue(_delegateValueNotifier!.value);
+  }
+
+  _listenErrorTextNotifier() {
+    if (_delegateErrorTextNotifier != null)
+      errorTextNotifier._setValue(_delegateErrorTextNotifier!.value);
+  }
+
+  void _dispose() {
+    _state.controllerAliveNotifier.removeListener(_updateAlive);
+    focusNotifier.dispose();
+    errorTextNotifier.dispose();
+    valueNotifier.dispose();
+  }
 }
 
 class ReadOnlyValueNotifier<T> extends ChangeNotifier
@@ -866,27 +946,6 @@ class ReadOnlyValueNotifier<T> extends ChangeNotifier
     if (_value == newValue) return;
     _value = newValue;
     notifyListeners();
-  }
-
-  bool disposed = false;
-
-  @override
-  void addListener(VoidCallback callback) {
-    if (disposed)
-      throw 'notifier is disposed! can\'t add listener any more !!!';
-    super.addListener(callback);
-  }
-
-  @override
-  void removeListener(VoidCallback callback) {
-    if (disposed) return;
-    super.removeListener(callback);
-  }
-
-  @override
-  void dispose() {
-    disposed = true;
-    super.dispose();
   }
 }
 
