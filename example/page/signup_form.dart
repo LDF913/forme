@@ -293,8 +293,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
             padding: MaterialStateProperty.all(EdgeInsets.all(0.0)),
           ),
           onPressed: () {
-            List<FormeFieldControllerWithError> errors =
-                formeKey.quietlyValidate();
+            List<FormeFieldControllerWithError> errors = formeKey.validate();
             if (errors.isNotEmpty) {
               errors.first.formeFieldController
                   .ensureVisible()
@@ -521,9 +520,7 @@ class CustomTextField extends StatelessWidget {
             FormeTextField(
               name: name,
               validator: validator,
-              onChanged: (m, a, b) {
-                m.quietlyValidate();
-              },
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               validateErrorListener: (m, a) {
                 InputBorder border;
                 if (a == null) {

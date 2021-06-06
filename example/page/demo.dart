@@ -99,8 +99,7 @@ class _DemoPageState extends State<DemoPage> {
             child: Text('validate')),
         TextButton(
             onPressed: () {
-              for (FormeFieldControllerWithError error
-                  in formKey.quietlyValidate()) {
+              for (FormeFieldControllerWithError error in formKey.validate()) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(error.errorText),
                   backgroundColor: Colors.red,

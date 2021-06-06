@@ -60,8 +60,8 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   bool get isValid => _currentController.isValid;
 
   @override
-  List<FormeFieldControllerWithError> quietlyValidate() =>
-      _currentController.quietlyValidate();
+  List<FormeFieldControllerWithError> validate() =>
+      _currentController.validate();
 
   @override
   void reset() => _currentController.reset();
@@ -72,9 +72,6 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   @override
   void setData(Map<String, dynamic> data, {bool trigger = true}) =>
       _currentController.setData(data, trigger: trigger);
-
-  @override
-  bool validate() => _currentController.validate();
 
   @override
   T valueField<T extends FormeValueFieldController>(String name) =>
@@ -93,6 +90,13 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   static FormeController of(BuildContext context) {
     return _FormScope.of(context).formeController;
   }
+
+  @override
+  bool get quietlyValidate => _currentController.quietlyValidate;
+
+  @override
+  set quietlyValidate(bool quietlyValidate) =>
+      _currentController.quietlyValidate = quietlyValidate;
 }
 
 /// build your form
@@ -128,6 +132,11 @@ class Forme extends StatefulWidget {
 
   final WillPopCallback? onWillPop;
 
+  /// if this flag is true , will not display default error when perform a valiate
+  ///
+  /// [FormeValueFieldController.errorText] will return null
+  final bool quietlyValidate;
+
   Forme({
     FormeKey? key,
     this.readOnly = false,
@@ -136,6 +145,7 @@ class Forme extends StatefulWidget {
     this.initialValue = const {},
     this.validateErrorListener,
     this.onWillPop,
+    this.quietlyValidate = false,
   }) : super(key: key);
 
   @override
@@ -148,6 +158,7 @@ class _FormeState extends State<Forme> {
       ValueNotifier([]);
 
   bool? _readOnly;
+  bool? _quietlyValidate;
 
   @override
   void initState() {
@@ -164,6 +175,16 @@ class _FormeState extends State<Forme> {
       setState(() {
         gen++;
         _readOnly = readOnly;
+      });
+    }
+  }
+
+  bool get quietlyValidate => _quietlyValidate ?? widget.quietlyValidate;
+  set quietlyValidate(bool quietlyValidate) {
+    if (_quietlyValidate != quietlyValidate) {
+      setState(() {
+        gen++;
+        _quietlyValidate = quietlyValidate;
       });
     }
   }
@@ -193,6 +214,7 @@ class _FormeState extends State<Forme> {
           valueChanged: widget.onChanged,
           formInitialValue: widget.initialValue,
           validateErrorListener: widget.validateErrorListener,
+          quietlyValidate: quietlyValidate,
         ),
         child: widget.child,
       ),
@@ -220,6 +242,7 @@ class _InheritedFormScope extends InheritedWidget {
 class _FormScope {
   final FormeController formeController;
   final bool readOnly;
+  final bool quietlyValidate;
   final FormeValueChanged? valueChanged;
   final Map<String, dynamic> formInitialValue;
   final ValidateErrorListener? validateErrorListener;
@@ -242,6 +265,7 @@ class _FormScope {
     this.validateErrorListener,
     required this.formeController,
     required this.controllerAliveNotifier,
+    required this.quietlyValidate,
   });
 
   void registerField(FormeFieldController controller) {
@@ -409,6 +433,11 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   ValueField<T, E> get widget => super.widget as ValueField<T, E>;
 
   @override
+  String? get errorText => _formScope.quietlyValidate
+      ? null
+      : controller.errorTextNotifier._value?._value;
+
+  @override
   FormeValueFieldController<T, E> get controller =>
       super.controller as FormeValueFieldController<T, E>;
 
@@ -524,18 +553,18 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     controller.valueNotifier._setValue(current);
   }
 
-  String? _quietlyValidate() {
-    if (widget.validator != null) {
-      String? errorText = widget.validator!(value);
-      _onErrorTextChange(errorText);
-      return errorText;
-    }
-  }
-
   @override
   bool validate() {
-    bool isValid = super.validate();
-    _onErrorTextChange(super.errorText);
+    bool isValid;
+    if (_formScope.quietlyValidate) {
+      String? errorText =
+          widget.validator == null ? null : widget.validator!(value);
+      isValid = errorText == null;
+      _onErrorTextChange(errorText);
+    } else {
+      isValid = super.validate();
+      _onErrorTextChange(super.errorText);
+    }
     return isValid;
   }
 
@@ -708,9 +737,6 @@ class _FormeValueFieldController<T, E extends FormeModel>
   bool validate() => state.validate();
 
   @override
-  String? quietlyValidate() => state._quietlyValidate();
-
-  @override
   void save() => state.save();
 
   @override
@@ -772,8 +798,11 @@ class _FormeController extends FormeController {
   }
 
   @override
-  List<FormeFieldControllerWithError> quietlyValidate() {
-    return _readErrors((state) => state.quietlyValidate());
+  List<FormeFieldControllerWithError> validate() {
+    return _readErrors((state) {
+      state.validate();
+      return state.errorText;
+    });
   }
 
   List<FormeFieldControllerWithError> _readErrors(
@@ -807,14 +836,6 @@ class _FormeController extends FormeController {
     _valueFieldControllers.forEach((element) {
       element.reset();
     });
-  }
-
-  @override
-  bool validate() {
-    bool hasError = false;
-    for (final FormeValueFieldController field in _valueFieldControllers)
-      hasError = !field.validate() || hasError;
-    return !hasError;
   }
 
   @override
@@ -853,6 +874,13 @@ class _FormeController extends FormeController {
       _state.controllerAliveNotifier.value
           .where((element) => element is FormeValueFieldController)
           .map((e) => e as FormeValueFieldController);
+
+  @override
+  bool get quietlyValidate => _state.quietlyValidate;
+
+  @override
+  set quietlyValidate(bool quietlyValidate) =>
+      _state.quietlyValidate = quietlyValidate;
 }
 
 class FormeFieldNotifier<T> {

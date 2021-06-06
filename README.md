@@ -122,6 +122,10 @@ TODO
 
 if default error text display can not fit your needs , you can implementing a custom error display via `ValueField`'s `validateErrorListener` or `FormeValueFieldController`'s  `errorTextNotifier`
 
+### quietlyValidate
+
+queitlyValidate is userful when you want to validate a field but don't want to display the default error 
+
 ### via validateErrorListener
 
 `validateErrorListener` will triggered whenever errorText of field changes , it is suitable when you want to update field according to error state of field 

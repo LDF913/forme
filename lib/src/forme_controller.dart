@@ -60,18 +60,15 @@ abstract class FormeController {
   /// or ensure field visible via [FormeFieldController.ensureVisible]
   List<FormeFieldControllerWithError> get errors;
 
-  /// perform a quietly validate, used to get error text and without display it
+  /// perform a quietly validate
   ///
-  /// this method will not set errorText on field and rebuild field , so after this method called
-  /// [FormeValueFieldController.isValid] still return true even though an error text returned by
-  /// field's validator ,  also [FormeValueFieldController.errorText] will   return null too,
-  /// so value field will not display error
+  /// if [Forme.quietlyValidate] is true, this method will not display default error
   ///
   /// you can get errorText
   /// via [FormeFieldControllerWithError.errorText]
   /// or request a focus via [FormeFieldController.focus]
   /// or ensure field visible via [FormeFieldController.ensureVisible]
-  List<FormeFieldControllerWithError> quietlyValidate();
+  List<FormeFieldControllerWithError> validate();
 
   /// equals to setData(data,trigger:true)
   set data(Map<String, dynamic> data) => setData(data);
@@ -86,13 +83,6 @@ abstract class FormeController {
   /// **only reset all value fields**
   void reset();
 
-  /// validate form and return is valid or not
-  ///
-  /// **will display error if invalid ,
-  /// if you only want to know the form is valid or not ,
-  /// use [isValid] instead**
-  bool validate();
-
   /// whether form is valid
   ///
   /// **only check is valid or not , won't show error**
@@ -102,6 +92,10 @@ abstract class FormeController {
   ///
   /// form field's onSaved will be  called
   void save();
+
+  bool get quietlyValidate;
+
+  set quietlyValidate(bool quietlyValidate);
 }
 
 /// used to control form field
@@ -208,6 +202,8 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
 
   /// whether value field is valid,this method won't display error msg
   /// if you want to show error msg,use validate instead
+  ///
+  ///
   bool get isValid;
 
   /// validate value field ,return whether field is valid or not
@@ -219,12 +215,9 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   void reset();
 
   /// get error message
-  String? get errorText;
-
-  /// validate quietly,return an error message if has
   ///
-  /// this method won't display error message
-  String? quietlyValidate();
+  /// if [Forme.quietlyValidate] is true, this method will always return null
+  String? get errorText;
 
   /// save field
   ///
@@ -334,8 +327,6 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   void reset() => delegate.reset();
   @override
   String? get errorText => delegate.errorText;
-  @override
-  String? quietlyValidate() => delegate.quietlyValidate();
   @override
   void save() => delegate.save();
   @override

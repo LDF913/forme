@@ -61,12 +61,6 @@ class RangeSliderFieldPage
             createButton('validate', () {
               controller.validate();
             }),
-            Builder(builder: (context) {
-              return createButton('quietly validate', () {
-                String? error = controller.quietlyValidate();
-                if (error != null) showError(context, error);
-              });
-            }),
           ],
         )
       ],
