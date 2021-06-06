@@ -83,10 +83,6 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   @override
   set readOnly(bool readOnly) => _currentController.readOnly = readOnly;
 
-  @override
-  FormeFieldNotifier<T> fieldNotifier<T>(String name) =>
-      _currentController.fieldNotifier<T>(name);
-
   static FormeController of(BuildContext context) {
     return _FormScope.of(context).formeController;
   }
@@ -159,6 +155,7 @@ class _FormeState extends State<Forme> {
 
   bool? _readOnly;
   bool? _quietlyValidate;
+  List<_FormeFieldListenable> notifiers = [];
 
   @override
   void initState() {
@@ -195,9 +192,31 @@ class _FormeState extends State<Forme> {
     if (iterable.isNotEmpty) return iterable.first as T;
   }
 
+  _FormeFieldListenable<T> fieldListenable<T>(String name) {
+    for (_FormeFieldListenable notifier in notifiers) {
+      if (notifier.name == name) return notifier as _FormeFieldListenable<T>;
+    }
+    _FormeFieldListenable<T> newNotifier = _FormeFieldListenable<T>(this, name);
+    notifiers.add(newNotifier);
+    return newNotifier;
+  }
+
+  void removeFieldListenable(String name) {
+    notifiers.removeWhere((element) {
+      if (element.name == name) {
+        element.dispose();
+        return true;
+      }
+      return false;
+    });
+  }
+
   @override
   void dispose() {
-    formeController._dispose();
+    notifiers.removeWhere((element) {
+      element.dispose();
+      return true;
+    });
     controllerAliveNotifier.dispose();
     super.dispose();
   }
@@ -208,13 +227,7 @@ class _FormeState extends State<Forme> {
       child: _InheritedFormScope(
         gen: gen,
         formScope: _FormScope(
-          formeController: formeController,
-          readOnly: readOnly,
-          controllerAliveNotifier: controllerAliveNotifier,
-          valueChanged: widget.onChanged,
-          formInitialValue: widget.initialValue,
-          validateErrorListener: widget.validateErrorListener,
-          quietlyValidate: quietlyValidate,
+          this,
         ),
         child: widget.child,
       ),
@@ -240,52 +253,40 @@ class _InheritedFormScope extends InheritedWidget {
 }
 
 class _FormScope {
-  final FormeController formeController;
-  final bool readOnly;
-  final bool quietlyValidate;
-  final FormeValueChanged? valueChanged;
-  final Map<String, dynamic> formInitialValue;
-  final ValidateErrorListener? validateErrorListener;
-  final Map<String, String> errorMap = {};
-  final ValueNotifier<List<FormeFieldController>> controllerAliveNotifier;
+  final _FormeState state;
+
+  _FormScope(this.state);
+
+  FormeController get formeController => state.formeController;
+  bool get readOnly => state.readOnly;
+  bool get quietlyValidate => state.quietlyValidate;
+  dynamic getInitialValue(String? name) => state.widget.initialValue[name];
 
   void onValueChanged(
       FormeValueFieldController controller, oldValue, newValue) {
-    if (valueChanged != null) valueChanged!(controller, oldValue, newValue);
+    FormeValueChanged? valueChanged = state.widget.onChanged;
+    if (valueChanged != null) valueChanged(controller, oldValue, newValue);
   }
 
   void onValidateError(FormeValueFieldController field, String? errorText) {
-    if (validateErrorListener != null) validateErrorListener!(field, errorText);
+    ValidateErrorListener? validateErrorListener =
+        state.widget.validateErrorListener;
+    if (validateErrorListener != null) validateErrorListener(field, errorText);
   }
 
-  _FormScope({
-    required this.readOnly,
-    this.valueChanged,
-    required this.formInitialValue,
-    this.validateErrorListener,
-    required this.formeController,
-    required this.controllerAliveNotifier,
-    required this.quietlyValidate,
-  });
-
   void registerField(FormeFieldController controller) {
-    controllerAliveNotifier.value = List.of(controllerAliveNotifier.value)
-      ..add(controller);
+    state.controllerAliveNotifier.value =
+        List.of(state.controllerAliveNotifier.value)..add(controller);
   }
 
   void unregisterField(FormeFieldController controller) {
-    controllerAliveNotifier.value = List.of(controllerAliveNotifier.value)
-      ..remove(controller);
+    state.controllerAliveNotifier.value =
+        List.of(state.controllerAliveNotifier.value)..remove(controller);
   }
 
   static _FormScope of(BuildContext context) => context
       .dependOnInheritedWidgetOfExactType<_InheritedFormScope>()!
       .formScope;
-
-  bool hasInitialValue(String? name) =>
-      name != null && formInitialValue.containsKey(name);
-
-  dynamic getInitialValue(String? name) => formInitialValue[name];
 }
 
 /// state for all stateful form field
@@ -362,7 +363,6 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     _init = true;
     controller = createFormeFieldController();
     _formScope.registerField(controller);
-    afterInitiation();
   }
 
   /// called when  FormeFieldController created
@@ -371,6 +371,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   ///
   /// **init your resource in this method**
   @protected
+  @mustCallSuper
   void afterInitiation() {}
 
   @override
@@ -774,7 +775,6 @@ class FormeFieldControllerWithError {
 class _FormeController extends FormeController {
   final _FormeState _state;
 
-  List<FormeFieldNotifier> notifiers = [];
   _FormeController(this._state);
 
   @override
@@ -871,23 +871,6 @@ class _FormeController extends FormeController {
     });
   }
 
-  @override
-  FormeFieldNotifier<T> fieldNotifier<T>(String name) {
-    for (FormeFieldNotifier notifier in notifiers) {
-      if (notifier.name == name) return notifier as FormeFieldNotifier<T>;
-    }
-    FormeFieldNotifier<T> newNotifier = FormeFieldNotifier<T>._(name, _state);
-    notifiers.add(newNotifier);
-    return newNotifier;
-  }
-
-  void _dispose() {
-    notifiers.removeWhere((element) {
-      element._dispose();
-      return true;
-    });
-  }
-
   Iterable<FormeValueFieldController> get _valueFieldControllers =>
       _state.controllerAliveNotifier.value
           .where((element) => element is FormeValueFieldController)
@@ -901,8 +884,8 @@ class _FormeController extends FormeController {
       _state.quietlyValidate = quietlyValidate;
 }
 
-class FormeFieldNotifier<T> {
-  final _FormeState _state;
+class _FormeFieldListenable<T> {
+  final _FormeState state;
   final String name;
 
   final FormeValueListenable<bool> focusListenable =
@@ -916,65 +899,46 @@ class FormeFieldNotifier<T> {
   FormeValueListenable<bool>? _delegateFocusListenable;
   FormeValueListenable<T?>? _delegateValueListenable;
 
-  FormeFieldNotifier._(this.name, this._state) {
-    _state.controllerAliveNotifier.addListener(_updateAlive);
-    _updateAlive();
+  _FormeFieldListenable(this.state, this.name);
+
+  set focusListenable(FormeValueListenable<bool> focusListenable) {
+    if (_delegateFocusListenable != null)
+      _delegateFocusListenable!.removeListener(_listenFocus);
+    _delegateFocusListenable = focusListenable;
+    _delegateFocusListenable!.addListener(_listenFocus);
   }
 
-  _updateAlive() {
-    bool alive = _state.controllerAliveNotifier.value
-        .any((element) => element.name == name);
-    if (alive) {
-      FormeFieldController controller = _state.controllerAliveNotifier.value
-          .where((element) => element.name == name)
-          .first;
-
-      if (_delegateFocusListenable == null) {
-        _delegateFocusListenable = controller.focusListenable;
-        _delegateFocusListenable!.addListener(_listenfocusListenable);
-      }
-
-      if (controller is! FormeValueFieldController) {
-        return;
-      }
-
-      FormeValueFieldController<T, FormeModel> cast =
-          controller as FormeValueFieldController<T, FormeModel>;
-
-      if (_delegateErrorTextListenable == null) {
-        _delegateErrorTextListenable = cast.errorTextListenable;
-        _delegateErrorTextListenable!.addListener(_listenerrorTextListenable);
-      }
-
-      if (_delegateValueListenable == null) {
-        _delegateValueListenable = cast.valueListenable;
-        _delegateValueListenable!.addListener(_listenValueNotifier);
-      }
-    } else {
-      //no need to removeListener here , delegate notifier has been disposed !
-      _delegateFocusListenable = null;
-      _delegateValueListenable = null;
-      _delegateErrorTextListenable = null;
-    }
+  set errorTextListenable(
+      FormeValueListenable<Optional<String>?> errorTextListenable) {
+    if (_delegateErrorTextListenable != null)
+      _delegateErrorTextListenable!.removeListener(_listenErrorText);
+    _delegateErrorTextListenable = errorTextListenable;
+    _delegateErrorTextListenable!.addListener(_listenErrorText);
   }
 
-  _listenfocusListenable() {
+  set valueListenable(FormeValueListenable<T?> valueListenable) {
+    if (_delegateValueListenable != null)
+      _delegateValueListenable!.removeListener(_listenValue);
+    _delegateValueListenable = valueListenable;
+    _delegateValueListenable!.addListener(_listenValue);
+  }
+
+  _listenFocus() {
     if (_delegateFocusListenable != null)
       focusListenable._value = _delegateFocusListenable!.value;
   }
 
-  _listenValueNotifier() {
+  _listenValue() {
     if (_delegateValueListenable != null)
       valueNotifier._value = _delegateValueListenable!.value;
   }
 
-  _listenerrorTextListenable() {
+  _listenErrorText() {
     if (_delegateErrorTextListenable != null)
       errorTextListenable._value = _delegateErrorTextListenable!.value;
   }
 
-  void _dispose() {
-    _state.controllerAliveNotifier.removeListener(_updateAlive);
+  void dispose() {
     focusListenable._notifier.dispose();
     errorTextListenable._notifier.dispose();
     valueNotifier._notifier.dispose();
