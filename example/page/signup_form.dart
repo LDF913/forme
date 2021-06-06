@@ -33,6 +33,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
             width: _width,
             margin: EdgeInsets.only(bottom: 5),
             child: Forme(
+              quietlyValidate: true,
               onWillPop: () async {
                 return true;
               },
@@ -228,7 +229,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
                 Builder(builder: (context) {
                   return ValueListenableBuilder<Optional<String>?>(
                       valueListenable:
-                          formeKey.fieldNotifier('accept').errorTextNotifier,
+                          formeKey.fieldNotifier('accept').errorTextListenable,
                       builder: (context, a, b) {
                         if (a != null && a.isPresent)
                           return Text(
@@ -506,7 +507,7 @@ class CustomTextField extends StatelessWidget {
                   child: Builder(builder: (context) {
                     return ValueListenableBuilder<Optional<String>?>(
                         valueListenable:
-                            formeKey.fieldNotifier(name).errorTextNotifier,
+                            formeKey.fieldNotifier(name).errorTextListenable,
                         builder: (context, a, b) {
                           return a == null || a.isNotPresent
                               ? SizedBox()
@@ -573,8 +574,8 @@ class CustomTextField extends StatelessWidget {
                           FormeValueFieldController<String, FormeModel>
                               controller = FormeFieldController.of(context);
                           return ValueListenableBuilder2<bool, String?>(
-                              controller.focusNotifier,
-                              controller.valueNotifier,
+                              controller.focusListenable,
+                              controller.valueListenable,
                               builder: (context, a, b, c) {
                             if (a && b != null && b.length > 0) {
                               return IconButton(
@@ -593,7 +594,7 @@ class CustomTextField extends StatelessWidget {
                           FormeValueFieldController<String, FormeModel>
                               controller = FormeFieldController.of(context);
                           return ValueListenableBuilder<Optional<String>?>(
-                              valueListenable: controller.errorTextNotifier,
+                              valueListenable: controller.errorTextListenable,
                               child: const IconButton(
                                   onPressed: null,
                                   icon: const Icon(

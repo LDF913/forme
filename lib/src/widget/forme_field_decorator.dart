@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 
 import '../render/forme_render_utils.dart';
 import '../forme_core.dart';
-import '../forme_field.dart';
 import '../forme_state_model.dart';
 
 typedef FormeDecoratorBuilder<T> = Widget Function(
@@ -14,7 +13,7 @@ typedef FormeDecoratorBuilder<T> = Widget Function(
   T model,
 );
 
-abstract class FormeDecorator<T extends FormeModel> extends StatefulWidget {
+class FormeDecorator<T extends FormeModel> extends StatefulWidget {
   final String name;
   final T model;
   final FormeDecoratorBuilder<T> builder;
@@ -63,9 +62,9 @@ class FormeDecoratorState<T extends FormeModel>
   Widget build(BuildContext context) {
     Widget child = widget.builder(
         context,
-        _notifier.focusNotifier,
+        _notifier.focusListenable,
         _notifier.valueNotifier,
-        _notifier.errorTextNotifier,
+        _notifier.errorTextListenable,
         modelNotifier.value);
     return FormeDecoratorController<T>(
       modelNotifier,
@@ -108,21 +107,35 @@ class FormeInputDecorator extends FormeDecorator<FormeInputDecoratorModel> {
   FormeInputDecorator({
     Key? key,
     InputDecoration? decoration,
-    required ValueField child,
+    required Widget child,
     required String name,
+    bool isEmpty = false,
   }) : super(
             key: key,
             name: name,
             model: FormeInputDecoratorModel(
                 decoration: decoration ?? const InputDecoration()),
             builder: (context, a, b, c, model) {
+              if (FormeKey.of(context).quietlyValidate) {
+                return ValueListenableBuilder<bool>(
+                    valueListenable: a,
+                    builder: (context, focus, _child) {
+                      return InputDecorator(
+                        isEmpty: false,
+                        isFocused: focus,
+                        decoration:
+                            (model.decoration ?? const InputDecoration()),
+                        child: child,
+                      );
+                    });
+              }
               return _ValueListenableBuilder2<bool, Optional<String>?>(
                 a,
                 c,
                 builder:
                     (context, bool focus, Optional<String>? errorText, _child) {
                   return InputDecorator(
-                    isEmpty: false,
+                    isEmpty: isEmpty,
                     isFocused: focus,
                     decoration: (model.decoration ?? const InputDecoration())
                         .copyWith(errorText: errorText?.value),

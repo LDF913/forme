@@ -334,7 +334,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   }
 
   void _onFocusChange() {
-    controller.focusNotifier._setValue(focusNode.hasFocus);
+    controller.focusListenable._value = focusNode.hasFocus;
     if (_field.focusListener != null)
       _field.focusListener!(controller, focusNode.hasFocus);
   }
@@ -375,7 +375,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
 
   @override
   void dispose() {
-    controller.focusNotifier.dispose();
+    controller.focusListenable._notifier.dispose();
     _focusNode?.dispose();
     _formScope.unregisterField(controller);
     super.dispose();
@@ -435,7 +435,24 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   String? get errorText => _formScope.quietlyValidate
       ? null
-      : controller.errorTextNotifier._value?._value;
+      : controller.errorTextListenable.value?._value;
+
+  T? _value;
+  String? _errorText;
+  bool _hasInteractedByUser = false;
+
+  @override
+  bool get hasError => _errorText != null;
+
+  @override
+  bool get isValid => widget.validator?.call(_value) == null;
+
+  @override
+  T? get value => _value;
+
+  void _validate() {
+    if (widget.validator != null) _errorText = widget.validator!(_value);
+  }
 
   @override
   FormeValueFieldController<T, E> get controller =>
@@ -444,8 +461,6 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   FormeValueFieldController<T, E> createFormeFieldController() =>
       _FormeValueFieldController(this);
-
-  bool get enabled => widget.enabled;
 
   @override
   _setModel(E _model) {
@@ -474,7 +489,7 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   @mustCallSuper
   void afterInitiation() {
-    super.setValue(initialValue);
+    _value = initialValue;
   }
 
   @override
@@ -487,7 +502,7 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   void setValue(T? newValue) {
     newValue = beforeSetValue(newValue);
     if (!compare(value, newValue)) {
-      super.setValue(newValue);
+      _value = newValue;
       _didChange(value, newValue, true);
     }
   }
@@ -501,28 +516,32 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     newValue = beforeSetValue(newValue);
     T? oldValue = value;
     if (!compare(oldValue, newValue)) {
-      super.didChange(newValue);
-      afterValueChanged(oldValue, newValue);
-      _didChange(oldValue, newValue, trigger);
+      setState(() {
+        _value = newValue;
+        _hasInteractedByUser = true;
+        afterValueChanged(oldValue, newValue);
+        _didChange(oldValue, newValue, trigger);
+      });
     }
   }
 
   @override
   void reset() {
     T? oldValue = value;
-    super.reset();
-    if (_formScope.hasInitialValue(name)) super.setValue(initialValue);
-    if (!compare(oldValue, value)) {
-      afterValueChanged(oldValue, value);
-      _didChange(oldValue, value, true);
-    }
-    _onErrorTextChange(null, reset: true);
+    setState(() {
+      _value = initialValue;
+      _hasInteractedByUser = false;
+      _errorText = null;
+      afterValueChanged(oldValue, _value);
+      _didChange(oldValue, _value, true);
+      _onErrorTextChange(null);
+    });
   }
 
   @override
   void dispose() {
-    controller.valueNotifier.dispose();
-    controller.errorTextNotifier.dispose();
+    controller.valueListenable._notifier.dispose();
+    controller.errorTextListenable._notifier.dispose();
     super.dispose();
   }
 
@@ -550,39 +569,33 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
       if (onChanged != null) onChanged(controller, old, current);
     }
     _formScope.onValueChanged(this.controller, old, current);
-    controller.valueNotifier._setValue(current);
+    controller.valueListenable._value = current;
   }
 
   @override
   bool validate() {
-    bool isValid;
+    if (widget.validator == null) return true;
     if (_formScope.quietlyValidate) {
-      String? errorText =
-          widget.validator == null ? null : widget.validator!(value);
-      isValid = errorText == null;
-      _onErrorTextChange(errorText);
+      String? errorText = widget.validator!(value);
+      _onErrorTextChange(Optional.fromNullable(errorText));
+      return errorText == null;
     } else {
-      isValid = super.validate();
-      _onErrorTextChange(super.errorText);
+      setState(() {
+        _validate();
+        _onErrorTextChange(Optional.fromNullable(_errorText));
+      });
+      return isValid;
     }
-    return isValid;
   }
 
-  void _onErrorTextChange(String? nowErrorText, {bool reset = false}) {
-    String? oldErrorText =
-        (controller.errorTextNotifier.value ?? Optional<String>.absent())
-            ._value;
-    if (oldErrorText != nowErrorText) {
-      if (!reset) {
-        controller.errorTextNotifier
-            ._setValue(Optional.fromNullable(nowErrorText));
-      } else {
-        controller.errorTextNotifier._setValue(null);
-      }
-      onErrorTextChange(oldErrorText, nowErrorText);
+  void _onErrorTextChange(Optional<String>? nowErrorText) {
+    if (controller.errorTextListenable.value != nowErrorText) {
+      String? oldErrorText = controller.errorTextListenable.value?._value;
+      controller.errorTextListenable._value = nowErrorText;
+      onErrorTextChange(oldErrorText, nowErrorText?._value);
       if (widget.validateErrorListener != null)
-        widget.validateErrorListener!(controller, nowErrorText);
-      _formScope.onValidateError(controller, nowErrorText);
+        widget.validateErrorListener!(controller, nowErrorText?._value);
+      _formScope.onValidateError(controller, nowErrorText?._value);
     }
   }
 
@@ -592,14 +605,18 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   @override
   @mustCallSuper
   Widget build(BuildContext context) {
-    String? oldErrorText = super.errorText;
-    Widget result = super.build(context);
-    if (oldErrorText != super.errorText) {
+    bool needValidate = widget.validator != null &&
+        widget.enabled &&
+        ((widget.autovalidateMode == AutovalidateMode.always) ||
+            (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
+                _hasInteractedByUser));
+    if (needValidate) {
+      _validate();
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _onErrorTextChange(super.errorText);
+        _onErrorTextChange(Optional.fromNullable(_errorText));
       });
     }
-    return result;
+    return InheritedFormeFieldController(controller, widget.builder(this));
   }
 }
 
@@ -636,8 +653,8 @@ class NonnullValueFieldState<T, E extends FormeModel>
 class _FormeFieldController<E extends FormeModel>
     extends FormeFieldController<E> {
   final AbstractFieldState<StatefulWidget, E> state;
-  final ReadOnlyValueNotifier<bool> focusNotifier =
-      ReadOnlyValueNotifier(false);
+  final FormeValueListenable<bool> focusListenable =
+      FormeValueListenable._(ValueNotifier(false));
 
   _FormeFieldController(this.state);
 
@@ -710,9 +727,10 @@ class _FormeValueFieldController<T, E extends FormeModel>
   final FormeFieldController<E> delegate;
   _FormeValueFieldController(this.state)
       : this.delegate = _FormeFieldController<E>(state);
-  final ReadOnlyValueNotifier<Optional<String>?> errorTextNotifier =
-      ReadOnlyValueNotifier(null);
-  final ReadOnlyValueNotifier<T?> valueNotifier = ReadOnlyValueNotifier(null);
+  final FormeValueListenable<Optional<String>?> errorTextListenable =
+      FormeValueListenable._(ValueNotifier(null));
+  final FormeValueListenable<T?> valueListenable =
+      FormeValueListenable._(ValueNotifier(null));
 
   @override
   T? get value => state.value;
@@ -887,15 +905,16 @@ class FormeFieldNotifier<T> {
   final _FormeState _state;
   final String name;
 
-  final ReadOnlyValueNotifier<bool> focusNotifier =
-      ReadOnlyValueNotifier(false);
-  final ReadOnlyValueNotifier<Optional<String>?> errorTextNotifier =
-      ReadOnlyValueNotifier(null);
-  final ReadOnlyValueNotifier<T?> valueNotifier = ReadOnlyValueNotifier(null);
+  final FormeValueListenable<bool> focusListenable =
+      FormeValueListenable._(ValueNotifier(false));
+  final FormeValueListenable<Optional<String>?> errorTextListenable =
+      FormeValueListenable._(ValueNotifier(null));
+  final FormeValueListenable<T?> valueNotifier =
+      FormeValueListenable._(ValueNotifier(null));
 
-  ReadOnlyValueNotifier<Optional<String>?>? _delegateErrorTextNotifier;
-  ReadOnlyValueNotifier<bool>? _delegateFocusNotifier;
-  ReadOnlyValueNotifier<T?>? _delegateValueNotifier;
+  FormeValueListenable<Optional<String>?>? _delegateErrorTextListenable;
+  FormeValueListenable<bool>? _delegateFocusListenable;
+  FormeValueListenable<T?>? _delegateValueListenable;
 
   FormeFieldNotifier._(this.name, this._state) {
     _state.controllerAliveNotifier.addListener(_updateAlive);
@@ -910,9 +929,9 @@ class FormeFieldNotifier<T> {
           .where((element) => element.name == name)
           .first;
 
-      if (_delegateFocusNotifier == null) {
-        _delegateFocusNotifier = controller.focusNotifier;
-        _delegateFocusNotifier!.addListener(_listenFocusNotifier);
+      if (_delegateFocusListenable == null) {
+        _delegateFocusListenable = controller.focusListenable;
+        _delegateFocusListenable!.addListener(_listenfocusListenable);
       }
 
       if (controller is! FormeValueFieldController) {
@@ -922,59 +941,61 @@ class FormeFieldNotifier<T> {
       FormeValueFieldController<T, FormeModel> cast =
           controller as FormeValueFieldController<T, FormeModel>;
 
-      if (_delegateErrorTextNotifier == null) {
-        _delegateErrorTextNotifier = cast.errorTextNotifier;
-        _delegateErrorTextNotifier!.addListener(_listenErrorTextNotifier);
+      if (_delegateErrorTextListenable == null) {
+        _delegateErrorTextListenable = cast.errorTextListenable;
+        _delegateErrorTextListenable!.addListener(_listenerrorTextListenable);
       }
 
-      if (_delegateValueNotifier == null) {
-        _delegateValueNotifier = cast.valueNotifier;
-        _delegateValueNotifier!.addListener(_listenValueNotifier);
+      if (_delegateValueListenable == null) {
+        _delegateValueListenable = cast.valueListenable;
+        _delegateValueListenable!.addListener(_listenValueNotifier);
       }
     } else {
       //no need to removeListener here , delegate notifier has been disposed !
-      _delegateFocusNotifier = null;
-      _delegateValueNotifier = null;
-      _delegateErrorTextNotifier = null;
+      _delegateFocusListenable = null;
+      _delegateValueListenable = null;
+      _delegateErrorTextListenable = null;
     }
   }
 
-  _listenFocusNotifier() {
-    if (_delegateFocusNotifier != null)
-      focusNotifier._setValue(_delegateFocusNotifier!.value);
+  _listenfocusListenable() {
+    if (_delegateFocusListenable != null)
+      focusListenable._value = _delegateFocusListenable!.value;
   }
 
   _listenValueNotifier() {
-    if (_delegateValueNotifier != null)
-      valueNotifier._setValue(_delegateValueNotifier!.value);
+    if (_delegateValueListenable != null)
+      valueNotifier._value = _delegateValueListenable!.value;
   }
 
-  _listenErrorTextNotifier() {
-    if (_delegateErrorTextNotifier != null)
-      errorTextNotifier._setValue(_delegateErrorTextNotifier!.value);
+  _listenerrorTextListenable() {
+    if (_delegateErrorTextListenable != null)
+      errorTextListenable._value = _delegateErrorTextListenable!.value;
   }
 
   void _dispose() {
     _state.controllerAliveNotifier.removeListener(_updateAlive);
-    focusNotifier.dispose();
-    errorTextNotifier.dispose();
-    valueNotifier.dispose();
+    focusListenable._notifier.dispose();
+    errorTextListenable._notifier.dispose();
+    valueNotifier._notifier.dispose();
   }
 }
 
-class ReadOnlyValueNotifier<T> extends ChangeNotifier
-    implements ValueListenable<T> {
-  ReadOnlyValueNotifier(this._value);
+class FormeValueListenable<T> implements ValueListenable<T> {
+  final ValueNotifier<T> _notifier;
+  FormeValueListenable._(this._notifier);
 
   @override
-  T get value => _value;
-  T _value;
+  void addListener(VoidCallback listener) => _notifier.addListener(listener);
 
-  _setValue(T newValue) {
-    if (_value == newValue) return;
-    _value = newValue;
-    notifyListeners();
-  }
+  @override
+  void removeListener(VoidCallback listener) =>
+      _notifier.removeListener(listener);
+
+  @override
+  T get value => _notifier.value;
+
+  set _value(T newValue) => _notifier.value = newValue;
 }
 
 class Optional<T> {

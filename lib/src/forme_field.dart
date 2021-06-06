@@ -57,7 +57,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
     with AbstractFieldState<CommonField<E>, E> {
   @override
   Widget build(BuildContext context) {
-    return InheritedFormeFieldController._(controller, widget.builder(this));
+    return InheritedFormeFieldController(controller, widget.builder(this));
   }
 }
 
@@ -106,8 +106,7 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
             onSaved: onSaved,
             builder: (field) {
               ValueFieldState<T, E> state = field as ValueFieldState<T, E>;
-              return InheritedFormeFieldController._(
-                  state.controller, builder(state));
+              return builder(state);
             },
             validator: validator,
             autovalidateMode: autovalidateMode,
@@ -158,8 +157,7 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
             builder: (field) {
               NonnullValueFieldState<T, E> state =
                   field as NonnullValueFieldState<T, E>;
-              return InheritedFormeFieldController._(
-                  state.controller, builder(state));
+              return builder(state);
             },
             validator: validator == null ? null : (value) => validator(value!),
             autovalidateMode: autovalidateMode,
@@ -172,7 +170,7 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
 /// share FormFieldController in sub tree
 class InheritedFormeFieldController extends InheritedWidget {
   final FormeFieldController controller;
-  const InheritedFormeFieldController._(this.controller, Widget child)
+  const InheritedFormeFieldController(this.controller, Widget child)
       : super(child: child);
   @override
   bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;

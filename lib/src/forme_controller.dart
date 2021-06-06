@@ -177,7 +177,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// it's lifecycle is same as field
   ///
   /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
-  ReadOnlyValueNotifier<bool> get focusNotifier;
+  FormeValueListenable<bool> get focusListenable;
 
   static T of<T extends FormeFieldController>(BuildContext context) {
     return InheritedFormeFieldController.of(context) as T;
@@ -237,7 +237,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// this notifier is used for [ValueListenableBuilder]
   ///
   /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
-  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier;
+  FormeValueListenable<Optional<String>?> get errorTextListenable;
 
   /// get value listenable
   ///
@@ -262,7 +262,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// this notifier is used for [ValueListenableBuilder]
   ///
   /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
-  ReadOnlyValueNotifier<T?> get valueNotifier;
+  FormeValueListenable<T?> get valueListenable;
 }
 
 abstract class FormeFieldControllerDelegate<E extends FormeModel>
@@ -304,7 +304,7 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
   @override
   void updateModel(E model) => delegate.updateModel(model);
   @override
-  ReadOnlyValueNotifier<bool> get focusNotifier => delegate.focusNotifier;
+  FormeValueListenable<bool> get focusListenable => delegate.focusListenable;
 }
 
 abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
@@ -334,8 +334,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
       getFormeDecoratorController<T extends FormeModel>() =>
           delegate.getFormeDecoratorController<T>();
   @override
-  ReadOnlyValueNotifier<Optional<String>?> get errorTextNotifier =>
-      delegate.errorTextNotifier;
+  FormeValueListenable<Optional<String>?> get errorTextListenable =>
+      delegate.errorTextListenable;
   @override
-  ReadOnlyValueNotifier<T?> get valueNotifier => delegate.valueNotifier;
+  FormeValueListenable<T?> get valueListenable => delegate.valueListenable;
 }

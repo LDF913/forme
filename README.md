@@ -1,5 +1,3 @@
-
-
 ## Screenshot
 
 ![screenshot](https://raw.githubusercontent.com/wwwqyhme/forme/main/ezgif-2-4c5414cc2d89.gif)
@@ -36,6 +34,7 @@ Widget forme = Forme(
 | initialValue | false | `Map<String,dynamic>` | initialValue , **will override FormField's initialValue** |
 | validateErrorListener  | false | `ValidateErrorListener` | listen form field's errorText change  |
 |onWillPop | false | `WillPopCallback` | Signature for a callback that verifies that it's OK to call Navigator.pop |
+| quietlyValidate | false | bool | if this attribute is true , will not display default error text|
 
 ## Differences Between Form and Forme
 
@@ -52,10 +51,10 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 ### field type
 
 ```
-	-StatefulField
-		- ValueField
-			- NonnullValueField
-		- CommonField
+-StatefulField
+	- ValueField
+		- NonnullValueField
+	- CommonField
 ```
 
 ### attributes supported by all statefule fields
@@ -114,21 +113,49 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | FormeCupertinoDateField| DateTime | true |
 
 
-## Control Form Field 
+## Forme Model
 
-TODO
+you can update a widget easily with `FormeModel`
+
+eg: if you want to update labelText of a FormeTextField, you can do this :
+
+``` Dart
+FormeFieldController controller = formKey.field(fieldName);
+controller.update(FormeTextFieldModel(decoration:InputDecoration(labelText:'New Label')));
+```
+
+if you want to update items of FormeDropdownButton:
+
+``` Dart
+controller.updateModel(FormeDropdownButtonModel<String>(
+	icon: SizedBox(
+	width: 14,
+	height: 14,
+	child: CircularProgressIndicator(),
+)));
+Future<List<DropdownMenuItem<String>>> future =
+	Future.delayed(Duration(seconds: 2), () {
+	return FormeUtils.toDropdownMenuItems(
+		['java', 'dart', 'c#', 'python', 'flutter']);
+	});
+future.then((value) {
+controller.updateModel(FormeDropdownButtonModel<String>(
+	icon: Icon(Icons.arrow_drop_down), items: value));
+});
+```
+
+**update model will auto copywith old model's attribute**
+
 
 ## Custom way display error text
 
-if default error text display can not fit your needs , you can implementing a custom error display via `ValueField`'s `validateErrorListener` or `FormeValueFieldController`'s  `errorTextNotifier`
+if default error text display can not fit your needs , you can implementing a custom error display via `ValueField`'s `validateErrorListener` or `FormeValueFieldController`'s  `errorTextListenable`
 
-### quietlyValidate
-
-queitlyValidate is userful when you want to validate a field but don't want to display the default error 
+**don't forget to set Forme's quieltyValidate attribute to true**
 
 ### via validateErrorListener
 
-`validateErrorListener` will triggered whenever errorText of field changes , it is suitable when you want to update field according to error state of field 
+`validateErrorListener` will triggered whenever errorText of field changes , it is suitable when you want to update a stateful field according to error state of field 
 
 eg: change border color when error state changes
 
@@ -146,12 +173,12 @@ FormeTextField(
 ),
 ```
 
-### via errorTextNotifier
+### via errorTextListenable
 
-`errorTextNotifier` is more smart than `validateErrorListener`.
+`errorTextListenable` is more convenient than `validateErrorListener` sometimes.
 
 eg: when your want to display an valid or invalid suffix icon according to error state of field, in `validateErrorListener` , update model will rebuild whole field,
-but with `errorTextNotifier`, you can only rebuild the suffix icon, below is an example to do this:
+but with `errorTextListenable`, you can only rebuild the suffix icon, below is an example to do this:
 
 ``` dart
 suffixicon: Builder(
@@ -159,7 +186,7 @@ suffixicon: Builder(
 		FormeValueFieldController<String, FormeModel>
 			controller = FormeFieldController.of(context);
 		return ValueListenableBuilder<Optional<String>?>(
-			valueListenable: controller.errorTextNotifier,
+			valueListenable: controller.errorTextListenable,
 			child: const IconButton(
 				onPressed: null,
 				icon: const Icon(
@@ -183,23 +210,100 @@ suffixicon: Builder(
 ),
 ```
 
-**you shouldn't use FormeValueFieldController's errorTextNotifier  out of field ,use `FormFieldNotifier.errorTextNotifier` instead**
+**you shouldn't use FormeValueFieldController's errorTextListenable  out of field ,use `FormFieldNotifier.errorTextListenable` instead**
 
-lifecycle of FormeValueFieldController's errorTextNotifier  is same as field,when used it on another widget , `errorTextNotifier` will disposed before removeListener , which will cause an error in debug mode
+lifecycle of FormeValueFieldController's errorTextListenable  is same as field,when used it on another widget , `errorTextListenable` will disposed before removeListener , which will cause an error in debug mode
 
-`FormFieldNotifier` is from `formKey.fieldNotifier(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a singleton Text Widget
+`FormFieldNotifier` is from `formKey.fieldNotifier(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a Text Widget
 
 ``` Dart
 Column(
 	children:[
 		FormeTextField(validator:validator,name:name),
 		ValueListenableBuilder<Optional<String>?>(
-			valueListenable: formeKey.fieldNotifier(name).errorTextNotifier,
+			valueListenable: formeKey.fieldNotifier(name).errorTextListenable,
 			build: (context,errorText,child){
 				return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
 			},
 		),
 ])
+```
+
+## Forme Field Decorator 
+
+unlike `FormeTextField` , some widgets , such as `FormeSlider`, don't have a InputDecorator , you must 
+specific a `FormeDecorator` for them.
+
+**`FormeDecorator`'s name attribute must same as field's name attribute**
+
+eg:
+
+``` Dart
+FormeInputDecorator(
+  name: name,
+  decoration: InputDecoration(labelText: 'Slider'),
+  child: FormeSlider(
+	min: 1,
+	max: 100,
+	autovalidateMode: AutovalidateMode.onUserInteraction,
+	name: name,
+	model: FormeSliderModel(),
+	validator: (value) => value < 50
+		? 'value must bigger than 50 ,current is $value'
+		: null,
+  ),
+),
+```
+
+default `FormeDecorator` is `FormeInputDecorator`.
+
+### Custom Decorator
+
+it's easily to implementing a custom decorator, below is an example:
+
+``` Dart
+FormeDecorator<EmptyStateModel>(
+	model: EmptyStateModel(),
+	name: name,
+	builder: (context, a, b, c, model) {
+	return Column(
+		children: [
+		ValueListenableBuilder<bool>(
+			valueListenable: a,
+			builder: (context, focus, child) {
+				return Text(
+				'Slider',
+				style: TextStyle(
+					fontSize: 30,
+					color: focus
+						? Colors.greenAccent
+						: Colors.yellowAccent),
+				);
+			}),
+		FormeSlider(
+			min: 1,
+			max: 100,
+			autovalidateMode: AutovalidateMode.onUserInteraction,
+			name: name,
+			model: FormeSliderModel(),
+			validator: (value) => value < 50
+				? 'value must bigger than 50 ,current is $value'
+				: null,
+		),
+		ValueListenableBuilder<Optional<String>?>(
+			valueListenable: c,
+			builder: (context, errorText, child) {
+				return errorText == null || errorText.isNotPresent
+					? const SizedBox()
+					: Text(
+						errorText.value!,
+						style: TextStyle(color: Colors.red, fontSize: 30),
+					);
+			}),
+		],
+	);
+	},
+),
 ```
 
 ## FormeKey Methods
@@ -240,20 +344,12 @@ T controller = formeKey.valueField<T extends FormeValueFieldController>(String n
 Map<String, dynamic> data = formeKey.data;
 ```
 
-### get form validate errors
-
-**should call this method after valdiate form**
-
-``` Dart
-List<FormeFieldControllerWithError> errors = formeKey.errors;
-```
-
-### quiety validate
+### validate
 
 **validate form quietly and return fields with a error**
 
 ``` Dart
-List<FormeFieldControllerWithError> errors = formKey.quietlyValidate();
+List<FormeFieldControllerWithError> errors = formKey.validate();
 ```
 
 ### set form data
@@ -269,12 +365,6 @@ formKey.setData(Map<String,dynamic> data,{bool trigger}) // if trigger is true,w
 formeKey.reset();
 ```
 
-### validate form
-
-``` Dart
-bool isValid = formeKey.validate();
-```
-
 ### whether form is valid
 
 ``` Dart
@@ -285,6 +375,18 @@ bool isValid = formeKey.isValid;
 
 ``` Dart
 formeKey.save();
+```
+
+### whether validate is quietly
+
+``` Dart
+bool quietlyValidate = formKey.quietlyValidate;
+```
+
+### set quietlyValidate
+
+``` Dart
+formeKey.quieltyValidate = bool quietlyValidate;
 ```
 
 ## Forme Field Methods
@@ -364,6 +466,12 @@ Future<void> result = field.ensureVisibe({Duration? duration,
       double? alignment});
 ```
 
+### get focusListenable
+
+``` Dart
+FormeValueListenable<bool> focusListenable = field.focusListenable;
+```
+
 ## Forme Value Field Methods
 
 **FormeValueFieldController is extended FormeFieldController**
@@ -417,22 +525,23 @@ String? errorText = valueField.quietlyValidate();
 valueField.save();
 ```
 
-### get decorator model
+### get decorator controller
 
 ``` Dart
-FormeModel? decoratorModel = valueField.currentDecoratorModel;
+FormeDecoratorController<T>? decoratorController = 
+      valueField.getFormeDecoratorController<T extends FormeModel>();
 ```
 
-### update decorator model
+### get errorTextListenable
 
 ``` Dart
-valueField.updateDecoratorModel(FormeModel model);
+FormeValueListenable<Optional<String>?>  errorTextListenable = valueField.errorTextListenable;
 ```
 
-### set decorator model
+### get valueListenable
 
 ``` Dart
-valueField.decoratorModel = FormModel model;
+FormeValueListenable<dynamic> errorTextListenable = valueField.errorTextListenable;
 ```
 
 ## build your field
