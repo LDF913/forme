@@ -228,8 +228,9 @@ class _SignUpScreenState extends State<SignupFormPage> {
               children: [
                 Builder(builder: (context) {
                   return ValueListenableBuilder<Optional<String>?>(
-                      valueListenable:
-                          formeKey.fieldNotifier('accept').errorTextListenable,
+                      valueListenable: formeKey
+                          .fieldListenable('accept')
+                          .errorTextListenable,
                       builder: (context, a, b) {
                         if (a != null && a.isPresent)
                           return Text(
@@ -507,7 +508,7 @@ class CustomTextField extends StatelessWidget {
                   child: Builder(builder: (context) {
                     return ValueListenableBuilder<Optional<String>?>(
                         valueListenable:
-                            formeKey.fieldNotifier(name).errorTextListenable,
+                            formeKey.fieldListenable(name).errorTextListenable,
                         builder: (context, a, b) {
                           return a == null || a.isNotPresent
                               ? SizedBox()

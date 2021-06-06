@@ -34,18 +34,6 @@ abstract class FormeController {
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
   T valueField<T extends FormeValueFieldController>(String name);
 
-  /// notifiers of form field's focus|errorText|value
-  ///
-  ///
-  /// **unlike [FormeFieldController]'s notifier , this controller's notifier will auto find last alived [FormeFieldController] by name,
-  /// in another words , this controller's lifestyle is same as form,but [FormeFieldController]'s lifecycle is same as field,
-  /// so it's safe to use this controller out of form field**
-  ///
-  /// **do not use this notifier out of forme**
-  ///
-  /// see [FormeInputDecorator]
-  FormeFieldNotifier<T> fieldNotifier<T>(String name);
-
   /// get form data
   ///
   /// if a value field doesn't has a name ,it's value will be ignored
@@ -176,7 +164,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   ///
   /// it's lifecycle is same as field
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
   FormeValueListenable<bool> get focusListenable;
 
   static T of<T extends FormeFieldController>(BuildContext context) {
@@ -236,7 +224,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
   FormeValueListenable<Optional<String>?> get errorTextListenable;
 
   /// get value listenable
@@ -261,7 +249,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldNotifierController] instead**
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
   FormeValueListenable<T?> get valueListenable;
 }
 

@@ -31,7 +31,7 @@ class FormeDecorator<T extends FormeModel> extends StatefulWidget {
 class FormeDecoratorState<T extends FormeModel>
     extends State<FormeDecorator<T>> {
   T? _model;
-  late FormeFieldNotifier _notifier;
+  late FormefieldListenable _notifier;
 
   T get model => _model ?? widget.model;
 
@@ -49,7 +49,7 @@ class FormeDecoratorState<T extends FormeModel>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _notifier = FormeKey.of(context).fieldNotifier(widget.name);
+    _notifier = FormeKey.of(context).fieldListenable(widget.name);
   }
 
   @override

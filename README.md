@@ -210,18 +210,18 @@ suffixicon: Builder(
 ),
 ```
 
-**you shouldn't use FormeValueFieldController's errorTextListenable  out of field ,use `FormFieldNotifier.errorTextListenable` instead**
+**you shouldn't use FormeValueFieldController's errorTextListenable  out of field ,use `FormfieldListenable.errorTextListenable` instead**
 
 lifecycle of FormeValueFieldController's errorTextListenable  is same as field,when used it on another widget , `errorTextListenable` will disposed before removeListener , which will cause an error in debug mode
 
-`FormFieldNotifier` is from `formKey.fieldNotifier(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a Text Widget
+`FormfieldListenable` is from `formKey.fieldListenable(fieldName)`,it's lifecycle is same as `Forme`,  typically used to build a widget which is not a stateful field but relies on state  of field , eg: you want to display error of a field on a Text Widget
 
 ``` Dart
 Column(
 	children:[
 		FormeTextField(validator:validator,name:name),
 		ValueListenableBuilder<Optional<String>?>(
-			valueListenable: formeKey.fieldNotifier(name).errorTextListenable,
+			valueListenable: formeKey.fieldListenable(name).errorTextListenable,
 			build: (context,errorText,child){
 				return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
 			},
