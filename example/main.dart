@@ -13,6 +13,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Forme ForYou',
       home: HomePage(),
+      theme: ThemeData.dark().copyWith(
+        colorScheme: ColorScheme.dark(),
+      ),
       routes: {
         '/textfield': (context) => TextFieldPage(),
         '/timefield': (context) => TimeFieldPage(),

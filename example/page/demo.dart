@@ -94,11 +94,6 @@ class _DemoPageState extends State<DemoPage> {
             child: Text('rebuild page')),
         TextButton(
             onPressed: () {
-              formKey.validate();
-            },
-            child: Text('validate')),
-        TextButton(
-            onPressed: () {
               for (FormeFieldControllerWithError error in formKey.validate()) {
                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text(error.errorText),
@@ -116,7 +111,7 @@ class _DemoPageState extends State<DemoPage> {
                 backgroundColor: Colors.green,
               ));
             },
-            child: Text('quietly validate')),
+            child: Text('validate')),
         TextButton(
             onPressed: () {
               formKey.reset();
@@ -205,14 +200,34 @@ class _DemoPageState extends State<DemoPage> {
             field.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(labelText: 'Focus:$hasFocus')));
           },
+          validateErrorListener: (c, e) {
+            c.updateModel(FormeTextFieldModel(
+              maxLines: 1,
+            ));
+          },
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: (value) => value.length <= 10
-              ? 'length must bigger than 10,current is ${value.length} '
-              : null,
+          validator: (value) {
+            return value.length <= 10
+                ? 'length must bigger than 10,current is ${value.length} '
+                : null;
+          },
           model: FormeTextFieldModel(
             selectAllOnFocus: true,
             decoration: InputDecoration(
               labelText: 'Text',
+              suffixIcon: Builder(
+                builder: (context) {
+                  return ValueListenableBuilder<Optional<String>?>(
+                    valueListenable:
+                        formKey.fieldListenable('text').errorTextListenable,
+                    builder: (context, focus, child) {
+                      return focus == null || focus.isNotPresent
+                          ? Icon(Icons.check)
+                          : Icon(Icons.error);
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -527,10 +542,12 @@ class _DemoPageState extends State<DemoPage> {
             ),
           ),
         ),
-        FormeDropdownButton<String>(
-          name: 'dropdown',
-          model: FormeDropdownButtonModel<String>(
-              icon: Row(
+        FormeInputDecorator(
+          child: DropdownButtonHideUnderline(
+            child: FormeDropdownButton<String>(
+              name: 'dropdown',
+              model: FormeDropdownButtonModel<String>(
+                  icon: Row(
                 children: [
                   InkWell(
                       child: Icon(Icons.clear),
@@ -542,15 +559,15 @@ class _DemoPageState extends State<DemoPage> {
                   ),
                   Icon(Icons.arrow_drop_down)
                 ],
-              ),
-              decoration: InputDecoration(
-                labelText: 'Dropdown Button',
               )),
-          items: FormeUtils.toDropdownMenuItems([
-            'Flutter',
-            'Android',
-            'IOS',
-          ]),
+              items: FormeUtils.toDropdownMenuItems([
+                'Flutter',
+                'Android',
+                'IOS',
+              ]),
+            ),
+          ),
+          name: 'dropdown',
         ),
         Row(children: [
           Flexible(

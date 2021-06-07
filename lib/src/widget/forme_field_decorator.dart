@@ -4,19 +4,20 @@ import 'package:flutter/material.dart';
 import '../render/forme_render_utils.dart';
 import '../forme_core.dart';
 import '../forme_state_model.dart';
+import 'forme_listenable_builder.dart';
 
-typedef FormeDecoratorBuilder<T> = Widget Function(
+typedef FormeDecoratorBuilder<T, E extends FormeModel> = Widget Function(
   BuildContext context,
   ValueListenable<bool> focusListenable,
-  ValueListenable<dynamic> valueListenable,
+  ValueListenable<T?> valueListenable,
   ValueListenable<Optional<String>?> errorTextListenable,
-  T model,
+  E model,
 );
 
-class FormeDecorator<T extends FormeModel> extends StatefulWidget {
+class FormeDecorator<T, E extends FormeModel> extends StatefulWidget {
   final String name;
-  final T model;
-  final FormeDecoratorBuilder<T> builder;
+  final E model;
+  final FormeDecoratorBuilder<T, E> builder;
   FormeDecorator({
     Key? key,
     required this.name,
@@ -25,23 +26,23 @@ class FormeDecorator<T extends FormeModel> extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  FormeDecoratorState<T> createState() => FormeDecoratorState();
+  FormeDecoratorState<T, E> createState() => FormeDecoratorState();
 }
 
-class FormeDecoratorState<T extends FormeModel>
-    extends State<FormeDecorator<T>> {
-  T? _model;
-  late FormefieldListenable _notifier;
+class FormeDecoratorState<T, E extends FormeModel>
+    extends State<FormeDecorator<T, E>> {
+  E? _model;
+  late FormeFieldListenable<T> _notifier;
 
-  T get model => _model ?? widget.model;
+  E get model => _model ?? widget.model;
 
-  late final ValueNotifier<T> modelNotifier;
+  late final ValueNotifier<E> _modelNotifier;
 
   @override
   void initState() {
     super.initState();
-    modelNotifier = ValueNotifier(model);
-    modelNotifier.addListener(() {
+    _modelNotifier = ValueNotifier(model);
+    _modelNotifier.addListener(() {
       setState(() {});
     });
   }
@@ -49,12 +50,12 @@ class FormeDecoratorState<T extends FormeModel>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _notifier = FormeKey.of(context).fieldListenable(widget.name);
+    _notifier = FormeKey.of(context).fieldListenable<T>(widget.name);
   }
 
   @override
   void dispose() {
-    modelNotifier.dispose();
+    _modelNotifier.dispose();
     super.dispose();
   }
 
@@ -63,28 +64,28 @@ class FormeDecoratorState<T extends FormeModel>
     Widget child = widget.builder(
         context,
         _notifier.focusListenable,
-        _notifier.valueNotifier,
+        _notifier.valueListenable,
         _notifier.errorTextListenable,
-        modelNotifier.value);
-    return FormeDecoratorController<T>(
-      modelNotifier,
+        _modelNotifier.value);
+    return FormeDecoratorController<E>(
+      _modelNotifier,
       child: child,
     );
   }
 }
 
 /// used to update decorator model
-class FormeDecoratorController<T extends FormeModel> extends InheritedWidget {
-  final ValueNotifier<T> _valueNotifier;
+class FormeDecoratorController<E extends FormeModel> extends InheritedWidget {
+  final ValueNotifier<E> _valueListenable;
 
-  set model(T model) => _valueNotifier.value = model;
-  T get model => _valueNotifier.value;
+  set model(E model) => _valueListenable.value = model;
+  E get model => _valueListenable.value;
 
-  void update(T model) =>
-      _valueNotifier.value = model.copyWith(_valueNotifier.value) as T;
+  void update(E model) =>
+      _valueListenable.value = model.copyWith(_valueListenable.value) as E;
 
   FormeDecoratorController(
-    this._valueNotifier, {
+    this._valueListenable, {
     required Widget child,
   }) : super(child: child);
 
@@ -100,25 +101,30 @@ class FormeDecoratorController<T extends FormeModel> extends InheritedWidget {
   }
 }
 
+typedef EmptyChecker<T> = bool Function(T? value);
+
 /// wrap your field in a [InputDecorator]
 ///
 /// **worked well if you no need to support prefixIcon & suffixIcon & prefix & sufix**
-class FormeInputDecorator extends FormeDecorator<FormeInputDecoratorModel> {
+class FormeInputDecorator<T>
+    extends FormeDecorator<T, FormeInputDecoratorModel> {
   FormeInputDecorator({
     Key? key,
     InputDecoration? decoration,
     required Widget child,
     required String name,
-    bool isEmpty = false,
+    EmptyChecker<T>? emptyChecker,
   }) : super(
             key: key,
             name: name,
             model: FormeInputDecoratorModel(
                 decoration: decoration ?? const InputDecoration()),
-            builder: (context, a, b, c, model) {
-              if (FormeKey.of(context).quietlyValidate) {
-                return ValueListenableBuilder<bool>(
-                    valueListenable: a,
+            builder: (context, focusListenable, valueListenable,
+                errorTextListenable, model) {
+              if (emptyChecker == null) {
+                if (FormeKey.of(context).quietlyValidate) {
+                  return ValueListenableBuilder<bool>(
+                    valueListenable: focusListenable,
                     builder: (context, focus, _child) {
                       return InputDecorator(
                         isEmpty: false,
@@ -127,22 +133,52 @@ class FormeInputDecorator extends FormeDecorator<FormeInputDecoratorModel> {
                             (model.decoration ?? const InputDecoration()),
                         child: child,
                       );
-                    });
-              }
-              return _ValueListenableBuilder2<bool, Optional<String>?>(
-                a,
-                c,
-                builder:
-                    (context, bool focus, Optional<String>? errorText, _child) {
-                  return InputDecorator(
-                    isEmpty: isEmpty,
-                    isFocused: focus,
-                    decoration: (model.decoration ?? const InputDecoration())
-                        .copyWith(errorText: errorText?.value),
-                    child: child,
+                    },
                   );
-                },
-              );
+                }
+                return ValueListenableBuilder2(
+                  focusListenable,
+                  errorTextListenable,
+                  builder: (context, bool focus, Optional<String>? errorText,
+                      _child) {
+                    return InputDecorator(
+                      isEmpty: false,
+                      isFocused: focus,
+                      decoration: (model.decoration ?? const InputDecoration())
+                          .copyWith(errorText: errorText?.value),
+                      child: child,
+                    );
+                  },
+                );
+              } else {
+                if (FormeKey.of(context).quietlyValidate) {
+                  return ValueListenableBuilder2(
+                      focusListenable, valueListenable,
+                      builder: (context, bool focus, T? value, child) {
+                    return InputDecorator(
+                      isEmpty: emptyChecker(value),
+                      isFocused: focus,
+                      decoration: (model.decoration ?? const InputDecoration()),
+                      child: child,
+                    );
+                  });
+                }
+                return ValueListenableBuilder3(
+                  focusListenable,
+                  errorTextListenable,
+                  valueListenable,
+                  builder: (context, bool focus, Optional<String>? errorText,
+                      T? value, _child) {
+                    return InputDecorator(
+                      isEmpty: emptyChecker(value),
+                      isFocused: focus,
+                      decoration: (model.decoration ?? const InputDecoration())
+                          .copyWith(errorText: errorText?.value),
+                      child: child,
+                    );
+                  },
+                );
+              }
             });
 }
 
@@ -157,36 +193,6 @@ class FormeInputDecoratorModel extends FormeModel {
     return FormeInputDecoratorModel(
       decoration:
           FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
-    );
-  }
-}
-
-class _ValueListenableBuilder2<A, B> extends StatelessWidget {
-  _ValueListenableBuilder2(
-    this.first,
-    this.second, {
-    Key? key,
-    required this.builder,
-    this.child,
-  }) : super(key: key);
-
-  final ValueListenable<A> first;
-  final ValueListenable<B> second;
-  final Widget? child;
-  final Widget Function(BuildContext context, A a, B b, Widget? child) builder;
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<A>(
-      valueListenable: first,
-      builder: (_, a, __) {
-        return ValueListenableBuilder<B>(
-          valueListenable: second,
-          builder: (context, b, __) {
-            return builder(context, a, b, child);
-          },
-        );
-      },
     );
   }
 }

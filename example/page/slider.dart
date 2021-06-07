@@ -8,19 +8,47 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
+        FormeDecorator<double, EmptyStateModel>(
+          model: EmptyStateModel(),
           name: name,
-          decoration: InputDecoration(labelText: 'Slider'),
-          child: FormeSlider(
-            min: 1,
-            max: 100,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeSliderModel(),
-            validator: (value) => value < 50
-                ? 'value must bigger than 50 ,current is $value'
-                : null,
-          ),
+          builder: (context, a, b, c, model) {
+            return Column(
+              children: [
+                ValueListenableBuilder<bool>(
+                    valueListenable: a,
+                    builder: (context, focus, child) {
+                      return Text(
+                        'Slider',
+                        style: TextStyle(
+                            fontSize: 30,
+                            color: focus
+                                ? Colors.greenAccent
+                                : Colors.yellowAccent),
+                      );
+                    }),
+                FormeSlider(
+                  min: 1,
+                  max: 100,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  name: name,
+                  model: FormeSliderModel(),
+                  validator: (value) => value < 50
+                      ? 'value must bigger than 50 ,current is $value'
+                      : null,
+                ),
+                ValueListenableBuilder<Optional<String>?>(
+                    valueListenable: c,
+                    builder: (context, errorText, child) {
+                      return errorText == null || errorText.isNotPresent
+                          ? const SizedBox()
+                          : Text(
+                              errorText.value!,
+                              style: TextStyle(color: Colors.red, fontSize: 30),
+                            );
+                    }),
+              ],
+            );
+          },
         ),
         Wrap(
           children: [
@@ -47,15 +75,6 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
                   inactiveTrackColor: Colors.purpleAccent,
                 ),
               ));
-            }),
-            createButton('update labelText', () async {
-              updateLabel();
-            }),
-            createButton('update labelStyle', () {
-              updateLabelStyle();
-            }),
-            createButton('set helper text', () {
-              updateHelperStyle();
             }),
             createButton('validate', () {
               controller.validate();

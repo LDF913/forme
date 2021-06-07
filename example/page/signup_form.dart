@@ -525,7 +525,7 @@ class CustomTextField extends StatelessWidget {
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validateErrorListener: (m, a) {
                 InputBorder border;
-                if (a == null) {
+                if (a == null || a.isNotPresent) {
                   border = OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
                       borderSide: BorderSide.none);

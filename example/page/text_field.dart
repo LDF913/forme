@@ -16,7 +16,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                   decoration: InputDecoration(
                 labelStyle: TextStyle(
                   fontSize: 30,
-                  color: errorText == null ? Colors.green : Colors.red,
+                  color: errorText == null || errorText.isNotPresent
+                      ? Colors.green
+                      : Colors.red,
                 ),
               )));
             },
@@ -89,8 +91,11 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
                 maxLength: 10,
               ));
             }),
-            createButton('validate', () {
-              controller.validate();
+            builderButton('validate', (context) {
+              String? errorText = controller.validate(quietly: true);
+              if (errorText != null) {
+                showError(context, errorText);
+              }
             }),
           ],
         )

@@ -19,9 +19,10 @@ class CupertinoPickerFieldPage
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validateErrorListener: (field, errorText) {
                 controller.updateModel(FormeCupertinoPickerModel(
-                  useMagnifier: errorText != null,
-                  magnification:
-                      errorText != null ? 1.0 + field.value / 100 : 1.0,
+                  useMagnifier: errorText != null && errorText.isPresent,
+                  magnification: (errorText != null && errorText.isPresent)
+                      ? 1.0 + field.value / 100
+                      : 1.0,
                 ));
               },
               name: name,

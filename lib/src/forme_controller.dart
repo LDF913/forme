@@ -34,6 +34,18 @@ abstract class FormeController {
   /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
   T valueField<T extends FormeValueFieldController>(String name);
 
+  /// notifiers of form field's focus|errorText|value
+  ///
+  ///
+  /// **unlike [FormeFieldController]'s notifier , this controller's notifier will auto find last alived [FormeFieldController] by name,
+  /// in another words , this controller's lifestyle is same as form,but [FormeFieldController]'s lifecycle is same as field,
+  /// so it's safe to use this controller out of form field**
+  ///
+  /// **do not use this notifier out of forme**
+  ///
+  /// see [FormeInputDecorator]
+  FormeFieldListenable<T> fieldListenable<T>(String name);
+
   /// get form data
   ///
   /// if a value field doesn't has a name ,it's value will be ignored
@@ -48,15 +60,18 @@ abstract class FormeController {
   /// or ensure field visible via [FormeFieldController.ensureVisible]
   List<FormeFieldControllerWithError> get errors;
 
-  /// perform a quietly validate
+  /// perform a validate
   ///
   /// if [Forme.quietlyValidate] is true, this method will not display default error
+  ///
+  /// **if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false**
+  ///
   ///
   /// you can get errorText
   /// via [FormeFieldControllerWithError.errorText]
   /// or request a focus via [FormeFieldController.focus]
   /// or ensure field visible via [FormeFieldController.ensureVisible]
-  List<FormeFieldControllerWithError> validate();
+  List<FormeFieldControllerWithError> validate({bool quietly = false});
 
   /// equals to setData(data,trigger:true)
   set data(Map<String, dynamic> data) => setData(data);
@@ -71,18 +86,17 @@ abstract class FormeController {
   /// **only reset all value fields**
   void reset();
 
-  /// whether form is valid
-  ///
-  /// **only check is valid or not , won't show error**
-  bool get isValid;
-
   /// save all form fields
   ///
   /// form field's onSaved will be  called
   void save();
 
+  /// whether validate is quietly
   bool get quietlyValidate;
 
+  /// set validate quietly
+  ///
+  /// **call this method (if Forme's quietlyValidate is false) if you want to display error by a custom way**
   set quietlyValidate(bool quietlyValidate);
 }
 
@@ -188,15 +202,10 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// set newValue on valuefield,if trigger is false,won't trigger onChanged listener
   setValue(T? value, {bool trigger: true});
 
-  /// whether value field is valid,this method won't display error msg
-  /// if you want to show error msg,use validate instead
+  /// validate field , return errorText
   ///
-  ///
-  bool get isValid;
-
-  /// validate value field ,return whether field is valid or not
-  /// this message will show error msg,you can use isValid instead if you don't want show error msg
-  bool validate();
+  /// if [quietly] is true,will not rebuild field and update and display error Text
+  String? validate({bool quietly = false});
 
   /// reset valuefield,will set value to initialValue
   /// also clear error msg
@@ -237,7 +246,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// ``` dart
   ///  return ValueListenableBuilder<String?>(
-  ///         valueListenable:formeKey.valueField(name).valueNotifier,
+  ///         valueListenable:formeKey.valueField(name).valueListenable,
   ///         builder: (context, a, b) {
   ///           return a == null || a.length == 0
   ///               ? SizedBox()
@@ -308,9 +317,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
   setValue(T? value, {bool trigger: true}) =>
       delegate.setValue(value, trigger: true);
   @override
-  bool get isValid => delegate.isValid;
-  @override
-  bool validate() => delegate.validate();
+  String? validate({bool quietly = false}) =>
+      delegate.validate(quietly: quietly);
   @override
   void reset() => delegate.reset();
   @override

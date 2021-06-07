@@ -20,6 +20,20 @@ abstract class BasePage<T, E extends FormeModel> extends StatelessWidget {
     );
   }
 
+  Widget builderButton(
+      String text, void Function(BuildContext context) onPressed) {
+    return Builder(builder: (context) {
+      return Padding(
+        padding: EdgeInsets.all(5),
+        child: TextButton(
+            onPressed: () {
+              onPressed(context);
+            },
+            child: Text(text)),
+      );
+    });
+  }
+
   void showError(BuildContext context, String error) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(error),

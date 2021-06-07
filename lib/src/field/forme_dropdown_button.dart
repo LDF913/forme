@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../render/forme_render_utils.dart';
 import '../forme_core.dart';
 
 import '../forme_field.dart';
@@ -43,11 +42,7 @@ class FormeDropdownButton<T>
             bool readOnly = state.readOnly;
             double iconSize = state.model.iconSize ?? 24;
 
-            InputDecoration inputDecoration =
-                state.model.decoration ?? InputDecoration();
-
-            DropdownButtonFormField<T> dropdownButton =
-                DropdownButtonFormField<T>(
+            DropdownButton<T> dropdownButton = DropdownButton<T>(
               focusNode: state.focusNode,
               autofocus: state.model.autofocus ?? false,
               selectedItemBuilder: state.model.selectedItemBuilder,
@@ -67,7 +62,6 @@ class FormeDropdownButton<T>
               itemHeight: state.model.itemHeight ?? kMinInteractiveDimension,
               focusColor: state.model.focusColor,
               dropdownColor: state.model.dropdownColor,
-              decoration: inputDecoration.copyWith(errorText: state.errorText),
               onChanged: readOnly
                   ? null
                   : (value) {
@@ -76,13 +70,7 @@ class FormeDropdownButton<T>
                     },
             );
 
-            return Row(
-              children: [
-                Expanded(
-                  child: dropdownButton,
-                )
-              ],
-            );
+            return dropdownButton;
           },
         );
 
@@ -128,7 +116,6 @@ class FormeDropdownButtonModel<T> extends FormeModel {
   final Color? focusColor;
   final Color? dropdownColor;
   final double? iconSize;
-  final InputDecoration? decoration;
   final Widget? icon;
   final Color? iconDisabledColor;
   final Color? iconEnabledColor;
@@ -143,7 +130,6 @@ class FormeDropdownButtonModel<T> extends FormeModel {
     this.itemHeight,
     this.focusColor,
     this.dropdownColor,
-    this.decoration,
     this.iconSize,
     this.icon,
     this.iconDisabledColor,
@@ -169,8 +155,6 @@ class FormeDropdownButtonModel<T> extends FormeModel {
       focusColor: focusColor ?? old.focusColor,
       dropdownColor: dropdownColor ?? old.dropdownColor,
       iconSize: iconSize ?? old.iconSize,
-      decoration:
-          FormeRenderUtils.copyInputDecoration(old.decoration, decoration),
       icon: icon ?? old.icon,
       iconDisabledColor: iconDisabledColor ?? old.iconDisabledColor,
       iconEnabledColor: iconEnabledColor ?? old.iconEnabledColor,

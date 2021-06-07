@@ -87,7 +87,6 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
 
             Widget chipWidget =
                 FormeRenderUtils.wrap(state.model.wrapRenderData, chips);
-
             return Focus(
               focusNode: state.focusNode,
               child: ChipTheme(
