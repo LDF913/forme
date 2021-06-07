@@ -663,9 +663,6 @@ class _FormeFieldController<E extends FormeModel>
       state._focusNode!.unfocus();
   }
 
-  @override
-  bool get isValueField => state is ValueFieldState;
-
   E get model => state.model;
 
   @override
@@ -822,7 +819,7 @@ class _FormeController extends FormeController {
     data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
       FormeValueFieldController? controller =
           _state.getFormeFieldController(key);
-      if (controller == null || !controller.isValueField) return;
+      if (controller == null) return;
       controller.setValue(value, trigger: trigger);
     });
   }

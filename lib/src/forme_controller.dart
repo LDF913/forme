@@ -126,9 +126,6 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// if field is not focusable ,an error will be throw
   set focus(bool focus);
 
-  /// whether field is value field
-  bool get isValueField;
-
   /// set state model on field
   ///
   /// directly set model will lose old model
@@ -294,8 +291,6 @@ abstract class FormeFieldControllerDelegate<E extends FormeModel>
   bool get focusable => delegate.focusable;
   @override
   bool get hasFocus => delegate.hasFocus;
-  @override
-  bool get isValueField => true;
   @override
   String? get name => delegate.name;
   @override

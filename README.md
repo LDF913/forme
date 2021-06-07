@@ -220,12 +220,14 @@ lifecycle of FormeValueFieldController's errorTextListenable  is same as field,w
 Column(
 	children:[
 		FormeTextField(validator:validator,name:name),
-		ValueListenableBuilder<Optional<String>?>(
-			valueListenable: formeKey.fieldListenable(name).errorTextListenable,
-			build: (context,errorText,child){
-				return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
-			},
-		),
+		Builder(builder:(context){
+			return ValueListenableBuilder<Optional<String>?>(
+				valueListenable: formeKey.fieldListenable(name).errorTextListenable,
+				build: (context,errorText,child){
+					return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
+				},
+			);
+		})
 ])
 ```
 
@@ -311,7 +313,7 @@ FormeDecorator<EmptyStateModel>(
 ### whether form has a name field
 
 ``` Dart
-bool has = formeKey.hasField(String name);
+bool hasField = formeKey.hasField(String name);
 ```
 
 ### whether current form is readOnly
@@ -346,10 +348,8 @@ Map<String, dynamic> data = formeKey.data;
 
 ### validate
 
-**validate form quietly and return fields with a error**
-
 ``` Dart
-List<FormeFieldControllerWithError> errors = formKey.validate();
+List<FormeFieldControllerWithError> errors = formKey.validate({bool quietly = false});
 ```
 
 ### set form data
@@ -363,12 +363,6 @@ formKey.setData(Map<String,dynamic> data,{bool trigger}) // if trigger is true,w
 
 ``` Dart
 formeKey.reset();
-```
-
-### whether form is valid
-
-``` Dart
-bool isValid = formeKey.isValid;
 ```
 
 ### save form
@@ -433,12 +427,6 @@ bool hasFocus = field.hasFocus;
 field.focus = bool focus;
 ```
 
-### whether current field is a value field
-
-``` Dart
-bool isValueField = field.isValueField;
-```
-
 ### set field model
 
 ``` Dart
@@ -498,25 +486,13 @@ valueField.reset();
 ### validate field
 
 ``` Dart
-bool isValid = valueField.validate();
-```
-
-### whether field is valid
-
-``` Dart
-bool isValid = valueField.isValid;
+String? errorText = valueField.validate({bool quietly = false});
 ```
 
 ### get errorText
 
 ``` Dart
 String? errorText = valueField.errorText;
-```
-
-### quiety validate
-
-``` Dart
-String? errorText = valueField.quietlyValidate();
 ```
 
 ### save field
@@ -541,7 +517,7 @@ FormeValueListenable<Optional<String>?>  errorTextListenable = valueField.errorT
 ### get valueListenable
 
 ``` Dart
-FormeValueListenable<dynamic> errorTextListenable = valueField.errorTextListenable;
+FormeValueListenable<dynamic> valueListenable = valueField.valueListenable;
 ```
 
 ## build your field
