@@ -14,7 +14,7 @@ class FormeCupertinoPicker
     AutovalidateMode? autovalidateMode,
     required int initialValue,
     FormFieldSetter<int>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     required double itemExtent,
     required List<Widget> children,

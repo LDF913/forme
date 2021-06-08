@@ -20,7 +20,7 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
     FormFieldSetter<DateTime>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeDateTimeFieldModel? model,
     ValidateErrorListener<

@@ -22,7 +22,7 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
     AutovalidateMode? autovalidateMode,
     NonnullFormFieldSetter<String>? onSaved,
     String? initialValue,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeTextFieldModel? model,
     ValidateErrorListener<

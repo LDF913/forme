@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
@@ -28,8 +30,9 @@ class RowPage extends StatelessWidget {
                   padding: EdgeInsets.all(5),
                   child: TextButton.icon(
                     onPressed: () {
-                      controller.model =
-                          controller.model.append(FormeSingleCheckbox());
+                      controller.model = controller.model.append(
+                          FormeSingleCheckbox(
+                              name: Random.secure().nextDouble().toString()));
                     },
                     icon: Icon(Icons.add),
                     label: Text('append a checkbox'),

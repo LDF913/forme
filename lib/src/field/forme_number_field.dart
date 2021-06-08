@@ -18,7 +18,7 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
     num? initialValue,
     ValueChanged<num?>? onSubmitted,
     FormFieldSetter<num>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeNumberFieldModel? model,
     ValidateErrorListener<

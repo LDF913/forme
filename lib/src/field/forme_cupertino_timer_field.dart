@@ -21,7 +21,7 @@ class FormeCupertinoTimerField
     AutovalidateMode? autovalidateMode,
     Duration? initialValue,
     FormFieldSetter<Duration>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeCupertinoTimerFieldModel? model,
     ValidateErrorListener<

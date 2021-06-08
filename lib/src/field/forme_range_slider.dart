@@ -23,7 +23,7 @@ class FormeRangeSlider
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
     NonnullFormFieldSetter<RangeValues>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeRangeSliderModel? model,
     required double min,

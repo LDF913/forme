@@ -24,7 +24,7 @@ class FormeCupertinoDateField
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
     FormFieldSetter<DateTime>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeCupertinoDateFieldModel? model,
     ValidateErrorListener<

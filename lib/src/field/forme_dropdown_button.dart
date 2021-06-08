@@ -14,7 +14,7 @@ class FormeDropdownButton<T>
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     FormFieldSetter<T>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
     ValidateErrorListener<

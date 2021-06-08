@@ -14,7 +14,7 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
     FormFieldValidator<T>? validator,
     FormeFieldValueChanged<T, FormeChoiceChipModel<T>>? onChanged,
     FormFieldSetter<T>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeChoiceChipModel<T>? model,

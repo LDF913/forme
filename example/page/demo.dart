@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 
 import 'package:forme/forme.dart';
@@ -128,6 +130,7 @@ class _DemoPageState extends State<DemoPage> {
             FormeFlexModel model =
                 formKey.field('column').model as FormeFlexModel;
             formKey.field('column').model = model.append(FormeNumberField(
+              name: Random.secure().nextDouble().toString(),
               model: FormeNumberFieldModel(
                 textFieldModel: FormeTextFieldModel(),
               ),
@@ -140,6 +143,7 @@ class _DemoPageState extends State<DemoPage> {
             FormeFlexModel model =
                 formKey.field('column').model as FormeFlexModel;
             formKey.field('column').model = model.prepend(FormeNumberField(
+              name: Random.secure().nextDouble().toString(),
               model: FormeNumberFieldModel(
                 textFieldModel: FormeTextFieldModel(
                   decoration: InputDecoration(
@@ -182,7 +186,8 @@ class _DemoPageState extends State<DemoPage> {
         TextButton(
           onPressed: () {
             FormeFlexModel model = formKey.field('row').model as FormeFlexModel;
-            formKey.field('row').model = model.append(FormeSingleCheckbox());
+            formKey.field('row').model = model.append(FormeSingleCheckbox(
+                name: Random.secure().nextDouble().toString()));
           },
           child: Text('append field into dynamic row'),
         ),

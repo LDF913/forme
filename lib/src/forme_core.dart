@@ -236,7 +236,7 @@ class _FormScope {
   FormeController get formeController => state.formeController;
   bool get readOnly => state.readOnly;
   bool get quietlyValidate => state.quietlyValidate;
-  dynamic getInitialValue(String? name) => state.widget.initialValue[name];
+  dynamic getInitialValue(String name) => state.widget.initialValue[name];
 
   void onValueChanged(
       FormeValueFieldController controller, oldValue, newValue) {
@@ -277,7 +277,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     on State<T> {
   bool _init = false;
   FocusNode? _focusNode;
-  String? get name => _field.name;
+  String get name => _field.name;
   late final FormeFieldController<E> controller;
 
   bool get init => _init;

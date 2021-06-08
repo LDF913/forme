@@ -15,7 +15,7 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
     AutovalidateMode? autovalidateMode,
     T? initialValue,
     FormFieldSetter<T>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-
 import 'base_page.dart';
 
 class TextFieldPage extends BasePage<String, FormeTextFieldModel> {

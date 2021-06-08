@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
@@ -38,10 +40,15 @@ class ColumnPage extends StatelessWidget {
                                 FormeRow(children: [
                                   Expanded(
                                       child: FormeTextField(
+                                    name: 'text$i',
                                     initialValue: '$i',
                                   )),
-                                  FormeSingleCheckbox(),
-                                  FormeSingleSwitch(),
+                                  FormeSingleCheckbox(
+                                    name: 'checkbox$i',
+                                  ),
+                                  FormeSingleSwitch(
+                                    name: 'switch$i',
+                                  ),
                                 ], name: 'row$i'),
                               );
                             }
@@ -57,9 +64,18 @@ class ColumnPage extends StatelessWidget {
                         onPressed: () {
                           controller.model = controller.model.prepend(Row(
                             children: [
-                              Expanded(child: FormeTextField()),
-                              FormeSingleCheckbox(),
-                              FormeSingleSwitch(),
+                              Expanded(
+                                child: FormeTextField(
+                                    name: Random.secure()
+                                        .nextDouble()
+                                        .toString()),
+                              ),
+                              FormeSingleCheckbox(
+                                  name:
+                                      Random.secure().nextDouble().toString()),
+                              FormeSingleSwitch(
+                                  name:
+                                      Random.secure().nextDouble().toString()),
                             ],
                           ));
                         },

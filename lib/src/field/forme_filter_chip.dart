@@ -67,7 +67,7 @@ class FormeFilterChip<T>
     NonnullFieldValidator<List<T>>? validator,
     FormeFieldValueChanged<List<T>, FormeFilterChipModel<T>>? onChanged,
     NonnullFormFieldSetter<List<T>>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,

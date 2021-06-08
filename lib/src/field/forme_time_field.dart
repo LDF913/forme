@@ -16,7 +16,7 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,
     FormFieldSetter<TimeOfDay>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeTimeFieldModel? model,
     ValidateErrorListener<

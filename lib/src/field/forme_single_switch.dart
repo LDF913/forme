@@ -15,7 +15,7 @@ class FormeSingleSwitch
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
     NonnullFormFieldSetter<bool>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     Widget? label,
     FormeSingleSwitchModel? model,

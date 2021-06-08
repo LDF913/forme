@@ -20,7 +20,7 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
   /// field's name
   ///
   /// used to control field
-  String? get name;
+  String get name;
 
   @override
   T createState();
@@ -35,14 +35,14 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
 /// if you want to create a stateful form field, but don't want to return a value,you can override this field
 class CommonField<E extends FormeModel> extends StatefulWidget
     with StatefulField<CommonFieldState<E>, E> {
-  final String? name;
+  final String name;
   final FieldContentBuilder<CommonFieldState<E>> builder;
   final E model;
   final bool readOnly;
   final FocusListener<FormeFieldController<E>>? focusListener;
   const CommonField({
     Key? key,
-    this.name,
+    required this.name,
     required this.builder,
     required this.model,
     this.readOnly = false,
@@ -66,7 +66,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
 /// if your return value is nonnull,use [NonnullValueField]
 class ValueField<T, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
-  final String? name;
+  final String name;
   final FormeFieldValueChanged<T, E>? onChanged;
   final E model;
   final bool readOnly;
@@ -88,7 +88,7 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   ValueField({
     Key? key,
     this.onChanged,
-    this.name,
+    required this.name,
     required FieldContentBuilder<ValueFieldState<T, E>> builder,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
@@ -135,7 +135,7 @@ class NonnullValueField<T, E extends FormeModel> extends ValueField<T, E> {
     required T initialValue,
     NonnullFormFieldSetter<T>? onSaved,
     bool enabled = true,
-    String? name,
+    required String name,
     required E model,
     bool readOnly = false,
     Key? key,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-
 import 'base_page.dart';
 
 class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {

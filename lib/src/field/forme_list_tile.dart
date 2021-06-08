@@ -50,7 +50,7 @@ class FormeListTile<T>
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
     NonnullFormFieldSetter<List<T>>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     this.type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,

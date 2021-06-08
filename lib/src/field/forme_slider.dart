@@ -15,7 +15,7 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
     AutovalidateMode? autovalidateMode,
     double? initialValue,
     NonnullFormFieldSetter<double>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     required double min,
     required double max,

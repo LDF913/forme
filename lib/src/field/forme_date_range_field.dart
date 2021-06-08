@@ -17,7 +17,7 @@ class FormeDateRangeField
     AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,
     FormFieldSetter<DateTimeRange>? onSaved,
-    String? name,
+    required String name,
     bool visible = true,
     FormeDateRangeFieldModel? model,
     ValidateErrorListener<

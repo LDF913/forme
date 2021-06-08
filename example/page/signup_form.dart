@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
+import 'package:forme/src/forme_field.dart';
 
 /// from https://github.com/sherazmahar/Flutter-Login-Signup-UI
 class SignupFormPage extends StatefulWidget {

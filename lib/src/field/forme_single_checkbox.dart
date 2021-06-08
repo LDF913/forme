@@ -15,7 +15,7 @@ class FormeSingleCheckbox
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
     NonnullFormFieldSetter<bool>? onSaved,
-    String? name,
+    required String name,
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
     ValidateErrorListener<
