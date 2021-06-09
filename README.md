@@ -53,7 +53,6 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 ```
 -StatefulField
 	- ValueField
-		- NonnullValueField
 	- CommonField
 ```
 
@@ -77,18 +76,7 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | autovalidateMode | false | `AutovalidateMode` | auto validate mode , default is `AutovalidateMode.disabled`|
 | initialValue | false | `dynamic` | initialValue,**can be overwritten by forme's initialValue**|
 | onSaved | false | `FormFieldSetter` | triggered when call forme or field's save method|
-
-### attributes supported by all nonnull value fields
-
-| Attribute |  Required  | Type | Description  |
-| --- | --- | --- | --- |
-| onChanged | false | `NonnullFormeFieldValueChanged` | listen field's value change |
-| validateErrorListener | false | `ValidateErrorListener` | listen field's errorText change |
-| validator | false | `NonnullFieldValidator` | validate field's value |
-| autovalidateMode | false | `AutovalidateMode` | auto validate mode , default is `AutovalidateMode.disabled`|
-| initialValue | true | `dynamic` | initialValue,**can be overwritten by forme's initialValue**|
-| onSaved | false | `NonnullFormFieldSetter` | triggered when call forme or field's save method|
-
+| decoratorBuilder | false | `FormeDecoratorBuilder` | used to decorate a field |
 
 ### currently supported fields
 
@@ -185,7 +173,7 @@ suffixicon: Builder(
 	builder: (context) {
 		FormeValueFieldController<String, FormeModel>
 			controller = FormeFieldController.of(context);
-		return ValueListenableBuilder<Optional<String>?>(
+		return ValueListenableBuilder<FormeValidateError?>(
 			valueListenable: controller.errorTextListenable,
 			child: const IconButton(
 				onPressed: null,
@@ -221,7 +209,7 @@ Column(
 	children:[
 		FormeTextField(validator:validator,name:name),
 		Builder(builder:(context){
-			return ValueListenableBuilder<Optional<String>?>(
+			return ValueListenableBuilder<FormeValidateError?>(
 				valueListenable: formeKey.fieldListenable(name).errorTextListenable,
 				build: (context,errorText,child){
 					return errorText == null || errorText.isNotPresent ? SizedBox() : Text(errorText.value!);
@@ -229,83 +217,6 @@ Column(
 			);
 		})
 ])
-```
-
-## Forme Field Decorator 
-
-unlike `FormeTextField` , some widgets , such as `FormeSlider`, don't have a InputDecorator , you must 
-specific a `FormeDecorator` for them.
-
-**`FormeDecorator`'s name attribute must same as field's name attribute**
-
-eg:
-
-``` Dart
-FormeInputDecorator(
-  name: name,
-  decoration: InputDecoration(labelText: 'Slider'),
-  child: FormeSlider(
-	min: 1,
-	max: 100,
-	autovalidateMode: AutovalidateMode.onUserInteraction,
-	name: name,
-	model: FormeSliderModel(),
-	validator: (value) => value < 50
-		? 'value must bigger than 50 ,current is $value'
-		: null,
-  ),
-),
-```
-
-default `FormeDecorator` is `FormeInputDecorator`.
-
-### Custom Decorator
-
-it's easily to implementing a custom decorator, below is an example:
-
-``` Dart
-FormeDecorator<EmptyStateModel>(
-	model: EmptyStateModel(),
-	name: name,
-	builder: (context, a, b, c, model) {
-	return Column(
-		children: [
-		ValueListenableBuilder<bool>(
-			valueListenable: a,
-			builder: (context, focus, child) {
-				return Text(
-				'Slider',
-				style: TextStyle(
-					fontSize: 30,
-					color: focus
-						? Colors.greenAccent
-						: Colors.yellowAccent),
-				);
-			}),
-		FormeSlider(
-			min: 1,
-			max: 100,
-			autovalidateMode: AutovalidateMode.onUserInteraction,
-			name: name,
-			model: FormeSliderModel(),
-			validator: (value) => value < 50
-				? 'value must bigger than 50 ,current is $value'
-				: null,
-		),
-		ValueListenableBuilder<Optional<String>?>(
-			valueListenable: c,
-			builder: (context, errorText, child) {
-				return errorText == null || errorText.isNotPresent
-					? const SizedBox()
-					: Text(
-						errorText.value!,
-						style: TextStyle(color: Colors.red, fontSize: 30),
-					);
-			}),
-		],
-	);
-	},
-),
 ```
 
 ## FormeKey Methods
@@ -349,14 +260,13 @@ Map<String, dynamic> data = formeKey.data;
 ### validate
 
 ``` Dart
-List<FormeFieldControllerWithError> errors = formKey.validate({bool quietly = false});
+Map<FormeValueFieldController,String> errors = formKey.performValidate({bool quietly = false});
 ```
 
 ### set form data
 
 ``` Dart
-formeKey.data = Map<String,dynamic> data;// equals to formeKey.setData(data,trigger:true)
-formKey.setData(Map<String,dynamic> data,{bool trigger}) // if trigger is true,will trigger fields' onChanged listener
+formeKey.data = Map<String,dynamic> data;
 ```
 
 ### reset form
@@ -388,7 +298,7 @@ formeKey.quieltyValidate = bool quietlyValidate;
 ### get forme controller
 
 ``` Dart
-FormeController formeController = field.controller;
+FormeController formeController = field.formeController;
 ```
 
 ### get field's name
@@ -409,12 +319,6 @@ bool readOnly = field.readOnly;
 field.readOnly = bool readOnly;
 ```
 
-### whether current field is focusable
-
-``` Dart
-bool focusable = field.focusable;
-```
-
 ### whether current field is focusd
 
 ``` Dart
@@ -424,7 +328,8 @@ bool hasFocus = field.hasFocus;
 ### focus|unfocus current Field
 
 ``` Dart
-field.focus = bool focus;
+field.requestFocus();
+field.unfocus();
 ```
 
 ### set field model
@@ -473,8 +378,7 @@ dynamic value = valueField.value;
 ### set field value
 
 ``` Dart
-valueField.value = dynamic data;// equals to formeKey.setData(data,trigger:true)
-valueField.setValue(dynamic data,{bool trigger}) // if trigger is true,will trigger fields' onChanged listener
+valueField.value = dynamic data;
 ```
 
 ### reset field
@@ -486,13 +390,13 @@ valueField.reset();
 ### validate field
 
 ``` Dart
-String? errorText = valueField.validate({bool quietly = false});
+String? errorText = valueField.performValidate({bool quietly = false});
 ```
 
-### get errorText
+### get error
 
 ``` Dart
-String? errorText = valueField.errorText;
+FormeValidateError? error = valueField.error;
 ```
 
 ### save field
@@ -504,14 +408,13 @@ valueField.save();
 ### get decorator controller
 
 ``` Dart
-FormeDecoratorController<T>? decoratorController = 
-      valueField.getFormeDecoratorController<T extends FormeModel>();
+FormeDecoratorController decoratorController = valueField.decoratorController;
 ```
 
 ### get errorTextListenable
 
 ``` Dart
-FormeValueListenable<Optional<String>?>  errorTextListenable = valueField.errorTextListenable;
+FormeValueListenable<FormeValidateError?>  errorTextListenable = valueField.errorTextListenable;
 ```
 
 ### get valueListenable
@@ -523,8 +426,8 @@ FormeValueListenable<dynamic> valueListenable = valueField.valueListenable;
 ## build your field
 
 1. create your `FormeModel` , if you don't need it , use `FormeEmptyModel` instead
-2. create your `ValueField<T,E>|NonnullValueField<T,E>` ,  T is your field return value's type, E is your `FormeModel`'s type
-3. if you want to create your custom `State`,extends `ValueFieldState|NonnullValueFieldState`
+2. create your `ValueField<T,E>` ,  T is your field return value's type, E is your `FormeModel`'s type
+3. if you want to create your custom `State`,extends `ValueFieldState<T,E>`
 
 links below is some examples to help you to build your field
 
@@ -537,8 +440,3 @@ links below is some examples to help you to build your field
 
 1. https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_filter_chip.dart
 2. https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_radio_group.dart
-
-### nonnull value field
-
-1. https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_list_tile.dart
-2. https://github.com/wwwqyhme/forme/blob/main/lib/src/field/forme_slider.dart
