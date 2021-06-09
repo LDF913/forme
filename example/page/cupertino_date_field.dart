@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
 import 'package:forme/forme.dart';
+
 import 'base_page.dart';
 
 class CupertinoDateFieldPage
@@ -10,19 +10,17 @@ class CupertinoDateFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeCupertinoDateField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            validator: (value) => value == null ? 'select a date!' : null,
-            model: FormeCupertinoDateFieldModel(
-                bottomSheetRenderData: FormeBottomSheetRenderData(
-                  afterClose: () => print('close'),
-                ),
-                textFieldModel: FormeTextFieldModel(
-                  decoration: InputDecoration(labelText: 'Cupertino Date'),
-                )),
-          ),
+        FormeCupertinoDateField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          validator: (value) => value == null ? 'select a date!' : null,
+          model: FormeCupertinoDateFieldModel(
+              bottomSheetRenderData: FormeBottomSheetRenderData(
+                afterClose: () => print('close'),
+              ),
+              textFieldModel: FormeTextFieldModel(
+                decoration: InputDecoration(labelText: 'Cupertino Date'),
+              )),
         ),
         Wrap(
           children: [
@@ -103,7 +101,7 @@ class CupertinoDateFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

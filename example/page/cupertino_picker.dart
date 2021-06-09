@@ -9,28 +9,27 @@ class CupertinoPickerFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
-          name: name,
-          decoration: InputDecoration(labelText: 'CupertinoPicker'),
-          child: FormeCupertinoPicker(
-              validator: (value) => value < 100
-                  ? 'value must bigger than 100,current is $value'
-                  : null,
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              validateErrorListener: (field, errorText) {
-                controller.updateModel(FormeCupertinoPickerModel(
-                  useMagnifier: errorText != null && errorText.isPresent,
-                  magnification: (errorText != null && errorText.isPresent)
-                      ? 1.0 + field.value / 100
-                      : 1.0,
-                ));
-              },
-              name: name,
-              initialValue: 50,
-              itemExtent: 50,
-              children: List<Widget>.generate(
-                  1000, (index) => Text(index.toString()))),
-        ),
+        FormeCupertinoPicker(
+            onChanged: (c, v) => print(v),
+            decoratorBuilder: FormeInputDecoratorBuilder(
+                decoration: InputDecoration(labelText: 'Cupertino Picker')),
+            validator: (value) => value! < 100
+                ? 'value must bigger than 100,current is $value'
+                : null,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            validateErrorListener: (field, errorText) {
+              controller.updateModel(FormeCupertinoPickerModel(
+                useMagnifier: errorText != null && errorText.hasError,
+                magnification: (errorText != null && errorText.hasError)
+                    ? 1.0 + field.value / 100
+                    : 1.0,
+              ));
+            },
+            name: name,
+            initialValue: 50,
+            itemExtent: 50,
+            children:
+                List<Widget>.generate(1000, (index) => Text(index.toString()))),
         Wrap(
           children: [
             createButton('change item extent to 30', () {
@@ -106,7 +105,7 @@ class CupertinoPickerFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

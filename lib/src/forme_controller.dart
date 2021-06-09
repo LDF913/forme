@@ -1,13 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'forme_field.dart';
 
 import 'package:forme/forme.dart';
 import 'forme_state_model.dart';
-import 'widget/forme_field_decorator.dart';
 
 /// base form controller
 ///
-/// you can access a form controller by [FormeKey]
+/// you can access a form controller by [FormeKey] or [FormeKey.of]
 abstract class FormeController {
   /// whether form has a name field
   bool hasField(String name);
@@ -18,20 +18,10 @@ abstract class FormeController {
   /// set form readOnly|editable
   set readOnly(bool readOnly);
 
-  /// create a new [FormeFieldController] by name
-  ///
-  /// you can override [AbstractFieldState.createFormeFieldController] to wrap you custom
-  /// FormeFieldController, and this method will return your wrapped.
-  /// **when you override this method,
-  /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
+  /// find [FormeFieldController] by name
   T field<T extends FormeFieldController>(String name);
 
-  /// create a new [FormeValueFieldController] by name
-  ///
-  /// you can override [AbstractFieldState.createFormeFieldController] to wrap you custom
-  /// FormeFieldController, and this method will return your wrapped.
-  /// **when you override this method,
-  /// you should handle value that returned  by parent carefully to avoid lose some abilities provided by  parent**
+  /// find [FormeValueFieldController] by name
   T valueField<T extends FormeValueFieldController>(String name);
 
   /// notifiers of form field's focus|errorText|value
@@ -51,14 +41,10 @@ abstract class FormeController {
   /// if a value field doesn't has a name ,it's value will be ignored
   Map<String, dynamic> get data;
 
-  /// get error msg after validate form,if you don't want to display error text,
-  /// look at [quietlyValidate]
+  /// get error msg after [performValidate]
   ///
-  /// you can get errorText
-  /// via [FormeFieldControllerWithError.errorText]
-  /// or request a focus via [FormeFieldController.focus]
-  /// or ensure field visible via [FormeFieldController.ensureVisible]
-  List<FormeFieldControllerWithError> get errors;
+  /// key is [FormeValueFieldController]
+  Map<FormeValueFieldController, String> get errors;
 
   /// perform a validate
   ///
@@ -66,20 +52,13 @@ abstract class FormeController {
   ///
   /// **if [quietly] is true , this method will not update and display error though [Forme.quietlyValidate] is false**
   ///
-  ///
-  /// you can get errorText
-  /// via [FormeFieldControllerWithError.errorText]
-  /// or request a focus via [FormeFieldController.focus]
-  /// or ensure field visible via [FormeFieldController.ensureVisible]
-  List<FormeFieldControllerWithError> validate({bool quietly = false});
+  /// key is [FormeValueFieldController]
+  /// value is errorMsg
+  Map<FormeValueFieldController, String> performValidate(
+      {bool quietly = false});
 
-  /// equals to setData(data,trigger:true)
-  set data(Map<String, dynamic> data) => setData(data);
-
-  /// set form data
-  ///
-  /// [trigger] whether trigger onChanged
-  void setData(Map<String, dynamic> data, {bool trigger = true});
+  /// set forme data
+  set data(Map<String, dynamic> data);
 
   /// reset form
   ///
@@ -103,10 +82,10 @@ abstract class FormeController {
 /// used to control form field
 abstract class FormeFieldController<E extends FormeModel> {
   /// get forme controller
-  FormeController get controller;
+  FormeController get formeController;
 
   ///get field's name
-  String? get name;
+  String get name;
 
   /// whether field is readOnly;
   bool get readOnly;
@@ -115,16 +94,20 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// set readOnly(bool readOnly);
   set readOnly(bool readOnly);
 
-  /// whether field is focusable
-  bool get focusable;
-
   // whether field is focused
   bool get hasFocus;
 
-  /// focus|unfocus field
+  /// request focus
   ///
-  /// if field is not focusable ,an error will be throw
-  set focus(bool focus);
+  /// if current field don't have a focusNode or focusNode is unfocusable,this method will no effect
+  void requestFocus();
+
+  /// unfocus
+  ///
+  /// if current field don't have a focusNode or focusNode is unfocusable,this method will no effect
+  void unfocus({
+    UnfocusDisposition disposition = UnfocusDisposition.scope,
+  });
 
   /// set state model on field
   ///
@@ -175,14 +158,10 @@ abstract class FormeFieldController<E extends FormeModel> {
   ///
   /// it's lifecycle is same as field
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
-  FormeValueListenable<bool> get focusListenable;
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
+  ValueListenable<bool> get focusListenable;
 
   static T of<T extends FormeFieldController>(BuildContext context) {
-    return InheritedFormeFieldController.of(context) as T;
-  }
-
-  static T? maybeOf<T extends FormeFieldController>(BuildContext context) {
     return InheritedFormeFieldController.of(context) as T;
   }
 }
@@ -192,26 +171,28 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// get current value of valuefield
   T? get value;
 
-  /// set newValue on valuefield,this method will trigger onChanged listener
-  /// if you don't want to trigger it,you can use setValue method
-  set value(T? value) => setValue(value, trigger: true);
-
-  /// set newValue on valuefield,if trigger is false,won't trigger onChanged listener
-  setValue(T? value, {bool trigger: true});
+  /// set field value
+  set value(T? value);
 
   /// validate field , return errorText
   ///
   /// if [quietly] is true,will not rebuild field and update and display error Text
-  String? validate({bool quietly = false});
+  String? performValidate({bool quietly = false});
 
   /// reset valuefield,will set value to initialValue
   /// also clear error msg
   void reset();
 
-  /// get error message
+  /// get error
+  ///
+  /// error is null means this field has not validated yet
+  ///
+  /// if error is not null and [FormeValidateError.text] is null ,means field is valid
+  ///
+  /// if error is not null and [FormeValidateError.text] is not null ,means is invalid
   ///
   /// if [Forme.quietlyValidate] is true, this method will always return null
-  String? get errorText;
+  FormeValidateError? get error;
 
   /// save field
   ///
@@ -219,10 +200,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   void save();
 
   /// get forme decorator controller
-  ///
-  /// maybe null if field not wrapped by a [FormeDecorator]
-  FormeDecoratorController<T>?
-      getFormeDecoratorController<T extends FormeModel>();
+  FormeDecoratorController get decoratorController;
 
   /// get error listenable
   ///
@@ -230,8 +208,8 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
-  FormeValueListenable<Optional<String>?> get errorTextListenable;
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
+  ValueListenable<FormeValidateError?> get errorTextListenable;
 
   /// get value listenable
   ///
@@ -255,78 +233,33 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   ///
   /// this notifier is used for [ValueListenableBuilder]
   ///
-  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenableController] instead**
-  FormeValueListenable<T?> get valueListenable;
+  /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
+  ValueListenable<T?> get valueListenable;
+
+  static T of<T extends FormeValueFieldController>(BuildContext context) {
+    return InheritedFormeFieldController.of(context) as T;
+  }
 }
 
-abstract class FormeFieldControllerDelegate<E extends FormeModel>
-    implements FormeFieldController<E> {
-  FormeFieldController<E> get delegate;
+/// used to control decorator's model
+/// see  [ValueField.decoratorBuilder]
+abstract class FormeDecoratorController {
+  /// get current decorator model
+  ///
+  /// always return null if you don't update or set a decorator model yet
+  FormeModel? get currentModel;
 
-  @override
-  FormeController get controller => delegate.controller;
-  @override
-  E get model => delegate.model;
-  @override
-  set model(E model) => delegate.model = model;
-  @override
-  bool get readOnly => delegate.readOnly;
-  @override
-  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
-  @override
-  Future<void> ensureVisible(
-          {Duration? duration,
-          Curve? curve,
-          ScrollPositionAlignmentPolicy? alignmentPolicy,
-          double? alignment}) =>
-      delegate.ensureVisible(
-        duration: duration,
-        curve: curve,
-        alignmentPolicy: alignmentPolicy,
-        alignment: alignment,
-      );
-  @override
-  set focus(bool focus) => delegate.focus = focus;
-  @override
-  bool get focusable => delegate.focusable;
-  @override
-  bool get hasFocus => delegate.hasFocus;
-  @override
-  String? get name => delegate.name;
-  @override
-  void updateModel(E model) => delegate.updateModel(model);
-  @override
-  FormeValueListenable<bool> get focusListenable => delegate.focusListenable;
-}
+  /// update decorator model
+  ///
+  /// the model type is determined by type of FormeDecorator
+  ///
+  /// eg: [FormeInputDecorator]'s model type is [FormeInputDecoratorModel]
+  update(FormeModel model);
 
-abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
-    extends FormeFieldControllerDelegate<E>
-    implements FormeValueFieldController<T, E> {
-  FormeValueFieldController<T, E> get delegate;
-
-  @override
-  T? get value => delegate.value;
-  @override
-  set value(T? value) => setValue(value, trigger: true);
-  @override
-  setValue(T? value, {bool trigger: true}) =>
-      delegate.setValue(value, trigger: true);
-  @override
-  String? validate({bool quietly = false}) =>
-      delegate.validate(quietly: quietly);
-  @override
-  void reset() => delegate.reset();
-  @override
-  String? get errorText => delegate.errorText;
-  @override
-  void save() => delegate.save();
-  @override
-  FormeDecoratorController<T>?
-      getFormeDecoratorController<T extends FormeModel>() =>
-          delegate.getFormeDecoratorController<T>();
-  @override
-  FormeValueListenable<Optional<String>?> get errorTextListenable =>
-      delegate.errorTextListenable;
-  @override
-  FormeValueListenable<T?> get valueListenable => delegate.valueListenable;
+  /// set decorator model
+  ///
+  /// the model type is determined by type of FormeDecorator
+  ///
+  /// eg: [FormeInputDecorator]'s model type is [FormeInputDecoratorModel]
+  set model(FormeModel model);
 }

@@ -7,28 +7,26 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeTextField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            validateErrorListener: (field, errorText) {
-              controller.updateModel(FormeTextFieldModel(
-                  decoration: InputDecoration(
-                labelStyle: TextStyle(
-                  fontSize: 30,
-                  color: errorText == null || errorText.isNotPresent
-                      ? Colors.green
-                      : Colors.red,
-                ),
-              )));
-            },
-            name: name,
-            model: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'TextField'),
-            ),
-            validator: (value) => value.length < 8
-                ? 'value length must bigger than 8,current length is ${value.length}'
-                : null,
+        FormeTextField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          validateErrorListener: (field, errorText) {
+            controller.updateModel(FormeTextFieldModel(
+                decoration: InputDecoration(
+              labelStyle: TextStyle(
+                fontSize: 30,
+                color: errorText == null || !errorText.hasError
+                    ? Colors.green
+                    : Colors.red,
+              ),
+            )));
+          },
+          name: name,
+          model: FormeTextFieldModel(
+            decoration: InputDecoration(labelText: 'TextField'),
           ),
+          validator: (value) => value!.length < 8
+              ? 'value length must bigger than 8,current length is ${value.length}'
+              : null,
         ),
         Wrap(
           children: [
@@ -91,7 +89,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ));
             }),
             builderButton('validate', (context) {
-              String? errorText = controller.validate(quietly: true);
+              String? errorText = controller.performValidate(quietly: true);
               if (errorText != null) {
                 showError(context, errorText);
               }

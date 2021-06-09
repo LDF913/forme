@@ -25,8 +25,10 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     FocusListener<FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
   }) : super(
           key: key,
+          decoratorBuilder: decoratorBuilder,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
           model: model ?? FormeTimeFieldModel(),
@@ -94,11 +96,10 @@ class _FormeTimeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
-  }
-
-  @override
-  void afterValueChanged(TimeOfDay? oldValue, TimeOfDay? current) {
-    textEditingController.text = value == null ? '' : _formatter(value!);
+    valueListenable.addListener(() {
+      TimeOfDay? value = valueListenable.value;
+      textEditingController.text = value == null ? '' : _formatter(value);
+    });
   }
 
   @override

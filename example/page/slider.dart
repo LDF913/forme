@@ -7,47 +7,17 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
   Widget get body {
     return Column(
       children: [
-        FormeDecorator<double, EmptyStateModel>(
-          model: EmptyStateModel(),
+        FormeSlider(
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: 'Slider')),
+          min: 1,
+          max: 100,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          builder: (context, a, b, c, model) {
-            return Column(
-              children: [
-                ValueListenableBuilder<bool>(
-                    valueListenable: a,
-                    builder: (context, focus, child) {
-                      return Text(
-                        'Slider',
-                        style: TextStyle(
-                            fontSize: 30,
-                            color: focus
-                                ? Colors.greenAccent
-                                : Colors.yellowAccent),
-                      );
-                    }),
-                FormeSlider(
-                  min: 1,
-                  max: 100,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  name: name,
-                  model: FormeSliderModel(),
-                  validator: (value) => value < 50
-                      ? 'value must bigger than 50 ,current is $value'
-                      : null,
-                ),
-                ValueListenableBuilder<Optional<String>?>(
-                    valueListenable: c,
-                    builder: (context, errorText, child) {
-                      return errorText == null || errorText.isNotPresent
-                          ? const SizedBox()
-                          : Text(
-                              errorText.value!,
-                              style: TextStyle(color: Colors.red, fontSize: 30),
-                            );
-                    }),
-              ],
-            );
-          },
+          model: FormeSliderModel(),
+          validator: (value) => value! < 50
+              ? 'value must bigger than 50 ,current is $value'
+              : null,
         ),
         Wrap(
           children: [
@@ -76,7 +46,7 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
               ));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

@@ -8,13 +8,13 @@ import '../forme_core.dart';
 
 typedef FormeLabelRender = String Function(double value);
 
-class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
+class FormeSlider extends ValueField<double, FormeSliderModel> {
   FormeSlider({
-    NonnullFormeFieldValueChanged<double, FormeSliderModel>? onChanged,
-    NonnullFieldValidator<double>? validator,
+    FormeFieldValueChanged<double, FormeSliderModel>? onChanged,
+    FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
-    NonnullFormFieldSetter<double>? onSaved,
+    FormFieldSetter<double>? onSaved,
     required String name,
     bool readOnly = false,
     required double min,
@@ -25,7 +25,10 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
     FocusListener<FormeValueFieldController<double, FormeSliderModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<double>? decoratorBuilder,
   }) : super(
+          nullValueReplacement: min,
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -38,7 +41,7 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
           onChanged: onChanged,
           onSaved: onSaved,
           validator: validator,
-          initialValue: initialValue ?? min,
+          initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           builder: (state) {
             bool readOnly = state.readOnly;
@@ -48,7 +51,7 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
             Color? activeColor = state.model.activeColor;
             Color? inactiveColor = state.model.inactiveColor;
 
-            double value = state.value;
+            double value = state.value!;
 
             String? sliderLabel = state.model.labelRender == null
                 ? null
@@ -58,7 +61,7 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
                 state.model.sliderThemeData ?? SliderTheme.of(state.context);
             if (sliderThemeData.thumbShape == null)
               sliderThemeData = sliderThemeData.copyWith(
-                  thumbShape: CustomSliderThumbCircle(value: state.value));
+                  thumbShape: CustomSliderThumbCircle(value: state.value!));
             Widget slider = SliderTheme(
               data: sliderThemeData,
               child: Slider(
@@ -92,13 +95,12 @@ class FormeSlider extends NonnullValueField<double, FormeSliderModel> {
   _FormeSliderState createState() => _FormeSliderState();
 }
 
-class _FormeSliderState
-    extends NonnullValueFieldState<double, FormeSliderModel> {
+class _FormeSliderState extends ValueFieldState<double, FormeSliderModel> {
   @override
   FormeSliderModel beforeUpdateModel(
       FormeSliderModel old, FormeSliderModel current) {
-    if (current.min != null && value < current.min!) setValue(current.min!);
-    if (current.max != null && value > current.max!) setValue(current.max!);
+    if (current.min != null && value! < current.min!) setValue(current.min!);
+    if (current.max != null && value! > current.max!) setValue(current.max!);
     return current;
   }
 

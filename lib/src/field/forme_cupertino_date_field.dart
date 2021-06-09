@@ -34,7 +34,9 @@ class FormeCupertinoDateField
             FormeValueFieldController<DateTime, FormeCupertinoDateFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<DateTime>? decoratorBuilder,
   }) : super(
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -131,25 +133,24 @@ class _FormeCupertinoDateFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: value == null ? '' : _formatter(model.type!, value!));
+    valueListenable.addListener(() {
+      textEditingController.text = valueListenable.value == null
+          ? ''
+          : _formatter(model.type!, valueListenable.value!);
+    });
   }
 
   @override
-  void afterValueChanged(DateTime? oldValue, DateTime? current) {
-    textEditingController.text =
-        value == null ? '' : _formatter(model.type!, value!);
-  }
-
-  @override
-  DateTime? beforeSetValue(DateTime? newValue) {
-    if (newValue == null) return null;
-    newValue = simple(newValue);
+  DateTime? get value {
+    DateTime? value = super.value;
+    if (value == null) return null;
+    value = simple(value);
     if (model.minuteInterval != null &&
         model.minuteInterval != 1 &&
-        newValue.minute % model.minuteInterval! != 0) {
-      newValue = DateTime(
-          newValue.year, newValue.month, newValue.day, newValue.hour, 0);
+        value.minute % model.minuteInterval! != 0) {
+      value = DateTime(value.year, value.month, value.day, value.hour, 0);
     }
-    return newValue;
+    return value;
   }
 
   @override

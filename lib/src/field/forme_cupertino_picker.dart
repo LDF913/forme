@@ -6,13 +6,12 @@ import '../forme_state_model.dart';
 import '../forme_field.dart';
 import '../forme_utils.dart';
 
-class FormeCupertinoPicker
-    extends NonnullValueField<int, FormeCupertinoPickerModel> {
+class FormeCupertinoPicker extends ValueField<int, FormeCupertinoPickerModel> {
   FormeCupertinoPicker({
-    NonnullFormeFieldValueChanged<int, FormeCupertinoPickerModel>? onChanged,
-    NonnullFieldValidator<int>? validator,
+    FormeFieldValueChanged<int, FormeCupertinoPickerModel>? onChanged,
+    FormFieldValidator<int>? validator,
     AutovalidateMode? autovalidateMode,
-    required int initialValue,
+    int? initialValue,
     FormFieldSetter<int>? onSaved,
     required String name,
     bool readOnly = false,
@@ -22,7 +21,10 @@ class FormeCupertinoPicker
     ValidateErrorListener? validateErrorListener,
     FocusListener? focusListener,
     Key? key,
+    FormeDecoratorBuilder<int>? decoratorBuilder,
   }) : super(
+          nullValueReplacement: 0,
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -86,7 +88,7 @@ class FormeCupertinoPicker
 }
 
 class _FormeCupertinoPickerState
-    extends NonnullValueFieldState<int, FormeCupertinoPickerModel> {
+    extends ValueFieldState<int, FormeCupertinoPickerModel> {
   late FixedExtentScrollController scrollController;
 
   late int index;
@@ -97,18 +99,19 @@ class _FormeCupertinoPickerState
   @override
   void afterInitiation() {
     super.afterInitiation();
-    scrollController = FixedExtentScrollController(initialItem: initialValue);
+    scrollController =
+        FixedExtentScrollController(initialItem: initialValue ?? 0);
+    valueListenable.addListener(() {
+      scrollController.jumpToItem(valueListenable.value!);
+    });
   }
 
   void onScrollStatusChanged(bool scrolling) {
     this.scrolling = scrolling;
     if (!scrolling) {
       if (action != null) {
-        setState(() {
-          setValue(index);
-          action!();
-          action = null;
-        });
+        action!();
+        action = null;
       } else {
         didChange(index);
       }
@@ -116,36 +119,35 @@ class _FormeCupertinoPickerState
   }
 
   @override
-  void afterValueChanged(num? oldValue, num? current) {
-    scrollController.jumpToItem(super.value);
-  }
-
-  @override
   FormeCupertinoPickerModel beforeUpdateModel(
       FormeCupertinoPickerModel old, FormeCupertinoPickerModel current) {
-    bool rebuild = (current.children != null &&
-            !FormeUtils.compare(old.children, current.children)) ||
+    bool updateChildren = current.children != null &&
+        !FormeUtils.compare(old.children, current.children);
+    bool rebuild = updateChildren ||
         (current.itemExtent != null && current.itemExtent != old.itemExtent) ||
         (current.selectionOverlay != null &&
             current.selectionOverlay != old.selectionOverlay);
 
-    if (current.children != null) {
-      int max = current.children!.length - 1;
-      if (value > max) setValue(max);
-    }
     if (rebuild) {
       if (this.scrolling) {
         action = () {
-          scrollController.dispose();
-          scrollController = FixedExtentScrollController(initialItem: value);
-          _key = UniqueKey();
-          setModel(current.copyWith(old));
+          setState(() {
+            if (updateChildren) {
+              didChange(0);
+            } else {
+              didChange(index);
+            }
+            scrollController.dispose();
+            scrollController = FixedExtentScrollController(initialItem: value!);
+            _key = UniqueKey();
+            setModel(current.copyWith(old));
+          });
         };
         return old;
       }
 
       scrollController.dispose();
-      scrollController = FixedExtentScrollController(initialItem: value);
+      scrollController = FixedExtentScrollController(initialItem: value!);
       _key = UniqueKey();
     }
 
@@ -173,7 +175,7 @@ class _FormeCupertinoPickerState
   @override
   void reset() {
     super.reset();
-    scrollController.jumpToItem(super.value);
+    scrollController.jumpToItem(value ?? 0);
   }
 }
 

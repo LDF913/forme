@@ -10,16 +10,14 @@ class CupertinoTimerFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeCupertinoTimerField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeCupertinoTimerFieldModel(
-                textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'Cupertino Timer'),
-            )),
-            validator: (value) => value == null ? 'select a duration!' : null,
-          ),
+        FormeCupertinoTimerField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          model: FormeCupertinoTimerFieldModel(
+              textFieldModel: FormeTextFieldModel(
+            decoration: InputDecoration(labelText: 'Cupertino Timer'),
+          )),
+          validator: (value) => value == null ? 'select a duration!' : null,
         ),
         Wrap(
           children: [
@@ -92,7 +90,7 @@ class CupertinoTimerFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

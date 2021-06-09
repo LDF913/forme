@@ -7,14 +7,13 @@ import '../forme_state_model.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
 
-class FormeSingleCheckbox
-    extends NonnullValueField<bool, FormeSingleCheckboxModel> {
+class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
   FormeSingleCheckbox({
-    NonnullFormeFieldValueChanged<bool, FormeSingleCheckboxModel>? onChanged,
-    NonnullFieldValidator<bool>? validator,
+    FormeFieldValueChanged<bool, FormeSingleCheckboxModel>? onChanged,
+    FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
-    NonnullFormFieldSetter<bool>? onSaved,
+    FormFieldSetter<bool>? onSaved,
     required String name,
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
@@ -25,6 +24,7 @@ class FormeSingleCheckbox
         focusListener,
     Key? key,
   }) : super(
+          nullValueReplacement: false,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
           key: key,
@@ -38,7 +38,7 @@ class FormeSingleCheckbox
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            bool value = state.value;
+            bool value = state.value!;
             FormeCheckboxRenderData? checkboxRenderData =
                 state.model.checkboxRenderData;
             return Row(

@@ -8,16 +8,14 @@ class DateRangeFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeDateRangeField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeDateRangeFieldModel(
-                textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'DateRange'),
-            )),
-            validator: (value) => value == null ? 'select a date range!' : null,
-          ),
+        FormeDateRangeField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          model: FormeDateRangeFieldModel(
+              textFieldModel: FormeTextFieldModel(
+            decoration: InputDecoration(labelText: 'DateRange'),
+          )),
+          validator: (value) => value == null ? 'select a date range!' : null,
         ),
         Wrap(
           children: [
@@ -103,7 +101,7 @@ class DateRangeFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

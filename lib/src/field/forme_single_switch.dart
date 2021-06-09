@@ -7,14 +7,13 @@ import '../forme_state_model.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
 
-class FormeSingleSwitch
-    extends NonnullValueField<bool, FormeSingleSwitchModel> {
+class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
   FormeSingleSwitch({
-    NonnullFormeFieldValueChanged<bool, FormeSingleSwitchModel>? onChanged,
-    NonnullFieldValidator<bool>? validator,
+    FormeFieldValueChanged<bool, FormeSingleSwitchModel>? onChanged,
+    FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
-    NonnullFormFieldSetter<bool>? onSaved,
+    FormFieldSetter<bool>? onSaved,
     required String name,
     bool readOnly = false,
     Widget? label,
@@ -26,6 +25,7 @@ class FormeSingleSwitch
         focusListener,
     Key? key,
   }) : super(
+          nullValueReplacement: false,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -39,7 +39,7 @@ class FormeSingleSwitch
           validator: validator,
           builder: (state) {
             bool readOnly = state.readOnly;
-            bool value = state.value;
+            bool value = state.value!;
 
             return Row(
               mainAxisSize: MainAxisSize.min,

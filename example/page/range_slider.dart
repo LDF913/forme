@@ -8,19 +8,17 @@ class RangeSliderFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
+        FormeRangeSlider(
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: 'Range Slider')),
+          min: 1,
+          max: 100,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          decoration: InputDecoration(labelText: 'Slider'),
-          child: FormeRangeSlider(
-            min: 1,
-            max: 100,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeRangeSliderModel(),
-            validator: (value) => value.start < 50
-                ? 'start value must bigger than 50 ,current is $value'
-                : null,
-          ),
+          model: FormeRangeSliderModel(),
+          validator: (value) => value!.start < 50
+              ? 'start value must bigger than 50 ,current is $value'
+              : null,
         ),
         Wrap(
           children: [
@@ -58,7 +56,7 @@ class RangeSliderFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

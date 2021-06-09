@@ -24,8 +24,10 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
     FocusListener<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
           key: key,
+          decoratorBuilder: decoratorBuilder,
           model: (model ?? FormeChoiceChipModel<T>())
               .copyWith(FormeChoiceChipModel<T>(items: items)),
           readOnly: readOnly,

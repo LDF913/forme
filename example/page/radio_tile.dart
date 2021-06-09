@@ -9,35 +9,33 @@ class RadioTileFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
+        FormeRadioGroup<String>(
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: 'Radio Group')),
+          items: [
+            FormeListTileItem(
+              title: Text('java'),
+              data: 'java',
+              secondary: Text('secondary1'),
+              subtitle: Text('subtitle'),
+            ),
+            FormeListTileItem(
+              title: Text('c#'),
+              data: 'c#',
+              secondary: Text('secondary2'),
+              subtitle: Text('subtitle'),
+            ),
+            FormeListTileItem(
+              title: Text('python'),
+              data: 'python',
+              secondary: Text('secondary3'),
+              subtitle: Text('subtitle'),
+            ),
+          ],
+          model: FormeRadioGroupModel<String>(),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          decoration: InputDecoration(labelText: 'Radio Tile'),
-          child: FormeRadioGroup<String>(
-            items: [
-              FormeListTileItem(
-                title: Text('java'),
-                data: 'java',
-                secondary: Text('secondary1'),
-                subtitle: Text('subtitle'),
-              ),
-              FormeListTileItem(
-                title: Text('c#'),
-                data: 'c#',
-                secondary: Text('secondary2'),
-                subtitle: Text('subtitle'),
-              ),
-              FormeListTileItem(
-                title: Text('python'),
-                data: 'python',
-                secondary: Text('secondary3'),
-                subtitle: Text('subtitle'),
-              ),
-            ],
-            model: FormeRadioGroupModel<String>(),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            validator: (value) => value == null ? 'select one item!' : null,
-          ),
+          validator: (value) => value == null ? 'select one item!' : null,
         ),
         Wrap(
           children: [
@@ -59,7 +57,7 @@ class RadioTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

@@ -7,19 +7,17 @@ class NumberFieldPage extends BasePage<num, FormeNumberFieldModel> {
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeNumberField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeNumberFieldModel(
-                max: 99,
-                textFieldModel: FormeTextFieldModel(
-                  decoration: InputDecoration(labelText: 'Number'),
-                )),
-            validator: (value) => value == null || value < 50
-                ? 'value must bigger than 50,current value is $value'
-                : null,
-          ),
+        FormeNumberField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          model: FormeNumberFieldModel(
+              max: 99,
+              textFieldModel: FormeTextFieldModel(
+                decoration: InputDecoration(labelText: 'Number'),
+              )),
+          validator: (value) => value == null || value < 50
+              ? 'value must bigger than 50,current value is $value'
+              : null,
         ),
         Wrap(
           children: [
@@ -95,7 +93,7 @@ class NumberFieldPage extends BasePage<num, FormeNumberFieldModel> {
               )));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

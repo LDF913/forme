@@ -25,7 +25,9 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
     FocusListener<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+            decoratorBuilder: decoratorBuilder,
             focusListener: focusListener,
             validateErrorListener: validateErrorListener,
             key: key,

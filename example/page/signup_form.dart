@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-import 'package:forme/src/forme_field.dart';
 
 /// from https://github.com/sherazmahar/Flutter-Login-Signup-UI
 class SignupFormPage extends StatefulWidget {
@@ -50,7 +49,6 @@ class _SignUpScreenState extends State<SignupFormPage> {
                       height: _height / 35,
                     ),
                     button(),
-                    infoTextRow(),
                     //signInTextRow(),
                   ],
                 ),
@@ -153,7 +151,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
       name: 'firstName',
       formeKey: formeKey,
       validator: (v) =>
-          v.length < 6 ? 'First Name\'s must bigger than 6' : null,
+          v!.length < 6 ? 'First Name\'s must bigger than 6' : null,
     );
   }
 
@@ -164,7 +162,8 @@ class _SignUpScreenState extends State<SignupFormPage> {
       hint: "Last Name",
       name: 'lastName',
       formeKey: formeKey,
-      validator: (v) => v.length < 6 ? 'Last Name\'s must bigger than 6' : null,
+      validator: (v) =>
+          v!.length < 6 ? 'Last Name\'s must bigger than 6' : null,
     );
   }
 
@@ -207,14 +206,10 @@ class _SignUpScreenState extends State<SignupFormPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
-                FormeSingleCheckbox(
+                FormeSingleSwitch(
                   name: 'accept',
                   validator: (v) =>
-                      !v ? 'you must accept all terms and conditions' : null,
-                  model: FormeSingleCheckboxModel(
-                      checkboxRenderData: FormeCheckboxRenderData(
-                    activeColor: Colors.orange[200],
-                  )),
+                      !v! ? 'you must accept all terms and conditions' : null,
                 ),
                 Text(
                   "I accept all terms and conditions",
@@ -228,14 +223,14 @@ class _SignUpScreenState extends State<SignupFormPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Builder(builder: (context) {
-                  return ValueListenableBuilder<Optional<String>?>(
+                  return ValueListenableBuilder<FormeValidateError?>(
                       valueListenable: formeKey
                           .fieldListenable('accept')
                           .errorTextListenable,
                       builder: (context, a, b) {
-                        if (a != null && a.isPresent)
+                        if (a != null && a.hasError)
                           return Text(
-                            a.value!,
+                            a.text!,
                             style: TextStyle(
                               fontSize: 10,
                               color: Colors.red,
@@ -296,14 +291,7 @@ class _SignUpScreenState extends State<SignupFormPage> {
             padding: MaterialStateProperty.all(EdgeInsets.all(0.0)),
           ),
           onPressed: () {
-            List<FormeFieldControllerWithError> errors = formeKey.validate();
-            if (errors.isNotEmpty) {
-              errors.first.formeFieldController
-                  .ensureVisible()
-                  .whenComplete(() {
-                errors.first.formeFieldController.focus = true;
-              });
-            }
+            formeKey.performValidate();
           },
           child: Container(
             alignment: Alignment.center,
@@ -323,23 +311,6 @@ class _SignUpScreenState extends State<SignupFormPage> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget infoTextRow() {
-    return Container(
-      margin: EdgeInsets.only(top: _height / 40.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Text(
-            "Or create using social media",
-            style: TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: _large ? 12 : (_medium ? 11 : 10)),
-          ),
-        ],
-      ),
     );
   }
 
@@ -479,7 +450,7 @@ class CustomTextField extends StatelessWidget {
   final String name;
   final FormeKey formeKey;
 
-  final NonnullFieldValidator<String>? validator;
+  final FormFieldValidator<String>? validator;
 
   CustomTextField({
     this.hint,
@@ -507,13 +478,13 @@ class CustomTextField extends StatelessWidget {
                   bottom: 5,
                   left: 48,
                   child: Builder(builder: (context) {
-                    return ValueListenableBuilder<Optional<String>?>(
+                    return ValueListenableBuilder<FormeValidateError?>(
                         valueListenable:
                             formeKey.fieldListenable(name).errorTextListenable,
                         builder: (context, a, b) {
-                          return a == null || a.isNotPresent
+                          return a == null || !a.hasError
                               ? SizedBox()
-                              : Text(a.value!,
+                              : Text(a.text!,
                                   style: TextStyle(
                                     color: Colors.red,
                                     fontSize: large ? 12 : 10,
@@ -526,7 +497,7 @@ class CustomTextField extends StatelessWidget {
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validateErrorListener: (m, a) {
                 InputBorder border;
-                if (a == null || a.isNotPresent) {
+                if (a == null || !a.hasError) {
                   border = OutlineInputBorder(
                       borderRadius: BorderRadius.circular(30.0),
                       borderSide: BorderSide.none);
@@ -595,7 +566,7 @@ class CustomTextField extends StatelessWidget {
                         builder: (context) {
                           FormeValueFieldController<String, FormeModel>
                               controller = FormeFieldController.of(context);
-                          return ValueListenableBuilder<Optional<String>?>(
+                          return ValueListenableBuilder<FormeValidateError?>(
                               valueListenable: controller.errorTextListenable,
                               child: const IconButton(
                                   onPressed: null,
@@ -607,7 +578,7 @@ class CustomTextField extends StatelessWidget {
                                 if (errorText == null)
                                   return SizedBox();
                                 else
-                                  return errorText.isPresent
+                                  return errorText.hasError
                                       ? const IconButton(
                                           onPressed: null,
                                           icon: const Icon(

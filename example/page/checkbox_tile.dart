@@ -8,36 +8,34 @@ class CheckboxTileFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
+        FormeListTile<String>(
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: '123')),
+          items: [
+            FormeListTileItem(
+              title: Text('java'),
+              data: 'java',
+              secondary: Text('secondary1'),
+              subtitle: Text('subtitle'),
+            ),
+            FormeListTileItem(
+              title: Text('c#'),
+              data: 'c#',
+              secondary: Text('secondary2'),
+              subtitle: Text('subtitle'),
+            ),
+            FormeListTileItem(
+              title: Text('python'),
+              data: 'python',
+              secondary: Text('secondary3'),
+              subtitle: Text('subtitle'),
+            ),
+          ],
+          type: FormeListTileType.Checkbox,
+          model: FormeListTileModel<String>(),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          decoration: InputDecoration(labelText: 'Checkbox Tile'),
-          child: FormeListTile<String>(
-            items: [
-              FormeListTileItem(
-                title: Text('java'),
-                data: 'java',
-                secondary: Text('secondary1'),
-                subtitle: Text('subtitle'),
-              ),
-              FormeListTileItem(
-                title: Text('c#'),
-                data: 'c#',
-                secondary: Text('secondary2'),
-                subtitle: Text('subtitle'),
-              ),
-              FormeListTileItem(
-                title: Text('python'),
-                data: 'python',
-                secondary: Text('secondary3'),
-                subtitle: Text('subtitle'),
-              ),
-            ],
-            type: FormeListTileType.Checkbox,
-            model: FormeListTileModel<String>(),
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            validator: (value) => value.isEmpty ? 'select one item!' : null,
-          ),
+          validator: (value) => value!.isEmpty ? 'select one item!' : null,
         ),
         Wrap(
           children: [
@@ -59,7 +57,7 @@ class CheckboxTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

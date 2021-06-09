@@ -5,11 +5,10 @@ import 'forme_utils.dart';
 import 'forme_field.dart';
 import 'forme_state_model.dart';
 import 'forme_controller.dart';
-import 'widget/forme_field_decorator.dart';
 
 /// triggered when form field's value changed
 typedef FormeValueChanged = void Function(
-    FormeValueFieldController field, dynamic oldValue, dynamic newValue);
+    FormeValueFieldController field, dynamic newValue);
 
 // listen focus change
 typedef FocusListener<T extends FormeFieldController> = void Function(
@@ -17,7 +16,7 @@ typedef FocusListener<T extends FormeFieldController> = void Function(
 
 /// listen field errorText change
 typedef ValidateErrorListener<T extends FormeValueFieldController> = void
-    Function(T field, Optional<String>? errorText);
+    Function(T field, FormeValidateError? error);
 
 /// form key is a global key
 class FormeKey extends LabeledGlobalKey<_FormeState>
@@ -37,7 +36,7 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
     if (currentState == null) {
       throw 'current state is null,did you put this key on Forme?';
     }
-    return currentState.formeController;
+    return currentState;
   }
 
   @override
@@ -47,7 +46,8 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   bool get readOnly => _currentController.readOnly;
 
   @override
-  List<FormeFieldControllerWithError> get errors => _currentController.errors;
+  Map<FormeValueFieldController, String> get errors =>
+      _currentController.errors;
 
   @override
   T field<T extends FormeFieldController>(String name) =>
@@ -57,18 +57,15 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
   bool hasField(String name) => _currentController.hasField(name);
 
   @override
-  List<FormeFieldControllerWithError> validate({bool quietly = false}) =>
-      _currentController.validate(quietly: quietly);
+  Map<FormeValueFieldController, String> performValidate(
+          {bool quietly = false}) =>
+      _currentController.performValidate(quietly: quietly);
 
   @override
   void reset() => _currentController.reset();
 
   @override
   void save() => _currentController.save();
-
-  @override
-  void setData(Map<String, dynamic> data, {bool trigger = true}) =>
-      _currentController.setData(data, trigger: trigger);
 
   @override
   T valueField<T extends FormeValueFieldController>(String name) =>
@@ -96,7 +93,7 @@ class FormeKey extends LabeledGlobalKey<_FormeState>
       _currentController.quietlyValidate = quietlyValidate;
 }
 
-/// build your form
+/// build your form !
 class Forme extends StatefulWidget {
   /// whether form should be readOnly;
   ///
@@ -113,18 +110,10 @@ class Forme extends StatefulWidget {
 
   /// map initial value
   ///
-  /// **this property will override field's initialValue**
+  /// **this property can be overwritten by field's initialValue**
   final Map<String, dynamic> initialValue;
 
   /// used to listen field's validate error changed
-  ///
-  /// triggerer when:
-  ///
-  /// 1. if your field's autovalidatemode is not disabled, **in this case, will triggered after current frame completed**
-  /// 2. after called [validate] method
-  /// 3. after called [quietlyValidate] method
-  ///
-  /// **errorText will be null if field's errorText from nonnull to null**
   final ValidateErrorListener? validateErrorListener;
 
   final WillPopCallback? onWillPop;
@@ -149,24 +138,20 @@ class Forme extends StatefulWidget {
   _FormeState createState() => _FormeState();
 }
 
-class _FormeState extends State<Forme> {
-  late final _FormeController formeController;
-  final ValueNotifier<List<FormeFieldController>> controllerAliveNotifier =
-      ValueNotifier([]);
+class _FormeState extends State<Forme> implements FormeController {
+  final List<FormeFieldController> controllers = [];
+  final List<_FormeFieldListenable> listenables = [];
 
   bool? _readOnly;
   bool? _quietlyValidate;
 
-  @override
-  void initState() {
-    super.initState();
-    formeController = _FormeController(this);
-  }
-
   @protected
   int gen = 0;
 
+  @override
   bool get readOnly => _readOnly ?? widget.readOnly;
+
+  @override
   set readOnly(bool readOnly) {
     if (_readOnly != readOnly) {
       setState(() {
@@ -176,7 +161,10 @@ class _FormeState extends State<Forme> {
     }
   }
 
+  @override
   bool get quietlyValidate => _quietlyValidate ?? widget.quietlyValidate;
+
+  @override
   set quietlyValidate(bool quietlyValidate) {
     if (_quietlyValidate != quietlyValidate) {
       setState(() {
@@ -186,16 +174,11 @@ class _FormeState extends State<Forme> {
     }
   }
 
-  T? getFormeFieldController<T extends FormeFieldController>(String name) {
-    Iterable<FormeFieldController> iterable =
-        controllerAliveNotifier.value.where((element) => element.name == name);
-    if (iterable.isNotEmpty) return iterable.first as T;
-  }
-
   @override
   void dispose() {
-    formeController._dispose();
-    controllerAliveNotifier.dispose();
+    listenables.forEach((element) {
+      element.dispose();
+    });
     super.dispose();
   }
 
@@ -209,6 +192,138 @@ class _FormeState extends State<Forme> {
       ),
       onWillPop: widget.onWillPop,
     );
+  }
+
+  @override
+  Map<String, dynamic> get data {
+    Map<String, dynamic> map = {};
+    valueFieldControllers.forEach((element) {
+      String? name = element.name;
+      dynamic value = element.value;
+      map[name] = value;
+    });
+    return map;
+  }
+
+  @override
+  Map<FormeValueFieldController<dynamic, FormeModel>, String> get errors =>
+      readErrors((e) => e.error?.text);
+
+  @override
+  T field<T extends FormeFieldController<FormeModel>>(String name) {
+    T? controller = getFormeFieldController(name);
+    if (controller == null) throw 'no field can be found by name :$name';
+    return controller;
+  }
+
+  @override
+  FormeFieldListenable<T> fieldListenable<T>(String name) {
+    _FormeFieldListenable<T> listenable = createFieldListenable<T>(name);
+    return FormeFieldListenable._(listenable.focusNotifier,
+        listenable.errorTextNotifier, listenable.valueNotifier);
+  }
+
+  @override
+  bool hasField(String name) {
+    return getFormeFieldController(name) != null;
+  }
+
+  @override
+  void reset() {
+    valueFieldControllers.forEach((element) {
+      element.reset();
+    });
+  }
+
+  @override
+  void save() {
+    valueFieldControllers.forEach((element) {
+      element.save();
+    });
+  }
+
+  @override
+  Map<FormeValueFieldController<dynamic, FormeModel>, String> performValidate(
+          {bool quietly = false}) =>
+      readErrors((e) => e.performValidate(quietly: quietly));
+
+  @override
+  T valueField<T extends FormeValueFieldController>(String name) =>
+      field<T>(name);
+
+  @override
+  set data(Map<String, dynamic> data) {
+    if (data.isEmpty) return;
+    data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
+      FormeValueFieldController? controller = getFormeFieldController(key);
+      if (controller == null) return;
+      controller.value = value;
+    });
+  }
+
+  void registerController(FormeFieldController controller) {
+    controllers.add(controller);
+    listenables
+        .where((element) => element.name == controller.name)
+        .forEach((element) {
+      element.whenAlive(controller);
+    });
+    if (controller is FormeValueFieldController) {
+      controller.valueListenable.addListener(() {
+        FormeValueChanged? valueChanged = widget.onChanged;
+        if (valueChanged != null)
+          valueChanged(controller, controller.valueListenable.value);
+      });
+      controller.errorTextListenable.addListener(() {
+        ValidateErrorListener? validateErrorListener =
+            widget.validateErrorListener;
+        if (validateErrorListener != null)
+          validateErrorListener(
+              controller, controller.errorTextListenable.value);
+      });
+    }
+  }
+
+  void unregisterController(FormeFieldController<FormeModel> controller) {
+    controllers.remove(controller);
+    listenables
+        .where((element) => element.name == controller.name)
+        .forEach((element) {
+      element.whenDead(controller);
+    });
+  }
+
+  _FormeFieldListenable<T> createFieldListenable<T>(String name) {
+    for (_FormeFieldListenable listenable in listenables) {
+      if (listenable.name == name)
+        return listenable as _FormeFieldListenable<T>;
+    }
+    _FormeFieldListenable<T> newListenable =
+        _FormeFieldListenable<T>(name, getFormeFieldController(name));
+    listenables.add(newListenable);
+    return newListenable;
+  }
+
+  Map<FormeValueFieldController, String> readErrors(
+      String? f(FormeValueFieldController e)) {
+    Map<FormeValueFieldController, String> errorMap = {};
+    for (FormeValueFieldController controller in valueFieldControllers) {
+      String? errorText = f(controller);
+      if (errorText == null) continue;
+      errorMap[controller] = errorText;
+    }
+    return errorMap;
+  }
+
+  T? getFormeFieldController<T extends FormeFieldController>(String name) {
+    for (FormeFieldController controller in controllers)
+      if (controller.name == name) return controller as T;
+  }
+
+  Iterable<FormeValueFieldController> get valueFieldControllers {
+    return controllers
+        .where((element) => element is FormeValueFieldController)
+        .map((e) => e as FormeValueFieldController);
   }
 }
 
@@ -233,32 +348,17 @@ class _FormScope {
 
   _FormScope(this.state);
 
-  FormeController get formeController => state.formeController;
+  FormeController get formeController => state;
   bool get readOnly => state.readOnly;
   bool get quietlyValidate => state.quietlyValidate;
   dynamic getInitialValue(String name) => state.widget.initialValue[name];
 
-  void onValueChanged(
-      FormeValueFieldController controller, oldValue, newValue) {
-    FormeValueChanged? valueChanged = state.widget.onChanged;
-    if (valueChanged != null) valueChanged(controller, oldValue, newValue);
+  void registerController(FormeFieldController controller) {
+    state.registerController(controller);
   }
 
-  void onValidateError(
-      FormeValueFieldController field, Optional<String>? errorText) {
-    ValidateErrorListener? validateErrorListener =
-        state.widget.validateErrorListener;
-    if (validateErrorListener != null) validateErrorListener(field, errorText);
-  }
-
-  void registerField(FormeFieldController controller) {
-    state.controllerAliveNotifier.value =
-        List.of(state.controllerAliveNotifier.value)..add(controller);
-  }
-
-  void unregisterField(FormeFieldController controller) {
-    state.controllerAliveNotifier.value =
-        List.of(state.controllerAliveNotifier.value)..remove(controller);
+  void unregisterController(FormeFieldController controller) {
+    state.unregisterController(controller);
   }
 
   static _FormScope of(BuildContext context) => context
@@ -274,31 +374,18 @@ class _FormScope {
 /// 2. make your custom state extends State and with [AbstractFieldState]
 ///
 mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
-    on State<T> {
+    on State<T> implements FormeFieldController<E> {
   bool _init = false;
   FocusNode? _focusNode;
-  String get name => _field.name;
-  late final FormeFieldController<E> controller;
-
-  bool get init => _init;
-
   late _FormScope _formScope;
-
   E? _model;
-
-  /// whether field should be readOnly
-  bool get readOnly => _formScope.readOnly || (_readOnly ?? _field.readOnly);
-
-  /// whether field is readOnly
   bool? _readOnly;
 
-  /// set readOnly on this field
-  set readOnly(bool readOnly) {
-    if (readOnly != _readOnly)
-      setState(() {
-        _readOnly = readOnly;
-      });
-  }
+  final ValueNotifier<bool> _focusNotifier = ValueNotifier(false);
+  late final ValueListenable<bool> focusListenable;
+
+  /// whether current focusnode is not null and  can request focus
+  bool get focusable => _focusNode != null && _focusNode!.canRequestFocus;
 
   /// get current widget's focus node
   ///
@@ -311,61 +398,41 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     return _focusNode ??= FocusNode();
   }
 
-  void _onFocusChange() {
-    controller.focusListenable._value = focusNode.hasFocus;
-    if (_field.focusListener != null)
-      _field.focusListener!(controller, focusNode.hasFocus);
-  }
-
-  /// focus current field is focusable
-  void requestFocus() {
-    if (_focusNode == null || !_focusNode!.canRequestFocus) return;
-    _focusNode!.requestFocus();
-  }
-
-  /// you can override this method to wrap your custom FormeFieldController
-  ///
-  /// use [FormeController.newFormeFieldController] to get FormeFieldController that you wrapped,
-  ///
-  /// you can use [FormeFieldControllerDelegate] to fast wrap
-  @protected
-  FormeFieldController<E> createFormeFieldController() =>
-      _FormeFieldController(this);
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _formScope = _FormScope.of(context);
     if (_init) return;
     _init = true;
-    controller = createFormeFieldController();
-    _formScope.registerField(controller);
+    beforeInitiation();
+    _formScope.registerController(this);
     afterInitiation();
   }
 
-  /// called when  FormeFieldController created
+  @override
+  void dispose() {
+    _focusNotifier.dispose();
+    _focusNode?.dispose();
+    _formScope.unregisterController(this);
+    super.dispose();
+  }
+
+  /// called after  FormeFieldController registed
   ///
   /// this method is called in didChangeDependencies and will only called once in state's lifecycle
   ///
   /// **init your resource in this method**
   @protected
+  @mustCallSuper
   void afterInitiation() {}
 
-  @override
-  void didUpdateWidget(T oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    String? name = this.name;
-    String? oldName = (oldWidget as StatefulField).name;
-    if (name != oldName)
-      throw 'field\'s name can not be changed at runtime !! , current name is $name, but oldName is $oldName';
-  }
-
-  @override
-  void dispose() {
-    controller.focusListenable._notifier.dispose();
-    _focusNode?.dispose();
-    _formScope.unregisterField(controller);
-    super.dispose();
+  /// called before  FormeFieldController registed
+  ///
+  /// this method is called in didChangeDependencies and will only called once in state's lifecycle
+  @protected
+  @mustCallSuper
+  void beforeInitiation() {
+    focusListenable = _ValueListenable(_focusNotifier);
   }
 
   /// used to do some logic before update model
@@ -377,10 +444,18 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @protected
   E beforeSetModel(E old, E current) => current;
 
-  StatefulField<AbstractFieldState<T, E>, E> get _field =>
-      widget as StatefulField<AbstractFieldState<T, E>, E>;
+  /// set model but do no request a new frame
+  ///
+  /// **make sure call setState after this model**
+  @protected
+  setModel(E model) {
+    this._model = model;
+  }
 
-  _updateModel(E _model) {
+  @override
+  String get name => _field.name;
+  @override
+  updateModel(E _model) {
     if (_model != model) {
       E copy = beforeUpdateModel(model, _model);
       if (copy != model) {
@@ -391,7 +466,8 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     }
   }
 
-  _setModel(E _model) {
+  @override
+  set model(E _model) {
     if (_model != model) {
       E copy = beforeSetModel(model, _model);
       if (copy != model) {
@@ -402,20 +478,72 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     }
   }
 
-  /// set model but do no request a new frame
-  ///
-  /// **make sure call setState after this model**
-  @protected
-  setModel(E model) {
-    this._model = model;
+  @override
+  FormeController get formeController => _formScope.formeController;
+  @override
+  bool get readOnly => _formScope.readOnly || (_readOnly ?? _field.readOnly);
+  @override
+  set readOnly(bool readOnly) {
+    if (readOnly != _readOnly)
+      setState(() {
+        _readOnly = readOnly;
+      });
   }
 
+  @override
+  void requestFocus() {
+    if (!focusable) return;
+    _focusNode!.requestFocus();
+  }
+
+  @override
+  void unfocus({
+    UnfocusDisposition disposition = UnfocusDisposition.scope,
+  }) {
+    if (!focusable) return;
+    _focusNode!.unfocus(disposition: disposition);
+  }
+
+  @override
+  Future<void> ensureVisible(
+      {Duration? duration,
+      Curve? curve,
+      ScrollPositionAlignmentPolicy? alignmentPolicy,
+      double? alignment}) {
+    return Scrollable.ensureVisible(context,
+        duration: duration ?? Duration.zero,
+        curve: curve ?? Curves.ease,
+        alignmentPolicy:
+            alignmentPolicy ?? ScrollPositionAlignmentPolicy.explicit,
+        alignment: alignment ?? 0);
+  }
+
+  @override
+  bool get hasFocus => _focusNode != null && _focusNode!.hasFocus;
+  @override
   E get model => _model ?? _field.model;
+
+  void _onFocusChange() {
+    _focusNotifier.value = focusNode.hasFocus;
+    if (_field.focusListener != null)
+      _field.focusListener!(this, focusNode.hasFocus);
+  }
+
+  StatefulField<AbstractFieldState<T, E>, E> get _field =>
+      widget as StatefulField<AbstractFieldState<T, E>, E>;
 }
 
 /// this State is only used for [ValueField]
 class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
-    with AbstractFieldState<FormField<T>, E> {
+    with AbstractFieldState<FormField<T>, E>
+    implements FormeValueFieldController<T, E> {
+  final ValueNotifier<FormeValidateError?> _errorNotifier = ValueNotifier(null);
+  final ValueNotifier<FormeModel?> _decoratorNotifier = ValueNotifier(null);
+  late final ValueNotifier<T?> _valueNotifier;
+  late final FormeDecoratorController decoratorController;
+  late final ValueListenable<T?> valueListenable;
+  late final ValueListenable<FormeValidateError?> errorTextListenable;
+
   @override
   ValueField<T, E> get widget => super.widget as ValueField<T, E>;
 
@@ -426,29 +554,12 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
   bool _hasInteractedByUser = false;
 
   @override
-  T? get value => super.value;
-
-  @override
-  FormeValueFieldController<T, E> get controller =>
-      super.controller as FormeValueFieldController<T, E>;
-
-  @override
-  FormeValueFieldController<T, E> createFormeFieldController() =>
-      _FormeValueFieldController(this);
-
-  @override
-  _setModel(E _model) {
-    if (_model != model) {
-      setState(() {
-        this._model = beforeSetModel(model, _model);
-      });
-    }
-  }
+  T? get value => replaceNullValue(super.value);
 
   /// get initialValue
   @protected
   T? get initialValue =>
-      widget.initialValue ?? _formScope.getInitialValue(name);
+      widget.initialValue ?? _formScope.getInitialValue(widget.name);
 
   /// **when you want to init something that relies on initialValue,
   /// you should do that in [afterInitiation] rather than in this method**
@@ -457,63 +568,53 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     super.initState();
   }
 
-  /// this method is called in didChangeDependencies, but only called once in state's lifecycle
-  ///
-  /// get [FormFieldController] or access initialValue is safe here
   @override
-  @mustCallSuper
-  void afterInitiation() {
-    setValue(initialValue);
+  void beforeInitiation() {
+    super.beforeInitiation();
+    _valueNotifier = ValueNotifier(initialValue);
+    decoratorController = _FormeDecoratorController(_decoratorNotifier);
+    valueListenable =
+        _ValueFieldValueListenable(_valueNotifier, widget.nullValueReplacement);
+    errorTextListenable = _ValueListenable(_errorNotifier);
+
+    _valueNotifier.addListener(() {
+      if (widget.onChanged != null)
+        widget.onChanged!(this, replaceNullValue(_valueNotifier.value));
+    });
+
+    _errorNotifier.addListener(() {
+      if (widget.validateErrorListener != null)
+        widget.validateErrorListener!(this, _errorNotifier.value);
+    });
   }
 
   @override
-  void didChange(T? value) {
-    doChangeValue(value);
-  }
-
-  @protected
-  @override
-  void setValue(T? newValue) {
-    newValue = beforeSetValue(newValue);
-    if (!compare(value, newValue)) {
-      super.setValue(newValue);
-      _didChange(value, newValue, true);
-    }
-  }
-
-  /// handle new value before update value
-  @protected
-  T? beforeSetValue(T? value) => value;
-
-  @visibleForTesting
-  void doChangeValue(T? newValue, {bool trigger = true}) {
-    newValue = beforeSetValue(newValue);
-    T? oldValue = value;
+  void didChange(T? newValue) {
+    _hasInteractedByUser = true;
+    T? oldValue = super.value;
     if (!compare(oldValue, newValue)) {
       super.didChange(newValue);
-      _hasInteractedByUser = true;
-      afterValueChanged(oldValue, newValue);
-      _didChange(oldValue, newValue, trigger);
+      _valueNotifier.value = newValue;
     }
   }
 
   @override
   void reset() {
-    T? oldValue = value;
+    T? oldValue = super.value;
     super.reset();
     _hasInteractedByUser = false;
     if (!compare(oldValue, initialValue)) {
-      super.setValue(initialValue);
-      afterValueChanged(oldValue, initialValue);
-      _didChange(oldValue, initialValue, true);
+      setValue(initialValue);
+      _valueNotifier.value = initialValue;
     }
-    _onErrorTextChange(null);
+    _errorNotifier.value = null;
   }
 
   @override
   void dispose() {
-    controller.valueListenable._notifier.dispose();
-    controller.errorTextListenable._notifier.dispose();
+    _decoratorNotifier.dispose();
+    _errorNotifier.dispose();
+    _valueNotifier.dispose();
     super.dispose();
   }
 
@@ -527,50 +628,8 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
     return FormeUtils.compare(a, b);
   }
 
-  /// called after value changed
-  ///
-  /// when you want render value in field  after value changed ,you can override this method
-  ///
-  /// **called in [didChange] and [reset] , won't called in [setValue]**
-  @protected
-  void afterValueChanged(T? oldValue, T? current) {}
-
-  _didChange(T? old, T? current, bool trigger) {
-    if (trigger) {
-      FormeFieldValueChanged<T, E>? onChanged = widget.onChanged;
-      if (onChanged != null) onChanged(controller, old, current);
-    }
-    _formScope.onValueChanged(this.controller, old, current);
-    controller.valueListenable._value = current;
-  }
-
   @override
-  bool validate() {
-    if (widget.validator == null) return true;
-    if (_formScope.quietlyValidate) {
-      String? errorText = widget.validator!(value);
-      _onErrorTextChange(Optional.fromNullable(errorText));
-      return errorText == null;
-    } else {
-      bool isValid = super.validate();
-      _onErrorTextChange(Optional.fromNullable(super.errorText));
-      return isValid;
-    }
-  }
-
-  void _onErrorTextChange(Optional<String>? nowErrorText) {
-    if (controller.errorTextListenable.value != nowErrorText) {
-      String? oldErrorText = controller.errorTextListenable.value?._value;
-      controller.errorTextListenable._value = nowErrorText;
-      onErrorTextChange(oldErrorText, nowErrorText?._value);
-      if (widget.validateErrorListener != null)
-        widget.validateErrorListener!(controller, nowErrorText);
-      _formScope.onValidateError(controller, nowErrorText);
-    }
-  }
-
-  @protected
-  void onErrorTextChange(String? oldErrorText, String? currentErrorText) {}
+  bool validate() => performValidate(quietly: false) == null;
 
   @override
   @mustCallSuper
@@ -582,405 +641,186 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
                 _hasInteractedByUser));
     if (needValidate) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _onErrorTextChange(Optional.fromNullable(super.errorText));
+        _errorNotifier.value = FormeValidateError(super.errorText);
       });
     }
-    Widget child =
-        InheritedFormeFieldController(controller, super.build(context));
-    return child;
-  }
-}
+    Widget child = super.build(context);
 
-class NonnullValueFieldState<T, E extends FormeModel>
-    extends ValueFieldState<T, E> {
-  @protected
-  T get initialValue =>
-      super.initialValue ?? (widget as NonnullValueField).initialValue;
-
-  @override
-  T get value => super.value!;
-
-  @override
-  void doChangeValue(T? newValue, {bool trigger = true}) {
-    super.doChangeValue(newValue == null ? initialValue : newValue,
-        trigger: trigger);
-  }
-
-  @mustCallSuper
-  @override
-  void setValue(T? value) {
-    super.setValue(value == null ? initialValue : value);
-  }
-
-  @override
-  void afterValueChanged(T? oldValue, T? current) {
-    afterNonnullValueChanged(oldValue!, current!);
-  }
-
-  @protected
-  void afterNonnullValueChanged(T oldValue, T current) {}
-}
-
-class _FormeFieldController<E extends FormeModel>
-    extends FormeFieldController<E> {
-  final AbstractFieldState<StatefulWidget, E> state;
-  final FormeValueListenable<bool> focusListenable;
-
-  _FormeFieldController(this.state)
-      : this.focusListenable = FormeValueListenable<bool>._(
-            ValueNotifier(state._focusNode?.hasFocus ?? false));
-
-  @override
-  Future<void> ensureVisible(
-      {Duration? duration,
-      Curve? curve,
-      ScrollPositionAlignmentPolicy? alignmentPolicy,
-      double? alignment}) {
-    return Scrollable.ensureVisible(state.context,
-        duration: duration ?? Duration.zero,
-        curve: curve ?? Curves.ease,
-        alignmentPolicy:
-            alignmentPolicy ?? ScrollPositionAlignmentPolicy.explicit,
-        alignment: alignment ?? 0);
-  }
-
-  @override
-  bool get focusable =>
-      state._focusNode != null && state._focusNode!.canRequestFocus;
-  @override
-  bool get hasFocus {
-    if (state._focusNode == null) throw 'current field do not has a focusnode';
-    return state._focusNode!.hasFocus;
-  }
-
-  @override
-  set focus(bool focus) {
-    if (!focusable)
-      throw 'current field do not has a focusnode or focusnode can not request a focus';
-    if (focus)
-      state._focusNode!.requestFocus();
-    else
-      state._focusNode!.unfocus();
-  }
-
-  E get model => state.model;
-
-  @override
-  String? get name => state.name;
-
-  @override
-  bool get readOnly => state.readOnly;
-
-  @override
-  set readOnly(bool readOnly) => state.readOnly = readOnly;
-
-  @override
-  set model(E model) {
-    state._setModel(model);
-  }
-
-  @override
-  void updateModel(E model) {
-    state._updateModel(model);
-  }
-
-  @override
-  FormeController get controller =>
-      _FormScope.of(state.context).formeController;
-}
-
-class _FormeValueFieldController<T, E extends FormeModel>
-    extends FormeFieldControllerDelegate<E>
-    implements FormeValueFieldController<T, E> {
-  final ValueFieldState<T, E> state;
-  final FormeFieldController<E> delegate;
-  final FormeValueListenable<Optional<String>?> errorTextListenable;
-  final FormeValueListenable<T?> valueListenable;
-
-  _FormeValueFieldController(this.state)
-      : this.delegate = _FormeFieldController<E>(state),
-        this.errorTextListenable =
-            FormeValueListenable<Optional<String>?>._(ValueNotifier(null)),
-        this.valueListenable = FormeValueListenable<T?>._(ValueNotifier(null));
-
-  @override
-  T? get value => state.value;
-
-  @override
-  set value(T? value) => state.doChangeValue(value, trigger: true);
-
-  @override
-  void setValue(T? value, {bool trigger = true}) =>
-      state.doChangeValue(value, trigger: trigger);
-
-  @override
-  String? get errorText => state.errorText;
-
-  @override
-  void reset() => state.reset();
-
-  @override
-  String? validate({bool quietly = false}) {
-    if (quietly) {
-      if (state.widget.validator != null)
-        return state.widget.validator!(state.value);
+    if (widget.decoratorBuilder != null) {
+      child = widget.decoratorBuilder!.build(
+        focusListenable,
+        errorTextListenable,
+        valueListenable,
+        child,
+        decoratorController.currentModel,
+      );
     }
-    state.validate();
-    return state.errorText;
+
+    return InheritedFormeFieldController(this, child);
   }
 
   @override
-  void save() => state.save();
+  FormeController get formeController => _formScope.formeController;
 
   @override
-  FormeDecoratorController<T>?
-      getFormeDecoratorController<T extends FormeModel>() =>
-          FormeDecoratorController.of<T>(state.context);
+  FormeValidateError? get error => errorTextListenable.value;
+
+  T? replaceNullValue(T? value) {
+    if (value == null && widget.nullValueReplacement != null)
+      return widget.nullValueReplacement;
+    return value;
+  }
+
+  @override
+  String? performValidate({bool quietly = false}) {
+    if (widget.validator == null) return null;
+    if (_formScope.quietlyValidate || quietly) {
+      String? errorText = widget.validator!(super.value);
+      _errorNotifier.value = FormeValidateError(errorText);
+      return errorText;
+    }
+    super.validate();
+    _errorNotifier.value = FormeValidateError(super.errorText);
+    return super.errorText;
+  }
+
+  @override
+  set value(T? value) => didChange(value);
 }
 
-class FormeFieldControllerWithError {
-  final FormeValueFieldController formeFieldController;
-  final String errorText;
-  const FormeFieldControllerWithError._(
-      this.formeFieldController, this.errorText);
+class _ValueFieldValueListenable<T> extends _ValueListenable<T> {
+  final T nullValueReplacement;
+
+  _ValueFieldValueListenable(ValueNotifier delegate, this.nullValueReplacement)
+      : super(delegate);
+
+  @override
+  T get value => super.value == null ? nullValueReplacement : super.value;
 }
 
-class _FormeController extends FormeController {
-  final _FormeState _state;
+class _FormeDecoratorController extends FormeDecoratorController {
+  final ValueNotifier<FormeModel?> notifier;
 
-  List<FormeFieldListenable> notifiers = [];
-  _FormeController(this._state);
-
-  @override
-  bool hasField(String name) => _state.getFormeFieldController(name) != null;
+  _FormeDecoratorController(this.notifier);
 
   @override
-  bool get readOnly => _state.readOnly;
+  FormeModel? get currentModel => notifier.value;
 
   @override
-  set readOnly(bool readOnly) => _state.readOnly = readOnly;
+  update(FormeModel model) => notifier.value == null
+      ? notifier.value = model
+      : notifier.value = model.copyWith(notifier.value!);
 
   @override
-  T field<T extends FormeFieldController>(String name) {
-    T? controller = _state.getFormeFieldController<T>(name);
-    if (controller == null) throw 'no field can be found by name :$name';
-    return controller;
-  }
-
-  @override
-  T valueField<T extends FormeValueFieldController>(String name) {
-    return field(name) as T;
-  }
-
-  @override
-  Map<String, dynamic> get data {
-    Map<String, dynamic> map = {};
-    _valueFieldControllers.forEach((element) {
-      String? name = element.name;
-      if (name == null) return;
-      dynamic value = element.value;
-      map[name] = value;
-    });
-    return map;
-  }
-
-  @override
-  List<FormeFieldControllerWithError> get errors {
-    return _readErrors((state) => state.errorText);
-  }
-
-  @override
-  List<FormeFieldControllerWithError> validate({bool quietly = false}) {
-    if (quietly) return _readErrors((e) => e.validate(quietly: quietly));
-    return _readErrors((state) {
-      state.validate();
-      return state.errorText;
-    });
-  }
-
-  List<FormeFieldControllerWithError> _readErrors(
-      String? f(FormeValueFieldController e)) {
-    List<FormeFieldControllerWithError> errors = [];
-    for (FormeValueFieldController controller in _valueFieldControllers) {
-      if (controller.name == null) continue;
-      String? errorText = f(controller);
-      if (errorText == null) continue;
-      errors.add(FormeFieldControllerWithError._(controller, errorText));
-    }
-    return errors;
-  }
-
-  @override
-  set data(Map<String, dynamic> data) => setData(data);
-
-  @override
-  void setData(Map<String, dynamic> data, {bool trigger = true}) {
-    if (data.isEmpty) return;
-    data.map((key, value) => MapEntry(key, value)).forEach((key, value) {
-      FormeValueFieldController? controller =
-          _state.getFormeFieldController(key);
-      if (controller == null) return;
-      controller.setValue(value, trigger: trigger);
-    });
-  }
-
-  @override
-  void reset() {
-    _valueFieldControllers.forEach((element) {
-      element.reset();
-    });
-  }
-
-  @override
-  void save() {
-    _valueFieldControllers.forEach((element) {
-      element.save();
-    });
-  }
-
-  @override
-  FormeFieldListenable<T> fieldListenable<T>(String name) {
-    for (FormeFieldListenable notifier in notifiers) {
-      if (notifier.name == name) return notifier as FormeFieldListenable<T>;
-    }
-    FormeFieldListenable<T> newNotifier =
-        FormeFieldListenable<T>._(name, _state);
-    notifiers.add(newNotifier);
-    return newNotifier;
-  }
-
-  void _dispose() {
-    notifiers.removeWhere((element) {
-      element._dispose();
-      return true;
-    });
-  }
-
-  Iterable<FormeValueFieldController> get _valueFieldControllers =>
-      _state.controllerAliveNotifier.value
-          .where((element) => element is FormeValueFieldController)
-          .map((e) => e as FormeValueFieldController);
-
-  @override
-  bool get quietlyValidate => _state.quietlyValidate;
-
-  @override
-  set quietlyValidate(bool quietlyValidate) =>
-      _state.quietlyValidate = quietlyValidate;
+  set model(FormeModel model) => notifier.value = model;
 }
 
 class FormeFieldListenable<T> {
-  final _FormeState _state;
+  final ValueListenable<bool> focusListenable;
+  final ValueListenable<FormeValidateError?> errorTextListenable;
+  final ValueListenable<T?> valueListenable;
+  FormeFieldListenable._(
+    ValueNotifier<bool> focusNotifier,
+    ValueNotifier<FormeValidateError?> errorTextNotifier,
+    ValueNotifier<T?> valueNotifier,
+  )   : this.focusListenable = _ValueListenable(focusNotifier),
+        this.errorTextListenable = _ValueListenable(errorTextNotifier),
+        this.valueListenable = _ValueListenable(valueNotifier);
+}
+
+class _FormeFieldListenable<T> {
   final String name;
+  FormeFieldController? controller;
 
-  final FormeValueListenable<bool> focusListenable =
-      FormeValueListenable._(ValueNotifier(false));
-  final FormeValueListenable<Optional<String>?> errorTextListenable =
-      FormeValueListenable._(ValueNotifier(null));
-  final FormeValueListenable<T?> valueListenable =
-      FormeValueListenable._(ValueNotifier(null));
+  final ValueNotifier<bool> focusNotifier = ValueNotifier(false);
+  final ValueNotifier<FormeValidateError?> errorTextNotifier =
+      ValueNotifier(null);
+  final ValueNotifier<T?> valueNotifier = ValueNotifier(null);
 
-  FormeValueListenable<Optional<String>?>? _delegateErrorTextListenable;
-  FormeValueListenable<bool>? _delegateFocusListenable;
-  FormeValueListenable<T?>? _delegateValueListenable;
-
-  FormeFieldListenable._(this.name, this._state) {
-    _state.controllerAliveNotifier.addListener(_updateAlive);
-    _updateAlive();
+  _FormeFieldListenable(this.name, FormeFieldController? controller) {
+    if (controller != null) whenAlive(controller);
   }
 
-  _updateAlive() {
-    bool alive = _state.controllerAliveNotifier.value
-        .any((element) => element.name == name);
-    if (alive) {
-      FormeFieldController controller = _state.controllerAliveNotifier.value
-          .where((element) => element.name == name)
-          .first;
-
-      if (_delegateFocusListenable == null) {
-        _delegateFocusListenable = controller.focusListenable;
-        _delegateFocusListenable!.addListener(_listenFocusNotifier);
-        focusListenable._value = _delegateFocusListenable!.value;
+  void whenAlive(FormeFieldController controller) {
+    if (this.controller != null) {
+      this.controller!.focusListenable.removeListener(listenFocus);
+      if (this.controller is FormeValueFieldController) {
+        (controller as FormeValueFieldController)
+            .valueListenable
+            .removeListener(listenValue);
+        controller.errorTextListenable.removeListener(listenFormeValidateError);
       }
+    }
 
-      if (controller is! FormeValueFieldController) {
-        return;
-      }
+    this.controller = controller;
+    focusNotifier.value = controller.focusListenable.value;
+    controller.focusListenable.addListener(listenFocus);
 
-      FormeValueFieldController<T, FormeModel> cast =
-          controller as FormeValueFieldController<T, FormeModel>;
+    if (controller is! FormeValueFieldController) {
+      return;
+    }
 
-      if (_delegateErrorTextListenable == null) {
-        _delegateErrorTextListenable = cast.errorTextListenable;
-        _delegateErrorTextListenable!.addListener(_listenErrorTextNotifier);
-        errorTextListenable._value = _delegateErrorTextListenable!.value;
-      }
+    FormeValueFieldController<T, FormeModel> cast =
+        controller as FormeValueFieldController<T, FormeModel>;
 
-      if (_delegateValueListenable == null) {
-        _delegateValueListenable = cast.valueListenable;
-        _delegateValueListenable!.addListener(_listenValueNotifier);
-        valueListenable._value = _delegateValueListenable!.value;
-      }
-    } else {
-      //no need to removeListener here , delegate notifier has been disposed !
-      _delegateFocusListenable = null;
-      _delegateValueListenable = null;
-      _delegateErrorTextListenable = null;
+    errorTextNotifier.value = cast.errorTextListenable.value;
+    cast.errorTextListenable.addListener(listenFormeValidateError);
+
+    valueNotifier.value = cast.valueListenable.value;
+    cast.valueListenable.addListener(listenValue);
+  }
+
+  void whenDead(FormeFieldController controller) {
+    if (this.controller == controller) {
+      this.controller = null;
     }
   }
 
-  _listenFocusNotifier() {
-    if (_delegateFocusListenable != null)
-      focusListenable._value = _delegateFocusListenable!.value;
+  void listenFocus() {
+    if (controller != null)
+      focusNotifier.value = controller!.focusListenable.value;
   }
 
-  _listenValueNotifier() {
-    if (_delegateValueListenable != null)
-      valueListenable._value = _delegateValueListenable!.value;
+  void listenValue() {
+    if (controller != null && controller is FormeValueFieldController)
+      valueNotifier.value =
+          (controller as FormeValueFieldController).valueListenable.value;
   }
 
-  _listenErrorTextNotifier() {
-    if (_delegateErrorTextListenable != null)
-      errorTextListenable._value = _delegateErrorTextListenable!.value;
+  void listenFormeValidateError() {
+    if (controller != null && controller is FormeValueFieldController)
+      errorTextNotifier.value =
+          (controller as FormeValueFieldController).errorTextListenable.value;
   }
 
-  void _dispose() {
-    _state.controllerAliveNotifier.removeListener(_updateAlive);
-    focusListenable._notifier.dispose();
-    errorTextListenable._notifier.dispose();
-    valueListenable._notifier.dispose();
+  void dispose() {
+    errorTextNotifier.dispose();
+    focusNotifier.dispose();
+    valueNotifier.dispose();
   }
 }
 
-class FormeValueListenable<T> implements ValueListenable<T> {
-  final ValueNotifier<T> _notifier;
-  FormeValueListenable._(this._notifier);
+class FormeValidateError {
+  final String? text;
+  bool get hasError => text != null;
+  const FormeValidateError(this.text);
 
   @override
-  void addListener(VoidCallback listener) => _notifier.addListener(listener);
+  int get hashCode => text.hashCode;
+  @override
+  bool operator ==(Object o) => o is FormeValidateError && o.text == text;
+}
+
+class _ValueListenable<T> extends ValueListenable<T> {
+  final ValueNotifier delegate;
+  const _ValueListenable(this.delegate);
+  @override
+  void addListener(VoidCallback listener) => delegate.addListener(listener);
 
   @override
   void removeListener(VoidCallback listener) =>
-      _notifier.removeListener(listener);
+      delegate.removeListener(listener);
 
   @override
-  T get value => _notifier.value;
-
-  set _value(T newValue) => _notifier.value = newValue;
-}
-
-class Optional<T> {
-  final T? _value;
-  const Optional.absent() : _value = null;
-  const Optional.fromNullable(T? value) : _value = value;
-
-  T? get value => _value;
-
-  @override
-  int get hashCode => _value.hashCode;
-  @override
-  bool operator ==(Object o) => o is Optional<T> && o._value == _value;
-
-  bool get isPresent => _value != null;
-  bool get isNotPresent => _value == null;
+  T get value => delegate.value;
 }

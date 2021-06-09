@@ -8,19 +8,18 @@ class DropdownButtonFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator<String>(
-            decoration: InputDecoration(labelText: '123', isDense: true),
-            emptyChecker: (value) => value == null,
-            child: DropdownButtonHideUnderline(
-              child: FormeDropdownButton<String>(
-                items: [],
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                name: name,
-                validator: (value) =>
-                    value == null ? 'pls select one item!' : null,
-              ),
-            ),
-            name: name),
+        FormeDropdownButton<String>(
+          items: [],
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: 'Dropdown'),
+              wrapper: (child) => DropdownButtonHideUnderline(
+                    child: child,
+                  ),
+              emptyChecker: (value) => value == null),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          validator: (value) => value == null ? 'pls select one item!' : null,
+        ),
         Wrap(
           children: [
             createButton('load items', () async {
@@ -46,7 +45,7 @@ class DropdownButtonFieldPage
               ));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

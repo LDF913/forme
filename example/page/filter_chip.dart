@@ -8,20 +8,18 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
     return Builder(builder: (context) {
       return Column(
         children: [
-          FormeInputDecorator(
+          FormeFilterChip<String>(
+            decoratorBuilder: FormeInputDecoratorBuilder(
+                decoration: InputDecoration(labelText: 'Filter Chip')),
+            autovalidateMode: AutovalidateMode.onUserInteraction,
             name: name,
-            decoration: InputDecoration(labelText: 'Filter Chip'),
-            child: FormeFilterChip<String>(
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              name: name,
-              items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
-              model: FormeFilterChipModel(
-                exceedCallback: () =>
-                    showError(context, 'you can select only  one item!'),
-              ),
-              validator: (value) =>
-                  value.length < 2 ? 'select at least two items!' : null,
+            items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
+            model: FormeFilterChipModel(
+              exceedCallback: () =>
+                  showError(context, 'you can select only  one item!'),
             ),
+            validator: (value) =>
+                value!.length < 2 ? 'select at least two items!' : null,
           ),
           Wrap(
             children: [
@@ -45,7 +43,7 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
                 updateHelperStyle();
               }),
               createButton('validate', () {
-                controller.validate();
+                controller.performValidate();
               }),
             ],
           )

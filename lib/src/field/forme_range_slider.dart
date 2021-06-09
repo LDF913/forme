@@ -14,15 +14,13 @@ class FormRangeLabelRender {
   FormRangeLabelRender(this.startRender, this.endRender);
 }
 
-class FormeRangeSlider
-    extends NonnullValueField<RangeValues, FormeRangeSliderModel> {
+class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
-    NonnullFormeFieldValueChanged<RangeValues, FormeRangeSliderModel>?
-        onChanged,
-    NonnullFieldValidator<RangeValues>? validator,
+    FormeFieldValueChanged<RangeValues, FormeRangeSliderModel>? onChanged,
+    FormFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
-    NonnullFormFieldSetter<RangeValues>? onSaved,
+    FormFieldSetter<RangeValues>? onSaved,
     required String name,
     bool readOnly = false,
     FormeRangeSliderModel? model,
@@ -35,7 +33,10 @@ class FormeRangeSlider
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
   }) : super(
+            nullValueReplacement: RangeValues(min, max),
+            decoratorBuilder: decoratorBuilder,
             focusListener: focusListener,
             validateErrorListener: validateErrorListener,
             key: key,
@@ -49,7 +50,7 @@ class FormeRangeSlider
             onChanged: onChanged,
             onSaved: onSaved,
             validator: validator,
-            initialValue: initialValue ?? RangeValues(min, max),
+            initialValue: initialValue,
             autovalidateMode: autovalidateMode,
             builder: (state) {
               bool readOnly = state.readOnly;
@@ -59,7 +60,7 @@ class FormeRangeSlider
               Color? activeColor = state.model.activeColor;
               Color? inactiveColor = state.model.inactiveColor;
 
-              RangeValues rangeValues = state.value;
+              RangeValues rangeValues = state.value!;
               RangeLabels? sliderLabels;
 
               if (state.model.rangeLabelRender != null) {
@@ -75,7 +76,7 @@ class FormeRangeSlider
               if (sliderThemeData.thumbShape == null)
                 sliderThemeData = sliderThemeData.copyWith(
                     rangeThumbShape:
-                        CustomRangeSliderThumbCircle(value: state.value));
+                        CustomRangeSliderThumbCircle(value: rangeValues));
               Widget slider = SliderTheme(
                 data: sliderThemeData,
                 child: RangeSlider(
@@ -110,10 +111,11 @@ class FormeRangeSlider
 }
 
 class _FormeRangeSliderState
-    extends NonnullValueFieldState<RangeValues, FormeRangeSliderModel> {
+    extends ValueFieldState<RangeValues, FormeRangeSliderModel> {
   @override
   FormeRangeSliderModel beforeUpdateModel(
       FormeRangeSliderModel old, FormeRangeSliderModel current) {
+    RangeValues value = super.value!;
     if (current.min != null && value.start < current.min!)
       setValue(RangeValues(current.min!, value.end));
     if (current.max != null && value.end > current.max!)

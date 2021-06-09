@@ -59,14 +59,13 @@ class FormeChipItem<T> {
   }) : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
 }
 
-class FormeFilterChip<T>
-    extends NonnullValueField<List<T>, FormeFilterChipModel<T>> {
+class FormeFilterChip<T> extends ValueField<List<T>, FormeFilterChipModel<T>> {
   FormeFilterChip({
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
-    NonnullFieldValidator<List<T>>? validator,
+    FormFieldValidator<List<T>>? validator,
     FormeFieldValueChanged<List<T>, FormeFilterChipModel<T>>? onChanged,
-    NonnullFormFieldSetter<List<T>>? onSaved,
+    FormFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
@@ -77,7 +76,10 @@ class FormeFilterChip<T>
     FocusListener<FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
+          nullValueReplacement: [],
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           model: (model ?? FormeFilterChipModel<T>())
@@ -88,7 +90,7 @@ class FormeFilterChip<T>
           onChanged: onChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
-          initialValue: initialValue ?? [],
+          initialValue: initialValue,
           validateErrorListener: validateErrorListener,
           builder: (state) {
             bool readOnly = state.readOnly;
@@ -102,7 +104,7 @@ class FormeFilterChip<T>
             for (FormeChipItem<T> item in items) {
               bool isReadOnly = readOnly || item.readOnly;
               FilterChip chip = FilterChip(
-                selected: state.value.contains(item.data),
+                selected: state.value!.contains(item.data),
                 label: item.label,
                 avatar: item.avatar,
                 padding: item.padding,
@@ -126,17 +128,17 @@ class FormeFilterChip<T>
                 onSelected: isReadOnly
                     ? null
                     : (bool selected) {
+                        List<T> value = List.of(state.value!);
                         if (selected) {
-                          if (count != null && state.value.length >= count) {
+                          if (count != null && value.length >= count) {
                             if (state.model.exceedCallback != null) {
                               state.model.exceedCallback!();
                             }
                             return;
                           }
-                          state.didChange(List.of(state.value)..add(item.data));
+                          state.didChange(value..add(item.data));
                         } else {
-                          state.didChange(
-                              List.of(state.value)..remove(item.data));
+                          state.didChange(value..remove(item.data));
                         }
                         state.requestFocus();
                       },
@@ -166,10 +168,11 @@ class FormeFilterChip<T>
 }
 
 class _FormeFilterChipState<T>
-    extends NonnullValueFieldState<List<T>, FormeFilterChipModel<T>> {
+    extends ValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
   FormeFilterChipModel<T> beforeUpdateModel(
       FormeFilterChipModel<T> old, FormeFilterChipModel<T> current) {
+    List<T> value = super.value!;
     if (value.isEmpty) return current;
     if (current.items != null) {
       List<T> items = List.of(value);

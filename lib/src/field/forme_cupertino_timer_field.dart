@@ -31,7 +31,9 @@ class FormeCupertinoTimerField
             FormeValueFieldController<Duration, FormeCupertinoTimerFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<Duration>? decoratorBuilder,
   }) : super(
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -145,11 +147,10 @@ class _FormeCupertinoTimerFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!, mode));
-  }
-
-  @override
-  void afterValueChanged(Duration? oldValue, Duration? current) {
-    textEditingController.text = value == null ? '' : _formatter(value!, mode);
+    valueListenable.addListener(() {
+      Duration? value = valueListenable.value;
+      textEditingController.text = value == null ? '' : _formatter(value, mode);
+    });
   }
 
   @override

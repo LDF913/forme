@@ -23,8 +23,10 @@ class FormeDropdownButton<T>
     FocusListener<FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
           key: key,
+          decoratorBuilder: decoratorBuilder,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
           model: (model ?? FormeDropdownButtonModel<T>())

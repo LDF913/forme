@@ -7,16 +7,14 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
   Widget get body {
     return Column(
       children: [
-        FormeInputDecorator(
+        FormeChoiceChip<String>(
+          decoratorBuilder: FormeInputDecoratorBuilder(
+              decoration: InputDecoration(labelText: 'Choice Chip')),
+          autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
-          decoration: InputDecoration(labelText: 'Choice Chip'),
-          child: FormeChoiceChip<String>(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
-            model: FormeChoiceChipModel(),
-            validator: (value) => value == null ? 'select one item!' : null,
-          ),
+          items: FormeUtils.toFormeChipItems(['flutter', 'android', 'iOS']),
+          model: FormeChoiceChipModel(),
+          validator: (value) => value == null ? 'select one item!' : null,
         ),
         Wrap(
           children: [
@@ -35,7 +33,7 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )

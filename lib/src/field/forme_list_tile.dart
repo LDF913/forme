@@ -41,15 +41,14 @@ class FormeListTileItem<T> {
 
 enum FormeListTileType { Checkbox, Switch }
 
-class FormeListTile<T>
-    extends NonnullValueField<List<T>, FormeListTileModel<T>> {
+class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
   final FormeListTileType type;
   FormeListTile({
-    NonnullFormeFieldValueChanged<List<T>, FormeListTileModel<T>>? onChanged,
-    NonnullFieldValidator<List<T>>? validator,
+    FormeFieldValueChanged<List<T>, FormeListTileModel<T>>? onChanged,
+    FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
-    NonnullFormFieldSetter<List<T>>? onSaved,
+    FormFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     this.type = FormeListTileType.Checkbox,
@@ -61,7 +60,10 @@ class FormeListTile<T>
     FocusListener<FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
+            nullValueReplacement: [],
+            decoratorBuilder: decoratorBuilder,
             focusListener: focusListener,
             validateErrorListener: validateErrorListener,
             key: key,
@@ -72,7 +74,7 @@ class FormeListTile<T>
             onChanged: onChanged,
             onSaved: onSaved,
             autovalidateMode: autovalidateMode,
-            initialValue: initialValue ?? [],
+            initialValue: initialValue,
             validator: validator,
             builder: (state) {
               bool readOnly = state.readOnly;
@@ -90,7 +92,7 @@ class FormeListTile<T>
 
               void changeValue(T value) {
                 state.requestFocus();
-                List<T> values = List.of(state.value);
+                List<T> values = List.of(state.value!);
                 if (!values.remove(value)) {
                   values.add(value);
                 }
@@ -164,7 +166,7 @@ class FormeListTile<T>
               for (int i = 0; i < items.length; i++) {
                 FormeListTileItem<T> item = items[i];
                 bool isReadOnly = readOnly || item.readOnly;
-                bool selected = state.value.contains(item.data);
+                bool selected = state.value!.contains(item.data);
                 if (split > 0) {
                   double factor = 1 / split;
                   if (factor == 1) {
@@ -250,14 +252,14 @@ class FormeListTile<T>
 }
 
 class _FormeListTileState<T>
-    extends NonnullValueFieldState<List<T>, FormeListTileModel<T>> {
+    extends ValueFieldState<List<T>, FormeListTileModel<T>> {
   bool allowSelectAll = false;
 
   @override
   FormeListTileModel<T> beforeUpdateModel(
       FormeListTileModel<T> old, FormeListTileModel<T> current) {
     if (current.items != null) {
-      List<T> items = List.of(value);
+      List<T> items = List.of(value!);
       Iterable<T> datas = current.items!.map((e) => e.data);
       bool removed = false;
       items.removeWhere((element) {

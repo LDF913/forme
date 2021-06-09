@@ -27,7 +27,9 @@ class FormeDateRangeField
             FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
   }) : super(
+          decoratorBuilder: decoratorBuilder,
           focusListener: focusListener,
           key: key,
           model: model ?? FormeDateRangeFieldModel(),
@@ -107,10 +109,10 @@ class _FormeDateRangeFieldState
   FormeDateRangeField get widget => super.widget as FormeDateRangeField;
 
   @override
-  DateTimeRange? beforeSetValue(DateTimeRange? newValue) {
-    if (newValue == null) return null;
-    return DateTimeRange(
-        start: simple(newValue.start), end: simple(newValue.end));
+  DateTimeRange? get value {
+    DateTimeRange? value = super.value;
+    if (value == null) return null;
+    return DateTimeRange(start: simple(value.start), end: simple(value.end));
   }
 
   @override
@@ -118,11 +120,10 @@ class _FormeDateRangeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
-  }
-
-  @override
-  void afterValueChanged(DateTimeRange? oldValue, DateTimeRange? current) {
-    textEditingController.text = value == null ? '' : _formatter(value!);
+    valueListenable.addListener(() {
+      DateTimeRange? value = valueListenable.value;
+      textEditingController.text = value == null ? '' : _formatter(value);
+    });
   }
 
   @override

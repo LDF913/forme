@@ -29,7 +29,9 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
     FocusListener<FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<DateTime>? decoratorBuilder,
   }) : super(
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -147,12 +149,12 @@ class _FormeDateTimeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: value == null ? '' : _formatter(model.type!, value!));
-  }
 
-  @override
-  void afterValueChanged(DateTime? oldValue, DateTime? current) {
-    textEditingController.text =
-        value == null ? '' : _formatter(model.type!, value!);
+    valueListenable.addListener(() {
+      DateTime? value = valueListenable.value;
+      textEditingController.text =
+          value == null ? '' : _formatter(model.type!, value);
+    });
   }
 
   @override
@@ -203,10 +205,10 @@ class _FormeDateTimeFieldState
   }
 
   @override
-  DateTime? beforeSetValue(DateTime? newValue) {
-    if (newValue == null) return null;
-    newValue = simple(newValue);
-    return newValue;
+  DateTime? get value {
+    DateTime? value = super.value;
+    if (value == null) return null;
+    return simple(value);
   }
 
   DateTime get initialDateTime {

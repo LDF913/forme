@@ -15,12 +15,12 @@ import '../forme_state_model.dart';
 import '../forme_field.dart';
 import '../forme_core.dart';
 
-class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
+class FormeTextField extends ValueField<String, FormeTextFieldModel> {
   FormeTextField({
-    NonnullFormeFieldValueChanged<String, FormeTextFieldModel>? onChanged,
-    NonnullFieldValidator<String>? validator,
+    FormeFieldValueChanged<String, FormeTextFieldModel>? onChanged,
+    FormFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
-    NonnullFormFieldSetter<String>? onSaved,
+    FormFieldSetter<String>? onSaved,
     String? initialValue,
     required String name,
     bool readOnly = false,
@@ -31,7 +31,10 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
     FocusListener<FormeValueFieldController<String, FormeTextFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<String>? decoratorBuilder,
   }) : super(
+          nullValueReplacement: '',
+          decoratorBuilder: decoratorBuilder,
           key: key,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
@@ -40,7 +43,7 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
           readOnly: readOnly,
           onChanged: onChanged,
           onSaved: onSaved,
-          initialValue: initialValue ?? '',
+          initialValue: initialValue,
           validator: validator,
           autovalidateMode: autovalidateMode,
           builder: (baseState) {
@@ -69,7 +72,7 @@ class FormeTextField extends NonnullValueField<String, FormeTextFieldModel> {
 }
 
 class _TextFormeFieldState
-    extends NonnullValueFieldState<String, FormeTextFieldModel> {
+    extends ValueFieldState<String, FormeTextFieldModel> {
   late final TextEditingController textEditingController;
 
   @override
@@ -78,12 +81,10 @@ class _TextFormeFieldState
   bool get selectAllOnFocus => model.selectAllOnFocus ?? false;
 
   void focusChange() {
-    setState(() {
-      if (focusNode.hasFocus && selectAllOnFocus) {
-        textEditingController.selection =
-            FormeUtils.selection(0, textEditingController.text.length);
-      }
-    });
+    if (focusNode.hasFocus && selectAllOnFocus) {
+      textEditingController.selection =
+          FormeUtils.selection(0, textEditingController.text.length);
+    }
   }
 
   @override
@@ -91,12 +92,11 @@ class _TextFormeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(text: initialValue);
     focusNode.addListener(focusChange);
-  }
-
-  @override
-  void afterNonnullValueChanged(String oldValue, String current) {
-    if (textEditingController.text != current)
-      textEditingController.text = current;
+    valueListenable.addListener(() {
+      String value = valueListenable.value!;
+      if (textEditingController.text != value)
+        textEditingController.text = value;
+    });
   }
 
   @override

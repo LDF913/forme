@@ -27,7 +27,9 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
     FocusListener<FormeValueFieldController<num, FormeNumberFieldModel>>?
         focusListener,
     Key? key,
+    FormeDecoratorBuilder<num>? decoratorBuilder,
   }) : super(
+          decoratorBuilder: decoratorBuilder,
           focusListener: focusListener,
           validateErrorListener: validateErrorListener,
           key: key,
@@ -134,18 +136,17 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : initialValue.toString());
-  }
-
-  @override
-  void afterValueChanged(num? oldValue, num? current) {
-    if (updateController) {
-      String str = super.value == null ? '' : value.toString();
-      if (textEditingController.text != str) {
-        textEditingController.text = str;
+    valueListenable.addListener(() {
+      num? value = valueListenable.value;
+      if (updateController) {
+        String str = value == null ? '' : value.toString();
+        if (textEditingController.text != str) {
+          textEditingController.text = str;
+        }
+      } else {
+        updateController = true;
       }
-    } else {
-      updateController = true;
-    }
+    });
   }
 
   @override

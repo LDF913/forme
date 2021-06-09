@@ -7,16 +7,14 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
   Widget get body {
     return Column(
       children: [
-        FormeTextFieldOnTapProxyWidget(
-          child: FormeDateTimeField(
-            autovalidateMode: AutovalidateMode.onUserInteraction,
-            name: name,
-            model: FormeDateTimeFieldModel(
-                textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'DateTime'),
-            )),
-            validator: (value) => value == null ? 'select a datetime!' : null,
-          ),
+        FormeDateTimeField(
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          name: name,
+          model: FormeDateTimeFieldModel(
+              textFieldModel: FormeTextFieldModel(
+            decoration: InputDecoration(labelText: 'DateTime'),
+          )),
+          validator: (value) => value == null ? 'select a datetime!' : null,
         ),
         Wrap(
           children: [
@@ -97,7 +95,7 @@ class DateTimeFieldPage extends BasePage<DateTime, FormeDateTimeFieldModel> {
               )));
             }),
             createButton('validate', () {
-              controller.validate();
+              controller.performValidate();
             }),
           ],
         )
