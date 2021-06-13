@@ -20,9 +20,13 @@ class FormeDateRangeField
     FormeFocusChanged<
             FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
           key: key,

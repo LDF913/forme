@@ -7,3 +7,4 @@ export 'src/forme_field.dart';
 export 'src/field/fields.dart';
 export 'src/widget/widgets.dart';
 export 'src/render/renders.dart';
+export 'src/forme_validate_utils.dart';

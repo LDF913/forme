@@ -21,7 +21,7 @@ class CupertinoPickerFieldPage
               controller.updateModel(FormeCupertinoPickerModel(
                 useMagnifier: errorText != null && errorText.hasError,
                 magnification: (errorText != null && errorText.hasError)
-                    ? 1.0 + field.value / 100
+                    ? 1.0 + field.value! / 100
                     : 1.0,
               ));
             },

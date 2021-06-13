@@ -16,9 +16,12 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,
           model: (model ?? FormeChoiceChipModel<T>())

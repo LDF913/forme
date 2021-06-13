@@ -70,9 +70,13 @@ class FormeFilterChip<T> extends ValueField<List<T>, FormeFilterChipModel<T>> {
     FormeFocusChanged<
             FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: [],
           decoratorBuilder: decoratorBuilder,
           key: key,

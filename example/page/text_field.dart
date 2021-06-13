@@ -8,7 +8,11 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
     return Column(
       children: [
         FormeTextField(
+          initialValue: '123',
           autovalidateMode: AutovalidateMode.onUserInteraction,
+          onInitialed: (c) {
+            print(c.value);
+          },
           onFocusChanged: (c, m) => print('focused changed , current is $m'),
           onErrorChanged: (field, errorText) {
             print("validate result: ${errorText?.text}");
@@ -29,9 +33,10 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
             autofocus: true,
             decoration: InputDecoration(labelText: 'TextField'),
           ),
-          validator: (value) => value!.length < 8
-              ? 'value length must bigger than 8,current length is ${value.length}'
-              : null,
+          validator: FormeValidates.any([
+            FormeValidates.size(min: 20),
+            FormeValidates.email(),
+          ], errorText: 'must be an email or length > 20'),
         ),
         Wrap(
           children: [

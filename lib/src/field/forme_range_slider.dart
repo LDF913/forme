@@ -26,10 +26,14 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     FormeFocusChanged<
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
   }) : super(
             nullValueReplacement: RangeValues(min, max),
+            onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder,
             onFocusChanged: onFocusChanged,
             onErrorChanged: onErrorChanged,

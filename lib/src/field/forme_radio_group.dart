@@ -16,9 +16,12 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+            onInitialed: onInitialed,
             decoratorBuilder: decoratorBuilder,
             onFocusChanged: onFocusChanged,
             onErrorChanged: onErrorChanged,

@@ -54,9 +54,13 @@ class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
     FormeFocusChanged<
             FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
+            onInitialed: onInitialed,
             nullValueReplacement: [],
             decoratorBuilder: decoratorBuilder,
             onFocusChanged: onFocusChanged,

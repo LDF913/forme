@@ -28,6 +28,8 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
   bool get readOnly;
 
   FormeFocusChanged<FormeFieldController<E>>? get onFocusChanged;
+
+  FormeFieldInitialed<FormeFieldController<E>>? get onInitialed;
 }
 
 /// if you want to create a stateful form field, but don't want to return a value,you can override this field
@@ -38,6 +40,7 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   final E model;
   final bool readOnly;
   final FormeFocusChanged<FormeFieldController<E>>? onFocusChanged;
+  final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
   const CommonField({
     Key? key,
     required this.name,
@@ -45,6 +48,7 @@ class CommonField<E extends FormeModel> extends StatefulWidget
     required this.model,
     this.readOnly = false,
     this.onFocusChanged,
+    this.onInitialed,
   }) : super(key: key);
 
   @override
@@ -101,6 +105,14 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   /// **should not setted by user**
   final T? nullValueReplacement;
 
+  /// called after [FormeController] or [FormeFieldController] initialed
+  ///
+  /// valueListenable will not listen [FormeField.initialValue] , you can do
+  /// that in this method
+  ///
+  /// **try to get another field's controller in this method will cause an error**
+  final FormeFieldInitialed<FormeFieldController<E>>? onInitialed;
+
   ValueField({
     Key? key,
     this.onValueChanged,
@@ -117,7 +129,9 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
     this.decoratorBuilder,
     this.nullValueReplacement,
     FormeFocusChanged<FormeValueFieldController<T, E>>? onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<T, E>>? onInitialed,
   })  : this.onFocusChanged = _convertFormeFocusChanged(onFocusChanged),
+        this.onInitialed = _convertFormeFieldInitialed(onInitialed),
         super(
             key: key,
             enabled: enabled,
@@ -144,5 +158,12 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
           FormeFocusChanged<FormeValueFieldController<T, E>>? listener) {
     if (listener == null) return null;
     return (v, focus) => listener(v as FormeValueFieldController<T, E>, focus);
+  }
+
+  static FormeFieldInitialed<FormeFieldController<E>>?
+      _convertFormeFieldInitialed<T, E extends FormeModel>(
+          FormeFieldInitialed<FormeValueFieldController<T, E>>? listener) {
+    if (listener == null) return null;
+    return (v) => listener(v as FormeValueFieldController<T, E>);
   }
 }

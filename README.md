@@ -66,6 +66,7 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | readOnly | false | `bool` | whether field should be readOnly,default is `false` |
 | onFocusChanged | false | `FormeFocusChanged` | listen field's focus change |
 | model | true | `FormeModel` | `FormeModel` used to provider widget render data |
+| onInitialed | false | `FormeFieldInitialed` | triggered when `FormeFieldController` initialed , when you specific a initialValue on `ValueField` or `Forme` , valueListenable will not listen this value , you can handle this value in `onInitialed` |
 
 ### attributes supported by all value fields
 
@@ -287,6 +288,30 @@ Forme(
 	)
 )
 ```
+
+## validate
+
+**validate is supported by FormeValidateUtils**	
+
+| Validator Name |  Support Type  | When Valid |  When Invalid  |
+| --- | --- | --- | --- |
+| `notNull` | `dynamic` | value is not null | value is null |
+| `size` | `Iterable` `Map` `String` | 1. value is null 2. max & min is null  3. String's length or Collection's size  is in [min,max] | String's length or Collection's size is not in [min,max] |
+| `min` | `num` | 1. value is null  2. value is bigger than min | value is smaller than min |
+| `max` | `num` | 1. value is null  2. value is smaller than max |  value is bigger than max |
+| `notEmpty` | `Iterable` `Map` `String` | 1. value is not null 2. String's length or Collection's size  is bigger than zero | 1. value is null 2. String's length or Collection's size  is  zero |
+| `notBlank` | `String` | 1. value is null 2. value.trim()'s length is not null |  value'length is zero after trimed |
+| `positive` | `num` | 1. value is null 2. value is bigger than zero |  value  is smaller than or equals zero |
+| `positiveOrZero` | `num` | 1. value is null 2. value is bigger than or equals zero |  value  is smaller than zero |
+| `negative` | `num` | 1. value null 2. value is smaller than zero |  value  is bigger than or equals zero |
+| `negativeOrZero` | `num` | 1. value  null 2. value is smaller than or equals zero |  value  is bigger than zero |
+| `pattern`  | `String` | 1. value null 2. value matches pattern  |  value does not matches pattern |
+| `email`  | `String` | 1. value null 2. value is a valid email  |  value is not a valid email |
+| `url`  | `String` | 1. value is null 2. value is empty or value is a valid url  |  value is not a valid url |
+| `any`  | `T` | any validators is valid  |  every validators is invalid |
+| `all`  | `T` | all validators is valid  |  any validators is invalid |
+
+when you use validators from `FormeValidateUtils` , you must specific at least one errorText , otherwise errorText is an empty string
 
 ## FormeKey Methods
 

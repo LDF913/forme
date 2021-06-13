@@ -21,9 +21,12 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<String, FormeTextFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<String, FormeTextFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<String>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: '',
           decoratorBuilder: decoratorBuilder,
           key: key,

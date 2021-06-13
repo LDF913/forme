@@ -16,8 +16,12 @@ class FormeSingleSwitch extends ValueField<bool, FormeSingleSwitchModel> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<bool, FormeSingleSwitchModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<bool, FormeSingleSwitchModel>>?
+        onInitialed,
     Key? key,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: false,
           key: key,
           onFocusChanged: onFocusChanged,

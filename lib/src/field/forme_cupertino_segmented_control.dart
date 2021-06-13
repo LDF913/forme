@@ -23,9 +23,14 @@ class FormeCupertinoSegmentedControl<T extends Object>
             FormeValueFieldController<T,
                 FormeCupertinoSegmentedControlModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<T,
+                FormeCupertinoSegmentedControlModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+            onInitialed: onInitialed,
             name: name,
             initialValue: initialValue,
             autovalidateMode: autovalidateMode,

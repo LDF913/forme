@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
+typedef FormeFieldInitialed<T> = void Function(T field);
+
 /// triggered when form field's value changed
 typedef FormeValueChanged<T, E extends FormeModel> = void Function(
     FormeValueFieldController<T, E> field, T? newValue);
@@ -346,6 +348,9 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
     this.controller = createFormeFieldController();
     _formScope.registerField(this);
     afterInitiation();
+    if (_field.onInitialed != null) {
+      _field.onInitialed!(this.controller);
+    }
   }
 
   /// create a [FormeFieldController]
@@ -598,6 +603,9 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
         ((widget.autovalidateMode == AutovalidateMode.always) ||
             (widget.autovalidateMode == AutovalidateMode.onUserInteraction &&
                 _hasInteractedByUser));
+
+    Widget child = super.build(context);
+
     FormeValidateError error;
     if (needValidate &&
         ((error = FormeValidateError(super.errorText)) !=
@@ -606,7 +614,6 @@ class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
         _errorNotifier.value = error;
       });
     }
-    Widget child = super.build(context);
 
     if (widget.decoratorBuilder != null) {
       child = widget.decoratorBuilder!.build(

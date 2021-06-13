@@ -19,9 +19,12 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<num, FormeNumberFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<num, FormeNumberFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<num>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,

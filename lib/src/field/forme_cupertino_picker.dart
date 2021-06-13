@@ -14,11 +14,19 @@ class FormeCupertinoPicker extends ValueField<int, FormeCupertinoPickerModel> {
     required double itemExtent,
     required List<Widget> children,
     FormeCupertinoPickerModel? model,
-    FormeErrorChanged? onErrorChanged,
-    FormeFocusChanged? onFocusChanged,
+    FormeErrorChanged<
+            FormeValueFieldController<int, FormeCupertinoPickerModel>>?
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<int, FormeCupertinoPickerModel>>?
+        onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<int, FormeCupertinoPickerModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<int>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: 0,
           decoratorBuilder: decoratorBuilder,
           key: key,

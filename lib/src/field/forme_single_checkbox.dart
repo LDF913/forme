@@ -17,8 +17,12 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
     FormeFocusChanged<
             FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
+        onInitialed,
     Key? key,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: false,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,

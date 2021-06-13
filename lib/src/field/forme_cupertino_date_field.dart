@@ -23,9 +23,13 @@ class FormeCupertinoDateField
     FormeFocusChanged<
             FormeValueFieldController<DateTime, FormeCupertinoDateFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<DateTime, FormeCupertinoDateFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
           onFocusChanged: onFocusChanged,

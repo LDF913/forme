@@ -23,9 +23,14 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
             FormeValueFieldController<T,
                 FormeCupertinoSlidingSegmentedControlModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<T,
+                FormeCupertinoSlidingSegmentedControlModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+            onInitialed: onInitialed,
             name: name,
             initialValue: initialValue,
             autovalidateMode: autovalidateMode,

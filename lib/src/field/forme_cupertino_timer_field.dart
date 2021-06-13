@@ -23,9 +23,13 @@ class FormeCupertinoTimerField
     FormeFocusChanged<
             FormeValueFieldController<Duration, FormeCupertinoTimerFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<Duration, FormeCupertinoTimerFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<Duration>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
           onFocusChanged: onFocusChanged,

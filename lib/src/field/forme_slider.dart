@@ -20,9 +20,12 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
         onErrorChanged,
     FormeFocusChanged<FormeValueFieldController<double, FormeSliderModel>>?
         onFocusChanged,
+    FormeFieldInitialed<FormeValueFieldController<double, FormeSliderModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           nullValueReplacement: min,
           decoratorBuilder: decoratorBuilder,
           key: key,

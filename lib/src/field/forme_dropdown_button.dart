@@ -19,9 +19,13 @@ class FormeDropdownButton<T>
     FormeFocusChanged<
             FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,

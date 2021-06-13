@@ -20,9 +20,13 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     FormeFocusChanged<
             FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
         onFocusChanged,
+    FormeFieldInitialed<
+            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
+        onInitialed,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
   }) : super(
+          onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
