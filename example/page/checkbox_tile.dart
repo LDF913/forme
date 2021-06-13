@@ -57,7 +57,7 @@ class CheckboxTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

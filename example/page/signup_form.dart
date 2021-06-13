@@ -291,7 +291,11 @@ class _SignUpScreenState extends State<SignupFormPage> {
             padding: MaterialStateProperty.all(EdgeInsets.all(0.0)),
           ),
           onPressed: () {
-            formeKey.performValidate();
+            int i = 0;
+            formeKey.validate().forEach((key, value) {
+              if (i == 0) key.requestFocus();
+              i++;
+            });
           },
           child: Container(
             alignment: Alignment.center,
@@ -495,7 +499,7 @@ class CustomTextField extends StatelessWidget {
               name: name,
               validator: validator,
               autovalidateMode: AutovalidateMode.onUserInteraction,
-              validateErrorListener: (m, a) {
+              onErrorChanged: (m, a) {
                 InputBorder border;
                 if (a == null || !a.hasError) {
                   border = OutlineInputBorder(
@@ -568,12 +572,6 @@ class CustomTextField extends StatelessWidget {
                               controller = FormeFieldController.of(context);
                           return ValueListenableBuilder<FormeValidateError?>(
                               valueListenable: controller.errorTextListenable,
-                              child: const IconButton(
-                                  onPressed: null,
-                                  icon: const Icon(
-                                    Icons.check,
-                                    color: Colors.green,
-                                  )),
                               builder: (context, errorText, child) {
                                 if (errorText == null)
                                   return SizedBox();
@@ -585,7 +583,12 @@ class CustomTextField extends StatelessWidget {
                                             Icons.error,
                                             color: Colors.red,
                                           ))
-                                      : child!;
+                                      : IconButton(
+                                          onPressed: null,
+                                          icon: const Icon(
+                                            Icons.check,
+                                            color: Colors.green,
+                                          ));
                               });
                         },
                       ),

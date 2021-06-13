@@ -45,7 +45,7 @@ class DropdownButtonFieldPage
               ));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

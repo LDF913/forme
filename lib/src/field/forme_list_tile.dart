@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../render/forme_render_data.dart';
-import '../render/forme_render_utils.dart';
-
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 class FormeListTileItem<T> {
   final Widget title;
@@ -35,7 +29,7 @@ class FormeListTileItem<T> {
       required this.data,
       this.ignoreSplit = false})
       : this.controlAffinity =
-            controlAffinity ?? ListTileControlAffinity.leading,
+            controlAffinity ?? ListTileControlAffinity.platform,
         this.padding = padding ?? EdgeInsets.zero;
 }
 
@@ -44,7 +38,7 @@ enum FormeListTileType { Checkbox, Switch }
 class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
   final FormeListTileType type;
   FormeListTile({
-    FormeFieldValueChanged<List<T>, FormeListTileModel<T>>? onChanged,
+    FormeValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
     FormFieldValidator<List<T>>? validator,
     AutovalidateMode? autovalidateMode,
     List<T>? initialValue,
@@ -54,24 +48,25 @@ class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
     this.type = FormeListTileType.Checkbox,
     required List<FormeListTileItem<T>>? items,
     FormeListTileModel<T>? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<List<T>, FormeListTileModel<T>>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
             nullValueReplacement: [],
             decoratorBuilder: decoratorBuilder,
-            focusListener: focusListener,
-            validateErrorListener: validateErrorListener,
+            onFocusChanged: onFocusChanged,
+            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeListTileModel<T>())
                 .copyWith(FormeListTileModel(items: items)),
             readOnly: readOnly,
             name: name,
-            onChanged: onChanged,
+            onValueChanged: onValueChanged,
             onSaved: onSaved,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue,

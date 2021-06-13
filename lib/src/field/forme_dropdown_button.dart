@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import '../forme_core.dart';
-
-import '../forme_field.dart';
-import '../forme_controller.dart';
-import '../forme_state_model.dart';
+import 'package:forme/forme.dart';
 
 class FormeDropdownButton<T>
     extends ValueField<T, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
-    FormeFieldValueChanged<T, FormeDropdownButtonModel<T>>? onChanged,
+    FormeValueChanged<T, FormeDropdownButtonModel<T>>? onValueChanged,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
@@ -17,25 +13,26 @@ class FormeDropdownButton<T>
     required String name,
     bool readOnly = false,
     FormeDropdownButtonModel<T>? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<T, FormeDropdownButtonModel<T>>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
           key: key,
           decoratorBuilder: decoratorBuilder,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: (model ?? FormeDropdownButtonModel<T>())
               .copyWith(FormeDropdownButtonModel<T>(
             items: items,
           )),
           readOnly: readOnly,
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,

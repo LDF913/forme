@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../render/forme_render_utils.dart';
-import '../forme_controller.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 typedef FormeLabelRender = String Function(double value);
 
 class FormeSlider extends ValueField<double, FormeSliderModel> {
   FormeSlider({
-    FormeFieldValueChanged<double, FormeSliderModel>? onChanged,
+    FormeValueChanged<double, FormeSliderModel>? onValueChanged,
     FormFieldValidator<double>? validator,
     AutovalidateMode? autovalidateMode,
     double? initialValue,
@@ -20,25 +16,25 @@ class FormeSlider extends ValueField<double, FormeSliderModel> {
     required double min,
     required double max,
     FormeSliderModel? model,
-    ValidateErrorListener<FormeValueFieldController<double, FormeSliderModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<double, FormeSliderModel>>?
-        focusListener,
+    FormeErrorChanged<FormeValueFieldController<double, FormeSliderModel>>?
+        onErrorChanged,
+    FormeFocusChanged<FormeValueFieldController<double, FormeSliderModel>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<double>? decoratorBuilder,
   }) : super(
           nullValueReplacement: min,
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: (model ?? FormeSliderModel()).copyWith(FormeSliderModel(
             max: max,
             min: min,
           )),
           readOnly: readOnly,
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,

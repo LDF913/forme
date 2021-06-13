@@ -33,7 +33,7 @@ class ChoiceChipFieldPage extends BasePage<String, FormeChoiceChipModel> {
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

@@ -1,9 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-import 'forme_field.dart';
-
 import 'package:forme/forme.dart';
-import 'forme_state_model.dart';
 
 /// base form controller
 ///
@@ -34,16 +31,12 @@ abstract class FormeController {
   /// **do not use this notifier out of forme**
   ///
   /// see [FormeInputDecorator]
-  FormeFieldListenable<T> fieldListenable<T>(String name);
+  FormeFieldListenable fieldListenable(String name);
 
   /// get form data
-  ///
-  /// if a value field doesn't has a name ,it's value will be ignored
   Map<String, dynamic> get data;
 
-  /// get error msg after [performValidate]
-  ///
-  /// key is [FormeValueFieldController]
+  /// get error msg after [validate]
   Map<FormeValueFieldController, String> get errors;
 
   /// perform a validate
@@ -54,8 +47,7 @@ abstract class FormeController {
   ///
   /// key is [FormeValueFieldController]
   /// value is errorMsg
-  Map<FormeValueFieldController, String> performValidate(
-      {bool quietly = false});
+  Map<FormeValueFieldController, String> validate({bool quietly = false});
 
   /// set forme data
   set data(Map<String, dynamic> data);
@@ -90,8 +82,7 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// whether field is readOnly;
   bool get readOnly;
 
-  /// set readOnly on field,it's equals to update1('readOnly',readOnly)
-  /// set readOnly(bool readOnly);
+  /// set readOnly
   set readOnly(bool readOnly);
 
   // whether field is focused
@@ -161,6 +152,14 @@ abstract class FormeFieldController<E extends FormeModel> {
   /// **do not use this notifier out of field,in this case , use [FormeController.fieldListenable] instead**
   ValueListenable<bool> get focusListenable;
 
+  /// readOnly listenable
+  ///
+  /// useful update children items when readOnly state changes,
+  ///  eg [FormeCupertinoSegmentedControl]
+  ///
+  /// will trigger when [Forme] or field's readOnly state changed
+  ValueListenable<bool> get readOnlyListenable;
+
   static T of<T extends FormeFieldController>(BuildContext context) {
     return InheritedFormeFieldController.of(context) as T;
   }
@@ -177,10 +176,9 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// validate field , return errorText
   ///
   /// if [quietly] is true,will not rebuild field and update and display error Text
-  String? performValidate({bool quietly = false});
+  String? validate({bool quietly = false});
 
-  /// reset valuefield,will set value to initialValue
-  /// also clear error msg
+  /// reset field
   void reset();
 
   /// get error
@@ -190,14 +188,7 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   /// if error is not null and [FormeValidateError.text] is null ,means field is valid
   ///
   /// if error is not null and [FormeValidateError.text] is not null ,means is invalid
-  ///
-  /// if [Forme.quietlyValidate] is true, this method will always return null
   FormeValidateError? get error;
-
-  /// save field
-  ///
-  /// trigger save listener
-  void save();
 
   /// get forme decorator controller
   FormeDecoratorController get decoratorController;
@@ -241,6 +232,34 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   }
 }
 
+/// used to get field's listenable
+///
+/// unlike [FormeFieldController]'s listenable , this listenable's lifecycle is same as [Forme] and no need to care about widget order.
+///
+/// when field's type changed,(eg: from [FormeSingleCheckbox] to [FormeSingleSwitch]) , this listenable still works,
+/// but [valueListenable] doesn't support generic type due to field's type may be changed at runtime
+///
+/// typically used with [ValueListenableBuilder]
+///
+/// **should not be used out of [Forme]**
+abstract class FormeFieldListenable {
+  /// get focuslistenable
+  ValueListenable<bool> get focusListenable;
+
+  /// get errorTextListenable
+  ///
+  /// if current field is not a [ValueField] ,this listenable will not be triggered always unless its type changed to  [ValueField]
+  ValueListenable<FormeValidateError?> get errorTextListenable;
+
+  /// get valueListenable
+  ///
+  /// if current field is not a [ValueField] ,this listenable will not be triggered always unless its type changed to  [ValueField]
+  ValueListenable get valueListenable;
+
+  /// get valueListenable
+  ValueListenable<bool> get readOnlyListenable;
+}
+
 /// used to control decorator's model
 /// see  [ValueField.decoratorBuilder]
 abstract class FormeDecoratorController {
@@ -262,4 +281,135 @@ abstract class FormeDecoratorController {
   ///
   /// eg: [FormeInputDecorator]'s model type is [FormeInputDecoratorModel]
   set model(FormeModel model);
+}
+
+abstract class FormeFieldControllerDelegate<E extends FormeModel>
+    implements FormeFieldController<E> {
+  FormeFieldController<E> get delegate;
+  @override
+  FormeController get formeController => delegate.formeController;
+  @override
+  E get model => delegate.model;
+  @override
+  set model(E model) => delegate.model = model;
+  @override
+  bool get readOnly => delegate.readOnly;
+  @override
+  set readOnly(bool readOnly) => delegate.readOnly = readOnly;
+  @override
+  ValueListenable<bool> get readOnlyListenable => delegate.readOnlyListenable;
+  @override
+  Future<void> ensureVisible(
+          {Duration? duration,
+          Curve? curve,
+          ScrollPositionAlignmentPolicy? alignmentPolicy,
+          double? alignment}) =>
+      delegate.ensureVisible(
+        duration: duration,
+        curve: curve,
+        alignmentPolicy: alignmentPolicy,
+        alignment: alignment,
+      );
+  @override
+  void requestFocus() => delegate.requestFocus();
+  @override
+  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) =>
+      delegate.unfocus(disposition: disposition);
+  @override
+  bool get hasFocus => delegate.hasFocus;
+  @override
+  String get name => delegate.name;
+  @override
+  void updateModel(E model) => delegate.updateModel(model);
+  @override
+  ValueListenable<bool> get focusListenable => delegate.focusListenable;
+}
+
+abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
+    extends FormeFieldControllerDelegate<E>
+    implements FormeValueFieldController<T, E> {
+  FormeValueFieldController<T, E> get delegate;
+
+  @override
+  T? get value => delegate.value;
+  @override
+  set value(T? value) => delegate.value = value;
+  @override
+  String? validate({bool quietly = false}) =>
+      delegate.validate(quietly: quietly);
+  @override
+  void reset() => delegate.reset();
+  @override
+  FormeValidateError? get error => delegate.error;
+  @override
+  FormeDecoratorController get decoratorController =>
+      delegate.decoratorController;
+  @override
+  ValueListenable<FormeValidateError?> get errorTextListenable =>
+      delegate.errorTextListenable;
+  @override
+  ValueListenable<T?> get valueListenable => delegate.valueListenable;
+}
+
+/// forme validate error
+///
+/// if error is null , means not perform a validate yet (or reset)
+///
+/// if error is not null and text is null , means field is valid
+///
+/// if error is not null and text is not null , means field is not valid
+class FormeValidateError {
+  final String? text;
+  bool get hasError => text != null;
+  const FormeValidateError(this.text);
+
+  @override
+  int get hashCode => text.hashCode;
+  @override
+  bool operator ==(Object o) => o is FormeValidateError && o.text == text;
+}
+
+/// used to update a field
+///
+/// ```
+/// FormeTextField(name:'text');
+///
+/// formeKey.field('text').updateModel(FormeTextFieldModel(decoration:InputDecoration('labelText':'New LabelText')))
+/// ```
+@immutable
+abstract class FormeModel {
+  const FormeModel();
+  FormeModel copyWith(FormeModel old);
+}
+
+class EmptyStateModel extends FormeModel {
+  EmptyStateModel._();
+  static final EmptyStateModel model = EmptyStateModel._();
+  factory EmptyStateModel() => model;
+
+  @override
+  FormeModel copyWith(FormeModel old) {
+    return EmptyStateModel();
+  }
+}
+
+/// share FormFieldController in sub tree
+class InheritedFormeFieldController extends InheritedWidget {
+  final FormeFieldController controller;
+  const InheritedFormeFieldController(this.controller, Widget child)
+      : super(child: child);
+  @override
+  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
+
+  static FormeFieldController of(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()!
+        .controller;
+  }
+
+  static FormeFieldController? maybeOf(BuildContext context) {
+    return context
+        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()
+        ?.controller;
+  }
 }

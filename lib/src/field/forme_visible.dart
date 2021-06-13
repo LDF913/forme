@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-
-import '../forme_field.dart';
-import '../forme_state_model.dart';
+import 'package:forme/forme.dart';
 
 /// a form field which can control visible of child
 ///
 /// ``` dart
-/// formeController.newFormeFieldController(nameOfVisibleField).model = FormeVisibleModel(visible:true|false);
+/// formeController.field(nameOfVisibleField).model = FormeVisibleModel(visible:true|false);
 /// ```
 class FormeVisible extends CommonField<FormeVisibleModel> {
   FormeVisible({

@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../render/forme_render_utils.dart';
-import '../render/forme_render_data.dart';
-
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 class FormeChipItem<T> {
   final Widget label;
@@ -64,34 +58,35 @@ class FormeFilterChip<T> extends ValueField<List<T>, FormeFilterChipModel<T>> {
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
     FormFieldValidator<List<T>>? validator,
-    FormeFieldValueChanged<List<T>, FormeFilterChipModel<T>>? onChanged,
+    FormeValueChanged<List<T>, FormeFilterChipModel<T>>? onValueChanged,
     FormFieldSetter<List<T>>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeFilterChipModel<T>? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<List<T>, FormeFilterChipModel<T>>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
   }) : super(
           nullValueReplacement: [],
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
+          onFocusChanged: onFocusChanged,
           model: (model ?? FormeFilterChipModel<T>())
               .copyWith(FormeFilterChipModel<T>(items: items)),
           readOnly: readOnly,
           name: name,
           validator: validator,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          validateErrorListener: validateErrorListener,
+          onErrorChanged: onErrorChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FormeFilterChipModel<T> model = state.model;

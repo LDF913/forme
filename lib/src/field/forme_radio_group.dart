@@ -1,16 +1,9 @@
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../render/forme_render_data.dart';
-import '../render/forme_render_utils.dart';
-
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
-import 'forme_list_tile.dart';
+import 'package:forme/forme.dart';
 
 class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
-    FormeFieldValueChanged<T, FormeRadioGroupModel<T>>? onChanged,
+    FormeValueChanged<T, FormeRadioGroupModel<T>>? onValueChanged,
     FormFieldValidator<T>? validator,
     AutovalidateMode? autovalidateMode,
     T? initialValue,
@@ -19,23 +12,22 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
     bool readOnly = false,
     required List<FormeListTileItem<T>>? items,
     FormeRadioGroupModel<T>? model,
-    ValidateErrorListener<
-            FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
-        focusListener,
+    FormeErrorChanged<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
+        onErrorChanged,
+    FormeFocusChanged<FormeValueFieldController<T, FormeRadioGroupModel<T>>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
             decoratorBuilder: decoratorBuilder,
-            focusListener: focusListener,
-            validateErrorListener: validateErrorListener,
+            onFocusChanged: onFocusChanged,
+            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeRadioGroupModel<T>())
                 .copyWith(FormeRadioGroupModel(items: items)),
             readOnly: readOnly,
             name: name,
-            onChanged: onChanged,
+            onValueChanged: onValueChanged,
             onSaved: onSaved,
             autovalidateMode: autovalidateMode,
             initialValue: initialValue,

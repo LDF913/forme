@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import 'forme_text_field.dart';
+import 'package:forme/forme.dart';
 
 typedef FormeTimeFieldFormatter = String Function(TimeOfDay timeOfDay);
 
 /// used to pick time only
 class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
   FormeTimeField({
-    FormeFieldValueChanged<TimeOfDay, FormeTimeFieldModel>? onChanged,
+    FormeValueChanged<TimeOfDay, FormeTimeFieldModel>? onValueChanged,
     FormFieldValidator<TimeOfDay>? validator,
     AutovalidateMode? autovalidateMode,
     TimeOfDay? initialValue,
@@ -19,21 +14,22 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
     required String name,
     bool readOnly = false,
     FormeTimeFieldModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<TimeOfDay, FormeTimeFieldModel>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
   }) : super(
           key: key,
           decoratorBuilder: decoratorBuilder,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: model ?? FormeTimeFieldModel(),
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
@@ -65,12 +61,12 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: [],
                   onTap: readOnly ? () {} : pickTime,
                   readOnly: true,
-                )));
+                ).copyWith(
+                    state.model.textFieldModel ?? FormeTextFieldModel()));
           },
         );
 
@@ -96,10 +92,11 @@ class _FormeTimeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
-    valueListenable.addListener(() {
-      TimeOfDay? value = valueListenable.value;
-      textEditingController.text = value == null ? '' : _formatter(value);
-    });
+  }
+
+  @override
+  void onValueChanged(TimeOfDay? value) {
+    textEditingController.text = value == null ? '' : _formatter(value);
   }
 
   @override

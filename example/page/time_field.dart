@@ -7,7 +7,8 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
   Widget get body {
     return Column(
       children: [
-        FormeTimeField(
+        FormeTextFieldOnTapProxyWidget(
+            child: FormeTimeField(
           autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeTimeFieldModel(
@@ -15,7 +16,7 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
             decoration: InputDecoration(labelText: 'DateTime'),
           )),
           validator: (value) => value == null ? 'select a time!' : null,
-        ),
+        )),
         Wrap(
           children: [
             createButton('change picker entry mode', () async {
@@ -85,7 +86,7 @@ class TimeFieldPage extends BasePage<TimeOfDay, FormeTimeFieldModel> {
               )));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

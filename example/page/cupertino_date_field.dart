@@ -10,7 +10,8 @@ class CupertinoDateFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeCupertinoDateField(
+        FormeTextFieldOnTapProxyWidget(
+            child: FormeCupertinoDateField(
           autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           validator: (value) => value == null ? 'select a date!' : null,
@@ -21,7 +22,7 @@ class CupertinoDateFieldPage
               textFieldModel: FormeTextFieldModel(
                 decoration: InputDecoration(labelText: 'Cupertino Date'),
               )),
-        ),
+        )),
         Wrap(
           children: [
             createButton('set type to datetime', () async {
@@ -101,7 +102,7 @@ class CupertinoDateFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

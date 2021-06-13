@@ -1,18 +1,12 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-import 'forme_datetime_field.dart';
-import '../field/forme_text_field.dart';
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
+import 'package:forme/forme.dart';
 
 class FormeDateRangeField
     extends ValueField<DateTimeRange, FormeDateRangeFieldModel> {
   FormeDateRangeField({
-    FormeFieldValueChanged<DateTimeRange, FormeDateRangeFieldModel>? onChanged,
+    FormeValueChanged<DateTimeRange, FormeDateRangeFieldModel>? onValueChanged,
     FormFieldValidator<DateTimeRange>? validator,
     AutovalidateMode? autovalidateMode,
     DateTimeRange? initialValue,
@@ -20,26 +14,26 @@ class FormeDateRangeField
     required String name,
     bool visible = true,
     FormeDateRangeFieldModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
-        validateErrorListener,
-    FocusListener<
+        onErrorChanged,
+    FormeFocusChanged<
             FormeValueFieldController<DateTimeRange, FormeDateRangeFieldModel>>?
-        focusListener,
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
   }) : super(
           decoratorBuilder: decoratorBuilder,
-          focusListener: focusListener,
+          onFocusChanged: onFocusChanged,
           key: key,
           model: model ?? FormeDateRangeFieldModel(),
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
-          validateErrorListener: validateErrorListener,
+          onErrorChanged: onErrorChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;
@@ -76,16 +70,18 @@ class FormeDateRangeField
               });
             }
 
+            FormeTextFieldModel model =
+                (state.model.textFieldModel ?? FormeTextFieldModel());
+
             return FormeTextFieldWidget(
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: [],
                   onTap: readOnly ? () {} : pickRange,
                   readOnly: true,
-                )));
+                ).copyWith(model));
           },
         );
 
@@ -120,10 +116,11 @@ class _FormeDateRangeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!));
-    valueListenable.addListener(() {
-      DateTimeRange? value = valueListenable.value;
-      textEditingController.text = value == null ? '' : _formatter(value);
-    });
+  }
+
+  @override
+  void onValueChanged(DateTimeRange? value) {
+    textEditingController.text = value == null ? '' : _formatter(value);
   }
 
   @override

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
-import '../forme_field.dart';
-import '../forme_state_model.dart';
+import 'package:forme/forme.dart';
 
 class FormeColumn extends _FormeFlex {
   FormeColumn({

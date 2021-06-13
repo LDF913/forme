@@ -1,12 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-
-import '../render/forme_render_utils.dart';
-import '../forme_controller.dart';
-import '../forme_state_model.dart';
-import 'forme_slider.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 class FormRangeLabelRender {
   final FormeLabelRender startRender;
@@ -16,7 +10,7 @@ class FormRangeLabelRender {
 
 class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
   FormeRangeSlider({
-    FormeFieldValueChanged<RangeValues, FormeRangeSliderModel>? onChanged,
+    FormeValueChanged<RangeValues, FormeRangeSliderModel>? onValueChanged,
     FormFieldValidator<RangeValues>? validator,
     AutovalidateMode? autovalidateMode,
     RangeValues? initialValue,
@@ -26,19 +20,19 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
     FormeRangeSliderModel? model,
     required double min,
     required double max,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
-        validateErrorListener,
-    FocusListener<
+        onErrorChanged,
+    FormeFocusChanged<
             FormeValueFieldController<RangeValues, FormeRangeSliderModel>>?
-        focusListener,
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<RangeValues>? decoratorBuilder,
   }) : super(
             nullValueReplacement: RangeValues(min, max),
             decoratorBuilder: decoratorBuilder,
-            focusListener: focusListener,
-            validateErrorListener: validateErrorListener,
+            onFocusChanged: onFocusChanged,
+            onErrorChanged: onErrorChanged,
             key: key,
             model: (model ?? FormeRangeSliderModel())
                 .copyWith(FormeRangeSliderModel(
@@ -47,7 +41,7 @@ class FormeRangeSlider extends ValueField<RangeValues, FormeRangeSliderModel> {
             )),
             readOnly: readOnly,
             name: name,
-            onChanged: onChanged,
+            onValueChanged: onValueChanged,
             onSaved: onSaved,
             validator: validator,
             initialValue: initialValue,

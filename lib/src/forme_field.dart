@@ -3,21 +3,13 @@ import 'package:flutter/material.dart';
 import 'forme_controller.dart';
 
 import 'forme_core.dart';
-import 'forme_state_model.dart';
 
 abstract class FormeDecoratorBuilder<T> {
   Widget build(
-    ValueListenable<bool> focusListenable,
-    ValueListenable<FormeValidateError?> errorTextListenable,
-    ValueListenable<T?> valueListenable,
+    FormeValueFieldController<T, FormeModel> controller,
     Widget child,
-    FormeModel? model,
   );
 }
-
-/// form field value changed listener
-typedef FormeFieldValueChanged<T, E extends FormeModel> = void Function(
-    FormeValueFieldController<T, E>, T? newValue);
 
 typedef FieldContentBuilder<T extends AbstractFieldState> = Widget Function(
     T state);
@@ -35,7 +27,7 @@ mixin StatefulField<T extends AbstractFieldState<StatefulWidget, E>,
 
   bool get readOnly;
 
-  FocusListener<FormeFieldController<E>>? get focusListener;
+  FormeFocusChanged<FormeFieldController<E>>? get onFocusChanged;
 }
 
 /// if you want to create a stateful form field, but don't want to return a value,you can override this field
@@ -45,14 +37,14 @@ class CommonField<E extends FormeModel> extends StatefulWidget
   final FieldContentBuilder<CommonFieldState<E>> builder;
   final E model;
   final bool readOnly;
-  final FocusListener<FormeFieldController<E>>? focusListener;
+  final FormeFocusChanged<FormeFieldController<E>>? onFocusChanged;
   const CommonField({
     Key? key,
     required this.name,
     required this.builder,
     required this.model,
     this.readOnly = false,
-    this.focusListener,
+    this.onFocusChanged,
   }) : super(key: key);
 
   @override
@@ -63,7 +55,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
     with AbstractFieldState<CommonField<E>, E> {
   @override
   Widget build(BuildContext context) {
-    return InheritedFormeFieldController(this, widget.builder(this));
+    return InheritedFormeFieldController(this.controller, widget.builder(this));
   }
 }
 
@@ -73,12 +65,12 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
 class ValueField<T, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String name;
-  final FormeFieldValueChanged<T, E>? onChanged;
+  final FormeValueChanged<T, E>? onValueChanged;
   final E model;
   final bool readOnly;
 
   /// used to listen focus changed
-  final FocusListener<FormeFieldController<E>>? focusListener;
+  final FormeFocusChanged<FormeValueFieldController<T, E>>? onFocusChanged;
 
   /// used to listen field's validate errorText changed
   ///
@@ -88,8 +80,7 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   /// 2. after called [validate] method
   ///
   /// **errorText will be null if field's errorText from nonnull to null**
-  final ValidateErrorListener<FormeValueFieldController<T, E>>?
-      validateErrorListener;
+  final FormeErrorChanged<FormeValueFieldController<T, E>>? onErrorChanged;
 
   /// used to build a decorator
   ///
@@ -104,15 +95,15 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   ///   2. [ValueField.validator]
   ///   3. [ValueField.onSaved]
   ///   4. [FormeValueFieldController.valueListenable]
-  ///   5. [ValueField.onChanged]
-  ///   6. [Forme.onChanged]
+  ///   5. [ValueField.onValueChanged]
+  ///   6. [Forme.onValueChanged]
   ///
   /// **should not setted by user**
   final T? nullValueReplacement;
 
   ValueField({
     Key? key,
-    this.onChanged,
+    this.onValueChanged,
     required this.name,
     required FieldContentBuilder<ValueFieldState<T, E>> builder,
     FormFieldValidator<T>? validator,
@@ -122,11 +113,11 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
     FormFieldSetter<T>? onSaved,
     required this.model,
     this.readOnly = false,
-    this.validateErrorListener,
+    this.onErrorChanged,
     this.decoratorBuilder,
     this.nullValueReplacement,
-    FocusListener<FormeValueFieldController<T, E>>? focusListener,
-  })  : this.focusListener = _convertFocusListener(focusListener),
+    FormeFocusChanged<FormeValueFieldController<T, E>>? onFocusChanged,
+  })  : this.onFocusChanged = _convertFormeFocusChanged(onFocusChanged),
         super(
             key: key,
             enabled: enabled,
@@ -148,31 +139,10 @@ class ValueField<T, E extends FormeModel> extends FormField<T>
   @override
   ValueFieldState<T, E> createState() => ValueFieldState();
 
-  static FocusListener<FormeFieldController<E>>?
-      _convertFocusListener<T, E extends FormeModel>(
-          FocusListener<FormeValueFieldController<T, E>>? listener) {
+  static FormeFocusChanged<FormeFieldController<E>>?
+      _convertFormeFocusChanged<T, E extends FormeModel>(
+          FormeFocusChanged<FormeValueFieldController<T, E>>? listener) {
     if (listener == null) return null;
     return (v, focus) => listener(v as FormeValueFieldController<T, E>, focus);
-  }
-}
-
-/// share FormFieldController in sub tree
-class InheritedFormeFieldController extends InheritedWidget {
-  final FormeFieldController controller;
-  const InheritedFormeFieldController(this.controller, Widget child)
-      : super(child: child);
-  @override
-  bool updateShouldNotify(covariant InheritedWidget oldWidget) => false;
-
-  static FormeFieldController of(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()!
-        .controller;
-  }
-
-  static FormeFieldController? maybeOf(BuildContext context) {
-    return context
-        .dependOnInheritedWidgetOfExactType<InheritedFormeFieldController>()
-        ?.controller;
   }
 }

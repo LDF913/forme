@@ -1,14 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_utils.dart';
+import 'package:forme/forme.dart';
 
 class FormeCupertinoPicker extends ValueField<int, FormeCupertinoPickerModel> {
   FormeCupertinoPicker({
-    FormeFieldValueChanged<int, FormeCupertinoPickerModel>? onChanged,
+    FormeValueChanged<int, FormeCupertinoPickerModel>? onValueChanged,
     FormFieldValidator<int>? validator,
     AutovalidateMode? autovalidateMode,
     int? initialValue,
@@ -18,22 +14,22 @@ class FormeCupertinoPicker extends ValueField<int, FormeCupertinoPickerModel> {
     required double itemExtent,
     required List<Widget> children,
     FormeCupertinoPickerModel? model,
-    ValidateErrorListener? validateErrorListener,
-    FocusListener? focusListener,
+    FormeErrorChanged? onErrorChanged,
+    FormeFocusChanged? onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<int>? decoratorBuilder,
   }) : super(
           nullValueReplacement: 0,
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: (model ?? FormeCupertinoPickerModel()).copyWith(
               FormeCupertinoPickerModel(
                   children: children, itemExtent: itemExtent)),
           name: name,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
           validator: validator,
@@ -101,9 +97,11 @@ class _FormeCupertinoPickerState
     super.afterInitiation();
     scrollController =
         FixedExtentScrollController(initialItem: initialValue ?? 0);
-    valueListenable.addListener(() {
-      scrollController.jumpToItem(valueListenable.value!);
-    });
+  }
+
+  @override
+  void onValueChanged(int? value) {
+    scrollController.jumpToItem(value!);
   }
 
   void onScrollStatusChanged(bool scrolling) {

@@ -46,7 +46,7 @@ class SliderFieldPage extends BasePage<double, FormeSliderModel> {
               ));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

@@ -57,7 +57,7 @@ class RadioTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

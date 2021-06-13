@@ -5,19 +5,11 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-
-import '../render/forme_render_utils.dart';
-import '../../forme.dart';
-import '../widget/forme_text_field_widget.dart';
-
-import '../forme_utils.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 class FormeTextField extends ValueField<String, FormeTextFieldModel> {
   FormeTextField({
-    FormeFieldValueChanged<String, FormeTextFieldModel>? onChanged,
+    FormeValueChanged<String, FormeTextFieldModel>? onValueChanged,
     FormFieldValidator<String>? validator,
     AutovalidateMode? autovalidateMode,
     FormFieldSetter<String>? onSaved,
@@ -25,23 +17,24 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
     required String name,
     bool readOnly = false,
     FormeTextFieldModel? model,
-    ValidateErrorListener<
-            FormeValueFieldController<String, FormeTextFieldModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<String, FormeTextFieldModel>>?
-        focusListener,
+    FormeErrorChanged<FormeValueFieldController<String, FormeTextFieldModel>>?
+        onErrorChanged,
+    FormeFocusChanged<FormeValueFieldController<String, FormeTextFieldModel>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<String>? decoratorBuilder,
   }) : super(
           nullValueReplacement: '',
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
-          model: model ?? FormeTextFieldModel(),
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
+          model: model ??
+              FormeTextFieldModel(
+                  maxLines: 1, decoration: const InputDecoration()),
           name: name,
           readOnly: readOnly,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           initialValue: initialValue,
           validator: validator,
@@ -59,10 +52,11 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
               textEditingController: state.textEditingController,
               focusNode: focusNode,
               errorText: state.errorText,
-              model: state.model.copyWith(FormeTextFieldModel(
-                  onChanged: onChanged,
-                  onTap: readOnly ? () {} : state.model.onTap,
-                  readOnly: readOnly)),
+              model: FormeTextFieldModel(
+                      onChanged: onChanged,
+                      onTap: readOnly ? () {} : state.model.onTap,
+                      readOnly: readOnly)
+                  .copyWith(state.model),
             );
           },
         );
@@ -80,8 +74,9 @@ class _TextFormeFieldState
 
   bool get selectAllOnFocus => model.selectAllOnFocus ?? false;
 
-  void focusChange() {
-    if (focusNode.hasFocus && selectAllOnFocus) {
+  @override
+  void onFocusChanged(bool hasFocus) {
+    if (hasFocus && selectAllOnFocus) {
       textEditingController.selection =
           FormeUtils.selection(0, textEditingController.text.length);
     }
@@ -91,17 +86,16 @@ class _TextFormeFieldState
   void afterInitiation() {
     super.afterInitiation();
     textEditingController = TextEditingController(text: initialValue);
-    focusNode.addListener(focusChange);
-    valueListenable.addListener(() {
-      String value = valueListenable.value!;
-      if (textEditingController.text != value)
-        textEditingController.text = value;
-    });
+  }
+
+  @override
+  void onValueChanged(String? value) {
+    if (textEditingController.text != value)
+      textEditingController.text = value!;
   }
 
   @override
   void dispose() {
-    focusNode.removeListener(focusChange);
     textEditingController.dispose();
     super.dispose();
   }

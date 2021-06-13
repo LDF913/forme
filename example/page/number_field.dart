@@ -93,7 +93,7 @@ class NumberFieldPage extends BasePage<num, FormeNumberFieldModel> {
               )));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

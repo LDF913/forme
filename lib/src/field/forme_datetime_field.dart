@@ -2,20 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-import '../field/forme_text_field.dart';
-
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
+import 'package:forme/forme.dart';
 
 enum FormeDateTimeFieldType { Date, DateTime }
 
 ///used to pick datetime and date
 class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
   FormeDateTimeField({
-    FormeFieldValueChanged<DateTime, FormeDateTimeFieldModel>? onChanged,
+    FormeValueChanged<DateTime, FormeDateTimeFieldModel>? onValueChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
@@ -23,22 +17,23 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
     required String name,
     bool readOnly = false,
     FormeDateTimeFieldModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<DateTime, FormeDateTimeFieldModel>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
   }) : super(
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: (model ?? FormeDateTimeFieldModel()).copyWith(
               FormeDateTimeFieldModel(type: FormeDateTimeFieldType.Date)),
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
@@ -80,16 +75,23 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
                 if (date != null) {
                   if (state.model.type! == FormeDateTimeFieldType.DateTime)
                     showTimePicker(
-                      initialEntryMode: state.model.initialEntryMode ??
-                          TimePickerEntryMode.dial,
-                      cancelText: state.model.timeCancelText,
-                      confirmText: state.model.timeConfirmText,
-                      helpText: state.model.timeHelpText,
-                      routeSettings: state.model.timeRouteSettings,
-                      context: state.context,
-                      initialTime: timeOfDay ??
-                          TimeOfDay(hour: value.hour, minute: value.minute),
-                    ).then((value) {
+                        initialEntryMode: state.model.initialEntryMode ??
+                            TimePickerEntryMode.dial,
+                        cancelText: state.model.timeCancelText,
+                        confirmText: state.model.timeConfirmText,
+                        helpText: state.model.timeHelpText,
+                        routeSettings: state.model.timeRouteSettings,
+                        context: state.context,
+                        initialTime: timeOfDay ??
+                            TimeOfDay(hour: value.hour, minute: value.minute),
+                        builder: (context, child) {
+                          return MediaQuery(
+                            data: MediaQuery.of(context).copyWith(
+                                alwaysUse24HourFormat:
+                                    state.model.use24hFormat ?? false),
+                            child: child!,
+                          );
+                        }).then((value) {
                       if (value != null) {
                         DateTime dateTime = DateTime(date.year, date.month,
                             date.day, value.hour, value.minute);
@@ -108,12 +110,12 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: [],
                   onTap: readOnly ? null : pickTime,
                   readOnly: true,
-                )));
+                ).copyWith(
+                    state.model.textFieldModel ?? FormeTextFieldModel()));
           },
         );
 
@@ -149,12 +151,12 @@ class _FormeDateTimeFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: value == null ? '' : _formatter(model.type!, value!));
+  }
 
-    valueListenable.addListener(() {
-      DateTime? value = valueListenable.value;
-      textEditingController.text =
-          value == null ? '' : _formatter(model.type!, value);
-    });
+  @override
+  void onValueChanged(DateTime? value) {
+    textEditingController.text =
+        value == null ? '' : _formatter(model.type!, value);
   }
 
   @override
@@ -263,6 +265,7 @@ class FormeDateTimeFieldModel extends FormeModel {
   final SelectableDayPredicate? selectableDayPredicate;
   final TransitionBuilder? builder;
   final FormeTextFieldModel? textFieldModel;
+  final bool? use24hFormat;
 
   FormeDateTimeFieldModel({
     this.type,
@@ -288,6 +291,7 @@ class FormeDateTimeFieldModel extends FormeModel {
     this.builder,
     this.dateInitialEntryMode,
     this.textFieldModel,
+    this.use24hFormat,
   });
 
   @override
@@ -317,6 +321,7 @@ class FormeDateTimeFieldModel extends FormeModel {
       selectableDayPredicate:
           selectableDayPredicate ?? old.selectableDayPredicate,
       builder: builder ?? old.builder,
+      use24hFormat: use24hFormat ?? old.use24hFormat,
       textFieldModel:
           FormeTextFieldModel.copy(old.textFieldModel, textFieldModel),
     );

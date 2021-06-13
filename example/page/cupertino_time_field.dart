@@ -10,7 +10,8 @@ class CupertinoTimerFieldPage
   Widget get body {
     return Column(
       children: [
-        FormeCupertinoTimerField(
+        FormeTextFieldOnTapProxyWidget(
+            child: FormeCupertinoTimerField(
           autovalidateMode: AutovalidateMode.onUserInteraction,
           name: name,
           model: FormeCupertinoTimerFieldModel(
@@ -18,7 +19,7 @@ class CupertinoTimerFieldPage
             decoration: InputDecoration(labelText: 'Cupertino Timer'),
           )),
           validator: (value) => value == null ? 'select a duration!' : null,
-        ),
+        )),
         Wrap(
           children: [
             createButton('change mode to ms', () async {
@@ -90,7 +91,7 @@ class CupertinoTimerFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

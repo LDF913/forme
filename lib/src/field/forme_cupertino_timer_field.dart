@@ -1,13 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import '../render/forme_render_data.dart';
-import '../render/forme_render_utils.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import 'forme_text_field.dart';
+import 'package:forme/forme.dart';
 
 typedef FormeDurationFormatter = String Function(
     Duration duration, CupertinoTimerPickerMode mode);
@@ -16,7 +9,7 @@ typedef FormeDurationFormatter = String Function(
 class FormeCupertinoTimerField
     extends ValueField<Duration, FormeCupertinoTimerFieldModel> {
   FormeCupertinoTimerField({
-    FormeFieldValueChanged<Duration, FormeCupertinoTimerFieldModel>? onChanged,
+    FormeValueChanged<Duration, FormeCupertinoTimerFieldModel>? onValueChanged,
     FormFieldValidator<Duration>? validator,
     AutovalidateMode? autovalidateMode,
     Duration? initialValue,
@@ -24,22 +17,22 @@ class FormeCupertinoTimerField
     required String name,
     bool readOnly = false,
     FormeCupertinoTimerFieldModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<Duration, FormeCupertinoTimerFieldModel>>?
-        validateErrorListener,
-    FocusListener<
+        onErrorChanged,
+    FormeFocusChanged<
             FormeValueFieldController<Duration, FormeCupertinoTimerFieldModel>>?
-        focusListener,
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<Duration>? decoratorBuilder,
   }) : super(
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: model ?? FormeCupertinoTimerFieldModel(),
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
@@ -101,12 +94,12 @@ class FormeCupertinoTimerField
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: [],
                   onTap: readOnly ? () {} : pickDuration,
                   readOnly: true,
-                )));
+                ).copyWith(
+                    state.model.textFieldModel ?? FormeTextFieldModel()));
           },
         );
 
@@ -147,10 +140,11 @@ class _FormeCupertinoTimerFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : _formatter(initialValue!, mode));
-    valueListenable.addListener(() {
-      Duration? value = valueListenable.value;
-      textEditingController.text = value == null ? '' : _formatter(value, mode);
-    });
+  }
+
+  @override
+  void onValueChanged(Duration? value) {
+    textEditingController.text = value == null ? '' : _formatter(value, mode);
   }
 
   @override
@@ -226,7 +220,8 @@ class FormeCupertinoTimerFieldModel extends FormeModel {
         oldModel as FormeCupertinoTimerFieldModel;
     return FormeCupertinoTimerFieldModel(
       formatter: formatter ?? old.formatter,
-      textFieldModel: textFieldModel ?? old.textFieldModel,
+      textFieldModel:
+          FormeTextFieldModel.copy(old.textFieldModel, textFieldModel),
       confirmWidget: confirmWidget ?? old.confirmWidget,
       mode: mode ?? old.mode,
       minuteInterval: minuteInterval ?? old.minuteInterval,

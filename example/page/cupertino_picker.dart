@@ -10,14 +10,14 @@ class CupertinoPickerFieldPage
     return Column(
       children: [
         FormeCupertinoPicker(
-            onChanged: (c, v) => print(v),
+            onValueChanged: (c, v) => print(v),
             decoratorBuilder: FormeInputDecoratorBuilder(
                 decoration: InputDecoration(labelText: 'Cupertino Picker')),
             validator: (value) => value! < 100
                 ? 'value must bigger than 100,current is $value'
                 : null,
             autovalidateMode: AutovalidateMode.onUserInteraction,
-            validateErrorListener: (field, errorText) {
+            onErrorChanged: (field, errorText) {
               controller.updateModel(FormeCupertinoPickerModel(
                 useMagnifier: errorText != null && errorText.hasError,
                 magnification: (errorText != null && errorText.hasError)
@@ -105,7 +105,7 @@ class CupertinoPickerFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

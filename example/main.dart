@@ -12,9 +12,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Forme ForYou',
       home: HomePage(),
-      theme: ThemeData.dark().copyWith(
-        colorScheme: ColorScheme.dark(),
-      ),
       routes: {
         '/textfield': (context) => TextFieldPage(),
         '/timefield': (context) => TimeFieldPage(),
@@ -122,6 +119,18 @@ class HomePage extends StatelessWidget {
               child: Text('FormeCheckboxTile')),
           TextButton(
               onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => CheckboxPage()));
+              },
+              child: Text('FormeSingleCheckbox')),
+          TextButton(
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => SwitchPage()));
+              },
+              child: Text('FormeSingleSwitch')),
+          TextButton(
+              onPressed: () {
                 Navigator.of(context).pushNamed('/switchtile');
               },
               child: Text('FormeSwitchTile')),
@@ -140,6 +149,23 @@ class HomePage extends StatelessWidget {
                 Navigator.of(context).pushNamed('/cupertinodate');
               },
               child: Text('FormeCupertinoDateField')),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => CupertinoSegmentedControlPage()));
+              },
+              child: Text('FormeCupertinoSegmentedControl')),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            CupertinoSlidingSegmentedControlPage()));
+              },
+              child: Text('FormeCupertinoSlidingSegmentedControl')),
           TextButton(
               onPressed: () {
                 Navigator.of(context).pushNamed('/signup');

@@ -1,28 +1,21 @@
 import 'package:flutter/material.dart';
-import '../../forme.dart';
-import '../render/forme_render_utils.dart';
-import '../render/forme_render_data.dart';
-
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import 'forme_filter_chip.dart';
+import 'package:forme/forme.dart';
 
 class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
   FormeChoiceChip({
     T? initialValue,
     AutovalidateMode? autovalidateMode,
     FormFieldValidator<T>? validator,
-    FormeFieldValueChanged<T, FormeChoiceChipModel<T>>? onChanged,
+    FormeValueChanged<T, FormeChoiceChipModel<T>>? onValueChanged,
     FormFieldSetter<T>? onSaved,
     required String name,
     bool readOnly = false,
     required List<FormeChipItem<T>>? items,
     FormeChoiceChipModel<T>? model,
-    ValidateErrorListener<
-            FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
-        focusListener,
+    FormeErrorChanged<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
+        onErrorChanged,
+    FormeFocusChanged<FormeValueFieldController<T, FormeChoiceChipModel<T>>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
   }) : super(
@@ -33,12 +26,12 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
           readOnly: readOnly,
           name: name,
           validator: validator,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
-          validateErrorListener: validateErrorListener,
-          focusListener: focusListener,
+          onErrorChanged: onErrorChanged,
+          onFocusChanged: onFocusChanged,
           builder: (state) {
             bool readOnly = state.readOnly;
             FormeChoiceChipModel<T> model = state.model;

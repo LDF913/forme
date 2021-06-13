@@ -43,7 +43,7 @@ class FilterChipFieldPage extends BasePage<List<String>, FormeFilterChipModel> {
                 updateHelperStyle();
               }),
               createButton('validate', () {
-                controller.performValidate();
+                controller.validate();
               }),
             ],
           )

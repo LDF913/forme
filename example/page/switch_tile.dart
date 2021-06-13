@@ -57,7 +57,7 @@ class SwitchTileFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

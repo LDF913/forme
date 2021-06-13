@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
-import '../forme_controller.dart';
-import '../render/forme_render_data.dart';
-import '../render/forme_render_utils.dart';
-
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import '../forme_core.dart';
+import 'package:forme/forme.dart';
 
 class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
   FormeSingleCheckbox({
-    FormeFieldValueChanged<bool, FormeSingleCheckboxModel>? onChanged,
+    FormeValueChanged<bool, FormeSingleCheckboxModel>? onValueChanged,
     FormFieldValidator<bool>? validator,
     AutovalidateMode? autovalidateMode,
     bool initialValue = false,
@@ -17,21 +11,22 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
     required String name,
     bool readOnly = false,
     FormeSingleCheckboxModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
-        focusListener,
+        onErrorChanged,
+    FormeFocusChanged<
+            FormeValueFieldController<bool, FormeSingleCheckboxModel>>?
+        onFocusChanged,
     Key? key,
   }) : super(
           nullValueReplacement: false,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           key: key,
           model: model ?? FormeSingleCheckboxModel(),
           readOnly: readOnly,
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
@@ -41,10 +36,36 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
             bool value = state.value!;
             FormeCheckboxRenderData? checkboxRenderData =
                 state.model.checkboxRenderData;
+
+            bool listTile = state.model.listTile ?? false;
+
+            if (listTile) {
+              return CheckboxListTile(
+                shape: checkboxRenderData?.shape,
+                tileColor: checkboxRenderData?.tileColor,
+                selectedTileColor: checkboxRenderData?.selectedTileColor,
+                activeColor: checkboxRenderData?.activeColor,
+                checkColor: checkboxRenderData?.checkColor,
+                secondary: state.model.secondary,
+                subtitle: state.model.subtitle,
+                controlAffinity: state.model.controlAffinity ??
+                    ListTileControlAffinity.platform,
+                contentPadding: state.model.contentPadding,
+                dense: state.model.dense,
+                title: state.model.title,
+                value: state.value!,
+                onChanged: readOnly
+                    ? null
+                    : (_) {
+                        state.didChange(!value);
+                        state.requestFocus();
+                      },
+              );
+            }
             return Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                state.model.label ?? SizedBox(),
+                state.model.title ?? SizedBox(),
                 FormeRenderUtils.checkbox(
                     value,
                     readOnly
@@ -62,16 +83,35 @@ class FormeSingleCheckbox extends ValueField<bool, FormeSingleCheckboxModel> {
 }
 
 class FormeSingleCheckboxModel extends FormeModel {
-  final Widget? label;
+  final Widget? title;
+  final Widget? secondary;
+  final Widget? subtitle;
+  final EdgeInsets? contentPadding;
+  final bool? dense;
+  final ListTileControlAffinity? controlAffinity;
   final FormeCheckboxRenderData? checkboxRenderData;
+  final bool? listTile;
+
   FormeSingleCheckboxModel({
-    this.label,
+    this.title,
+    this.secondary,
+    this.subtitle,
+    this.contentPadding,
+    this.dense,
+    this.controlAffinity,
     this.checkboxRenderData,
+    this.listTile,
   });
   FormeSingleCheckboxModel copyWith(FormeModel oldModel) {
     FormeSingleCheckboxModel old = oldModel as FormeSingleCheckboxModel;
     return FormeSingleCheckboxModel(
-      label: label ?? old.label,
+      title: title ?? old.title,
+      secondary: secondary ?? old.secondary,
+      subtitle: subtitle ?? old.subtitle,
+      contentPadding: contentPadding ?? old.contentPadding,
+      dense: dense ?? old.dense,
+      controlAffinity: controlAffinity ?? old.controlAffinity,
+      listTile: listTile ?? old.listTile,
       checkboxRenderData: FormeCheckboxRenderData.copy(
           old.checkboxRenderData, checkboxRenderData),
     );

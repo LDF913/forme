@@ -56,7 +56,7 @@ class RangeSliderFieldPage
               updateHelperStyle();
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

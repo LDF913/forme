@@ -18,3 +18,5 @@ export 'forme_radio_group.dart';
 export 'forme_cupertino_picker.dart';
 export 'forme_cupertino_timer_field.dart';
 export 'forme_cupertino_date_field.dart';
+export 'forme_cupertino_segmented_control.dart';
+export 'forme_cupertino_sliding_segmented_control.dart';

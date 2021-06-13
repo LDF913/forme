@@ -9,7 +9,9 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
       children: [
         FormeTextField(
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validateErrorListener: (field, errorText) {
+          onFocusChanged: (c, m) => print('focused changed , current is $m'),
+          onErrorChanged: (field, errorText) {
+            print("validate result: ${errorText?.text}");
             controller.updateModel(FormeTextFieldModel(
                 decoration: InputDecoration(
               labelStyle: TextStyle(
@@ -20,8 +22,11 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ),
             )));
           },
+          onValueChanged: (c, m) =>
+              print('value changed , current value is $m'),
           name: name,
           model: FormeTextFieldModel(
+            autofocus: true,
             decoration: InputDecoration(labelText: 'TextField'),
           ),
           validator: (value) => value!.length < 8
@@ -89,7 +94,7 @@ class TextFieldPage extends BasePage<String, FormeTextFieldModel> {
               ));
             }),
             builderButton('validate', (context) {
-              String? errorText = controller.performValidate(quietly: true);
+              String? errorText = controller.validate(quietly: true);
               if (errorText != null) {
                 showError(context, errorText);
               }

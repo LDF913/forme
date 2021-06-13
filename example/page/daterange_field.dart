@@ -101,7 +101,7 @@ class DateRangeFieldPage
               )));
             }),
             createButton('validate', () {
-              controller.performValidate();
+              controller.validate();
             }),
           ],
         )

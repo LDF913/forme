@@ -2,17 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import 'forme_text_field.dart';
+import 'package:forme/forme.dart';
 
 class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
   FormeNumberField({
-    FormeFieldValueChanged<num, FormeNumberFieldModel>? onChanged,
+    FormeValueChanged<num, FormeNumberFieldModel>? onValueChanged,
     FormFieldValidator<num>? validator,
     AutovalidateMode? autovalidateMode,
     num? initialValue,
@@ -21,23 +15,22 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
     required String name,
     bool readOnly = false,
     FormeNumberFieldModel? model,
-    ValidateErrorListener<
-            FormeValueFieldController<num, FormeNumberFieldModel>>?
-        validateErrorListener,
-    FocusListener<FormeValueFieldController<num, FormeNumberFieldModel>>?
-        focusListener,
+    FormeErrorChanged<FormeValueFieldController<num, FormeNumberFieldModel>>?
+        onErrorChanged,
+    FormeFocusChanged<FormeValueFieldController<num, FormeNumberFieldModel>>?
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<num>? decoratorBuilder,
   }) : super(
           decoratorBuilder: decoratorBuilder,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           key: key,
           model: model ?? FormeNumberFieldModel(),
           readOnly: readOnly,
           name: name,
           onSaved: onSaved,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           validator: validator,
           initialValue: initialValue,
           autovalidateMode: autovalidateMode,
@@ -99,8 +92,7 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: formatters,
                   readOnly: readOnly,
                   onTap: readOnly ? () {} : state.model.textFieldModel?.onTap,
@@ -109,7 +101,8 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
                   onSubmitted: onSubmitted == null
                       ? null
                       : (v) => onSubmitted(state.value),
-                )));
+                ).copyWith(
+                    state.model.textFieldModel ?? FormeTextFieldModel()));
           },
         );
 
@@ -136,17 +129,18 @@ class _NumberFieldState extends ValueFieldState<num, FormeNumberFieldModel> {
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: initialValue == null ? '' : initialValue.toString());
-    valueListenable.addListener(() {
-      num? value = valueListenable.value;
-      if (updateController) {
-        String str = value == null ? '' : value.toString();
-        if (textEditingController.text != str) {
-          textEditingController.text = str;
-        }
-      } else {
-        updateController = true;
+  }
+
+  @override
+  void onValueChanged(num? value) {
+    if (updateController) {
+      String str = value == null ? '' : value.toString();
+      if (textEditingController.text != str) {
+        textEditingController.text = str;
       }
-    });
+    } else {
+      updateController = true;
+    }
   }
 
   @override

@@ -2,11 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-import '../forme_core.dart';
-import '../render/forme_render_utils.dart';
-import '../forme_state_model.dart';
-import 'forme_listenable_builder.dart';
-
 class FormeInputDecoratorBuilder<T> implements FormeDecoratorBuilder<T> {
   final bool Function(T? value)? emptyChecker;
   final InputDecoration? decoration;
@@ -15,18 +10,13 @@ class FormeInputDecoratorBuilder<T> implements FormeDecoratorBuilder<T> {
       {this.emptyChecker, this.decoration, this.wrapper});
   @override
   Widget build(
-    ValueListenable<bool> focusListenable,
-    ValueListenable<FormeValidateError?> errorTextListenable,
-    ValueListenable<T?> valueListenable,
+    FormeValueFieldController<T, FormeModel> controller,
     Widget child,
-    FormeModel? model,
   ) {
     return FormeInputDecorator<T>(
       emptyChecker: emptyChecker,
       decoration: decoration,
-      focusListenable: focusListenable,
-      errorTextListenable: errorTextListenable,
-      valueListenable: valueListenable,
+      controller: controller,
       child: child,
       wrapper: wrapper,
     );
@@ -39,16 +29,12 @@ class FormeInputDecoratorBuilder<T> implements FormeDecoratorBuilder<T> {
 class FormeInputDecorator<T> extends StatelessWidget {
   final Widget child;
   final bool Function(T? value)? emptyChecker;
-  final ValueListenable<bool> focusListenable;
-  final ValueListenable<FormeValidateError?> errorTextListenable;
-  final ValueListenable<T?> valueListenable;
   final InputDecoration? decoration;
   final Widget Function(Widget child)? wrapper;
+  final FormeValueFieldController<T, FormeModel> controller;
 
   FormeInputDecorator({
-    required this.focusListenable,
-    required this.errorTextListenable,
-    required this.valueListenable,
+    required this.controller,
     Key? key,
     required this.child,
     this.decoration,
@@ -60,8 +46,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget child = wrapper == null ? this.child : wrapper!(this.child);
     FormeInputDecoratorModel model;
-    FormeModel? decoratorModel =
-        FormeValueFieldController.of(context).decoratorController.currentModel;
+    FormeModel? decoratorModel = controller.decoratorController.currentModel;
     if (decoratorModel == null || decoratorModel is! FormeInputDecoratorModel) {
       model = const FormeInputDecoratorModel();
     } else {
@@ -74,7 +59,7 @@ class FormeInputDecorator<T> extends StatelessWidget {
     if (emptyChecker == null) {
       if (FormeKey.of(context).quietlyValidate) {
         return ValueListenableBuilder<bool>(
-          valueListenable: focusListenable,
+          valueListenable: controller.focusListenable,
           builder: (context, focus, _child) {
             return InputDecorator(
               isEmpty: false,
@@ -86,8 +71,8 @@ class FormeInputDecorator<T> extends StatelessWidget {
         );
       }
       return ValueListenableBuilder2(
-        focusListenable,
-        errorTextListenable,
+        controller.focusListenable,
+        controller.errorTextListenable,
         builder: (context, bool focus, FormeValidateError? error, _child) {
           return InputDecorator(
             isEmpty: false,
@@ -99,7 +84,8 @@ class FormeInputDecorator<T> extends StatelessWidget {
       );
     } else {
       if (FormeKey.of(context).quietlyValidate) {
-        return ValueListenableBuilder2(focusListenable, valueListenable,
+        return ValueListenableBuilder2(
+            controller.focusListenable, controller.valueListenable,
             builder: (context, bool focus, T? value, child) {
           return InputDecorator(
             isEmpty: emptyChecker!(value),
@@ -110,9 +96,9 @@ class FormeInputDecorator<T> extends StatelessWidget {
         });
       }
       return ValueListenableBuilder3(
-        focusListenable,
-        errorTextListenable,
-        valueListenable,
+        controller.focusListenable,
+        controller.errorTextListenable,
+        controller.valueListenable,
         builder:
             (context, bool focus, FormeValidateError? error, T? value, _child) {
           return InputDecorator(

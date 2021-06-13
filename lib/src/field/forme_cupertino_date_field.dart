@@ -3,23 +3,13 @@ import 'dart:ui';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-
-import '../render/forme_render_data.dart';
-import '../render/forme_render_utils.dart';
-import '../forme_controller.dart';
-import '../widget/forme_text_field_widget.dart';
-import '../field/forme_text_field.dart';
-
-import '../forme_core.dart';
-import '../forme_state_model.dart';
-import '../forme_field.dart';
-import 'forme_datetime_field.dart';
+import 'package:forme/forme.dart';
 
 ///used to pick datetime and date
 class FormeCupertinoDateField
     extends ValueField<DateTime, FormeCupertinoDateFieldModel> {
   FormeCupertinoDateField({
-    FormeFieldValueChanged<DateTime, FormeCupertinoDateFieldModel>? onChanged,
+    FormeValueChanged<DateTime, FormeCupertinoDateFieldModel>? onValueChanged,
     FormFieldValidator<DateTime>? validator,
     AutovalidateMode? autovalidateMode,
     DateTime? initialValue,
@@ -27,23 +17,23 @@ class FormeCupertinoDateField
     required String name,
     bool readOnly = false,
     FormeCupertinoDateFieldModel? model,
-    ValidateErrorListener<
+    FormeErrorChanged<
             FormeValueFieldController<DateTime, FormeCupertinoDateFieldModel>>?
-        validateErrorListener,
-    FocusListener<
+        onErrorChanged,
+    FormeFocusChanged<
             FormeValueFieldController<DateTime, FormeCupertinoDateFieldModel>>?
-        focusListener,
+        onFocusChanged,
     Key? key,
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
   }) : super(
           decoratorBuilder: decoratorBuilder,
           key: key,
-          focusListener: focusListener,
-          validateErrorListener: validateErrorListener,
+          onFocusChanged: onFocusChanged,
+          onErrorChanged: onErrorChanged,
           model: (model ?? FormeCupertinoDateFieldModel()).copyWith(
               FormeCupertinoDateFieldModel(type: FormeDateTimeFieldType.Date)),
           name: name,
-          onChanged: onChanged,
+          onValueChanged: onValueChanged,
           onSaved: onSaved,
           validator: validator,
           initialValue: initialValue,
@@ -76,12 +66,12 @@ class FormeCupertinoDateField
                 textEditingController: textEditingController,
                 focusNode: focusNode,
                 errorText: state.errorText,
-                model: (state.model.textFieldModel ?? FormeTextFieldModel())
-                    .copyWith(FormeTextFieldModel(
+                model: FormeTextFieldModel(
                   inputFormatters: [],
                   onTap: readOnly ? null : pickTime,
                   readOnly: true,
-                )));
+                ).copyWith(
+                    state.model.textFieldModel ?? FormeTextFieldModel()));
           },
         );
 
@@ -133,11 +123,12 @@ class _FormeCupertinoDateFieldState
     super.afterInitiation();
     textEditingController = TextEditingController(
         text: value == null ? '' : _formatter(model.type!, value!));
-    valueListenable.addListener(() {
-      textEditingController.text = valueListenable.value == null
-          ? ''
-          : _formatter(model.type!, valueListenable.value!);
-    });
+  }
+
+  @override
+  void onValueChanged(DateTime? value) {
+    textEditingController.text =
+        value == null ? '' : _formatter(model.type!, value);
   }
 
   @override
