@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:forme/forme.dart';
 
+import 'async_autocomplete_text.dart';
 import 'cupertino_segmented_control.dart';
 
 class DemoPage extends StatefulWidget {
@@ -13,7 +14,11 @@ class DemoPage extends StatefulWidget {
 
 class _DemoPageState extends State<DemoPage> {
   final FormeKey formKey = FormeKey();
-
+  static const List<User> _userOptions = <User>[
+    User(name: 'Alice', email: 'alice@example.com'),
+    User(name: 'Bob', email: 'bob@example.com'),
+    User(name: 'Charlie', email: 'charlie123@gmail.com'),
+  ];
   @override
   void initState() {
     super.initState();
@@ -684,6 +689,52 @@ class _DemoPageState extends State<DemoPage> {
             split: 1,
           ),
         ),
+        FormeAutocompleteText<User>(
+          optionsBuilder: (v) {
+            if (v.text == '') {
+              return Iterable.empty();
+            }
+            return _userOptions.where((User option) {
+              return option.toString().contains(v.text.toLowerCase());
+            });
+          },
+          decoration: InputDecoration(labelText: 'Autocomplete Text'),
+          model: FormeAutocompleteTextModel<User>(
+              textFieldModel: FormeTextFieldModel(maxLines: 1)),
+          name: 'autocomplete',
+          validator: (v) => v == null ? 'pls select one !' : null,
+        ),
+        FormeAsnycAutocompleteText<User>(
+          optionsBuilder: (v) {
+            if (v.text == '') {
+              return Future.delayed(Duration.zero, () {
+                return Iterable.empty();
+              });
+            }
+            return Future.delayed(Duration(milliseconds: 800), () {
+              return _userOptions.where((User option) {
+                return option.toString().contains(v.text.toLowerCase());
+              });
+            });
+          },
+          model: FormeAsyncAutocompleteTextModel<User>(
+              emptyOptionBuilder: (context) {
+                return Text('no options found');
+              },
+              textFieldModel: FormeTextFieldModel(
+                maxLines: 1,
+                decoration: InputDecoration(
+                    labelText: 'Async Autocomplete Text',
+                    suffixIcon: IconButton(
+                      onPressed: () {
+                        formKey.valueField('asyncAutocomplete').value = null;
+                      },
+                      icon: Icon(Icons.clear),
+                    )),
+              )),
+          name: 'asyncAutocomplete',
+          validator: (v) => v == null ? 'pls select one !' : null,
+        ),
         Row(children: [
           Flexible(
             flex: 1,
@@ -740,6 +791,7 @@ class _DemoPageState extends State<DemoPage> {
         'radioGroup': '1',
         'checkboxTile': ['Checkbox 2'],
         'cupertinoDatetime': DateTime.now(),
+        'asyncAutocomplete': _userOptions[0],
       },
     );
   }

@@ -51,8 +51,9 @@ class FormeAsnycAutocompleteText<T extends Object>
             _FormeAutocompleteTextState<T> state =
                 baseState as _FormeAutocompleteTextState<T>;
             return Autocomplete<T>(
-              optionsBuilder:
-                  readOnly ? (v) => Iterable<T>.empty() : (v) => _Iterable<T>(),
+              optionsBuilder: readOnly
+                  ? (v) => Iterable<T>.empty()
+                  : (v) => _Iterable<T>(state),
               onSelected: readOnly
                   ? null
                   : (T value) {
@@ -105,20 +106,17 @@ class FormeAsnycAutocompleteText<T extends Object>
                 AutocompleteOnSelected<T> onSelected,
                 Iterable<T> options,
               ) {
+                if (state.value != null && state.optionsNotifier.value == 0)
+                  return const SizedBox();
+                if (state._effecitiveTextEditingController!.text == '' &&
+                    !state.queryWhenEmpty) return const SizedBox();
                 Widget loading = state.model.loadingOptionBuilder == null
                     ? state.defaultLoadingOptionBuilder(context)
                     : state.model.loadingOptionBuilder!(context);
-                bool firstLoad = state.optionsNotifier.value == 0;
-                if (firstLoad && state.queryWhenEmpty) {
-                  state.loadOptions();
-                }
-
                 Widget child = ValueListenableBuilder<int>(
                     child: loading,
                     valueListenable: state.optionsNotifier,
                     builder: (context, data, child) {
-                      if (state._effecitiveTextEditingController!.text == '' &&
-                          !state.queryWhenEmpty) return const SizedBox();
                       if (state.options == null || state.options!.gen < data)
                         return child!;
                       if (state.options!.gen == data) {
@@ -255,6 +253,13 @@ class _FormeAutocompleteTextState<T extends Object>
     if (_effecitiveFocusNode != focusNode) {
       _effecitiveFocusNode = focusNode;
       _effecitiveFocusNode!.addListener(() {
+        if (_effecitiveFocusNode!.hasFocus) {
+          String text = _effecitiveTextEditingController!.text;
+          if (text == '' && !queryWhenEmpty) return;
+          if (value == null)
+            loadOptions();
+          else if (displayStringForOption(value!) != text) loadOptions();
+        }
         if (widget.onFocusChanged != null) {
           if (widget.onFocusChanged != null)
             widget.onFocusChanged!(controller, _effecitiveFocusNode!.hasFocus);
@@ -375,6 +380,9 @@ class _FormeAutocompleteTextState<T extends Object>
       loadOptions();
     }
   }
+
+  bool get isLatestOption =>
+      options != null && options!.gen == optionsNotifier.value;
 }
 
 class FormeAsyncAutocompleteTextModel<T extends Object> extends FormeModel {
@@ -441,9 +449,17 @@ class _Options<T> {
   });
 }
 
-class _Iterable<T> extends Iterable<T> {
+class _Iterable<T extends Object> extends Iterable<T> {
+  final _FormeAutocompleteTextState<T> state;
+
+  _Iterable(this.state);
   @override
-  Iterator<T> get iterator => throw UnimplementedError();
+  Iterator<T> get iterator {
+    if (state.isLatestOption && state.options!.datas != null)
+      return state.options!.datas!.iterator;
+    throw UnimplementedError();
+  }
+
   bool get isEmpty => false;
-  bool get isNotEmpty => true;
+  bool get isNotEmpty => !isEmpty;
 }
