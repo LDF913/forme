@@ -1,3 +1,8 @@
+## 2.0.2
+
+1. add `FormeAutocompleteText`
+2. add `FormeAsyncAutocompleteText`
+
 ## 2.0.1
 
 1. StatefulField support `onInitialed` , used to listen `FormeFieldController` initialed
