@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeListTileItem<T> {
+class FormeListTileItem<T extends Object> {
   final Widget title;
   final bool readOnly;
   final bool visible;
@@ -35,7 +35,8 @@ class FormeListTileItem<T> {
 
 enum FormeListTileType { Checkbox, Switch }
 
-class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
+class FormeListTile<T extends Object>
+    extends ValueField<List<T>, FormeListTileModel<T>> {
   final FormeListTileType type;
   FormeListTile({
     FormeValueChanged<List<T>, FormeListTileModel<T>>? onValueChanged,
@@ -99,7 +100,7 @@ class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
               }
 
               Widget createFormeListTileItem(
-                  FormeListTileItem item, bool selected, bool readOnly) {
+                  FormeListTileItem<T> item, bool selected, bool readOnly) {
                 switch (type) {
                   case FormeListTileType.Checkbox:
                     return CheckboxListTile(
@@ -143,7 +144,7 @@ class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
               }
 
               Widget createCommonItem(
-                  FormeListTileItem item, bool selected, bool readOnly) {
+                  FormeListTileItem<T> item, bool selected, bool readOnly) {
                 switch (type) {
                   case FormeListTileType.Checkbox:
                     return FormeRenderUtils.checkbox(
@@ -250,7 +251,7 @@ class FormeListTile<T> extends ValueField<List<T>, FormeListTileModel<T>> {
   _FormeListTileState<T> createState() => _FormeListTileState();
 }
 
-class _FormeListTileState<T>
+class _FormeListTileState<T extends Object>
     extends ValueFieldState<List<T>, FormeListTileModel<T>> {
   bool allowSelectAll = false;
 
@@ -283,7 +284,7 @@ class _FormeListTileState<T>
   }
 }
 
-class FormeListTileModel<T> extends FormeModel {
+class FormeListTileModel<T extends Object> extends FormeModel {
   final int? split;
   final List<FormeListTileItem<T>>? items;
   final FormeListTileRenderData? listTileRenderData;

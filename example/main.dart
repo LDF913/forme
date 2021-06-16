@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Forme ForYou',
+      title: 'For Me For You',
       home: HomePage(),
       routes: {
         '/textfield': (context) => TextFieldPage(),
@@ -166,6 +166,22 @@ class HomePage extends StatelessWidget {
                             CupertinoSlidingSegmentedControlPage()));
               },
               child: Text('FormeCupertinoSlidingSegmentedControl')),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AsyncAutocompleteText()));
+              },
+              child: Text('FormeAsyncAutocompleteText')),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => AutocompleteText()));
+              },
+              child: Text('FormeAutocompleteText')),
           TextButton(
               onPressed: () {
                 Navigator.of(context).pushNamed('/signup');

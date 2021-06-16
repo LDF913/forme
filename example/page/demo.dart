@@ -429,7 +429,7 @@ class _DemoPageState extends State<DemoPage> {
         SizedBox(
           height: 20,
         ),
-        FormeFilterChip(
+        FormeFilterChip<String>(
           name: 'filterChip',
           decoratorBuilder: FormeInputDecoratorBuilder(
               decoration: InputDecoration(labelText: 'Filter Chip')),
@@ -439,7 +439,7 @@ class _DemoPageState extends State<DemoPage> {
             _buildItem('Developer', Colors.cyan),
           ],
         ),
-        FormeChoiceChip(
+        FormeChoiceChip<String>(
           decoratorBuilder: FormeInputDecoratorBuilder(
               decoration: InputDecoration(labelText: 'Choice Chip')),
           name: 'choiceChip',
@@ -631,7 +631,7 @@ class _DemoPageState extends State<DemoPage> {
           autovalidateMode: AutovalidateMode.onUserInteraction,
           validator: (value) => value != '2' ? 'pls select 2' : null,
         ),
-        FormeListTile(
+        FormeListTile<String>(
           decoratorBuilder: FormeInputDecoratorBuilder(
               decoration: InputDecoration(labelText: 'Checkbox Tile')),
           items: [
@@ -673,7 +673,7 @@ class _DemoPageState extends State<DemoPage> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               )),
         ),
-        FormeListTile(
+        FormeListTile<String>(
           decoratorBuilder: FormeInputDecoratorBuilder(
               decoration: InputDecoration(labelText: 'Switch Tile')),
           name: 'switchTile',
@@ -716,7 +716,7 @@ class _DemoPageState extends State<DemoPage> {
         print('${a.name} ... value: $b');
       },
       onErrorChanged: (a, b) {
-        print('${a.name} ... error: $b');
+        print('${a.name} ... error: ${b?.text}');
       },
       onFocusChanged: (a, b) {
         print('${a.name} ... focus: $b');
@@ -728,7 +728,7 @@ class _DemoPageState extends State<DemoPage> {
             start: DateTime.now(), end: DateTime.now().add(Duration(days: 30))),
         'datetime': DateTime.now(),
         'time': TimeOfDay(hour: 12, minute: 12),
-        'filterChip': <String>['Gamer'],
+        'filterChip': ['Gamer'],
         'choiceChip': 'Gamer',
         'slider': 40.0,
         'rangeSlider': RangeValues(1.0, 10.0),

@@ -85,7 +85,7 @@ class FormeCupertinoSegmentedControl<T extends Object>
       _FormeCupertinoSegmentedControlState();
 }
 
-class _FormeCupertinoSegmentedControlState<T>
+class _FormeCupertinoSegmentedControlState<T extends Object>
     extends ValueFieldState<T, FormeCupertinoSegmentedControlModel<T>> {
   @override
   FormeCupertinoSegmentedControlModel<T> beforeUpdateModel(

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeDropdownButton<T>
+class FormeDropdownButton<T extends Object>
     extends ValueField<T, FormeDropdownButtonModel<T>> {
   FormeDropdownButton({
     required List<DropdownMenuItem<T>> items,
@@ -81,7 +81,7 @@ class FormeDropdownButton<T>
   _FormDropdownButtonState<T> createState() => _FormDropdownButtonState();
 }
 
-class _FormDropdownButtonState<T>
+class _FormDropdownButtonState<T extends Object>
     extends ValueFieldState<T, FormeDropdownButtonModel<T>> {
   @override
   FormeDropdownButtonModel<T> beforeUpdateModel(

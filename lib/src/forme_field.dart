@@ -66,7 +66,7 @@ class CommonFieldState<E extends FormeModel> extends State<CommonField<E>>
 /// base field used to return a value
 ///
 /// if your return value is nonnull,use [ValueField]
-class ValueField<T, E extends FormeModel> extends FormField<T>
+class ValueField<T extends Object, E extends FormeModel> extends FormField<T>
     with StatefulField<ValueFieldState<T, E>, E> {
   final String name;
   final FormeValueChanged<T, E>? onValueChanged;

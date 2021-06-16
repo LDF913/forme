@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeChipItem<T> {
+class FormeChipItem<T extends Object> {
   final Widget label;
   final Widget? avatar;
   final T data;
@@ -53,7 +53,8 @@ class FormeChipItem<T> {
   }) : this.padding = padding ?? EdgeInsets.symmetric(horizontal: 10);
 }
 
-class FormeFilterChip<T> extends ValueField<List<T>, FormeFilterChipModel<T>> {
+class FormeFilterChip<T extends Object>
+    extends ValueField<List<T>, FormeFilterChipModel<T>> {
   FormeFilterChip({
     List<T>? initialValue,
     AutovalidateMode? autovalidateMode,
@@ -166,7 +167,7 @@ class FormeFilterChip<T> extends ValueField<List<T>, FormeFilterChipModel<T>> {
   _FormeFilterChipState<T> createState() => _FormeFilterChipState();
 }
 
-class _FormeFilterChipState<T>
+class _FormeFilterChipState<T extends Object>
     extends ValueFieldState<List<T>, FormeFilterChipModel<T>> {
   @override
   FormeFilterChipModel<T> beforeUpdateModel(
@@ -203,7 +204,7 @@ class _FormeFilterChipState<T>
   }
 }
 
-class FormeFilterChipModel<T> extends FormeModel {
+class FormeFilterChipModel<T extends Object> extends FormeModel {
   final List<FormeChipItem<T>>? items;
   final int? count;
   final ChipThemeData? chipThemeData;

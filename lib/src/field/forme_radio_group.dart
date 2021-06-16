@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
+class FormeRadioGroup<T extends Object>
+    extends ValueField<T, FormeRadioGroupModel<T>> {
   FormeRadioGroup({
     FormeValueChanged<T, FormeRadioGroupModel<T>>? onValueChanged,
     FormFieldValidator<T>? validator,
@@ -53,7 +54,7 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
               }
 
               Widget createFormeListTileItem(
-                  FormeListTileItem item, bool selected, bool readOnly) {
+                  FormeListTileItem<T> item, bool selected, bool readOnly) {
                 return RadioListTile<T>(
                   shape: radioRenderData?.shape,
                   tileColor: radioRenderData?.tileColor,
@@ -72,7 +73,7 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
               }
 
               Widget createCommonItem(
-                  FormeListTileItem item, bool selected, bool readOnly) {
+                  FormeListTileItem<T> item, bool selected, bool readOnly) {
                 return FormeRenderUtils.radio<T>(
                     item.data,
                     state.value,
@@ -170,7 +171,7 @@ class FormeRadioGroup<T> extends ValueField<T, FormeRadioGroupModel<T>> {
   _FormeRadioGroupState<T> createState() => _FormeRadioGroupState();
 }
 
-class _FormeRadioGroupState<T>
+class _FormeRadioGroupState<T extends Object>
     extends ValueFieldState<T, FormeRadioGroupModel<T>> {
   @override
   FormeRadioGroupModel<T> beforeUpdateModel(
@@ -193,7 +194,7 @@ class _FormeRadioGroupState<T>
   }
 }
 
-class FormeRadioGroupModel<T> extends FormeModel {
+class FormeRadioGroupModel<T extends Object> extends FormeModel {
   final int? split;
   final List<FormeListTileItem<T>>? items;
   final FormeListTileRenderData? listTileRenderData;

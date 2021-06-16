@@ -405,6 +405,11 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @protected
   E beforeUpdateModel(E old, E current) => current;
 
+  /// used to do some logic after update model
+  ///
+  /// **this method will be called after [beforeUpdateModel] or [beforeSetModel]**
+  void afterUpdateModel(E model, E old, E current) {}
+
   /// used to do some logic before set model
   ///
   /// **if returned value is [old],this method will not rebuild field**
@@ -433,6 +438,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy.copyWith(model) as E;
         });
+        afterUpdateModel(copy, model, _model);
       }
     }
   }
@@ -444,6 +450,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy;
         });
+        afterUpdateModel(copy, model, _model);
       }
     }
   }
@@ -475,8 +482,8 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
 }
 
 /// this State is only used for [ValueField]
-class ValueFieldState<T, E extends FormeModel> extends FormFieldState<T>
-    with AbstractFieldState<FormField<T>, E> {
+class ValueFieldState<T extends Object, E extends FormeModel>
+    extends FormFieldState<T> with AbstractFieldState<FormField<T>, E> {
   final ValueNotifier<FormeValidateError?> _errorNotifier = ValueNotifier(null);
   final ValueNotifier<FormeModel?> _decoratorNotifier = ValueNotifier(null);
   late final ValueNotifier<T?> _valueNotifier;
@@ -949,7 +956,7 @@ class _FormeFieldController<E extends FormeModel>
   set readOnly(bool readOnly) => state.readOnly = readOnly;
 }
 
-class _FormeValueFieldController<T, E extends FormeModel>
+class _FormeValueFieldController<T extends Object, E extends FormeModel>
     extends FormeFieldControllerDelegate<E>
     implements FormeValueFieldController<T, E> {
   final ValueFieldState<T, E> state;

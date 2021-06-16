@@ -40,7 +40,6 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
           builder: (state) {
             bool readOnly = state.readOnly;
             FocusNode focusNode = state.focusNode;
-            //List<Widget>? suffixIcons = state.model.suffixIcons;
             int decimal = state.model.decimal ?? 0;
             bool allowNegative = state.model.allowNegative ?? false;
             double? max = state.model.max;

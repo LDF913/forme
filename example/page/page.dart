@@ -22,5 +22,7 @@ export 'cupertino_time_field.dart';
 export 'dropdown_button.dart';
 export 'cupertino_segmented_control.dart';
 export 'cupertino_sliding_segmented_control.dart';
+export 'async_autocomplete_text.dart';
+export 'autocomplete_text.dart';
 export 'signup_form.dart';
 export 'demo.dart';

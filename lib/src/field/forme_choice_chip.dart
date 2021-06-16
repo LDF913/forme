@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
 
-class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
+class FormeChoiceChip<T extends Object>
+    extends ValueField<T, FormeChoiceChipModel<T>> {
   FormeChoiceChip({
     T? initialValue,
     AutovalidateMode? autovalidateMode,
@@ -99,7 +100,7 @@ class FormeChoiceChip<T> extends ValueField<T, FormeChoiceChipModel<T>> {
   _FormeChoiceChipState<T> createState() => _FormeChoiceChipState();
 }
 
-class _FormeChoiceChipState<T>
+class _FormeChoiceChipState<T extends Object>
     extends ValueFieldState<T, FormeChoiceChipModel<T>> {
   @override
   FormeChoiceChipModel<T> beforeUpdateModel(
@@ -123,7 +124,7 @@ class _FormeChoiceChipState<T>
   }
 }
 
-class FormeChoiceChipModel<T> extends FormeModel {
+class FormeChoiceChipModel<T extends Object> extends FormeModel {
   final List<FormeChipItem<T>>? items;
   final ChipThemeData? chipThemeData;
   final FormeWrapRenderData? wrapRenderData;
