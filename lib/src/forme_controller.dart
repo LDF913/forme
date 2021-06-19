@@ -230,6 +230,14 @@ abstract class FormeValueFieldController<T, E extends FormeModel>
   static T of<T extends FormeValueFieldController>(BuildContext context) {
     return InheritedFormeFieldController.of(context) as T;
   }
+
+  /// clear value
+  ///
+  /// when field has multi widgets need to clear value (eg: [FormeAsyncAutocompleteText]) , use this method rather than
+  /// call `value = null` directly
+  ///
+  /// @since 2.0.3
+  void clearValue();
 }
 
 /// used to get field's listenable
@@ -349,6 +357,8 @@ abstract class FormeValueFieldControllerDelegate<T, E extends FormeModel>
       delegate.errorTextListenable;
   @override
   ValueListenable<T?> get valueListenable => delegate.valueListenable;
+  @override
+  void clearValue() => delegate.clearValue();
 }
 
 /// forme validate error

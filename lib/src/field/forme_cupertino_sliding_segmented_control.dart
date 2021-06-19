@@ -29,6 +29,7 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
             onInitialed: onInitialed,
             name: name,
@@ -41,7 +42,10 @@ class FormeCupertinoSlidingSegmentedControl<T extends Object>
             readOnly: readOnly,
             onFocusChanged: onFocusChanged,
             key: key,
-            decoratorBuilder: decoratorBuilder,
+            decoratorBuilder: decoratorBuilder ??
+                (decoration == null
+                    ? null
+                    : FormeInputDecoratorBuilder(decoration: decoration)),
             model: (model ?? FormeCupertinoSlidingSegmentedControlModel<T>())
                 .copyWith(FormeCupertinoSlidingSegmentedControlModel(
                     children: chidren)),

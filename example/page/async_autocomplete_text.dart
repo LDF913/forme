@@ -28,6 +28,7 @@ class AsyncAutocompleteText
             });
           },
           model: FormeAsyncAutocompleteTextModel<User>(
+              queryWhenEmpty: true,
               emptyOptionBuilder: (context) {
                 return Text('no options found');
               },
@@ -37,7 +38,7 @@ class AsyncAutocompleteText
                     labelText: 'Async Autocomplete Text',
                     suffixIcon: IconButton(
                       onPressed: () {
-                        controller.value = null;
+                        controller.clearValue();
                       },
                       icon: Icon(Icons.clear),
                     )),
@@ -61,9 +62,9 @@ class AsyncAutocompleteText
                 controller.updateModel(FormeAsyncAutocompleteTextModel(
                   loadingOptionBuilder: (context) => Text('loading...'),
                   emptyOptionBuilder: (contex) => Text('empty ...'),
-                  optionsViewDecoratorBuilder: (context, child, key, width) {
+                  optionsViewDecoratorBuilder:
+                      (context, child, width, closeOptionsView) {
                     return Align(
-                      key: key,
                       alignment: Alignment.topLeft,
                       child: Material(
                         elevation: 4.0,
@@ -108,7 +109,7 @@ class AsyncAutocompleteText
                     FormeAsyncAutocompleteTextModel(optionsBuilder: (v) {
                   if (v.text == '')
                     return Future.delayed(Duration.zero, () => []);
-                  return Future.delayed(Duration(seconds: 5), () {
+                  return Future.delayed(Duration(seconds: 1), () {
                     return <User>[
                       User(name: 'Alice1', email: 'alice1@example.com'),
                       User(name: 'Bob2', email: 'bob2@example.com'),

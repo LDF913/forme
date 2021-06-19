@@ -24,5 +24,6 @@ export 'cupertino_segmented_control.dart';
 export 'cupertino_sliding_segmented_control.dart';
 export 'async_autocomplete_text.dart';
 export 'autocomplete_text.dart';
+export 'async_autocomplete_chip.dart';
 export 'signup_form.dart';
 export 'demo.dart';

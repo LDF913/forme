@@ -103,7 +103,9 @@ Forme is a form widget, but forme is not wrapped in a `Form`  , because I don't 
 | FormeCupertinoDateField| DateTime | true |
 | FormeCupertinoSegmentedControl | T | true |
 | FormeCupertinoSlidingSegmentedControl | T | true |
-
+| FormeAsnycAutocompleteChip | List&lt;T&gt; | false |
+| FormeAsnycAutocompleteText | T | true |
+| FormeAutocompleteText | T | true |
 
 ## Forme Model
 

@@ -1,3 +1,8 @@
+## 2.0.3
+
+1. fields add `InputDecoration` and `maxLines` properties , used to quickly specific labelText or others
+2. add `FormeAsyncAutocompleteChip`
+
 ## 2.0.2
 
 1. add `FormeAutocompleteText`

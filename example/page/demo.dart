@@ -217,34 +217,26 @@ class _DemoPageState extends State<DemoPage> {
                 field.updateModel(FormeTextFieldModel(
                     decoration: InputDecoration(labelText: 'Focus:$hasFocus')));
               },
-              onErrorChanged: (c, e) {
-                c.updateModel(FormeTextFieldModel(
-                  maxLines: 1,
-                ));
-              },
               autovalidateMode: AutovalidateMode.onUserInteraction,
               validator: (value) {
                 return value!.length <= 10
                     ? 'length must bigger than 10,current is ${value.length} '
                     : null;
               },
-              model: FormeTextFieldModel(
-                selectAllOnFocus: true,
-                decoration: InputDecoration(
-                  labelText: 'Text',
-                  suffixIcon: Builder(
-                    builder: (context) {
-                      return ValueListenableBuilder<FormeValidateError?>(
-                        valueListenable:
-                            formKey.fieldListenable('text').errorTextListenable,
-                        builder: (context, focus, child) {
-                          return focus == null || !focus.hasError
-                              ? Icon(Icons.check)
-                              : Icon(Icons.error);
-                        },
-                      );
-                    },
-                  ),
+              decoration: InputDecoration(
+                labelText: 'Text',
+                suffixIcon: Builder(
+                  builder: (context) {
+                    return ValueListenableBuilder<FormeValidateError?>(
+                      valueListenable:
+                          formKey.fieldListenable('text').errorTextListenable,
+                      builder: (context, focus, child) {
+                        return focus == null || !focus.hasError
+                            ? Icon(Icons.check)
+                            : Icon(Icons.error);
+                      },
+                    );
+                  },
                 ),
               ),
             ),
@@ -254,58 +246,48 @@ class _DemoPageState extends State<DemoPage> {
         ]),
         FormeNumberField(
           name: 'number',
+          decoration: InputDecoration(labelText: 'Number'),
           model: FormeNumberFieldModel(
             max: 99,
             decimal: 2,
-            textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(labelText: 'Number'),
-            ),
           ),
         ),
         FormeTextFieldOnTapProxyWidget(
           child: FormeDateRangeField(
             name: 'dateRange',
-            model: FormeDateRangeFieldModel(
-                textFieldModel: FormeTextFieldModel(
-              decoration: InputDecoration(
-                labelText: 'Date Range',
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.clear),
-                  onPressed: () => formKey.valueField('dateRange').value = null,
-                ),
+            decoration: InputDecoration(
+              labelText: 'Date Range',
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () => formKey.valueField('dateRange').value = null,
               ),
-            )),
+            ),
           ),
         ),
         FormeTextFieldOnTapProxyWidget(
           child: FormeDateTimeField(
             name: 'datetime',
-            model: FormeDateTimeFieldModel(
-              textFieldModel: FormeTextFieldModel(
-                decoration: InputDecoration(
-                  labelText: 'DateTime',
-                  prefixIcon: Builder(
-                    builder: (context) {
-                      return IconButton(
-                          icon: Icon(Icons.tab),
-                          onPressed: () {
-                            FormeValueFieldController<DateTime,
-                                    FormeDateTimeFieldModel> controller =
-                                FormeFieldController.of(context);
-                            controller.updateModel(FormeDateTimeFieldModel(
-                              type: FormeDateTimeFieldType.DateTime,
-                            ));
-                            toast(context,
-                                'field type has been changed to DateTime');
-                          });
-                    },
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () =>
-                        formKey.valueField('datetime').value = null,
-                  ),
-                ),
+            decoration: InputDecoration(
+              labelText: 'DateTime',
+              prefixIcon: Builder(
+                builder: (context) {
+                  return IconButton(
+                      icon: Icon(Icons.tab),
+                      onPressed: () {
+                        FormeValueFieldController<DateTime,
+                                FormeDateTimeFieldModel> controller =
+                            FormeFieldController.of(context);
+                        controller.updateModel(FormeDateTimeFieldModel(
+                          type: FormeDateTimeFieldType.DateTime,
+                        ));
+                        toast(
+                            context, 'field type has been changed to DateTime');
+                      });
+                },
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () => formKey.valueField('datetime').value = null,
               ),
             ),
           ),
@@ -313,50 +295,43 @@ class _DemoPageState extends State<DemoPage> {
         FormeTextFieldOnTapProxyWidget(
           child: FormeCupertinoDateField(
             name: 'cupertinoDatetime',
+            decoration: InputDecoration(
+              labelText: 'Cupertino DateTime',
+              prefixIcon: Builder(
+                builder: (context) {
+                  return IconButton(
+                      icon: Icon(Icons.tab),
+                      onPressed: () {
+                        FormeValueFieldController<DateTime,
+                                FormeCupertinoDateFieldModel> controller =
+                            FormeFieldController.of(context);
+                        controller.updateModel(FormeCupertinoDateFieldModel(
+                          type: FormeDateTimeFieldType.Date,
+                        ));
+                        toast(context, 'field type has been changed to Date');
+                      });
+                },
+              ),
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () =>
+                    formKey.valueField('cupertinoDatetime').value = null,
+              ),
+            ),
             model: FormeCupertinoDateFieldModel(
               type: FormeDateTimeFieldType.DateTime,
-              textFieldModel: FormeTextFieldModel(
-                decoration: InputDecoration(
-                  labelText: 'Cupertino DateTime',
-                  prefixIcon: Builder(
-                    builder: (context) {
-                      return IconButton(
-                          icon: Icon(Icons.tab),
-                          onPressed: () {
-                            FormeValueFieldController<DateTime,
-                                    FormeCupertinoDateFieldModel> controller =
-                                FormeFieldController.of(context);
-                            controller.updateModel(FormeCupertinoDateFieldModel(
-                              type: FormeDateTimeFieldType.Date,
-                            ));
-                            toast(
-                                context, 'field type has been changed to Date');
-                          });
-                    },
-                  ),
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () =>
-                        formKey.valueField('cupertinoDatetime').value = null,
-                  ),
-                ),
-              ),
             ),
           ),
         ),
         FormeTextFieldOnTapProxyWidget(
           child: FormeCupertinoTimerField(
             name: 'cupertinoTimer',
-            model: FormeCupertinoTimerFieldModel(
-              textFieldModel: FormeTextFieldModel(
-                decoration: InputDecoration(
-                  labelText: 'Cupertino Timer',
-                  suffixIcon: IconButton(
-                    icon: Icon(Icons.clear),
-                    onPressed: () =>
-                        formKey.valueField('cupertinoTimer').value = null,
-                  ),
-                ),
+            decoration: InputDecoration(
+              labelText: 'Cupertino Timer',
+              suffixIcon: IconButton(
+                icon: Icon(Icons.clear),
+                onPressed: () =>
+                    formKey.valueField('cupertinoTimer').value = null,
               ),
             ),
           ),
@@ -364,17 +339,13 @@ class _DemoPageState extends State<DemoPage> {
         FormeTextFieldOnTapProxyWidget(
           child: FormeTimeField(
             name: 'time',
-            model: FormeTimeFieldModel(
-              textFieldModel: FormeTextFieldModel(
-                decoration: InputDecoration(
-                  labelText: 'Time',
-                  suffixIcon: IconButton(
-                      icon: Icon(Icons.clear),
-                      onPressed: () {
-                        formKey.valueField('time').value = null;
-                      }),
-                ),
-              ),
+            decoration: InputDecoration(
+              labelText: 'Time',
+              suffixIcon: IconButton(
+                  icon: Icon(Icons.clear),
+                  onPressed: () {
+                    formKey.valueField('time').value = null;
+                  }),
             ),
           ),
         ),
@@ -421,12 +392,7 @@ class _DemoPageState extends State<DemoPage> {
               },
             ),
           ),
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Dropdown'),
-              wrapper: (child) => DropdownButtonHideUnderline(
-                    child: child,
-                  ),
-              emptyChecker: (value) => value == null),
+          decoration: InputDecoration(labelText: 'Dropdown'),
           autovalidateMode: AutovalidateMode.onUserInteraction,
           name: 'dropdown',
           validator: (value) => value == null ? 'pls select one item!' : null,
@@ -436,8 +402,7 @@ class _DemoPageState extends State<DemoPage> {
         ),
         FormeFilterChip<String>(
           name: 'filterChip',
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Filter Chip')),
+          decoration: InputDecoration(labelText: 'Filter Chip'),
           items: [
             _buildItem('Gamer', Colors.cyan),
             _buildItem('Hacker', Colors.cyan),
@@ -445,8 +410,7 @@ class _DemoPageState extends State<DemoPage> {
           ],
         ),
         FormeChoiceChip<String>(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Choice Chip')),
+          decoration: InputDecoration(labelText: 'Choice Chip'),
           name: 'choiceChip',
           items: [
             _buildItem('Gamer', Color(0xFFff6666)),
@@ -462,8 +426,7 @@ class _DemoPageState extends State<DemoPage> {
         FormeVisible(
           name: 'sliderVisible',
           child: FormeSlider(
-            decoratorBuilder: FormeInputDecoratorBuilder(
-                decoration: InputDecoration(labelText: 'Slider')),
+            decoration: InputDecoration(labelText: 'Slider'),
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: (value) {
               return value! < 50
@@ -497,8 +460,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ),
         FormeRangeSlider(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Range Slider')),
+          decoration: InputDecoration(labelText: 'Range Slider'),
           name: 'rangeSlider',
           min: 1,
           max: 100,
@@ -511,9 +473,7 @@ class _DemoPageState extends State<DemoPage> {
           model: FormeCupertinoSegmentedControlModel<String>(
             padding: const EdgeInsets.symmetric(vertical: 10),
           ),
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration:
-                  InputDecoration(labelText: 'CupertinoSegmentedControl')),
+          decoration: InputDecoration(labelText: 'CupertinoSegmentedControl'),
           onValueChanged: (c, v) => print('value changed,current value is $v'),
           name: 'segmentedControl',
           chidren: {
@@ -599,8 +559,7 @@ class _DemoPageState extends State<DemoPage> {
           autovalidateMode: AutovalidateMode.onUserInteraction,
         ),
         FormeCupertinoPicker(
-            decoratorBuilder: FormeInputDecoratorBuilder(
-                decoration: InputDecoration(labelText: 'Cupertino Picker')),
+            decoration: InputDecoration(labelText: 'Cupertino Picker'),
             validator: (value) => value! < 100
                 ? 'value must bigger than 100,current is $value'
                 : null,
@@ -622,8 +581,7 @@ class _DemoPageState extends State<DemoPage> {
                   });
             })),
         FormeRadioGroup<String>(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Radio Group')),
+          decoration: InputDecoration(labelText: 'Radio Group'),
           items: FormeUtils.toFormeListTileItems(['1', '2', '3', '4'],
               style: Theme.of(context).textTheme.subtitle1),
           name: 'radioGroup',
@@ -637,8 +595,7 @@ class _DemoPageState extends State<DemoPage> {
           validator: (value) => value != '2' ? 'pls select 2' : null,
         ),
         FormeListTile<String>(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Checkbox Tile')),
+          decoration: InputDecoration(labelText: 'Checkbox Tile'),
           items: [
             FormeListTileItem(
                 title: Text("Checkbox 1"),
@@ -679,8 +636,7 @@ class _DemoPageState extends State<DemoPage> {
               )),
         ),
         FormeListTile<String>(
-          decoratorBuilder: FormeInputDecoratorBuilder(
-              decoration: InputDecoration(labelText: 'Switch Tile')),
+          decoration: InputDecoration(labelText: 'Switch Tile'),
           name: 'switchTile',
           type: FormeListTileType.Switch,
           items: FormeUtils.toFormeListTileItems(['1', '2'],
@@ -717,20 +673,20 @@ class _DemoPageState extends State<DemoPage> {
               });
             });
           },
+          decoration: InputDecoration(
+              labelText: 'Async Autocomplete Text',
+              suffixIcon: IconButton(
+                onPressed: () {
+                  formKey.valueField('asyncAutocomplete').value = null;
+                },
+                icon: Icon(Icons.clear),
+              )),
           model: FormeAsyncAutocompleteTextModel<User>(
               emptyOptionBuilder: (context) {
                 return Text('no options found');
               },
               textFieldModel: FormeTextFieldModel(
                 maxLines: 1,
-                decoration: InputDecoration(
-                    labelText: 'Async Autocomplete Text',
-                    suffixIcon: IconButton(
-                      onPressed: () {
-                        formKey.valueField('asyncAutocomplete').value = null;
-                      },
-                      icon: Icon(Icons.clear),
-                    )),
               )),
           name: 'asyncAutocomplete',
           validator: (v) => v == null ? 'pls select one !' : null,
@@ -739,8 +695,7 @@ class _DemoPageState extends State<DemoPage> {
           Flexible(
             flex: 1,
             child: FormeSlider(
-              decoratorBuilder: FormeInputDecoratorBuilder(
-                  decoration: InputDecoration(labelText: 'Slider')),
+              decoration: InputDecoration(labelText: 'Slider'),
               onValueChanged: (m, v) {
                 formKey.valueField('test').value = v!.round();
               },

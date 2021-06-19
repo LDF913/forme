@@ -28,14 +28,22 @@ class FormeDateTimeField extends ValueField<DateTime, FormeDateTimeFieldModel> {
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
-          model: (model ?? FormeDateTimeFieldModel()).copyWith(
-              FormeDateTimeFieldModel(type: FormeDateTimeFieldType.Date)),
+          model: (model ?? FormeDateTimeFieldModel())
+              .copyWith(FormeDateTimeFieldModel(
+            type: FormeDateTimeFieldType.Date,
+            textFieldModel: FormeTextFieldModel(
+              maxLines: maxLines,
+              decoration: decoration,
+            ),
+          )),
           name: name,
           onValueChanged: onValueChanged,
           onSaved: onSaved,

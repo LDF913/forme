@@ -60,10 +60,14 @@ class FormeListTile<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
             onInitialed: onInitialed,
             nullValueReplacement: [],
-            decoratorBuilder: decoratorBuilder,
+            decoratorBuilder: decoratorBuilder ??
+                (decoration == null
+                    ? null
+                    : FormeInputDecoratorBuilder(decoration: decoration)),
             onFocusChanged: onFocusChanged,
             onErrorChanged: onErrorChanged,
             key: key,

@@ -23,13 +23,21 @@ class FormeNumberField extends ValueField<num, FormeNumberFieldModel> {
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<num>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
           key: key,
-          model: model ?? FormeNumberFieldModel(),
+          model:
+              (model ?? FormeNumberFieldModel()).copyWith(FormeNumberFieldModel(
+            textFieldModel: FormeTextFieldModel(
+              decoration: decoration,
+              maxLines: maxLines,
+            ),
+          )),
           readOnly: readOnly,
           name: name,
           onSaved: onSaved,

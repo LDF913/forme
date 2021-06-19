@@ -408,7 +408,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   /// used to do some logic after update model
   ///
   /// **this method will be called after [beforeUpdateModel] or [beforeSetModel]**
-  void afterUpdateModel(E model, E old, E current) {}
+  void afterUpdateModel(E old, E current) {}
 
   /// used to do some logic before set model
   ///
@@ -438,7 +438,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy.copyWith(model) as E;
         });
-        afterUpdateModel(copy, model, _model);
+        afterUpdateModel(model, _model);
       }
     }
   }
@@ -450,7 +450,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
         setState(() {
           this._model = copy;
         });
-        afterUpdateModel(copy, model, _model);
+        afterUpdateModel(model, _model);
       }
     }
   }
@@ -986,6 +986,9 @@ class _FormeValueFieldController<T extends Object, E extends FormeModel>
 
   @override
   set value(T? value) => state.didChange(value);
+
+  @override
+  void clearValue() => state.didChange(null);
 }
 
 class _LazyFieldListenable extends FormeFieldListenable {

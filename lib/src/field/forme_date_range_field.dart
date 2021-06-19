@@ -25,12 +25,20 @@ class FormeDateRangeField
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTimeRange>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
           key: key,
-          model: model ?? FormeDateRangeFieldModel(),
+          model: (model ?? FormeDateRangeFieldModel())
+              .copyWith(FormeDateRangeFieldModel(
+            textFieldModel: FormeTextFieldModel(
+              maxLines: maxLines,
+              decoration: decoration,
+            ),
+          )),
           name: name,
           onValueChanged: onValueChanged,
           onSaved: onSaved,

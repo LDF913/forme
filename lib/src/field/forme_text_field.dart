@@ -25,6 +25,8 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<String>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           nullValueReplacement: '',
@@ -32,9 +34,8 @@ class FormeTextField extends ValueField<String, FormeTextFieldModel> {
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
-          model: model ??
-              FormeTextFieldModel(
-                  maxLines: 1, decoration: const InputDecoration()),
+          model: (model ?? FormeTextFieldModel()).copyWith(
+              FormeTextFieldModel(decoration: decoration, maxLines: maxLines)),
           name: name,
           readOnly: readOnly,
           onValueChanged: onValueChanged,

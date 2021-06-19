@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
+import 'package:forme/src/widget/forme_mounted_value_notifier.dart';
 
 class FormeAutocompleteText<T extends Object>
     extends ValueField<T, FormeAutocompleteTextModel<T>> {
   FormeAutocompleteText({
     required String name,
     required AutocompleteOptionsBuilder<T> optionsBuilder,
-    InputDecoration? decoration = const InputDecoration(),
+    InputDecoration? decoration,
     FormeAutocompleteTextModel<T>? model,
     FormeValueChanged<T, FormeAutocompleteTextModel<T>>? onValueChanged,
     FormFieldValidator<T>? validator,
@@ -25,6 +26,7 @@ class FormeAutocompleteText<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
@@ -38,10 +40,13 @@ class FormeAutocompleteText<T extends Object>
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          model: (model ?? FormeAutocompleteTextModel()).copyWith(
-              FormeAutocompleteTextModel(
+          model: (model ?? FormeAutocompleteTextModel())
+              .copyWith(FormeAutocompleteTextModel(
                   optionsBuilder: optionsBuilder,
-                  textFieldModel: FormeTextFieldModel(decoration: decoration))),
+                  textFieldModel: FormeTextFieldModel(
+                    decoration: decoration,
+                    maxLines: maxLines,
+                  ))),
           builder: (baseState) {
             _FormeAutocompleteTextState<T> state =
                 baseState as _FormeAutocompleteTextState<T>;
@@ -115,11 +120,7 @@ class _FormeAutocompleteTextState<T extends Object>
 
   late final FormeMountedValueNotifier<double?> fieldViewWidgetNotifier =
       FormeMountedValueNotifier(null, this);
-
   late final FormeMountedValueNotifier<int> rebuildOptionsViewNotifier =
-      FormeMountedValueNotifier(0, this);
-
-  late final FormeMountedValueNotifier<int> optionsNotifier =
       FormeMountedValueNotifier(0, this);
 
   AutocompleteOptionToString<T> get displayStringForOption =>
@@ -217,7 +218,6 @@ class _FormeAutocompleteTextState<T extends Object>
   @override
   void dispose() {
     fieldViewWidgetNotifier.dispose();
-    optionsNotifier.dispose();
     rebuildOptionsViewNotifier.dispose();
     super.dispose();
   }
@@ -243,9 +243,7 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void afterUpdateModel(
-      FormeAutocompleteTextModel<T> model,
-      FormeAutocompleteTextModel<T> old,
+  void afterUpdateModel(FormeAutocompleteTextModel<T> old,
       FormeAutocompleteTextModel<T> current) {
     if ((current.optionsViewHeight != old.optionsViewHeight &&
             current.optionsViewHeight != null) ||

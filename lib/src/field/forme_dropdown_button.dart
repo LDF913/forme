@@ -24,10 +24,19 @@ class FormeDropdownButton<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
           onInitialed: onInitialed,
           key: key,
-          decoratorBuilder: decoratorBuilder,
+          decoratorBuilder: decoratorBuilder ??
+              (decoration == null
+                  ? null
+                  : FormeInputDecoratorBuilder(
+                      decoration: decoration,
+                      emptyChecker: (value) => value == null,
+                      wrapper: (child) {
+                        return DropdownButtonHideUnderline(child: child);
+                      })),
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
           model: (model ?? FormeDropdownButtonModel<T>())

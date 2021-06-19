@@ -28,13 +28,22 @@ class FormeCupertinoTimerField
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<Duration>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
-          model: model ?? FormeCupertinoTimerFieldModel(),
+          model: (model ?? FormeCupertinoTimerFieldModel()).copyWith(
+            FormeCupertinoTimerFieldModel(
+              textFieldModel: FormeTextFieldModel(
+                maxLines: maxLines,
+                decoration: decoration,
+              ),
+            ),
+          ),
           name: name,
           onValueChanged: onValueChanged,
           onSaved: onSaved,

@@ -21,9 +21,13 @@ class FormeRadioGroup<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
             onInitialed: onInitialed,
-            decoratorBuilder: decoratorBuilder,
+            decoratorBuilder: decoratorBuilder ??
+                (decoration == null
+                    ? null
+                    : FormeInputDecoratorBuilder(decoration: decoration)),
             onFocusChanged: onFocusChanged,
             onErrorChanged: onErrorChanged,
             key: key,

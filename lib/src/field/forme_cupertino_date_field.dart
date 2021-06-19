@@ -28,14 +28,22 @@ class FormeCupertinoDateField
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<DateTime>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
-          model: (model ?? FormeCupertinoDateFieldModel()).copyWith(
-              FormeCupertinoDateFieldModel(type: FormeDateTimeFieldType.Date)),
+          model: (model ?? FormeCupertinoDateFieldModel())
+              .copyWith(FormeCupertinoDateFieldModel(
+            type: FormeDateTimeFieldType.Date,
+            textFieldModel: FormeTextFieldModel(
+              maxLines: maxLines,
+              decoration: decoration,
+            ),
+          )),
           name: name,
           onValueChanged: onValueChanged,
           onSaved: onSaved,

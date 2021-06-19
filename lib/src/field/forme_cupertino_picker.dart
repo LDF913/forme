@@ -25,10 +25,14 @@ class FormeCupertinoPicker extends ValueField<int, FormeCupertinoPickerModel> {
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<int>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
           onInitialed: onInitialed,
           nullValueReplacement: 0,
-          decoratorBuilder: decoratorBuilder,
+          decoratorBuilder: decoratorBuilder ??
+              (decoration == null
+                  ? null
+                  : FormeInputDecoratorBuilder(decoration: decoration)),
           key: key,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,

@@ -22,3 +22,4 @@ export 'forme_cupertino_segmented_control.dart';
 export 'forme_cupertino_sliding_segmented_control.dart';
 export 'forme_autocomplete_async_text.dart';
 export 'forme_autocomplete_text.dart';
+export 'forme_autocomplete_async_chip.dart';

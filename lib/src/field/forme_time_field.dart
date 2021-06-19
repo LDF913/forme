@@ -25,13 +25,21 @@ class FormeTimeField extends ValueField<TimeOfDay, FormeTimeFieldModel> {
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<TimeOfDay>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           key: key,
           decoratorBuilder: decoratorBuilder,
           onFocusChanged: onFocusChanged,
           onErrorChanged: onErrorChanged,
-          model: model ?? FormeTimeFieldModel(),
+          model: model ??
+              FormeTimeFieldModel(
+                textFieldModel: FormeTextFieldModel(
+                  decoration: decoration,
+                  maxLines: maxLines,
+                ),
+              ),
           name: name,
           onValueChanged: onValueChanged,
           onSaved: onSaved,

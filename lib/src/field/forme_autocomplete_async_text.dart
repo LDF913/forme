@@ -1,13 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:forme/forme.dart';
-
-typedef AutocompleteAsyncOptionsBuilder<T extends Object> = Future<Iterable<T>>
-    Function(TextEditingValue textEditingValue);
-
-typedef AutocompleteOptionsViewDecoratorBuilder = Widget Function(
-    BuildContext context, Widget child, GlobalKey key, double? width);
+import 'package:forme/src/field/raw_autocomplete_async.dart';
 
 class FormeAsnycAutocompleteText<T extends Object>
     extends ValueField<T, FormeAsyncAutocompleteTextModel<T>> {
@@ -32,6 +25,8 @@ class FormeAsnycAutocompleteText<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    InputDecoration? decoration,
+    int? maxLines = 1,
   }) : super(
           onInitialed: onInitialed,
           decoratorBuilder: decoratorBuilder,
@@ -45,105 +40,27 @@ class FormeAsnycAutocompleteText<T extends Object>
           autovalidateMode: autovalidateMode,
           initialValue: initialValue,
           validator: validator,
-          model: (model ?? FormeAsyncAutocompleteTextModel()).copyWith(
-              FormeAsyncAutocompleteTextModel(optionsBuilder: optionsBuilder)),
+          model: (model ?? FormeAsyncAutocompleteTextModel())
+              .copyWith(FormeAsyncAutocompleteTextModel(
+            optionsBuilder: optionsBuilder,
+            textFieldModel: FormeTextFieldModel(
+              decoration: decoration,
+              maxLines: maxLines,
+            ),
+          )),
           builder: (baseState) {
             _FormeAutocompleteTextState<T> state =
                 baseState as _FormeAutocompleteTextState<T>;
-            return Autocomplete<T>(
-              optionsBuilder: readOnly
-                  ? (v) => Iterable<T>.empty()
-                  : (v) => _Iterable<T>(state),
-              onSelected: readOnly
-                  ? null
-                  : (T value) {
-                      state.didChange(value);
-                      state.requestFocus();
-                    },
-              displayStringForOption: state.displayStringForOption,
-              fieldViewBuilder: (BuildContext context,
-                  TextEditingController textEditingController,
-                  FocusNode focusNode,
-                  VoidCallback onFieldSubmitted) {
-                state.effecitiveTextEditingController = textEditingController;
-                state.effecitiveFocusNode = focusNode;
-                return OrientationBuilder(builder: (context, o) {
-                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                    state.fieldViewWidgetNotifier.value =
-                        (context.findRenderObject() as RenderBox).size.width;
-                  });
-                  return FormeTextFieldWidget(
-                      textEditingController: textEditingController,
-                      focusNode: focusNode,
-                      errorText: state.errorText,
-                      model: FormeTextFieldModel(
-                        onChanged: (v) {
-                          state.updateOptions();
-                          state.timer?.cancel();
-                          if (state.queryWhenEmpty || v != '') {
-                            state.timer = Timer(
-                                state.model.loadOptionsTimerDuration ??
-                                    const Duration(milliseconds: 500),
-                                () => state.loadOptions());
-                          }
-                          if (state.model.textFieldModel?.onChanged != null)
-                            state.model.textFieldModel!.onChanged!(v);
-                        },
-                        onSubmitted: state.readOnly
-                            ? null
-                            : (v) {
-                                if (state.model.textFieldModel?.onSubmitted !=
-                                    null)
-                                  state.model.textFieldModel!.onSubmitted!(v);
-                              },
-                        readOnly: state.readOnly,
-                      ).copyWith(
-                          state.model.textFieldModel ?? FormeTextFieldModel()));
-                });
-              },
-              optionsViewBuilder: (
-                BuildContext context,
-                AutocompleteOnSelected<T> onSelected,
-                Iterable<T> options,
-              ) {
-                if (state.value != null && state.optionsNotifier.value == 0)
-                  return const SizedBox();
-                if (state._effecitiveTextEditingController!.text == '' &&
-                    !state.queryWhenEmpty) return const SizedBox();
-                Widget loading = state.model.loadingOptionBuilder == null
-                    ? state.defaultLoadingOptionBuilder(context)
-                    : state.model.loadingOptionBuilder!(context);
-                Widget child = ValueListenableBuilder<int>(
-                    child: loading,
-                    valueListenable: state.optionsNotifier,
-                    builder: (context, data, child) {
-                      if (state.options == null || state.options!.gen < data)
-                        return child!;
-                      if (state.options!.gen == data) {
-                        if (state.options!.hasError)
-                          return (state.model.errorBuilder ??
-                                  state.defaultErrorBuilder)(
-                              context, state.options!.error);
-                        else {
-                          if (state.options!.datas!.isEmpty)
-                            return (state.model.emptyOptionBuilder ??
-                                state.defaultEmptyOptionBuilder)(context);
-                          return (state.model.optionsViewBuilder ??
-                                  state.defaultOptionsViewBuilder)(
-                              context, onSelected, state.options!.datas!);
-                        }
-                      }
-                      return const SizedBox();
-                    });
-                return ValueListenableBuilder2<double?, int>(
-                    state.fieldViewWidgetNotifier,
-                    state.optionsViewRebuildNotifier,
-                    builder: (context, width, gen, _child) {
-                  return (state.model.optionsViewDecoratorBuilder ??
-                          state.defaultOptionsViewDecoratorBuilder)(
-                      context, child, state._key, width);
-                });
-              },
+            FormeAsyncAutocompleteTextModel<T> model =
+                FormeAsyncAutocompleteTextModel<T>(
+                        textFieldModel: FormeTextFieldModel(
+                            decoration:
+                                InputDecoration(errorText: state.errorText)))
+                    .copyWith(state.model);
+            return FormeRawAutoComplete<T>(
+              model: model,
+              readOnly: readOnly,
+              controller: state,
             );
           },
         );
@@ -153,129 +70,29 @@ class FormeAsnycAutocompleteText<T extends Object>
 }
 
 class _FormeAutocompleteTextState<T extends Object>
-    extends ValueFieldState<T, FormeAsyncAutocompleteTextModel<T>> {
-  TextEditingController? _effecitiveTextEditingController;
-  FocusNode? _effecitiveFocusNode;
-
-  AutocompleteOptionToString<T> get displayStringForOption =>
-      model.displayStringForOption ?? RawAutocomplete.defaultStringForOption;
-  Timer? timer;
-
-  late final FormeMountedValueNotifier<int> optionsNotifier =
-      FormeMountedValueNotifier(0, this);
-
-  late final FormeMountedValueNotifier<double?> fieldViewWidgetNotifier =
-      FormeMountedValueNotifier(null, this);
-
-  late final FormeMountedValueNotifier<int> optionsViewRebuildNotifier =
-      FormeMountedValueNotifier(0, this);
-
-  final _key = GlobalKey();
-
-  bool get queryWhenEmpty => model.queryWhenEmpty ?? false;
-
-  void rebuildOptionsView() {
-    optionsViewRebuildNotifier.value = optionsViewRebuildNotifier.value + 1;
+    extends ValueFieldState<T, FormeAsyncAutocompleteTextModel<T>>
+    with RawAutocompleteController<T> {
+  @override
+  FormeValueFieldController<T, FormeAsyncAutocompleteTextModel<T>>
+      createFormeFieldController() {
+    return _FormeValueFieldController(super.createFormeFieldController(), this);
   }
 
-  void updateOptions() {
-    optionsNotifier.value = optionsNotifier.value + 1;
-  }
-
-  Widget defaultErrorBuilder(BuildContext context, dynamic error) {
-    return const SizedBox();
-  }
-
-  Widget defaultOptionsViewDecoratorBuilder(
-      BuildContext context, Widget child, GlobalKey key, double? width) {
-    return Align(
-      key: key,
-      alignment: Alignment.topLeft,
-      child: Material(
-        elevation: 4.0,
-        child: SizedBox(
-          child: child,
-          width: width,
-        ),
-      ),
-    );
-  }
-
-  Widget defaultLoadingOptionBuilder(BuildContext context) {
-    return Container(
-      height: model.optionsViewHeight ?? 200,
-      width: double.infinity,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(),
-        ],
-      ),
-    );
-  }
-
-  Widget defaultEmptyOptionBuilder(BuildContext context) {
-    return const SizedBox();
-  }
-
-  Widget defaultOptionsViewBuilder(
-    BuildContext context,
-    AutocompleteOnSelected<T> onSelected,
-    Iterable<T> options,
-  ) {
-    return SizedBox(
-      height: model.optionsViewHeight ?? 200,
-      child: ListView.builder(
-        padding: EdgeInsets.zero,
-        itemCount: options.length,
-        itemBuilder: (BuildContext context, int index) {
-          final T option = options.elementAt(index);
-          return InkWell(
-            onTap: () {
-              onSelected(option);
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(displayStringForOption(option)),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  set effecitiveTextEditingController(TextEditingController controller) {
-    _effecitiveTextEditingController = controller;
-  }
-
-  set effecitiveFocusNode(FocusNode focusNode) {
-    if (_effecitiveFocusNode != focusNode) {
-      _effecitiveFocusNode = focusNode;
-      _effecitiveFocusNode!.addListener(() {
-        if (_effecitiveFocusNode!.hasFocus) {
-          String text = _effecitiveTextEditingController!.text;
-          if (text == '' && !queryWhenEmpty) return;
-          if (value == null)
-            loadOptions();
-          else if (displayStringForOption(value!) != text) loadOptions();
-        }
-        if (widget.onFocusChanged != null) {
-          if (widget.onFocusChanged != null)
-            widget.onFocusChanged!(controller, _effecitiveFocusNode!.hasFocus);
-        }
-      });
-    }
+  void clearValue() {
+    selection = null;
+    didChange(null);
   }
 
   @override
-  void requestFocus() {
-    _effecitiveFocusNode?.requestFocus();
+  void onSelected(T value) {
+    selection = value;
+    didChange(value);
   }
 
   @override
-  void unfocus({UnfocusDisposition disposition = UnfocusDisposition.scope}) {
-    _effecitiveFocusNode?.unfocus(disposition: disposition);
+  void afterFocusChanged(bool hasFocus) {
+    if (widget.onFocusChanged != null)
+      widget.onFocusChanged!(controller, hasFocus);
   }
 
   @override
@@ -283,61 +100,8 @@ class _FormeAutocompleteTextState<T extends Object>
     super.afterInitiation();
     if (initialValue != null)
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _effecitiveTextEditingController?.text =
-            displayStringForOption(initialValue!);
+        selection = initialValue;
       });
-  }
-
-  @override
-  void didChange(T? newValue) {
-    super.didChange(newValue);
-    if (value == null && newValue == null) onValueChanged(null);
-  }
-
-  @override
-  void onValueChanged(T? value) {
-    String? text;
-    if (value == null) {
-      text = '';
-    } else {
-      text = displayStringForOption(value);
-    }
-    if (_effecitiveTextEditingController?.text != text) {
-      _effecitiveTextEditingController?.text = text;
-    }
-    if (value == null) {
-      timer?.cancel();
-      if (queryWhenEmpty) loadOptions();
-    }
-  }
-
-  _Options<T>? options;
-
-  void loadOptions() {
-    updateOptions();
-    int gen = optionsNotifier.value + 1;
-    model.optionsBuilder!(_effecitiveTextEditingController!.value)
-        .then((value) {
-      options = _Options(hasError: false, gen: gen, datas: value);
-    }).catchError((e) {
-      options = _Options(hasError: true, error: e, gen: gen);
-    }).whenComplete(() {
-      if (gen == optionsNotifier.value + 1) updateOptions();
-    });
-  }
-
-  @override
-  void dispose() {
-    optionsNotifier.dispose();
-    fieldViewWidgetNotifier.dispose();
-    optionsViewRebuildNotifier.dispose();
-    super.dispose();
-  }
-
-  @override
-  void reset() {
-    super.reset();
-    _effecitiveTextEditingController?.text = '';
   }
 
   @override
@@ -351,40 +115,25 @@ class _FormeAutocompleteTextState<T extends Object>
   }
 
   @override
-  void afterUpdateModel(
-      FormeAsyncAutocompleteTextModel<T> model,
-      FormeAsyncAutocompleteTextModel<T> old,
+  void afterUpdateModel(FormeAsyncAutocompleteTextModel<T> old,
       FormeAsyncAutocompleteTextModel<T> current) {
-    if ((current.optionsViewHeight != old.optionsViewHeight &&
-            current.optionsViewHeight != null) ||
-        current.loadingOptionBuilder != null ||
-        current.emptyOptionBuilder != null ||
-        current.optionsViewBuilder != null ||
-        current.optionsViewDecoratorBuilder != null ||
-        current.displayStringForOption != null) {
-      rebuildOptionsView();
-    }
+    rebuild(model);
     if (current.displayStringForOption != null && value != null) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        String selectionString = current.displayStringForOption!(value!);
-        _effecitiveTextEditingController?.value = TextEditingValue(
-          selection: TextSelection.collapsed(offset: selectionString.length),
-          text: selectionString,
-        );
-      });
+      updateDisplay(value);
     }
-
-    if (current.optionsBuilder != null) {
-      if (_effecitiveTextEditingController!.text == '' && !queryWhenEmpty)
-        return;
-      loadOptions();
-    }
+    if (current.optionsBuilder != null) loadOptions();
   }
 
-  bool get isLatestOption =>
-      options != null && options!.gen == optionsNotifier.value;
+  @override
+  bool isSelected(T option) {
+    return value == option;
+  }
 }
 
+///
+/// **the context provided by builders can not used to get `FormeValueFieldController` ,
+/// when you want to access `FormeValueField Controller`,
+/// you can use `formeKey.valueField(String name)`**
 class FormeAsyncAutocompleteTextModel<T extends Object> extends FormeModel {
   final AutocompleteOptionToString<T>? displayStringForOption;
   final AutocompleteAsyncOptionsBuilder<T>? optionsBuilder;
@@ -397,6 +146,8 @@ class FormeAsyncAutocompleteTextModel<T extends Object> extends FormeModel {
   final AutocompleteOptionsViewDecoratorBuilder? optionsViewDecoratorBuilder;
   final bool? queryWhenEmpty;
   final Widget Function(BuildContext context, dynamic error)? errorBuilder;
+  final Widget Function(BuildContext context, T option, bool isSelected)?
+      optionBuilder;
   const FormeAsyncAutocompleteTextModel({
     this.optionsBuilder,
     this.displayStringForOption,
@@ -409,6 +160,7 @@ class FormeAsyncAutocompleteTextModel<T extends Object> extends FormeModel {
     this.optionsViewDecoratorBuilder,
     this.queryWhenEmpty,
     this.errorBuilder,
+    this.optionBuilder,
   });
 
   @override
@@ -431,35 +183,24 @@ class FormeAsyncAutocompleteTextModel<T extends Object> extends FormeModel {
           optionsViewDecoratorBuilder ?? old.optionsViewDecoratorBuilder,
       queryWhenEmpty: queryWhenEmpty ?? old.queryWhenEmpty,
       errorBuilder: errorBuilder ?? old.errorBuilder,
+      optionBuilder: optionBuilder ?? old.optionBuilder,
     );
   }
 }
 
-class _Options<T> {
-  final Iterable<T>? datas;
-  final dynamic error;
-  final bool hasError;
-  final int gen;
+class _FormeValueFieldController<T extends Object>
+    extends FormeValueFieldControllerDelegate<T,
+        FormeAsyncAutocompleteTextModel<T>> {
+  final _FormeAutocompleteTextState state;
+  final FormeValueFieldController<T, FormeAsyncAutocompleteTextModel<T>>
+      delegate;
+  _FormeValueFieldController(this.delegate, this.state);
 
-  const _Options({
-    this.datas,
-    this.error,
-    required this.hasError,
-    required this.gen,
-  });
-}
-
-class _Iterable<T extends Object> extends Iterable<T> {
-  final _FormeAutocompleteTextState<T> state;
-
-  _Iterable(this.state);
   @override
-  Iterator<T> get iterator {
-    if (state.isLatestOption && state.options!.datas != null)
-      return state.options!.datas!.iterator;
-    throw UnimplementedError();
-  }
+  bool get hasFocus => state.hasFocus;
 
-  bool get isEmpty => false;
-  bool get isNotEmpty => !isEmpty;
+  @override
+  void clearValue() {
+    state.clearValue();
+  }
 }

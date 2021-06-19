@@ -76,10 +76,14 @@ class FormeFilterChip<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<List<T>>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
           onInitialed: onInitialed,
           nullValueReplacement: [],
-          decoratorBuilder: decoratorBuilder,
+          decoratorBuilder: decoratorBuilder ??
+              (decoration == null
+                  ? null
+                  : FormeInputDecoratorBuilder(decoration: decoration)),
           key: key,
           onFocusChanged: onFocusChanged,
           model: (model ?? FormeFilterChipModel<T>())

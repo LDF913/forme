@@ -21,12 +21,18 @@ class FormeChoiceChip<T extends Object>
         onInitialed,
     Key? key,
     FormeDecoratorBuilder<T>? decoratorBuilder,
+    InputDecoration? decoration,
   }) : super(
           onInitialed: onInitialed,
           key: key,
-          decoratorBuilder: decoratorBuilder,
+          decoratorBuilder: decoratorBuilder ??
+              (decoration == null
+                  ? null
+                  : FormeInputDecoratorBuilder(decoration: decoration)),
           model: (model ?? FormeChoiceChipModel<T>())
-              .copyWith(FormeChoiceChipModel<T>(items: items)),
+              .copyWith(FormeChoiceChipModel<T>(
+            items: items,
+          )),
           readOnly: readOnly,
           name: name,
           validator: validator,
