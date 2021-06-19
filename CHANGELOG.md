@@ -1,3 +1,7 @@
+## 2.0.3+1
+
+1. bug fix: readOnlyNotifier will be disposed !
+
 ## 2.0.3
 
 1. fields add `InputDecoration` and `maxLines` properties , used to quickly specific labelText or others

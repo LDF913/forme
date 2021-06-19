@@ -367,6 +367,7 @@ mixin AbstractFieldState<T extends StatefulWidget, E extends FormeModel>
   @override
   void dispose() {
     _focusNotifier.dispose();
+    _readOnlyNotifier.dispose();
     _focusNode?.dispose();
     _formScope.unregisterField(this);
     super.dispose();
